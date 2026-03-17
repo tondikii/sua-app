@@ -1,4 +1,4 @@
-# Sua 💖
+# Sua 👩‍❤️‍👨 - Date Planner Ecosystem
 
 > Turning date plans into reality.
 
@@ -19,8 +19,7 @@ To understand the product vision, features, and technical constraints, please re
 2. [Product Requirements Document (PRD)](docs/PRD.md) - Detailed feature specifications.
 3. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Expected behaviors and test cases.
 4. [Architecture](docs/ARCHITECTURE.md) - System design and data flow.
-5. [API Specification](docs/API_SPEC.md) - Backend REST API endpoints.
-6. [UX & Copywriting Notes](docs/UX_NOTES.md) - Brand guidelines and UI text (Indonesian).
+5. [UX & Copywriting Notes](docs/UX_NOTES.md) - Brand guidelines and UI text (Indonesian).
 
 ## 🚀 Getting Started
 *(Instructions for setting up the local development environment will be added here once CI/CD and Docker setups are complete.)*
