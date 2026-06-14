@@ -1,23 +1,25 @@
-# Project Brief: Sua
+# Project Brief: Atur Perjalanan
 
-## 🧩 The Problem
-Couples frequently encounter friction when trying to spend quality time together:
-1. **The "Wacana" Loop**: Plans are discussed but never executed due to planning fatigue.
-2. **Scattered Inspiration**: Users save aesthetic places on TikTok/Instagram, but when it's time to choose a date spot, they forget where those saved items are or lack the context to organize them.
-3. **Decision Paralysis**: Choosing "what to do" or "where to eat" becomes a chore rather than a fun activity.
+## 🧩 Masalah (The Problem)
+Merencanakan perjalanan bersama teman sering kali menghadapi hambatan yang membuat rencana sekadar menjadi wacana:
+1. **Kutukan "Wacana" & Bentrok Jadwal**: Rencana liburan sering batal karena sulitnya menentukan tanggal yang cocok untuk semua partisipan. Discussion terlalu panjang tanpa ada keputusan final.
+2. **Inspirasi yang Tercecer**: Referensi tempat estetik di TikTok atau Instagram sering kali hilang, lupa disimpan, atau terpisah dari ruang obrolan grup.
+3. **Gesekan Koordinasi (Coordination Friction)**: Menyatukan jadwal dan memastikan siapa saja yang ikut menguras energi si pembuat rencana (planner).
 
-## 💡 The Solution
-Sua acts as an actionable, shared hub for couples. It bridges the gap between inspiration and execution by:
-* Providing a categorized, shared **Wishlist** with emotional priority sorting.
-* Offering an **Explore** feature that immediately pulls real-world locations via Google Maps based on mood/activity.
-* Enabling a structured **Itinerary** that syncs directly to partner calendars.
+## 💡 Solusi (The Solution)
+Atur Perjalanan hadir sebagai *hub* terpusat yang menjembatani inspirasi liburan dan eksekusi nyata melalui:
+* **Penentuan Tanggal Fleksibel (Date Voting)**: Mengakomodasi ketidakpastian jadwal dengan fitur pengajuan beberapa kandidat tanggal yang kemudian bisa ditentukan via *voting* oleh seluruh partisipan.
+* **Pusat Informasi & Referensi**: Menyusun daftar destinasi secara rapi, lengkap dengan tautan peta serta kolom opsional untuk menyematkan *link* video/foto referensi (TikTok, Instagram, dll.).
+* **Grup Chat Terintegrasi**: Ruang obrolan khusus di setiap proyek perjalanan untuk menjaga agar diskusi koordinasi tidak tercampur dengan obrolan sehari-hari.
+* **Kolaborasi Mulus**: Sistem undangan praktis via *username* atau email yang otomatis terintegrasi dengan Google Calendar.
+* **Wishlist Terstruktur**: Tabungan destinasi impian dengan sistem *tagging* dan skala prioritas untuk rencana perjalanan di masa mendatang.
 
-## 🎯 Target Audience
-* Couples looking to improve the quality and frequency of their dates.
-* The "Planner" in the relationship who needs better organizational tools.
-* The "Indecisive" partner who needs curated, easy-to-digest options.
+## 🎯 Target Audiens (Target Audience)
+* **Si "Planner"**: Anggota grup yang selalu berinisiatif menyusun jadwal dan membutuhkan alat organisasi yang praktis.
+* **Si "Terima Beres"**: Anggota grup yang pasif dalam merencanakan, tetapi butuh satu sumber informasi yang jelas tentang detail perjalanan.
+* **Solo Traveler**: Individu yang ingin merapikan daftar kunjungan dan *wishlist* perjalanan pribadi mereka.
 
-## 🎨 Brand Philosophy
-* **Name**: Sua (Meaning: to meet/encounter in Indonesian).
-* **Vibe**: Soft on the outside (emotional, romantic), strong on the inside (highly functional, anti-wacana).
-* **Tone**: Fun, playful, warm, and highly conversational. The UI must not feel like a corporate utility app.
+## 🎨 Filosofi Brand (Brand Philosophy)
+* **Nama**: Atur Perjalanan (Sebuah *call-to-action* yang jelas dan fungsional).
+* **Vibe**: Energik, kolaboratif, solutif, dan sosial.
+* **Tone**: *Fun*, *playful*, santai, dan bersahabat—tidak kaku seperti aplikasi produktivitas korporat.
