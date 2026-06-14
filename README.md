@@ -1,25 +1,31 @@
-# Sua 👩‍❤️‍👨 - Date Planner Ecosystem
+# Atur Perjalanan ✈️
 
-> Turning date plans into reality.
+> Mengubah wacana perjalanan menjadi kenyataan.
 
-Sua is a mobile application designed for couples to seamlessly plan, organize, and execute date activities. It transforms scattered social media saves and indecisive planning into structured, actionable itineraries synced across both partners' calendars.
+Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun *itinerary*, dan berkolaborasi dalam satu platform terpusat.
+
+## ✨ Fitur Utama (MVP)
+* **Manajemen Perjalanan:** Susun jadwal, destinasi, dan *tagging* perjalanan.
+* **Kolaborasi & Chat:** Undang teman (via *username*/email) dan diskusi langsung di grup chat internal perjalanan.
+* **Sosial:** Sistem saling *follow* dan intip riwayat perjalanan pengguna lain.
+* **Wishlist:** Simpan dan urutkan destinasi impian berdasarkan prioritas.
+
+*(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md)).*
 
 ## ⚙️ Tech Stack
-* **Architecture**: Monorepo
-* **Backend**: Go (Golang) RESTful API
-* **Mobile**: Kotlin Multiplatform (KMP) with Compose Multiplatform
-* **Authentication**: Google Sign-In
-* **Integrations**: Google Maps API (Places), Google Calendar API
-* **Database**: PostgreSQL (planned)
+* **Arsitektur**: Monorepo
+* **Backend**: Gin Framework
+* **Mobile**: Kotlin Multiplatform (KMP)
+* **Database**: PostgreSQL
+* **Integrasi**: Google Sign-In, Google Calendar API
 
-## 📚 Documentation Directory
-To understand the product vision, features, and technical constraints, please refer to the `/docs` directory:
+## 📚 Direktori Dokumentasi
+Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
-1. [Project Brief](docs/BRIEF.md) - Core problem, solution, and target audience.
-2. [Product Requirements Document (PRD)](docs/PRD.md) - Detailed feature specifications.
-3. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Expected behaviors and test cases.
-4. [Architecture](docs/ARCHITECTURE.md) - System design and data flow.
-5. [UX & Copywriting Notes](docs/UX_NOTES.md) - Brand guidelines and UI text (Indonesian).
+1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
+2. [Product Requirements Document (PRD)](docs/PRD.md) - Spesifikasi lengkap MVP.
+3. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur.
+4. [Architecture](docs/ARCHITECTURE.md) - Desain sistem dan alur data.
 
-## 🚀 Getting Started
-*(Instructions for setting up the local development environment will be added here once CI/CD and Docker setups are complete.)*
+## 🚀 Memulai Pengerjaan
+*(Instruksi setup environment lokal, CI/CD, dan Docker akan ditambahkan di sini).*
