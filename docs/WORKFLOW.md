@@ -1,4 +1,4 @@
-# Work Flow - Atur Perjalanan
+# WorkFlow - Atur Perjalanan
 
 Dokumen ini mencatat alur kerja (*workflow*) pengguna dari awal membuka aplikasi hingga menggunakan seluruh fitur di dalamnya. Alur ini juga dirancang sebagai panduan pembuatan antarmuka (UI/UX) dan skema basis data (*database*).
 

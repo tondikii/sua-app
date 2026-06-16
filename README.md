@@ -24,8 +24,8 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
 2. [Product Requirements Document (PRD)](docs/PRD.md) - Spesifikasi lengkap MVP.
-3. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur.
-4. [Architecture](docs/ARCHITECTURE.md) - Desain sistem dan alur data.
+3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi.
+4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur.
 
 ## 🚀 Memulai Pengerjaan
 *(Instruksi setup environment lokal, CI/CD, dan Docker akan ditambahkan di sini).*
