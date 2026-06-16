@@ -30,7 +30,7 @@ Untuk panduan UI/UX, aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu 
 ## 3. Beranda (Home) - Tab 1
 * Setelah berhasil masuk, pengguna diarahkan ke halaman Beranda.
 * **UI/UX & Layout**:
-  * **Header**: Sapaan (contoh: "Halo, [Nama]!") beserta *icon* lonceng untuk Notifikasi (undangan trip, *follow* baru).
+  * **Header**: *icon* lonceng untuk Notifikasi (undangan trip, *follow* baru).
   * **Tab View**: Terdapat *segmented control* atau *swipeable tabs* dengan kategori: "Mendatang", "Selesai", dan "Undangan".
   * **Komponen Card**: Setiap perjalanan ditampilkan dalam bentuk *Card* modern (mirip Airbnb). *Card* memuat Judul Trip, *Tags* (berupa *chips*), Rentang Tanggal, dan *Stacked Avatars* (foto profil kecil yang bertumpuk) dari para partisipan.
 * **Interaksi Data**:
@@ -50,12 +50,12 @@ Untuk panduan UI/UX, aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu 
 * **UI/UX & Layout**:
   * Menggunakan *Modal Full-Screen* atau *Bottom Sheet*.
   * **Form Info**: Input "Nama Perjalanan", dan input dinamis untuk "Tags" (ketik lalu *enter* menjadi *Chip*).
-  * **Toggle Switch**: Pilihan antara "Tanggal Pasti" vs "Belum Pasti (Voting)".
-  * **Date Picker**: Jika "Tanggal Pasti", muncul kalender untuk memilih rentang (*Start* - *End*). Jika "Voting", kalender memungkinkan pengguna memilih beberapa rentang secara bergantian (menambah *Card* kandidat tanggal ke bawah form).
+  * **Date Picker**: Form langsung menampilkan satu input rentang kalender (*Start* - *End*).
+  * **Tombol "Tambah Kandidat Tanggal"**: Berada di bawah input kalender utama. Jika ditekan, akan memunculkan rentang kalender baru (menambah *Card* kandidat tanggal ke bawah form) dan menyediakan ikon hapus pada setiap kandidat tambahan.
 * **Interaksi Data**:
   * BE membuat *record* di tabel `trips` (`trip_id`, `trip_name`, `tags`, `creator_id`).
-  * **Jika Tanggal Pasti**: Menyimpan `start_date` dan `end_date` ke `trips`, set status `fixed`.
-  * **Jika Voting**: Set status `trips` ke `voting_pending`. Menyimpan setiap rentang waktu ke tabel `trip_date_candidates` (`candidate_id`, `trip_id`, `start_date`, `end_date`).
+  * **Jika Hanya 1 Rentang Tanggal**: Menyimpan `start_date` dan `end_date` langsung ke tabel `trips`, lalu set status `fixed`.
+  * **Jika Lebih dari 1 Rentang Tanggal**: Set status `trips` ke `voting_pending`. Menyimpan seluruh rentang waktu yang diinput ke tabel `trip_date_candidates` (`candidate_id`, `trip_id`, `start_date`, `end_date`).
 
 ## 6. Pengisian Destinasi Perjalanan
 * Di dalam halaman *Detail Trip*, pengguna masuk ke tab "Destinasi".
