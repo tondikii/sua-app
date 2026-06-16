@@ -19,7 +19,7 @@
 * **Tujuan**: Wadah terpusat untuk *itinerary*, penentuan jadwal, dan referensi.
 * **Fitur Utama**:
   * **Pembuatan Trip**: Mengatur nama perjalanan dan *tagging* kategori ala Instagram.
-  * **Penentuan Jadwal (Voting)**: Pembuat dapat memasukkan beberapa kandidat rentang tanggal (mulai - selesai) untuk dipilih (*vote*) oleh para partisipan.
+  * **Penentuan Jadwal**: Mendukung pengisian tanggal langsung (jika sudah yakin) atau pembuatan beberapa kandidat tanggal jika jadwal belum pasti. Pilihan jadwal atau kandidat tetap dapat diubah setelahnya.
   * **Penyusunan Destinasi**: Menambahkan daftar tempat, dilengkapi tautan peta dan *link* referensi visual (opsional) dari media sosial seperti TikTok atau Instagram.
 
 ## 4. Kolaborasi & Integrasi
