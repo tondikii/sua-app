@@ -1,11 +1,11 @@
 # Product Requirements Document (PRD)
 
 ## 1. Autentikasi & Onboarding
-* **Tujuan**: Akses masuk yang cepat dan tanpa hambatan.
-* **Alur**:
-  * Menggunakan otentikasi Google Sign-In.
-  * **Pengguna Baru**: Pembuatan akun otomatis mengambil metadata Google (Nama, Email, Avatar) dilanjutkan dengan pembuatan *username* unik.
-  * **Pengguna Lama**: Validasi sesi dan langsung diarahkan ke beranda.
+* Aplikasi menampilkan layar *Onboarding* (informasi aplikasi) khusus saat pengguna baru pertama kali membuka aplikasi di perangkatnya.
+* Pengguna dapat masuk (*login*) dengan sukses menggunakan akun Google.
+* Sistem berhasil mengambil data dasar (Nama, Email, Avatar) dari Google.
+* Pengguna baru diwajibkan membuat *username* unik yang belum terdaftar di sistem.
+* Pengguna lama yang masuk akan langsung diarahkan ke halaman utama.
 
 ## 2. Profil & Sistem Sosial
 * **Tujuan**: Membangun ekosistem kolaborasi dan interaksi antar pengguna.
