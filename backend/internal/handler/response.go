@@ -42,6 +42,10 @@ func conflict(c *gin.Context, code, message string) {
 	jsonError(c, http.StatusConflict, code, message)
 }
 
+func forbidden(c *gin.Context, code, message string) {
+	jsonError(c, http.StatusForbidden, code, message)
+}
+
 func internalError(c *gin.Context, err error) {
 	slog.Error("unhandled internal error",
 		"error", err,

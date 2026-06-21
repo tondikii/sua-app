@@ -110,6 +110,7 @@ type TripRepository interface {
 	SoftDelete(ctx context.Context, id uuid.UUID) error
 	IsParticipant(ctx context.Context, tripID, userID uuid.UUID) (bool, error)
 	IsCreator(ctx context.Context, tripID, userID uuid.UUID) (bool, error)
+	ListByParticipant(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*Trip, error)
 }
 
 type TripParticipantRepository interface {
@@ -135,7 +136,7 @@ type TripDateCandidateRepository interface {
 type TripDestinationRepository interface {
 	Create(ctx context.Context, dest *TripDestination) error
 	FindByTrip(ctx context.Context, tripID uuid.UUID) ([]*TripDestination, error)
-	Delete(ctx context.Context, id uuid.UUID) error
+	Delete(ctx context.Context, id, tripID uuid.UUID) error
 }
 
 type TripMessageRepository interface {
@@ -148,6 +149,7 @@ type TripMessageRepository interface {
 
 type TripService interface {
 	CreateTrip(ctx context.Context, creatorID uuid.UUID, input CreateTripInput) (*Trip, error)
+	ListTrips(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*Trip, error)
 	GetTrip(ctx context.Context, tripID, requesterID uuid.UUID) (*Trip, error)
 	UpdateTrip(ctx context.Context, tripID, requesterID uuid.UUID, input UpdateTripInput) (*Trip, error)
 	DeleteTrip(ctx context.Context, tripID, requesterID uuid.UUID) error
@@ -162,9 +164,11 @@ type TripService interface {
 
 	AddDestination(ctx context.Context, tripID, requesterID uuid.UUID, input AddDestinationInput) (*TripDestination, error)
 	RemoveDestination(ctx context.Context, destinationID, tripID, requesterID uuid.UUID) error
+	ListDestinations(ctx context.Context, tripID, requesterID uuid.UUID) ([]*TripDestination, error)
 
 	SendMessage(ctx context.Context, tripID, senderID uuid.UUID, text string) (*TripMessage, error)
 	GetMessages(ctx context.Context, tripID, requesterID uuid.UUID, cursor *time.Time, limit int) ([]*TripMessage, error)
+	ListDateCandidates(ctx context.Context, tripID, requesterID uuid.UUID) ([]*TripDateCandidate, error)
 }
 
 // ── Input DTOs ────────────────────────────────────────────────────────────────
