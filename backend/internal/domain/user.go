@@ -52,9 +52,12 @@ type UserService interface {
 	UpsertFromGoogle(ctx context.Context, input GoogleAuthInput) (*User, bool, error)
 	CompleteRegistration(ctx context.Context, userID uuid.UUID, username string) (*User, error)
 	GetProfile(ctx context.Context, username string, viewerID *uuid.UUID) (*User, error)
+	GetByID(ctx context.Context, userID uuid.UUID) (*User, error)
 	UpdateProfile(ctx context.Context, userID uuid.UUID, input UpdateProfileInput) (*User, error)
 	Follow(ctx context.Context, followerID, followingID uuid.UUID) error
 	Unfollow(ctx context.Context, followerID, followingID uuid.UUID) error
+	// Search performs a trigram search across users by username/name with keyset pagination.
+	Search(ctx context.Context, query string, limit int, cursor *uuid.UUID) ([]*User, error)
 }
 
 // ── Input DTOs ───────────────────────────────────────────────────────────────

@@ -241,6 +241,30 @@ func (h *TripHandler) PostTripInvitation(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
+// respondToInvitationRequest represents the request body for accepting/declining an invitation.
+type respondToInvitationRequest struct {
+	Accept bool `json:"accept" binding:"required"`
+}
+
+func (h *TripHandler) PutTripInvitation(c *gin.Context) {
+	userID := mustGetUserID(c)
+	invitationID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		badRequest(c, "INVALID_INVITATION_ID", "invitation ID must be a valid UUID")
+		return
+	}
+	var req respondToInvitationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		badRequest(c, "INVALID_REQUEST", "invalid response payload")
+		return
+	}
+	if err := h.trips.RespondToInvitation(c.Request.Context(), invitationID, userID, req.Accept); err != nil {
+		handleTripError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
 func (h *TripHandler) PostTripCandidateVote(c *gin.Context) {
 	userID := mustGetUserID(c)
 	candidateID, err := uuid.Parse(c.Param("candidateId"))
@@ -449,6 +473,7 @@ func (h *TripHandler) RegisterRoutes(r gin.IRouter, jwtSecret []byte) {
 	trips.PUT(":tripId", h.PutTrip)
 	trips.DELETE(":tripId", h.DeleteTrip)
 	trips.POST(":tripId/invitations", h.PostTripInvitation)
+	trips.PUT(":tripId/invitations/:id", h.PutTripInvitation)
 	trips.POST(":tripId/candidates/:candidateId/vote", h.PostTripCandidateVote)
 	trips.DELETE(":tripId/candidates/:candidateId/vote", h.DeleteTripCandidateVote)
 	trips.POST(":tripId/candidates/:candidateId/lock", h.PostTripCandidateLock)

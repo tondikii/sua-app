@@ -29,9 +29,11 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	// ── Repositories ──────────────────────────────────────────────────────────
 	userRepo   := repository.NewUserRepository(pool)
 	followRepo := repository.NewFollowRepository(pool)
+    wishlistRepo := repository.NewWishlistRepository(pool)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	userSvc := service.NewUserService(userRepo, followRepo)
+	wishlistSvc := service.NewWishlistService(wishlistRepo)
 
 	// ── Repositories ──────────────────────────────────────────────────────────
 	tripRepo := repository.NewTripRepository(pool)
@@ -53,10 +55,12 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		pool,
 	)
 
-	// ── Handlers ──────────────────────────────────────────────────────────────
+	// ── Handlers ─────────────────────────────────────────────────────────────-
 	jwtSecret  := []byte(cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(userSvc, cfg.GoogleClientID, jwtSecret)
 	tripHandler := handler.NewTripHandler(tripSvc)
+	userHandler := handler.NewUserHandler(userSvc)
+	wishlistHandler := handler.NewWishlistHandler(wishlistSvc)
 
 	// ── Health check — unauthenticated ────────────────────────────────────────
 	r.GET("/health", func(c *gin.Context) {
@@ -88,6 +92,10 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 	// Phase 3 — Trip APIs
 	tripHandler.RegisterRoutes(v1, jwtSecret)
+
+	// Phase 4 — Users & Wishlists
+	userHandler.RegisterRoutes(v1, jwtSecret)
+	wishlistHandler.RegisterRoutes(v1, jwtSecret)
 
 	return r
 }

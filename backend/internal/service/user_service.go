@@ -119,6 +119,10 @@ func (s *userService) UpdateProfile(ctx context.Context, userID uuid.UUID, input
 	return user, nil
 }
 
+func (s *userService) GetByID(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
+	return s.users.FindByID(ctx, userID)
+}
+
 func (s *userService) Follow(ctx context.Context, followerID, followingID uuid.UUID) error {
 	if followerID == followingID {
 		return domain.ErrInvalidInput
@@ -131,4 +135,14 @@ func (s *userService) Follow(ctx context.Context, followerID, followingID uuid.U
 
 func (s *userService) Unfollow(ctx context.Context, followerID, followingID uuid.UUID) error {
 	return s.follows.Delete(ctx, followerID, followingID)
+}
+
+func (s *userService) Search(ctx context.Context, query string, limit int, cursor *uuid.UUID) ([]*domain.User, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	return s.users.SearchByQuery(ctx, query, limit, cursor)
 }

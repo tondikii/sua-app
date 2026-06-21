@@ -582,6 +582,7 @@ type TripService interface {
 ├── users/
 │   ├── GET    /me                       # Get current user profile
 │   ├── PUT    /me                       # Update bio, is_public
+│   ├── GET    /search                   # Search users by name (trigram-based, cursor paginated)
 │   ├── GET    /:username                # Get public profile
 │   ├── POST   /:username/follow         # Follow a user
 │   └── DELETE /:username/follow         # Unfollow a user
