@@ -7,23 +7,37 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/sudutkode/atur-perjalanan/backend/internal/config"
+	"github.com/sudutkode/atur-perjalanan/backend/internal/handler"
+	"github.com/sudutkode/atur-perjalanan/backend/internal/middleware"
+	"github.com/sudutkode/atur-perjalanan/backend/internal/repository"
+	"github.com/sudutkode/atur-perjalanan/backend/internal/service"
 )
 
-// buildRouter wires all middleware and routes, returning the composed http.Handler.
-// Feature routes are registered here as each phase is implemented.
+// buildRouter is the composition root: it wires repositories → services → handlers
+// and registers all HTTP routes. Add new phases here as they are implemented.
 func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.New()
-
-	// Global middleware
 	r.Use(gin.Recovery())
 	r.Use(requestIDMiddleware())
 
-	// Health check — unauthenticated, used by Docker health checks and load balancers.
+	// ── Repositories ──────────────────────────────────────────────────────────
+	userRepo   := repository.NewUserRepository(pool)
+	followRepo := repository.NewFollowRepository(pool)
+
+	// ── Services ──────────────────────────────────────────────────────────────
+	userSvc := service.NewUserService(userRepo, followRepo)
+
+	// ── Handlers ──────────────────────────────────────────────────────────────
+	jwtSecret  := []byte(cfg.JWTSecret)
+	authHandler := handler.NewAuthHandler(userSvc, cfg.GoogleClientID, jwtSecret)
+
+	// ── Health check — unauthenticated ────────────────────────────────────────
 	r.GET("/health", func(c *gin.Context) {
 		if err := pool.Ping(c.Request.Context()); err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{
@@ -38,12 +52,21 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		})
 	})
 
-	// Versioned API group — feature routes are registered here in subsequent phases.
-	// v1 := r.Group("/v1")
-	// registerAuthRoutes(v1, ...)
-	// registerUserRoutes(v1, ...)
-	// registerTripRoutes(v1, ...)
-	// registerWishlistRoutes(v1, ...)
+	// ── v1 API ────────────────────────────────────────────────────────────────
+	v1 := r.Group("/v1")
+
+	// Phase 2 — Authentication
+	auth := v1.Group("/auth")
+	{
+		auth.POST("/google", authHandler.PostGoogle)
+		auth.POST("/complete-registration",
+			middleware.AuthRequired(jwtSecret),
+			authHandler.PostCompleteRegistration,
+		)
+	}
+
+	// Phase 3 — Trip APIs       (registered in next phase)
+	// Phase 4 — Secondary APIs  (registered in next phase)
 
 	return r
 }

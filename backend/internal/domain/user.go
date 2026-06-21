@@ -38,6 +38,13 @@ type UserRepository interface {
 
 // ── Service ──────────────────────────────────────────────────────────────────
 
+// FollowRepository defines the data-access contract for the follows table.
+type FollowRepository interface {
+	// Create inserts a follow relationship. Silently ignores duplicates (ON CONFLICT DO NOTHING).
+	Create(ctx context.Context, followerID, followingID uuid.UUID) error
+	Delete(ctx context.Context, followerID, followingID uuid.UUID) error
+}
+
 // UserService defines the business-logic contract for user management.
 type UserService interface {
 	// UpsertFromGoogle creates or updates a user from verified Google ID token claims.
