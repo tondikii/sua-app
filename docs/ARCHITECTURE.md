@@ -179,7 +179,7 @@ atur-perjalanan/
 │   └── iosApp/                   # iOS-specific SwiftUI
 │
 ├── figma/                        # Figma Make export — 32-screen React preview (design reference only)
-│   ├── src/app/components/screens/  # Screen1Auth … Screen32DesignTokens
+│   ├── src/app/components/screens/  # Screen3Auth … Screen32DesignTokens
 │   └── src/app/components/colors.ts # Canonical design tokens
 │
 ├── docs/

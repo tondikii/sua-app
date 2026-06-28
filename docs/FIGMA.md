@@ -2,7 +2,7 @@
 
 > **Tujuan dokumen ini**: 
 > - Untuk AI agents: Menjadi sumber kebenaran utama screen inventory, design tokens, dan mapping ke workflow/API sebelum mengimplementasikan atau mengaudit layar UI (M7–M12).
-> - Untuk product team: Dokumentasi lengkap palet warna, spacing, tipografi, dan 32 layar high-fidelity — referensi saat design review atau perubahan brand.
+> - Untuk product team: Dokumentasi lengkap palet warna, spacing, tipografi, dan 36 layar high-fidelity — referensi saat design review atau perubahan brand.
 
 ---
 
@@ -12,9 +12,9 @@ Desain diekspor dari Figma Make dan disimpan di folder **`figma/`** di root mono
 
 | Sumber | Path / URL | Keterangan |
 |--------|------------|------------|
-| **Code bundle (lokal)** | `figma/` | 32 layar high-fidelity sebagai React preview. **Sumber kebenaran utama** untuk screen inventory & design tokens. |
+| **Code bundle (lokal)** | `figma/` | 36 layar high-fidelity sebagai React preview. **Sumber kebenaran utama** untuk screen inventory & design tokens. |
 | **Design tokens (kode)** | `figma/src/app/components/colors.ts` | Palet warna, font, avatar colors. |
-| **Screen registry** | `figma/src/app/App.tsx` | Daftar lengkap 32 layar beserta label dan pengelompokan baris. |
+| **Screen registry** | `figma/src/app/App.tsx` | Daftar lengkap 36 layar dikelompokkan per `docs/WORKFLOW.md` §1–§13. |
 | **Figma Editor** | https://www.figma.com/design/tFarpj9aEUL64GrDd1jGU5/Atur-Perjalanan | File desain asli (memerlukan akses Figma). |
 | **Figma Preview (live)** | https://capri-spring-88160657.figma.site | Preview browser — alternatif jika bundle lokal belum dijalankan. |
 
@@ -26,7 +26,7 @@ npm i
 npm run dev
 ```
 
-Buka URL yang ditampilkan Vite (biasanya `http://localhost:5173`) untuk melihat seluruh 32 layar dalam phone frame.
+Buka URL yang ditampilkan Vite (biasanya `http://localhost:5173`) untuk melihat seluruh 36 layar dalam phone frame.
 
 > **Untuk AI Agent**: Prioritaskan inspeksi file di `figma/src/app/components/screens/` dan `colors.ts`. Gunakan `WebFetch` pada Figma Preview hanya sebagai pelengkap visual.
 
@@ -103,59 +103,68 @@ Tab aktif: coral `#FF6B6B`. Tab inactive: muted `#9091A0`.
 
 ## 📱 Inventori Layar (32 Screen Inventory)
 
-Semua layar dipetakan ke file React, milestone, workflow, dan kebutuhan API.
+Semua layar dipetakan ke file React, milestone, workflow (`docs/WORKFLOW.md`), dan kebutuhan API. **Nomor layar 1–32** = urutan file `Screen{N}*.tsx` = urutan section di `figma/src/app/App.tsx`.
 
-### Row 1 — Alur Utama (Layar 1–8)
-
-| # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
-|---|-------------|------|-------------------|-----------|----------|-------------|
-| 1 | Auth & Onboarding | `Screen1Auth.tsx` | `SignInScreen` | M7 | §2 | `POST /v1/auth/google` |
-| 2 | Beranda | `Screen2Home.tsx` | `HomeScreen` | M8 | §3 | `GET /v1/trips`, `GET /v1/trips/invitations` |
-| 3 | Profil & Eksplorasi | `Screen3Profile.tsx` | `ProfileScreen` | M10 | §4 | `GET /v1/users/me`, `GET /v1/users/me/trips` ⚠️ |
-| 4 | Buat Perjalanan | `Screen4Create.tsx` | `CreateTripSheet` | M8 | §5 | `POST /v1/trips` |
-| 5 | Detail — Destinasi | `Screen5Destinations.tsx` | `TripDetailScreen` (tab Destinasi) | M8 | §6 | `GET /v1/trips/:id`, `GET /v1/trips/:id/destinations` |
-| 6 | Detail — Voting | `Screen6Voting.tsx` | `VotingScreen` | M9 | §8 | `GET /v1/trips/:id/candidates`, vote/lock endpoints |
-| 7 | Detail — Group Chat | `Screen7Chat.tsx` | `ChatScreen` | M9 | §9 | `GET/POST /v1/trips/:id/messages` |
-| 8 | Wishlist | `Screen8Wishlist.tsx` | `WishlistScreen` | M10 | §10 | `GET /v1/wishlists` |
-
-### Row 2 — Alur Lanjutan (Layar 9–16)
+### §1 Onboarding · §2 Autentikasi
 
 | # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
 |---|-------------|------|-------------------|-----------|----------|-------------|
-| 9 | Edu Onboarding | `Screen9EduOnboarding.tsx` | `OnboardingScreen` | M7 | §1 | — (local DataStore flag) |
-| 10 | Buat Username | `Screen10Username.tsx` | `UsernameSetupScreen` | M7 | §2 | `POST /v1/auth/complete-registration` |
-| 11 | Notifikasi | `Screen11Notifikasi.tsx` | `NotificationScreen` | M8 | §11 | ⚠️ **Belum ada** — lihat § Kebutuhan API |
-| 12 | Pencarian Pengguna | `Screen12SearchUser.tsx` | `ExploreScreen` | M10 | §4 | `GET /v1/users/search`, follow/unfollow |
-| 13 | Sheet — Tambah Destinasi | `Screen13BottomSheetDestinasi.tsx` | `AddDestinationSheet` | M8 | §6 | `POST /v1/trips/:id/destinations` |
-| 14 | Sheet — Undang Teman | `Screen14BottomSheetUndang.tsx` | `InviteSheet` | M9 | §7 | `POST /v1/trips/:id/invitations` |
-| 15 | Sheet — Tambah Wishlist | `Screen15BottomSheetWishlist.tsx` | `AddWishlistSheet` | M10 | §10 | `POST /v1/wishlists` |
-| 16 | Edit Profil | `Screen16EditProfil.tsx` | `EditProfileScreen` | M10 | §4 | `PUT /v1/users/me` |
+| 1 | Splash Screen | `Screen1Splash.tsx` | `SplashScreen` | M7 | §1 | — (local) |
+| 2 | Edu Onboarding | `Screen2EduOnboarding.tsx` | `OnboardingScreen` | M7 | §1 | — (local DataStore flag) |
+| 3 | Auth & Onboarding | `Screen3Auth.tsx` | `SignInScreen` | M7 | §2 | `POST /v1/auth/google` |
+| 4 | Buat Username | `Screen4Username.tsx` | `UsernameSetupScreen` | M7 | §2 | `POST /v1/auth/complete-registration` |
 
-### Row 3 — Edge Cases & Komponen Sistem (Layar 17–24)
+### §3 Beranda · §4 Pencarian & Profil
 
 | # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
 |---|-------------|------|-------------------|-----------|----------|-------------|
-| 17 | Empty — Beranda | `Screen17EmptyBeranda.tsx` | `HomeEmptyState` | M8 | §3 | — (empty list response) |
-| 18 | Empty — Chat | `Screen18EmptyChat.tsx` | `ChatEmptyState` | M9 | §9 | — (empty messages) |
-| 19 | Jadwal Dikunci | `Screen19StatusLocked.tsx` | `VotingLockedState` | M9 | §8 | `GET /v1/trips/:id` (`status=fixed`) |
-| 20 | Profil Publik | `Screen20PublicProfile.tsx` | `PublicProfileScreen` | M10 | §4 | `GET /v1/users/:username`, `GET /v1/users/:username/trips`, follow (privasi Instagram M5.1) |
-| 21 | Pengaturan | `Screen21Settings.tsx` | `SettingsScreen` | M10 | §12 | ⚠️ **Sebagian belum ada** — logout local; push prefs |
-| 22 | Skeleton Loading | `Screen22SkeletonLoading.tsx` | `SkeletonComponents` | M8–M10 | §13 | — (loading state FE) |
-| 23 | Toast & Snackbar | `Screen23ToastComponents.tsx` | `ToastComponents` | M8–M10 | §13 | — (feedback FE) |
-| 24 | Error 404 / Offline | `Screen24Error.tsx` | `ErrorScreen` | M8–M10 | §13 | — (network error handling) |
+| 5 | Beranda | `Screen5Home.tsx` | `HomeScreen` | M8 | §3 | `GET /v1/trips`, `GET /v1/trips/invitations` |
+| 6 | Empty — Beranda | `Screen6EmptyBeranda.tsx` | `HomeEmptyState` | M8 | §3 | — (empty list response) |
+| 33 | Beranda — Selesai | `Screen33HomeSelesai.tsx` | `HomeScreen` (tab Selesai) | M8 | §3 | `GET /v1/trips?tab=completed` |
+| 34 | Beranda — Undangan | `Screen34HomeUndangan.tsx` | `HomeScreen` (tab Undangan) | M8 | §3 | `GET /v1/trips/invitations` |
+| 35 | Cari — Idle | `Screen35SearchIdle.tsx` | `ExploreScreen` (idle) | M10 | §4 | — (riwayat lokal) |
+| 7 | Cari — Hasil | `Screen7SearchUser.tsx` | `ExploreScreen` | M10 | §4 | `GET /v1/users/search`, follow/unfollow |
+| 10 | Profil Publik | `Screen10PublicProfile.tsx` | `PublicProfileScreen` | M10 | §4 | `GET /v1/users/:username`, `GET /v1/users/:username/trips`, follow (privasi Instagram M5.1) |
+| 8 | Profil & Eksplorasi | `Screen8Profile.tsx` | `ProfileScreen` | M10 | §4 | `GET /v1/users/me`, `GET /v1/users/me/trips` ⚠️ |
+| 36 | Profil — Empty Trip | `Screen36ProfileEmptyTrip.tsx` | `ProfileScreen` (empty) | M10 | §4 | `GET /v1/users/me/trips` (empty) |
+| 9 | Edit Profil | `Screen9EditProfil.tsx` | `EditProfileScreen` | M10 | §4 | `PUT /v1/users/me` |
+| 11 | Pengaturan | `Screen11Settings.tsx` | `SettingsScreen` | M10 | §4, §12 | ⚠️ **Sebagian belum ada** — logout local; push prefs |
 
-### Row 4 — Micro-interactions, Dark Mode & Design System (Layar 25–32)
+### §5 Pembuatan Perjalanan · §6 Detail Trip
 
 | # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
 |---|-------------|------|-------------------|-----------|----------|-------------|
-| 25 | Splash Screen | `Screen25Splash.tsx` | `SplashScreen` | M7 | §13 | — (local) |
-| 26 | Dark Mode — Beranda | `Screen26DarkBeranda.tsx` | `HomeScreen` (dark theme) | M12 | §13 | — (theme FE) |
-| 27 | Form Validation | `Screen27FormValidation.tsx` | Form error states | M8 | §5, §13 | Validasi client + error response BE |
-| 28 | Long Press Menu | `Screen28ChatLongPress.tsx` | Chat context menu | M9 | §9 | ⚠️ **Hapus pesan belum ada** |
-| 29 | Detail Destinasi | `Screen29DestinationDetail.tsx` | `DestinationDetailSheet` | M8 | §6 | ⚠️ **Detail GET belum ada** — list sudah ada |
-| 30 | Multi Kandidat Tanggal | `Screen30MultiDatePicker.tsx` | Multi-date picker UI | M8 | §5 | `POST /v1/trips` (multi candidates) |
-| 31 | Sync Sukses Modal | `Screen31CalendarSyncModal.tsx` | `CalendarSyncModal` | M11 | §8 | Google Calendar sync (post-lock) |
-| 32 | Design Tokens | `Screen32DesignTokens.tsx` | Theme reference | M12 | — | — |
+| 12 | Buat Perjalanan | `Screen12Create.tsx` | `CreateTripSheet` | M8 | §5 | `POST /v1/trips` |
+| 13 | Multi Kandidat Tanggal | `Screen13MultiDatePicker.tsx` | Multi-date picker UI | M8 | §5 | `POST /v1/trips` (multi candidates) |
+| 14 | Form Validation | `Screen14FormValidation.tsx` | Form error states | M8 | §5, §13 | Validasi client + error response BE |
+| 15 | Detail — Destinasi | `Screen15Destinations.tsx` | `TripDetailScreen` (tab Destinasi) | M8 | §6 | `GET /v1/trips/:id`, `GET /v1/trips/:id/destinations` |
+| 16 | Detail — Voting | `Screen16Voting.tsx` | `VotingScreen` | M9 | §6, §8 | `GET /v1/trips/:id/candidates`, vote/lock endpoints |
+| 17 | Detail — Group Chat | `Screen17Chat.tsx` | `ChatScreen` | M9 | §6, §9 | `GET/POST /v1/trips/:id/messages` |
+| 18 | Sheet — Tambah Destinasi | `Screen18BottomSheetDestinasi.tsx` | `AddDestinationSheet` | M8 | §6 | `POST /v1/trips/:id/destinations` |
+| 19 | Detail Destinasi | `Screen19DestinationDetail.tsx` | `DestinationDetailSheet` | M8 | §6 | ⚠️ **Detail GET belum ada** — list sudah ada |
+
+### §7 Undang · §8 Voting · §9 Chat · §10 Wishlist · §11 Notifikasi
+
+| # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
+|---|-------------|------|-------------------|-----------|----------|-------------|
+| 20 | Sheet — Undang Teman | `Screen20BottomSheetUndang.tsx` | `InviteSheet` | M9 | §7 | `POST /v1/trips/:id/invitations` |
+| 21 | Jadwal Dikunci | `Screen21StatusLocked.tsx` | `VotingLockedState` | M9 | §8 | `GET /v1/trips/:id` (`status=fixed`) |
+| 22 | Sync Sukses Modal | `Screen22CalendarSyncModal.tsx` | `CalendarSyncModal` | M11 | §8 | Google Calendar sync (post-lock) |
+| 23 | Empty — Chat | `Screen23EmptyChat.tsx` | `ChatEmptyState` | M9 | §9 | — (empty messages) |
+| 24 | Long Press Menu | `Screen24ChatLongPress.tsx` | Chat context menu | M9 | §9 | ⚠️ **Hapus pesan belum ada** |
+| 25 | Wishlist | `Screen25Wishlist.tsx` | `WishlistScreen` | M10 | §10 | `GET /v1/wishlists` |
+| 26 | Sheet — Tambah Wishlist | `Screen26BottomSheetWishlist.tsx` | `AddWishlistSheet` | M10 | §10 | `POST /v1/wishlists` |
+| 27 | Notifikasi | `Screen27Notifikasi.tsx` | `NotificationScreen` | M8 | §11 | ⚠️ **Belum ada** — lihat § Kebutuhan API |
+
+### §13 System States & Micro-interactions
+
+| # | Label Figma | File | Composable Target | Milestone | Workflow | API Backend |
+|---|-------------|------|-------------------|-----------|----------|-------------|
+| 28 | Skeleton Loading | `Screen28SkeletonLoading.tsx` | `SkeletonComponents` | M8–M10 | §13 | — (loading state FE) |
+| 29 | Toast & Snackbar | `Screen29ToastComponents.tsx` | `ToastComponents` | M8–M10 | §13 | — (feedback FE) |
+| 30 | Error 404 / Offline | `Screen30Error.tsx` | `ErrorScreen` | M8–M10 | §13 | — (network error handling) |
+| 31 | Dark Mode — Beranda | `Screen31DarkBeranda.tsx` | `HomeScreen` (dark theme) | M12 | §13 | — (theme FE) |
+| 32 | Design Tokens | `Screen32DesignTokens.tsx` | `Theme reference` | M12 | §13 | — |
 
 > ⚠️ = endpoint belum tersedia di backend saat M5 selesai. Lihat bagian **Kebutuhan API dari Desain** di bawah.
 
@@ -197,11 +206,11 @@ Privasi akun (`users.is_public`) dan visibilitas trip di profil (`trips.is_publi
 
 | Layar | Perilaku privat |
 |-------|-----------------|
-| `Screen20PublicProfile` | Non-follower: banner *Akun Privat*, tanpa bio/grid; follower: layout penuh seperti publik |
-| `Screen3Profile` | Owner selalu lihat semua trip creator di grid |
-| `Screen12SearchUser` | Akun privat tetap muncul; tombol Follow; tidak perlu akses grid |
-| `Screen16EditProfil` | Toggle *Akun Privat* ↔ `PUT /v1/users/me { is_public }` |
-| `Screen21Settings` | Menu Privasi & Keamanan → arahkan ke Edit Profil / toggle |
+| `Screen10PublicProfile` | Non-follower: banner *Akun Privat*, tanpa bio/grid; follower: layout penuh seperti publik |
+| `Screen8Profile` | Owner selalu lihat semua trip creator di grid |
+| `Screen7SearchUser` | Akun privat tetap muncul; tombol Follow; tidak perlu akses grid |
+| `Screen9EditProfil` | Toggle *Akun Privat* ↔ `PUT /v1/users/me { is_public }` |
+| `Screen11Settings` | Menu Privasi & Keamanan → arahkan ke Edit Profil / toggle |
 
 ### API (target M5.1)
 
@@ -228,7 +237,7 @@ Header trip detail: judul trip, rentang tanggal / jumlah anggota, tombol `⋯` (
 
 ### Beranda — Trip Card
 
-Card perjalanan (`Screen2Home.tsx`) menampilkan:
+Card perjalanan (`Screen5Home.tsx`) menampilkan:
 - **Cover image** hero (full-width di atas card)
 - Judul trip
 - Tags (chips teal)
@@ -247,7 +256,7 @@ Card perjalanan (`Screen2Home.tsx`) menampilkan:
 
 ### Chat — Long Press Menu
 
-Long press pada bubble pesan (`Screen28ChatLongPress.tsx`):
+Long press pada bubble pesan (`Screen24ChatLongPress.tsx`):
 - **Balas** (reply — UI only, bisa post-MVP)
 - **Salin Teks** (local clipboard)
 - **Hapus** (butuh `DELETE` endpoint, hanya pesan sendiri)

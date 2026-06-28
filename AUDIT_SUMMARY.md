@@ -12,7 +12,7 @@
 - ✅ Ekstrak 32 layar dari `figma/src/app/App.tsx` — validasi struktur 4 row (8+8+8+8 layar)
 - ✅ Verifikasi design tokens: `colors.ts` (Coral `#FF6B6B`, Teal `#4ECDC4`, font Plus Jakarta Sans)
 - ✅ Audit BottomNav: 5 items (Beranda, Cari, [+], Wishlist, Profil) ✓
-- ✅ Spot-check 5 layar representatif: Screen2Home, Screen5Destinations, Screen11Notifikasi, Screen20PublicProfile, Screen27FormValidation
+- ✅ Spot-check 5 layar representatif: Screen5Home, Screen15Destinations, Screen27Notifikasi, Screen10PublicProfile, Screen14FormValidation
 - ✅ Verifikasi trip detail tab structure: **Destinasi · Voting · Chat** (bukan "Info") ✓
 
 ### Langkah 2 — Cross-Reference Antar Dokumen ✅
@@ -59,7 +59,7 @@ Menerapkan prinsip **single source of truth** + cross-link via URL relatif
 
 **Perubahan**:
 - ✅ Tambah: Intro paragraph (1–2 kalimat) yang jelas state tujuan dokumen
-- ✅ Update: Screen references ke format konsisten — contoh `Screen5Destinations` (bukan `Screen5`) untuk clarity
+- ✅ Update: Screen references ke format konsisten — contoh `Screen15Destinations` (bukan `Screen5`) untuk clarity
 - ✅ Verify: Tab structure di §4 conform ke "Destinasi · Voting · Chat" (bukan "Info")
 
 **Alasan**: Clarity untuk readers; konsistensi naming untuk search & cross-reference
@@ -151,7 +151,7 @@ Menerapkan prinsip **single source of truth** + cross-link via URL relatif
 |-------|---------|---------|-----------|
 | README Milestones | §Direktori Dokumentasi + §Milestones terpisah (2 referensi) | §Direktori Dokumentasi #6 = satu referensi | Removed duplicate |
 | Color palette di BRIEF | Verbose tabel dengan 4 warna HEX | 1 baris + link ke FIGMA.md | Centralized source |
-| Screen references | Mix: `Screen5.tsx`, `Screen5`, `Screen5Destinations.tsx` | Standardized: `Screen5Destinations` (no .tsx) | Consistent naming |
+| Screen references | Mix: `Screen5.tsx`, `Screen5`, `Screen15Destinations.tsx` | Standardized: `Screen15Destinations` (no .tsx) | Consistent naming |
 | Intro dokumen | Tidak jelas audience | Setiap doc punya 1–2 baris intro + audience | Clarity |
 | Privacy model doc | Tabel identik di PRD, FIGMA, WORKFLOW, ACCEPTANCE_CRITERIA | Detail lengkap di PRD + FIGMA; lain link + ringkas | Single source of truth |
 

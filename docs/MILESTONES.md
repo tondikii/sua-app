@@ -252,14 +252,14 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M7. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §1, §2, §13`, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md`. Build the Android Auth & Onboarding screens."*
 
-**Referensi Figma**: `Screen25Splash`, `Screen9EduOnboarding`, `Screen1Auth`, `Screen10Username` (`figma/src/app/components/screens/`)
+**Referensi Figma**: `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username` (`figma/src/app/components/screens/`)
 
 ### Checklist
 - [ ] `ui/theme/` — Color.kt, Typography.kt, Theme.kt (tokens dari `figma/src/app/components/colors.ts`)
-- [ ] `SplashScreen` — logo coral + loading (`Screen25Splash`)
-- [ ] `OnboardingScreen` — carousel 3 slide; hanya saat first install (DataStore flag) (`Screen9EduOnboarding`)
-- [ ] `SignInScreen` — logo + tombol "Lanjutkan dengan Google" (`Screen1Auth`)
-- [ ] `UsernameSetupScreen` — validasi real-time, error duplikat (`Screen10Username`)
+- [ ] `SplashScreen` — logo coral + loading (`Screen1Splash`)
+- [ ] `OnboardingScreen` — carousel 3 slide; hanya saat first install (DataStore flag) (`Screen2EduOnboarding`)
+- [ ] `SignInScreen` — logo + tombol "Lanjutkan dengan Google" (`Screen3Auth`)
+- [ ] `UsernameSetupScreen` — validasi real-time, error duplikat (`Screen4Username`)
 - [ ] Navigasi: Splash → (pertama) Onboarding → SignIn → (baru) UsernameSetup → Home; lama → SignIn → Home
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
@@ -269,7 +269,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M8. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §3, §5, §6, §11, §13`, `docs/ACCEPTANCE_CRITERIA.md §2, §4`, `docs/FIGMA.md`. Build the Android Home and Trip screens."*
 
-**Referensi Figma**: `Screen2Home`, `Screen4Create`, `Screen5Destinations`, `Screen13BottomSheetDestinasi`, `Screen17EmptyBeranda`, `Screen27FormValidation`, `Screen29DestinationDetail`, `Screen30MultiDatePicker`, `Screen11Notifikasi`, `Screen22SkeletonLoading`, `Screen23ToastComponents`, `Screen24Error`
+**Referensi Figma**: `Screen5Home`, `Screen12Create`, `Screen15Destinations`, `Screen18BottomSheetDestinasi`, `Screen6EmptyBeranda`, `Screen14FormValidation`, `Screen19DestinationDetail`, `Screen13MultiDatePicker`, `Screen27Notifikasi`, `Screen28SkeletonLoading`, `Screen29ToastComponents`, `Screen30Error`
 
 ### Checklist
 - [ ] Bottom Navigation Bar — Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`)
@@ -288,15 +288,15 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §7, §8, §9`, `docs/ACCEPTANCE_CRITERIA.md §5`, `docs/FIGMA.md`. Build the Android Collaboration and Chat screens."*
 
-**Referensi Figma**: `Screen6Voting`, `Screen7Chat`, `Screen14BottomSheetUndang`, `Screen18EmptyChat`, `Screen19StatusLocked`, `Screen28ChatLongPress`, `Screen31CalendarSyncModal`
+**Referensi Figma**: `Screen16Voting`, `Screen17Chat`, `Screen20BottomSheetUndang`, `Screen23EmptyChat`, `Screen21StatusLocked`, `Screen24ChatLongPress`, `Screen22CalendarSyncModal`
 
 ### Checklist
 - [ ] `InviteSheet` — cari username atau input email
 - [ ] Tab Voting — card kandidat + vote count + tombol Vote
-- [ ] `VotingLockedState` — banner teal saat `status=fixed` (`Screen19StatusLocked`)
+- [ ] `VotingLockedState` — banner teal saat `status=fixed` (`Screen21StatusLocked`)
 - [ ] `CalendarSyncModal` — modal sukses setelah lock tanggal
 - [ ] `ChatScreen` — bubbles + input + empty state
-- [ ] Long-press menu: Balas, Salin, Hapus (`Screen28ChatLongPress`)
+- [ ] Long-press menu: Balas, Salin, Hapus (`Screen24ChatLongPress`)
 - [ ] Tombol "Kunci Tanggal Ini" hanya untuk creator
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
@@ -306,7 +306,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M10. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §4, §10, §12`, `docs/ACCEPTANCE_CRITERIA.md §3, §6`, `docs/FIGMA.md`. Build the Android Social and Wishlist screens."*
 
-**Referensi Figma**: `Screen3Profile`, `Screen8Wishlist`, `Screen12SearchUser`, `Screen15BottomSheetWishlist`, `Screen16EditProfil`, `Screen20PublicProfile`, `Screen21Settings`
+**Referensi Figma**: `Screen8Profile`, `Screen25Wishlist`, `Screen7SearchUser`, `Screen26BottomSheetWishlist`, `Screen9EditProfil`, `Screen10PublicProfile`, `Screen11Settings`
 
 ### Checklist
 - [ ] `ExploreScreen` — search bar + list (Avatar, Username, Follow button)

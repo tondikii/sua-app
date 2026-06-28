@@ -27,7 +27,7 @@
 |----------|--------|--------|
 | `POST /v1/auth/google` | ✅ | Shape benar: `{ access_token, is_new_user, user? }` |
 | `POST /v1/auth/complete-registration` | ✅ | Shape benar: `{ user }` |
-| `GET /v1/users/check-username?username=` | ❌ MISSING | Diperlukan `Screen10Username` real-time validation |
+| `GET /v1/users/check-username?username=` | ❌ MISSING | Diperlukan `Screen4Username` real-time validation |
 
 **Catatan**: `POST /v1/auth/google` untuk new user hanya mengembalikan `access_token` + `is_new_user: true` tanpa `user` object — ini **disengaja** (user belum punya username), sudah benar.
 
@@ -39,12 +39,12 @@
 |---------------|--------|--------|
 | Endpoint ada | ✅ | Route terdaftar, auth-gated |
 | Cursor pagination | ✅ | UUID-based keyset |
-| `?tab=upcoming\|completed` filter | ❌ MISSING | `Screen2Home` punya 3 tab; saat ini semua trip dikembalikan tanpa filter |
-| `cover_image_url` di response | ❌ MISSING | Kolom belum ada di tabel `trips`; Figma `Screen2Home` butuh hero image |
+| `?tab=upcoming\|completed` filter | ❌ MISSING | `Screen5Home` punya 3 tab; saat ini semua trip dikembalikan tanpa filter |
+| `cover_image_url` di response | ❌ MISSING | Kolom belum ada di tabel `trips`; Figma `Screen5Home` butuh hero image |
 | `participants_preview[]` di response | ❌ MISSING | Stacked avatars di trip card butuh preview 4–5 peserta |
 | `participant_count` di response | ❌ MISSING | Figma: "X anggota" pada header trip detail |
 | `GET /v1/trips/invitations` ada | ✅ | Shape: `[{ id, trip_id, invited_by, method, status, created_at }]` |
-| Trip summary di invitation | ❌ MISSING | Figma `Screen2Home` tab Undangan butuh nama trip; saat ini hanya `trip_id` UUID |
+| Trip summary di invitation | ❌ MISSING | Figma `Screen5Home` tab Undangan butuh nama trip; saat ini hanya `trip_id` UUID |
 | Inviter profile di invitation | ❌ MISSING | Figma butuh nama+avatar inviter; saat ini hanya `invited_by` UUID |
 
 ---
@@ -57,7 +57,7 @@
 | `PUT /v1/users/me` | ✅ | Shape benar: terima `{ bio, is_public }` |
 | `GET /v1/users/search` | ⚠️ Partial | Ada, tapi: (1) tidak auth-gated → tidak bisa return `is_following`; (2) tidak ada `public_trip_count` per result |
 | `GET /v1/users/:username` | ⚠️ Breaking needed | Ada, tapi **MASALAH PRIVASI**: private account saat ini tetap mengembalikan profil penuh ke siapa saja. Tidak ada `can_view_content` / `is_following` di response |
-| `GET /v1/users/:username/trips` | ❌ MISSING | Endpoint tidak terdaftar di router sama sekali — dibutuhkan `Screen3Profile` grid trip |
+| `GET /v1/users/:username/trips` | ❌ MISSING | Endpoint tidak terdaftar di router sama sekali — dibutuhkan `Screen8Profile` grid trip |
 | `POST /v1/users/:username/follow` | ✅ | Ada |
 | `DELETE /v1/users/:username/follow` | ✅ | Ada |
 
@@ -77,7 +77,7 @@ Kode di `user_handler.go:84–89` mengembalikan `toUserDTO(u)` penuh untuk semua
 | `GET /v1/trips/:tripId/destinations` | ✅ | Ada, returns list |
 | `POST /v1/trips/:tripId/destinations` | ✅ | Ada |
 | `DELETE /v1/trips/:tripId/destinations/:id` | ✅ | Ada |
-| `GET /v1/trips/:tripId/destinations/:id` | ❌ MISSING | `Screen29DestinationDetail` sheet butuh detail endpoint atau enrich list response |
+| `GET /v1/trips/:tripId/destinations/:id` | ❌ MISSING | `Screen19DestinationDetail` sheet butuh detail endpoint atau enrich list response |
 | `GET /v1/trips/:tripId/candidates` | ⚠️ Partial | Ada, tapi response adalah raw `domain.TripDateCandidate{}` (bukan DTO); kurang `voters_preview[]` dan `user_has_voted: bool` |
 | `POST/DELETE .../candidates/:id/vote` | ✅ | Ada |
 | `POST .../candidates/:id/lock` | ✅ | Ada, creator-only, returns 204 |
@@ -101,7 +101,7 @@ Kode di `user_handler.go:84–89` mengembalikan `toUserDTO(u)` penuh untuk semua
 |----------|--------|--------|
 | `GET /v1/trips/:tripId/messages` | ⚠️ Partial | Ada, cursor-paginated ✅; tapi `messageResponse` punya `sender_id` (UUID string) bukan embedded `sender { id, name, username, avatar_url }` — mobile harus call user endpoint terpisah untuk setiap sender |
 | `POST /v1/trips/:tripId/messages` | ✅ | Ada |
-| `DELETE /v1/trips/:tripId/messages/:id` | ❌ MISSING | `Screen28ChatLongPress` → menu "Hapus". Tabel `trip_messages` tidak punya kolom `deleted_at` |
+| `DELETE /v1/trips/:tripId/messages/:id` | ❌ MISSING | `Screen24ChatLongPress` → menu "Hapus". Tabel `trip_messages` tidak punya kolom `deleted_at` |
 
 ---
 
@@ -689,20 +689,20 @@ Setelah M5.1 selesai, verifikasi:
 
 | Screen | Fitur UI yang terlihat | Gap Backend |
 |--------|------------------------|-------------|
-| `Screen2Home` | Hero cover image di trip card | `trips.cover_image_url` kolom belum ada |
-| `Screen2Home` | Tab Mendatang/Selesai/Undangan | `?tab` filter belum ada di `GET /v1/trips` |
-| `Screen2Home` | Stacked avatars peserta di card | `participants_preview[]` belum di response |
-| `Screen3Profile` | Grid trip di profil | `GET /v1/users/:username/trips` endpoint tidak ada |
-| `Screen3Profile` | Followers/Following stats | `followers_count`, `following_count` belum di `userDTO` |
-| `Screen6Voting` | "X orang sudah vote" + avatars | `voters_preview[]`, `user_has_voted` belum di candidate response |
-| `Screen7Chat` | Nama + avatar per bubble | `sender` object belum embedded di `messageResponse` |
-| `Screen10Username` | Real-time cek username tersedia | `GET /v1/users/check-username` tidak ada |
-| `Screen11Notifikasi` | Semua tipe notifikasi | Seluruh domain notifikasi tidak ada |
-| `Screen14BottomSheetUndang` | Nama trip + nama inviter di notif | `invitationResponse` belum embed trip/inviter |
-| `Screen20PublicProfile` | Akun privat → tampilan terbatas | `GET /v1/users/:username` tidak enforce privasi |
-| `Screen28ChatLongPress` | Menu "Hapus" untuk pesan sendiri | `DELETE .../messages/:id` tidak ada |
-| `Screen29DestinationDetail` | Sheet detail destinasi | Belum ada GET detail endpoint, hanya list |
-| `Screen31CalendarSyncModal` | Modal sukses lock tanggal | Backend sudah return 204 — modal trigger di FE |
+| `Screen5Home` | Hero cover image di trip card | `trips.cover_image_url` kolom belum ada |
+| `Screen5Home` | Tab Mendatang/Selesai/Undangan | `?tab` filter belum ada di `GET /v1/trips` |
+| `Screen5Home` | Stacked avatars peserta di card | `participants_preview[]` belum di response |
+| `Screen8Profile` | Grid trip di profil | `GET /v1/users/:username/trips` endpoint tidak ada |
+| `Screen8Profile` | Followers/Following stats | `followers_count`, `following_count` belum di `userDTO` |
+| `Screen16Voting` | "X orang sudah vote" + avatars | `voters_preview[]`, `user_has_voted` belum di candidate response |
+| `Screen17Chat` | Nama + avatar per bubble | `sender` object belum embedded di `messageResponse` |
+| `Screen4Username` | Real-time cek username tersedia | `GET /v1/users/check-username` tidak ada |
+| `Screen27Notifikasi` | Semua tipe notifikasi | Seluruh domain notifikasi tidak ada |
+| `Screen20BottomSheetUndang` | Nama trip + nama inviter di notif | `invitationResponse` belum embed trip/inviter |
+| `Screen10PublicProfile` | Akun privat → tampilan terbatas | `GET /v1/users/:username` tidak enforce privasi |
+| `Screen24ChatLongPress` | Menu "Hapus" untuk pesan sendiri | `DELETE .../messages/:id` tidak ada |
+| `Screen19DestinationDetail` | Sheet detail destinasi | Belum ada GET detail endpoint, hanya list |
+| `Screen22CalendarSyncModal` | Modal sukses lock tanggal | Backend sudah return 204 — modal trigger di FE |
 
 ---
 

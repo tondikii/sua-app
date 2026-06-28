@@ -1,94 +1,216 @@
+import type { ReactElement } from 'react';
 import '../styles/index.css';
 import { PhoneFrame } from './components/PhoneFrame';
 
-// Row 1 — core flows
-import { Screen1Auth } from './components/screens/Screen1Auth';
-import { Screen2Home } from './components/screens/Screen2Home';
-import { Screen3Profile } from './components/screens/Screen3Profile';
-import { Screen4Create } from './components/screens/Screen4Create';
-import { Screen5Destinations } from './components/screens/Screen5Destinations';
-import { Screen6Voting } from './components/screens/Screen6Voting';
-import { Screen7Chat } from './components/screens/Screen7Chat';
-import { Screen8Wishlist } from './components/screens/Screen8Wishlist';
+// §1 Onboarding
+import { Screen1Splash } from './components/screens/Screen1Splash';
+import { Screen2EduOnboarding } from './components/screens/Screen2EduOnboarding';
 
-// Row 2 — extended flows
-import { Screen9EduOnboarding } from './components/screens/Screen9EduOnboarding';
-import { Screen10Username } from './components/screens/Screen10Username';
-import { Screen11Notifikasi } from './components/screens/Screen11Notifikasi';
-import { Screen12SearchUser } from './components/screens/Screen12SearchUser';
-import { Screen13BottomSheetDestinasi } from './components/screens/Screen13BottomSheetDestinasi';
-import { Screen14BottomSheetUndang } from './components/screens/Screen14BottomSheetUndang';
-import { Screen15BottomSheetWishlist } from './components/screens/Screen15BottomSheetWishlist';
-import { Screen16EditProfil } from './components/screens/Screen16EditProfil';
+// §2 Autentikasi
+import { Screen3Auth } from './components/screens/Screen3Auth';
+import { Screen4Username } from './components/screens/Screen4Username';
 
-// Row 3 — edge cases, empty states, system components
-import { Screen17EmptyBeranda } from './components/screens/Screen17EmptyBeranda';
+// §3 Beranda
+import { Screen5Home } from './components/screens/Screen5Home';
+import { Screen6EmptyBeranda } from './components/screens/Screen6EmptyBeranda';
+import { Screen33HomeSelesai } from './components/screens/Screen33HomeSelesai';
+import { Screen34HomeUndangan } from './components/screens/Screen34HomeUndangan';
 
-import { Screen18EmptyChat } from './components/screens/Screen18EmptyChat';
-import { Screen19StatusLocked } from './components/screens/Screen19StatusLocked';
-import { Screen20PublicProfile } from './components/screens/Screen20PublicProfile';
-import { Screen21Settings } from './components/screens/Screen21Settings';
-import { Screen22SkeletonLoading } from './components/screens/Screen22SkeletonLoading';
-import { Screen23ToastComponents } from './components/screens/Screen23ToastComponents';
-import { Screen24Error } from './components/screens/Screen24Error';
+// §4 Pencarian & Profil
+import { Screen35SearchIdle } from './components/screens/Screen35SearchIdle';
+import { Screen7SearchUser } from './components/screens/Screen7SearchUser';
+import { Screen8Profile } from './components/screens/Screen8Profile';
+import { Screen9EditProfil } from './components/screens/Screen9EditProfil';
+import { Screen10PublicProfile } from './components/screens/Screen10PublicProfile';
+import { Screen36ProfileEmptyTrip } from './components/screens/Screen36ProfileEmptyTrip';
+import { Screen37PublicProfileEmptyTrip } from './components/screens/Screen37PublicProfileEmptyTrip';
+import { Screen11Settings } from './components/screens/Screen11Settings';
 
-// Row 4 — micro-interactions, dark mode, design system
-import { Screen25Splash } from './components/screens/Screen25Splash';
-import { Screen26DarkBeranda } from './components/screens/Screen26DarkBeranda';
-import { Screen27FormValidation } from './components/screens/Screen27FormValidation';
-import { Screen28ChatLongPress } from './components/screens/Screen28ChatLongPress';
-import { Screen29DestinationDetail } from './components/screens/Screen29DestinationDetail';
-import { Screen30MultiDatePicker } from './components/screens/Screen30MultiDatePicker';
-import { Screen31CalendarSyncModal } from './components/screens/Screen31CalendarSyncModal';
+// §5 Pembuatan Perjalanan
+import { Screen12Create } from './components/screens/Screen12Create';
+import { Screen13MultiDatePicker } from './components/screens/Screen13MultiDatePicker';
+import { Screen14FormValidation } from './components/screens/Screen14FormValidation';
+
+// §6 Detail Perjalanan
+import { Screen15Destinations } from './components/screens/Screen15Destinations';
+import { Screen16Voting } from './components/screens/Screen16Voting';
+import { Screen17Chat } from './components/screens/Screen17Chat';
+import { Screen18BottomSheetDestinasi } from './components/screens/Screen18BottomSheetDestinasi';
+import { Screen19DestinationDetail } from './components/screens/Screen19DestinationDetail';
+
+// §7 Mengundang Partisipan
+import { Screen20BottomSheetUndang } from './components/screens/Screen20BottomSheetUndang';
+
+// §8 Voting Tanggal
+import { Screen21StatusLocked } from './components/screens/Screen21StatusLocked';
+import { Screen22CalendarSyncModal } from './components/screens/Screen22CalendarSyncModal';
+
+// §9 Grup Chat
+import { Screen23EmptyChat } from './components/screens/Screen23EmptyChat';
+import { Screen24ChatLongPress } from './components/screens/Screen24ChatLongPress';
+
+// §10 Wishlist
+import { Screen25Wishlist } from './components/screens/Screen25Wishlist';
+import { Screen26BottomSheetWishlist } from './components/screens/Screen26BottomSheetWishlist';
+
+// §11 Notifikasi
+import { Screen27Notifikasi } from './components/screens/Screen27Notifikasi';
+
+// §13 System States & Micro-interactions (§12 Pengaturan → Screen11 di §4)
+import { Screen28SkeletonLoading } from './components/screens/Screen28SkeletonLoading';
+import { Screen29ToastComponents } from './components/screens/Screen29ToastComponents';
+import { Screen30Error } from './components/screens/Screen30Error';
+import { Screen31DarkBeranda } from './components/screens/Screen31DarkBeranda';
 import { Screen32DesignTokens } from './components/screens/Screen32DesignTokens';
 
 const FONT = "'Plus Jakarta Sans', -apple-system, sans-serif";
 
-const row1 = [
-  { index: 1,  label: 'Auth & Onboarding',     component: <Screen1Auth /> },
-  { index: 2,  label: 'Beranda',                component: <Screen2Home /> },
-  { index: 3,  label: 'Profil & Eksplorasi',    component: <Screen3Profile /> },
-  { index: 4,  label: 'Buat Perjalanan',        component: <Screen4Create /> },
-  { index: 5,  label: 'Detail — Destinasi',     component: <Screen5Destinations /> },
-  { index: 6,  label: 'Detail — Voting',        component: <Screen6Voting /> },
-  { index: 7,  label: 'Detail — Group Chat',    component: <Screen7Chat /> },
-  { index: 8,  label: 'Wishlist',               component: <Screen8Wishlist /> },
+type WorkflowSection = {
+  id: number;
+  title: string;
+  subtitle: string;
+  accent: string;
+  screens: { index: number; label: string; component: ReactElement }[];
+};
+
+/** Pengelompokan selaras dengan docs/WORKFLOW.md §1–§13 · nomor layar 1–37 mengikuti urutan section */
+const workflowSections: WorkflowSection[] = [
+  {
+    id: 1,
+    title: '1. Onboarding Layar Awal',
+    subtitle: 'Splash · Carousel 4 slide (pengenalan → masalah & solusi per BRIEF)',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 1, label: 'Splash Screen', component: <Screen1Splash /> },
+      { index: 2, label: 'Edu Onboarding', component: <Screen2EduOnboarding /> },
+    ],
+  },
+  {
+    id: 2,
+    title: '2. Autentikasi (Google Sign-In)',
+    subtitle: 'Lanjutkan dengan Google · Buat username unik (pengguna baru)',
+    accent: '#4ECDC4',
+    screens: [
+      { index: 3, label: 'Auth & Onboarding', component: <Screen3Auth /> },
+      { index: 4, label: 'Buat Username', component: <Screen4Username /> },
+    ],
+  },
+  {
+    id: 3,
+    title: '3. Beranda (Home) — Tab 1',
+    subtitle: 'Tab Mendatang · Selesai · Undangan · Empty state · Counter tab & notifikasi',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 5, label: 'Beranda — Mendatang', component: <Screen5Home /> },
+      { index: 6, label: 'Empty — Beranda', component: <Screen6EmptyBeranda /> },
+      { index: 33, label: 'Beranda — Selesai', component: <Screen33HomeSelesai /> },
+      { index: 34, label: 'Beranda — Undangan', component: <Screen34HomeUndangan /> },
+    ],
+  },
+  {
+    id: 4,
+    title: '4. Pencarian & Profil — Tab 2 & 5',
+    subtitle: 'Cari (idle & hasil) · Profil publik · Profil pribadi · Empty trip · Edit · Pengaturan',
+    accent: '#4ECDC4',
+    screens: [
+      { index: 35, label: 'Cari — Idle', component: <Screen35SearchIdle /> },
+      { index: 7, label: 'Cari — Hasil', component: <Screen7SearchUser /> },
+      { index: 10, label: 'Profil Publik', component: <Screen10PublicProfile /> },
+      { index: 37, label: 'Profil Publik — Empty Trip', component: <Screen37PublicProfileEmptyTrip /> },
+      { index: 8, label: 'Profil & Eksplorasi', component: <Screen8Profile /> },
+      { index: 36, label: 'Profil — Empty Trip', component: <Screen36ProfileEmptyTrip /> },
+      { index: 9, label: 'Edit Profil', component: <Screen9EditProfil /> },
+      { index: 11, label: 'Pengaturan', component: <Screen11Settings /> },
+    ],
+  },
+  {
+    id: 5,
+    title: '5. Pembuatan Perjalanan — Tab [+]',
+    subtitle: 'Form buat trip · Multi kandidat tanggal · Validasi form',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 12, label: 'Buat Perjalanan', component: <Screen12Create /> },
+      { index: 13, label: 'Multi Kandidat Tanggal', component: <Screen13MultiDatePicker /> },
+      { index: 14, label: 'Form Validation', component: <Screen14FormValidation /> },
+    ],
+  },
+  {
+    id: 6,
+    title: '6. Detail Perjalanan — Destinasi · Voting · Chat',
+    subtitle: 'Tab destinasi & sheet tambah · Tab voting · Tab chat · Detail destinasi',
+    accent: '#1A1A2E',
+    screens: [
+      { index: 15, label: 'Detail — Destinasi', component: <Screen15Destinations /> },
+      { index: 16, label: 'Detail — Voting', component: <Screen16Voting /> },
+      { index: 17, label: 'Detail — Group Chat', component: <Screen17Chat /> },
+      { index: 18, label: 'Sheet — Tambah Destinasi', component: <Screen18BottomSheetDestinasi /> },
+      { index: 19, label: 'Detail Destinasi', component: <Screen19DestinationDetail /> },
+    ],
+  },
+  {
+    id: 7,
+    title: '7. Mengundang Partisipan & Kolaborasi',
+    subtitle: 'Bottom sheet undang via username atau email',
+    accent: '#4ECDC4',
+    screens: [
+      { index: 20, label: 'Sheet — Undang Teman', component: <Screen20BottomSheetUndang /> },
+    ],
+  },
+  {
+    id: 8,
+    title: '8. Voting Tanggal',
+    subtitle: 'Jadwal dikunci · Modal sukses sync Google Calendar (lihat tab Voting di §6)',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 21, label: 'Jadwal Dikunci', component: <Screen21StatusLocked /> },
+      { index: 22, label: 'Sync Sukses Modal', component: <Screen22CalendarSyncModal /> },
+    ],
+  },
+  {
+    id: 9,
+    title: '9. Grup Chat Internal Perjalanan',
+    subtitle: 'Empty state chat · Long press menu (lihat tab Chat di §6)',
+    accent: '#4ECDC4',
+    screens: [
+      { index: 23, label: 'Empty — Chat', component: <Screen23EmptyChat /> },
+      { index: 24, label: 'Long Press Menu', component: <Screen24ChatLongPress /> },
+    ],
+  },
+  {
+    id: 10,
+    title: '10. Wishlist — Tab 4',
+    subtitle: 'Grid/list destinasi impian · Bottom sheet tambah wishlist',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 25, label: 'Wishlist', component: <Screen25Wishlist /> },
+      { index: 26, label: 'Sheet — Tambah Wishlist', component: <Screen26BottomSheetWishlist /> },
+    ],
+  },
+  {
+    id: 11,
+    title: '11. Notifikasi',
+    subtitle: 'Undangan trip · Follow baru · Voting deadline · Update destinasi',
+    accent: '#1A1A2E',
+    screens: [
+      { index: 27, label: 'Notifikasi', component: <Screen27Notifikasi /> },
+    ],
+  },
+  {
+    id: 13,
+    title: '13. System States & Micro-interactions',
+    subtitle: 'Skeleton · Toast · Error · Dark mode · Design tokens (§12 Pengaturan → layar 11 di §4)',
+    accent: '#FF6B6B',
+    screens: [
+      { index: 28, label: 'Skeleton Loading', component: <Screen28SkeletonLoading /> },
+      { index: 29, label: 'Toast & Snackbar', component: <Screen29ToastComponents /> },
+      { index: 30, label: 'Error 404 / Offline', component: <Screen30Error /> },
+      { index: 31, label: 'Dark Mode — Beranda', component: <Screen31DarkBeranda /> },
+      { index: 32, label: 'Design Tokens', component: <Screen32DesignTokens /> },
+    ],
+  },
 ];
 
-const row2 = [
-  { index: 9,  label: 'Edu Onboarding',           component: <Screen9EduOnboarding /> },
-  { index: 10, label: 'Buat Username',             component: <Screen10Username /> },
-  { index: 11, label: 'Notifikasi',                component: <Screen11Notifikasi /> },
-  { index: 12, label: 'Pencarian Pengguna',        component: <Screen12SearchUser /> },
-  { index: 13, label: 'Sheet — Tambah Destinasi', component: <Screen13BottomSheetDestinasi /> },
-  { index: 14, label: 'Sheet — Undang Teman',      component: <Screen14BottomSheetUndang /> },
-  { index: 15, label: 'Sheet — Tambah Wishlist',   component: <Screen15BottomSheetWishlist /> },
-  { index: 16, label: 'Edit Profil',               component: <Screen16EditProfil /> },
-];
-
-const row3 = [
-  { index: 17, label: 'Empty — Beranda',        component: <Screen17EmptyBeranda /> },
-  { index: 18, label: 'Empty — Chat',           component: <Screen18EmptyChat /> },
-  { index: 19, label: 'Jadwal Dikunci',         component: <Screen19StatusLocked /> },
-  { index: 20, label: 'Profil Publik',          component: <Screen20PublicProfile /> },
-  { index: 21, label: 'Pengaturan',             component: <Screen21Settings /> },
-  { index: 22, label: 'Skeleton Loading',       component: <Screen22SkeletonLoading /> },
-  { index: 23, label: 'Toast & Snackbar',       component: <Screen23ToastComponents /> },
-  { index: 24, label: 'Error 404 / Offline',    component: <Screen24Error /> },
-];
-
-const row4 = [
-  { index: 25, label: 'Splash Screen',          component: <Screen25Splash /> },
-  { index: 26, label: 'Dark Mode — Beranda',    component: <Screen26DarkBeranda /> },
-  { index: 27, label: 'Form Validation',        component: <Screen27FormValidation /> },
-  { index: 28, label: 'Long Press Menu',        component: <Screen28ChatLongPress /> },
-  { index: 29, label: 'Detail Destinasi',       component: <Screen29DestinationDetail /> },
-  { index: 30, label: 'Multi Kandidat Tanggal', component: <Screen30MultiDatePicker /> },
-  { index: 31, label: 'Sync Sukses Modal',      component: <Screen31CalendarSyncModal /> },
-  { index: 32, label: 'Design Tokens',          component: <Screen32DesignTokens /> },
-];
-
-function ScreenRow({ screens }: { screens: typeof row1 }) {
+function ScreenRow({ screens }: { screens: WorkflowSection['screens'] }) {
   return (
     <div
       style={{
@@ -166,13 +288,13 @@ export default function App() {
         </div>
 
         <p style={{ color: '#9091A0', fontSize: 15, margin: '0 0 22px', fontWeight: 500 }}>
-          Mobile App UI · 32 Layar High-Fidelity · Palette Sunset &amp; Beach
+          Mobile App UI · 37 Layar High-Fidelity · Layar 1–37 selaras urutan docs/WORKFLOW.md
         </p>
 
         {/* Palette swatches */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
           {[
-            { color: '#FFFFFF', label: 'Canvas',      border: '1px solid #E0D8CE' },
+            { color: '#FFFFFF', label: 'Canvas', border: '1px solid #E0D8CE' },
             { color: '#1A1A2E', label: 'Charcoal' },
             { color: '#FF6B6B', label: 'Warm Coral' },
             { color: '#4ECDC4', label: 'Soft Teal' },
@@ -185,53 +307,16 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── Row 1: Alur Utama ── */}
-      <div style={{ padding: '0 60px 16px' }}>
-        <SectionLabel
-          title="Alur Utama — Layar 1–8"
-          subtitle="Onboarding · Home · Profil · Buat Perjalanan · Detail Trip · Voting · Chat · Wishlist"
-          accent="#FF6B6B"
-        />
-      </div>
-      <div style={{ padding: '0 60px 60px' }}>
-        <ScreenRow screens={row1} />
-      </div>
-
-      {/* ── Row 2: Alur Lanjutan ── */}
-      <div style={{ padding: '0 60px 16px' }}>
-        <SectionLabel
-          title="Alur Lanjutan — Layar 9–16"
-          subtitle="Edu Onboarding · Registrasi · Notifikasi · Pencarian · Bottom Sheets · Edit Profil"
-          accent="#4ECDC4"
-        />
-      </div>
-      <div style={{ padding: '0 60px 60px' }}>
-        <ScreenRow screens={row2} />
-      </div>
-
-      {/* ── Row 3: Edge Cases & System ── */}
-      <div style={{ padding: '0 60px 16px' }}>
-        <SectionLabel
-          title="Edge Cases & Komponen Sistem — Layar 17–24"
-          subtitle="Empty States · Status Terkunci · Profil Publik · Pengaturan · Skeleton · Toast · Error 404"
-          accent="#1A1A2E"
-        />
-      </div>
-      <div style={{ padding: '0 60px 60px' }}>
-        <ScreenRow screens={row3} />
-      </div>
-
-      {/* ── Row 4: Micro-interactions, Dark Mode & Design System ── */}
-      <div style={{ padding: '0 60px 16px' }}>
-        <SectionLabel
-          title="Micro-interactions, Dark Mode & Design System — Layar 25–32"
-          subtitle="Splash · Dark Mode · Validasi Form · Long Press · Detail Sheet · Multi-Tanggal · Modal Sukses · Design Tokens"
-          accent="#FF6B6B"
-        />
-      </div>
-      <div style={{ padding: '0 60px 80px' }}>
-        <ScreenRow screens={row4} />
-      </div>
+      {workflowSections.map((section, i) => (
+        <div key={section.id}>
+          <div style={{ padding: '0 60px 16px' }}>
+            <SectionLabel title={section.title} subtitle={section.subtitle} accent={section.accent} />
+          </div>
+          <div style={{ padding: `0 60px ${i === workflowSections.length - 1 ? 80 : 60}px` }}>
+            <ScreenRow screens={section.screens} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
