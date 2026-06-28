@@ -20,12 +20,15 @@ func NewTripHandler(trips domain.TripService) *TripHandler {
 	return &TripHandler{trips: trips}
 }
 
+// ── Request types ─────────────────────────────────────────────────────────────
+
 type createTripRequest struct {
-	Name       string             `json:"name" binding:"required,min=1,max=255"`
-	Tags       []string           `json:"tags"`
-	StartDate  *time.Time         `json:"start_date"`
-	EndDate    *time.Time         `json:"end_date"`
-	Candidates []domain.DateRange `json:"candidates"`
+	Name          string             `json:"name" binding:"required,min=1,max=255"`
+	Tags          []string           `json:"tags"`
+	StartDate     *time.Time         `json:"start_date"`
+	EndDate       *time.Time         `json:"end_date"`
+	Candidates    []domain.DateRange `json:"candidates"`
+	CoverImageURL *string            `json:"cover_image_url"`
 }
 
 type updateTripRequest struct {
@@ -50,50 +53,126 @@ type messageRequest struct {
 	Message string `json:"message" binding:"required,min=1,max=1000"`
 }
 
+// ── Response types ────────────────────────────────────────────────────────────
+
+type participantPreviewDTO struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Username  string  `json:"username"`
+	AvatarURL *string `json:"avatar_url"`
+}
+
 type tripResponse struct {
-	ID        string     `json:"id"`
-	CreatorID string     `json:"creator_id"`
-	Name      string     `json:"name"`
-	Tags      []string   `json:"tags"`
-	Status    string     `json:"status"`
-	StartDate *time.Time `json:"start_date"`
-	EndDate   *time.Time `json:"end_date"`
-	IsPublic  bool       `json:"is_public"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID                  string                  `json:"id"`
+	CreatorID           string                  `json:"creator_id"`
+	Name                string                  `json:"name"`
+	Tags                []string                `json:"tags"`
+	Status              string                  `json:"status"`
+	StartDate           *time.Time              `json:"start_date"`
+	EndDate             *time.Time              `json:"end_date"`
+	IsPublic            bool                    `json:"is_public"`
+	CoverImageURL       string                  `json:"cover_image_url"`
+	VotingDeadline      *time.Time              `json:"voting_deadline"`
+	CreatedAt           time.Time               `json:"created_at"`
+	UpdatedAt           time.Time               `json:"updated_at"`
+}
+
+type tripEnrichedResponse struct {
+	tripResponse
+	ParticipantCount    int                     `json:"participant_count"`
+	ParticipantsPreview []participantPreviewDTO `json:"participants_preview"`
+}
+
+func coverURL(t *domain.Trip) string {
+	if t.CoverImageURL != nil {
+		return *t.CoverImageURL
+	}
+	return domain.DefaultCoverImageURL
 }
 
 func toTripResponse(t *domain.Trip) tripResponse {
 	return tripResponse{
-		ID:        t.ID.String(),
-		CreatorID: t.CreatorID.String(),
-		Name:      t.Name,
-		Tags:      t.Tags,
-		Status:    string(t.Status),
-		StartDate: t.StartDate,
-		EndDate:   t.EndDate,
-		IsPublic:  t.IsPublic,
-		CreatedAt: t.CreatedAt,
-		UpdatedAt: t.UpdatedAt,
+		ID:             t.ID.String(),
+		CreatorID:      t.CreatorID.String(),
+		Name:           t.Name,
+		Tags:           t.Tags,
+		Status:         string(t.Status),
+		StartDate:      t.StartDate,
+		EndDate:        t.EndDate,
+		IsPublic:       t.IsPublic,
+		CoverImageURL:  coverURL(t),
+		VotingDeadline: t.VotingDeadline,
+		CreatedAt:      t.CreatedAt,
+		UpdatedAt:      t.UpdatedAt,
+	}
+}
+
+func toTripEnrichedResponse(e *domain.TripEnriched) tripEnrichedResponse {
+	previews := make([]participantPreviewDTO, 0, len(e.ParticipantsPreview))
+	for _, p := range e.ParticipantsPreview {
+		previews = append(previews, participantPreviewDTO{
+			ID:        p.ID.String(),
+			Name:      p.Name,
+			Username:  p.Username,
+			AvatarURL: p.AvatarURL,
+		})
+	}
+	return tripEnrichedResponse{
+		tripResponse:        toTripResponse(&e.Trip),
+		ParticipantCount:    e.ParticipantCount,
+		ParticipantsPreview: previews,
 	}
 }
 
 type destinationResponse struct {
-	ID            string     `json:"id"`
-	TripID        string     `json:"trip_id"`
-	PlaceName     string     `json:"place_name"`
-	MapsLink      *string    `json:"maps_link"`
-	ReferenceLink *string    `json:"reference_link"`
-	SortOrder     int        `json:"sort_order"`
-	CreatedAt     time.Time  `json:"created_at"`
+	ID            string    `json:"id"`
+	TripID        string    `json:"trip_id"`
+	PlaceName     string    `json:"place_name"`
+	MapsLink      *string   `json:"maps_link"`
+	ReferenceLink *string   `json:"reference_link"`
+	SortOrder     int       `json:"sort_order"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
-type messageResponse struct {
+type senderDTO struct {
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	Username  string  `json:"username"`
+	AvatarURL *string `json:"avatar_url"`
+}
+
+type messageEnrichedResponse struct {
 	ID          string    `json:"id"`
 	TripID      string    `json:"trip_id"`
-	SenderID    string    `json:"sender_id"`
 	MessageText string    `json:"message_text"`
+	Sender      senderDTO `json:"sender"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+type candidateEnrichedResponse struct {
+	ID            string                  `json:"id"`
+	TripID        string                  `json:"trip_id"`
+	StartDate     time.Time               `json:"start_date"`
+	EndDate       time.Time               `json:"end_date"`
+	VoteCount     int                     `json:"vote_count"`
+	UserHasVoted  bool                    `json:"user_has_voted"`
+	VotersPreview []participantPreviewDTO `json:"voters_preview"`
+	CreatedAt     time.Time               `json:"created_at"`
+}
+
+type tripSummaryDTO struct {
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	CoverImageURL string `json:"cover_image_url"`
+}
+
+type invitationEnrichedResponse struct {
+	ID        string         `json:"id"`
+	Trip      tripSummaryDTO `json:"trip"`
+	Inviter   senderDTO      `json:"inviter"`
+	Method    string         `json:"method"`
+	Status    string         `json:"status"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 func toDestinationResponse(d *domain.TripDestination) destinationResponse {
@@ -108,15 +187,7 @@ func toDestinationResponse(d *domain.TripDestination) destinationResponse {
 	}
 }
 
-func toMessageResponse(m *domain.TripMessage) messageResponse {
-	return messageResponse{
-		ID:          m.ID.String(),
-		TripID:      m.TripID.String(),
-		SenderID:    m.SenderID.String(),
-		MessageText: m.MessageText,
-		CreatedAt:   m.CreatedAt,
-	}
-}
+// ── Handlers ──────────────────────────────────────────────────────────────────
 
 func (h *TripHandler) PostTrip(c *gin.Context) {
 	userID := mustGetUserID(c)
@@ -126,11 +197,12 @@ func (h *TripHandler) PostTrip(c *gin.Context) {
 		return
 	}
 	trip, err := h.trips.CreateTrip(c.Request.Context(), userID, domain.CreateTripInput{
-		Name:       req.Name,
-		Tags:       req.Tags,
-		StartDate:  req.StartDate,
-		EndDate:    req.EndDate,
-		Candidates: req.Candidates,
+		Name:          req.Name,
+		Tags:          req.Tags,
+		StartDate:     req.StartDate,
+		EndDate:       req.EndDate,
+		Candidates:    req.Candidates,
+		CoverImageURL: req.CoverImageURL,
 	})
 	if err != nil {
 		handleTripError(c, err)
@@ -141,10 +213,9 @@ func (h *TripHandler) PostTrip(c *gin.Context) {
 
 func (h *TripHandler) GetTrips(c *gin.Context) {
 	userID := mustGetUserID(c)
-	limit := 20
-	cursorParam := c.Query("cursor")
+	tab := c.Query("tab") // "upcoming" | "completed" | ""
 	var cursor *uuid.UUID
-	if cursorParam != "" {
+	if cursorParam := c.Query("cursor"); cursorParam != "" {
 		id, err := uuid.Parse(cursorParam)
 		if err != nil {
 			badRequest(c, "INVALID_CURSOR", "cursor must be a valid UUID")
@@ -152,14 +223,14 @@ func (h *TripHandler) GetTrips(c *gin.Context) {
 		}
 		cursor = &id
 	}
-	trips, err := h.trips.ListTrips(c.Request.Context(), userID, cursor, limit)
+	trips, err := h.trips.ListTripsEnriched(c.Request.Context(), userID, tab, cursor, 20)
 	if err != nil {
 		internalError(c, err)
 		return
 	}
-	var resp []tripResponse
+	resp := make([]tripEnrichedResponse, 0, len(trips))
 	for _, t := range trips {
-		resp = append(resp, toTripResponse(t))
+		resp = append(resp, toTripEnrichedResponse(t))
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -171,12 +242,12 @@ func (h *TripHandler) GetTrip(c *gin.Context) {
 		badRequest(c, "INVALID_TRIP_ID", "trip ID must be a valid UUID")
 		return
 	}
-	trip, err := h.trips.GetTrip(c.Request.Context(), tripID, userID)
+	trip, err := h.trips.GetTripEnriched(c.Request.Context(), tripID, userID)
 	if err != nil {
 		handleTripError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, toTripResponse(trip))
+	c.JSON(http.StatusOK, toTripEnrichedResponse(trip))
 }
 
 func (h *TripHandler) PutTrip(c *gin.Context) {
@@ -242,8 +313,10 @@ func (h *TripHandler) PostTripInvitation(c *gin.Context) {
 }
 
 // respondToInvitationRequest represents the request body for accepting/declining an invitation.
+// Accept must NOT carry binding:"required": the validator treats a bool's zero value
+// (false = decline) as "missing", which would make declining an invitation impossible.
 type respondToInvitationRequest struct {
-	Accept bool `json:"accept" binding:"required"`
+	Accept bool `json:"accept"`
 }
 
 func (h *TripHandler) PutTripInvitation(c *gin.Context) {
@@ -367,7 +440,7 @@ func (h *TripHandler) GetTripDestinations(c *gin.Context) {
 		handleTripError(c, err)
 		return
 	}
-	var resp []destinationResponse
+	resp := make([]destinationResponse, 0, len(dests))
 	for _, d := range dests {
 		resp = append(resp, toDestinationResponse(d))
 	}
@@ -381,12 +454,34 @@ func (h *TripHandler) GetTripDateCandidates(c *gin.Context) {
 		badRequest(c, "INVALID_TRIP_ID", "trip ID must be a valid UUID")
 		return
 	}
-	candidates, err := h.trips.ListDateCandidates(c.Request.Context(), tripID, userID)
+	candidates, err := h.trips.ListDateCandidatesEnriched(c.Request.Context(), tripID, userID)
 	if err != nil {
 		handleTripError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, candidates)
+	resp := make([]candidateEnrichedResponse, 0, len(candidates))
+	for _, cand := range candidates {
+		voters := make([]participantPreviewDTO, 0, len(cand.VotersPreview))
+		for _, v := range cand.VotersPreview {
+			voters = append(voters, participantPreviewDTO{
+				ID:        v.ID.String(),
+				Name:      v.Name,
+				Username:  v.Username,
+				AvatarURL: v.AvatarURL,
+			})
+		}
+		resp = append(resp, candidateEnrichedResponse{
+			ID:            cand.ID.String(),
+			TripID:        cand.TripID.String(),
+			StartDate:     cand.StartDate,
+			EndDate:       cand.EndDate,
+			VoteCount:     cand.VoteCount,
+			UserHasVoted:  cand.UserHasVoted,
+			VotersPreview: voters,
+			CreatedAt:     cand.CreatedAt,
+		})
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 func (h *TripHandler) PostTripMessage(c *gin.Context) {
@@ -406,7 +501,13 @@ func (h *TripHandler) PostTripMessage(c *gin.Context) {
 		handleTripError(c, err)
 		return
 	}
-	c.JSON(http.StatusCreated, toMessageResponse(msg))
+	// Return minimal response for sent message (sender info not needed on create).
+	c.JSON(http.StatusCreated, gin.H{
+		"id":           msg.ID.String(),
+		"trip_id":      msg.TripID.String(),
+		"message_text": msg.MessageText,
+		"created_at":   msg.CreatedAt,
+	})
 }
 
 func (h *TripHandler) GetTripMessages(c *gin.Context) {
@@ -416,10 +517,8 @@ func (h *TripHandler) GetTripMessages(c *gin.Context) {
 		badRequest(c, "INVALID_TRIP_ID", "trip ID must be a valid UUID")
 		return
 	}
-	limit := 20
-	cursorParam := c.Query("cursor")
 	var cursor *time.Time
-	if cursorParam != "" {
+	if cursorParam := c.Query("cursor"); cursorParam != "" {
 		parsed, err := time.Parse(time.RFC3339, cursorParam)
 		if err != nil {
 			badRequest(c, "INVALID_CURSOR", "cursor must be RFC3339 timestamp")
@@ -427,14 +526,78 @@ func (h *TripHandler) GetTripMessages(c *gin.Context) {
 		}
 		cursor = &parsed
 	}
-	messages, err := h.trips.GetMessages(c.Request.Context(), tripID, userID, cursor, limit)
+	messages, err := h.trips.GetMessagesEnriched(c.Request.Context(), tripID, userID, cursor, 20)
 	if err != nil {
 		handleTripError(c, err)
 		return
 	}
-	var resp []messageResponse
+	resp := make([]messageEnrichedResponse, 0, len(messages))
 	for _, m := range messages {
-		resp = append(resp, toMessageResponse(m))
+		resp = append(resp, messageEnrichedResponse{
+			ID:          m.ID.String(),
+			TripID:      m.TripID.String(),
+			MessageText: m.MessageText,
+			Sender: senderDTO{
+				ID:        m.Sender.ID.String(),
+				Name:      m.Sender.Name,
+				Username:  m.Sender.Username,
+				AvatarURL: m.Sender.AvatarURL,
+			},
+			CreatedAt: m.CreatedAt,
+		})
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// DeleteTripMessage handles DELETE /v1/trips/:tripId/messages/:messageId
+// Only the original sender may delete their own message (soft delete).
+func (h *TripHandler) DeleteTripMessage(c *gin.Context) {
+	userID := mustGetUserID(c)
+	tripID, err := uuid.Parse(c.Param("tripId"))
+	if err != nil {
+		badRequest(c, "INVALID_TRIP_ID", "trip ID must be a valid UUID")
+		return
+	}
+	messageID, err := uuid.Parse(c.Param("messageId"))
+	if err != nil {
+		badRequest(c, "INVALID_MESSAGE_ID", "message ID must be a valid UUID")
+		return
+	}
+	if err := h.trips.DeleteMessage(c.Request.Context(), tripID, messageID, userID); err != nil {
+		handleTripError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// GetMyInvitations handles GET /v1/trips/invitations.
+// Returns enriched pending invitations for the authenticated user.
+func (h *TripHandler) GetMyInvitations(c *gin.Context) {
+	userID := mustGetUserID(c)
+	invitations, err := h.trips.ListPendingInvitationsEnriched(c.Request.Context(), userID)
+	if err != nil {
+		internalError(c, err)
+		return
+	}
+	resp := make([]invitationEnrichedResponse, 0, len(invitations))
+	for _, inv := range invitations {
+		resp = append(resp, invitationEnrichedResponse{
+			ID: inv.ID.String(),
+			Trip: tripSummaryDTO{
+				ID:            inv.Trip.ID.String(),
+				Name:          inv.Trip.Name,
+				CoverImageURL: inv.Trip.CoverImageURL,
+			},
+			Inviter: senderDTO{
+				ID:        inv.Inviter.ID.String(),
+				Name:      inv.Inviter.Name,
+				Username:  inv.Inviter.Username,
+				AvatarURL: inv.Inviter.AvatarURL,
+			},
+			Method:    string(inv.Method),
+			Status:    string(inv.Status),
+			CreatedAt: inv.CreatedAt,
+		})
 	}
 	c.JSON(http.StatusOK, resp)
 }
@@ -469,6 +632,7 @@ func (h *TripHandler) RegisterRoutes(r gin.IRouter, jwtSecret []byte) {
 	trips.Use(middleware.AuthRequired(jwtSecret))
 	trips.GET("/", h.GetTrips)
 	trips.POST("/", h.PostTrip)
+	trips.GET("/invitations", h.GetMyInvitations)
 	trips.GET(":tripId", h.GetTrip)
 	trips.PUT(":tripId", h.PutTrip)
 	trips.DELETE(":tripId", h.DeleteTrip)
@@ -483,4 +647,5 @@ func (h *TripHandler) RegisterRoutes(r gin.IRouter, jwtSecret []byte) {
 	trips.GET(":tripId/candidates", h.GetTripDateCandidates)
 	trips.GET(":tripId/messages", h.GetTripMessages)
 	trips.POST(":tripId/messages", h.PostTripMessage)
+	trips.DELETE(":tripId/messages/:messageId", h.DeleteTripMessage)
 }

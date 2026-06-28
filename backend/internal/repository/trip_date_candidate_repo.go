@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/sudutkode/atur-perjalanan/backend/internal/domain"
 )
@@ -20,22 +20,6 @@ type tripDateCandidateRepo struct {
 // NewTripDateCandidateRepository returns a PostgreSQL-backed implementation of domain.TripDateCandidateRepository.
 func NewTripDateCandidateRepository(db *pgxpool.Pool) domain.TripDateCandidateRepository {
 	return &tripDateCandidateRepo{db: db}
-}
-
-func (r *tripDateCandidateRepo) BulkCreate(ctx context.Context, candidates []*domain.TripDateCandidate) error {
-	const query = `INSERT INTO trip_date_candidates (id, trip_id, start_date, end_date) VALUES ($1, $2, $3, $4)`
-	batch := &pgx.Batch{}
-	for _, candidate := range candidates {
-		batch.Queue(query, candidate.ID, candidate.TripID, candidate.StartDate, candidate.EndDate)
-	}
-	br := r.db.SendBatch(ctx, batch)
-	defer br.Close()
-	for range candidates {
-		if _, err := br.Exec(); err != nil {
-			return fmt.Errorf("trip_date_candidate_repo: BulkCreate: %w", err)
-		}
-	}
-	return nil
 }
 
 func (r *tripDateCandidateRepo) FindByTrip(ctx context.Context, tripID uuid.UUID) ([]*domain.TripDateCandidate, error) {
@@ -109,4 +93,87 @@ func (r *tripDateCandidateRepo) RemoveVote(ctx context.Context, candidateID, use
 		return domain.ErrVoteNotFound
 	}
 	return nil
+}
+
+// FindByTripEnriched returns candidates with per-viewer vote status and voters preview (max 3).
+func (r *tripDateCandidateRepo) FindByTripEnriched(ctx context.Context, tripID, viewerID uuid.UUID) ([]*domain.TripCandidateEnriched, error) {
+	// Step 1: fetch base candidates with vote counts.
+	candidates, err := r.FindByTrip(ctx, tripID)
+	if err != nil {
+		return nil, err
+	}
+	if len(candidates) == 0 {
+		return []*domain.TripCandidateEnriched{}, nil
+	}
+
+	// Step 2: fetch viewer's votes for this trip.
+	viewerVotes := make(map[uuid.UUID]bool)
+	rows, err := r.db.Query(ctx,
+		`SELECT candidate_id FROM trip_date_votes v
+         JOIN trip_date_candidates c ON c.id = v.candidate_id
+         WHERE c.trip_id = $1 AND v.user_id = $2`,
+		tripID, viewerID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("trip_date_candidate_repo: FindByTripEnriched viewer votes: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid uuid.UUID
+		if err := rows.Scan(&cid); err != nil {
+			return nil, fmt.Errorf("trip_date_candidate_repo: scan viewer vote: %w", err)
+		}
+		viewerVotes[cid] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Step 3: fetch voters preview (max 3) per candidate.
+	candidateIDs := make([]uuid.UUID, len(candidates))
+	for i, c := range candidates {
+		candidateIDs[i] = c.ID
+	}
+	voterRows, err := r.db.Query(ctx,
+		`WITH ranked AS (
+            SELECT v.candidate_id, u.id, u.name, u.username, u.avatar_url,
+                   ROW_NUMBER() OVER (PARTITION BY v.candidate_id ORDER BY v.created_at ASC) AS rn
+            FROM trip_date_votes v
+            JOIN users u ON u.id = v.user_id
+            WHERE v.candidate_id = ANY($1)
+        )
+        SELECT candidate_id, id, name, username, avatar_url FROM ranked WHERE rn <= 3`,
+		candidateIDs,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("trip_date_candidate_repo: FindByTripEnriched voters: %w", err)
+	}
+	defer voterRows.Close()
+
+	votersMap := make(map[uuid.UUID][]*domain.UserSummary)
+	for voterRows.Next() {
+		var cid uuid.UUID
+		var s domain.UserSummary
+		if err := voterRows.Scan(&cid, &s.ID, &s.Name, &s.Username, &s.AvatarURL); err != nil {
+			return nil, fmt.Errorf("trip_date_candidate_repo: scan voter: %w", err)
+		}
+		votersMap[cid] = append(votersMap[cid], &s)
+	}
+	if err := voterRows.Err(); err != nil {
+		return nil, err
+	}
+
+	enriched := make([]*domain.TripCandidateEnriched, len(candidates))
+	for i, c := range candidates {
+		voters := votersMap[c.ID]
+		if voters == nil {
+			voters = []*domain.UserSummary{}
+		}
+		enriched[i] = &domain.TripCandidateEnriched{
+			TripDateCandidate: *c,
+			UserHasVoted:      viewerVotes[c.ID],
+			VotersPreview:     voters,
+		}
+	}
+	return enriched, nil
 }

@@ -1,42 +1,68 @@
 # Acceptance Criteria (Kriteria Penerimaan)
 
+> **Tujuan dokumen ini**: Checklist UAT lengkap untuk memverifikasi bahwa aplikasi mobile sesuai desain Figma (32 layar) dan spesifikasi MVPs. Referensi: [docs/FIGMA.md](docs/FIGMA.md), [docs/WORKFLOW.md](docs/WORKFLOW.md).
+
+---
+
 ## 1. Autentikasi & Onboarding
-- [ ] Tampilan depan (Frontend) menampilkan layar *Onboarding* menggunakan *slider/carousel* informasi hanya saat pengguna baru pertama kali membuka aplikasi.
-- [ ] Pengguna dapat masuk (*login*) dengan sukses menggunakan akun Google melalui tombol "Lanjutkan dengan Google".
-- [ ] Sistem berhasil mengekstrak dan menyimpan data dasar (Nama, Email, Avatar) dari Google ke tabel `users` di *database*.
-- [ ] Pengguna baru diarahkan ke form pembuatan *username* dan sistem menolak jika *username* sudah digunakan oleh orang lain.
-- [ ] Pengguna lama yang berhasil *login* langsung diarahkan ke halaman Beranda secara otomatis tanpa melewati form *username* lagi.
+- [ ] Splash screen tampil saat cold start, lalu lanjut ke onboarding atau auth (`Screen25Splash`).
+- [ ] Onboarding carousel hanya muncul saat pengguna pertama kali membuka aplikasi (`Screen9EduOnboarding`).
+- [ ] Login sukses via tombol "Lanjutkan dengan Google" (`Screen1Auth`).
+- [ ] Data dasar Google (Nama, Email, Avatar) tersimpan di tabel `users`.
+- [ ] Pengguna baru diarahkan ke form username; sistem menolak username duplikat dengan feedback visual (`Screen10Username`).
+- [ ] Pengguna lama langsung ke Beranda tanpa form username.
 
-## 2. Beranda, Profil & Sistem Sosial
-- [ ] Halaman Beranda menampilkan sapaan pengguna, ikon lonceng untuk Notifikasi, dan memisahkan daftar perjalanan ke dalam tab: "Mendatang", "Selesai", dan "Undangan".
-- [ ] *Card* perjalanan di Beranda menampilkan informasi Judul, *Tags* (bentuk *chips*), Rentang Tanggal, dan foto profil kecil bertumpuk (*stacked avatars*) dari seluruh partisipan.
-- [ ] Halaman profil pribadi menampilkan foto, *username*, bio, statistik pengikut (*followers/following*), dan daftar riwayat perjalanan.
-- [ ] Pengguna dapat mengubah bio dan mengatur *toggle* visibilitas profil (`is_public`).
-- [ ] Jika preferensi visibilitas profil di-set privat (`is_public = false`), pengguna lain yang mencari tidak dapat melihat daftar riwayat perjalanan orang tersebut.
-- [ ] Pengguna dapat mencari akun lain di tab Pencarian menggunakan *username* atau nama, lalu mem-*follow* atau *unfollow* akun tersebut.
-- [ ] Menerima undangan perjalanan otomatis membuat status saling *follow* (mutual) antara pengundang dan yang diundang di tabel `follows`.
+## 2. Beranda & Notifikasi
+- [ ] Beranda menampilkan ikon lonceng dengan badge unread (`Screen2Home`).
+- [ ] Tab "Mendatang", "Selesai", "Undangan" memfilter daftar trip dengan benar.
+- [ ] Trip card menampilkan cover image, judul, tags (chips), rentang tanggal, stacked avatars.
+- [ ] Empty state tampil saat tidak ada trip (`Screen17EmptyBeranda`).
+- [ ] Layar Notifikasi menampilkan tipe: undangan, follow, voting, update destinasi (`Screen11Notifikasi`).
+- [ ] Aksi inline notifikasi berfungsi: terima/tolak undangan, follow back, navigasi ke voting/trip.
 
-## 3. Manajemen Perjalanan & Destinasi
-- [ ] Pengguna dapat membuka form pembuatan perjalanan baru melalui tombol "+" dengan tampilan *Modal Full-Screen* atau *Bottom Sheet*.
-- [ ] Pengguna dapat mengisi "Nama Perjalanan" dan menginput "Tags" secara dinamis (mengetik lalu tekan *enter/space* untuk mengubah teks menjadi *chip*).
-- [ ] Pengguna dapat memilih *toggle* "Tanggal Pasti" (menentukan *start* & *end date*) atau "Belum Pasti (Voting)" (menambahkan beberapa kandidat rentang tanggal).
-- [ ] Pembuat perjalanan dapat mengubah nama trip, rentang tanggal, atau pilihan kandidat tanggal kapan saja.
-- [ ] Pengguna dapat menambahkan destinasi ke dalam perjalanan dengan form: "Nama Tempat" (wajib), "Link Google Maps" (opsional), dan "Link Referensi TikTok/IG" (opsional).
-- [ ] Tab Destinasi menampilkan *Empty State* (ilustrasi + tombol tambah) jika belum ada tempat yang dimasukkan.
-- [ ] *Card* destinasi berhasil menampilkan tombol pintasan langsung untuk membuka tautan Google Maps atau tautan referensi media sosial yang tertera.
+## 3. Profil & Sistem Sosial
+- [ ] Profil pribadi: foto, username, bio, followers/following, grid trip, tombol Edit & Pengaturan (`Screen3Profile`).
+- [ ] Profil user lain — akun **publik**: tombol Follow + grid trip dengan `trips.is_public=true` (`Screen20PublicProfile`).
+- [ ] Profil user lain — akun **privat**, viewer **bukan follower**: tampil terbatas (avatar, username, nama, stats, Follow); bio & grid trip disembunyikan; banner akun privat.
+- [ ] Profil user lain — akun **privat**, viewer **follower**: profil lengkap + grid trip (`trips.is_public=true`).
+- [ ] Edit profil: ubah bio + toggle akun privat/publik (`Screen16EditProfil`).
+- [ ] Trip `is_public=false` tidak muncul di grid profil milik orang lain (hanya via Beranda/partisipasi).
+- [ ] Pencarian username/nama + follow/unfollow; akun privat tetap discoverable (`Screen12SearchUser`).
+- [ ] Pengaturan: menu akun, dukungan, logout (`Screen21Settings`).
+- [ ] Menerima undangan trip otomatis mutual follow (follower dapat melihat trip grid jika akun privat).
 
-## 4. Kolaborasi, Voting & Grup Chat
-- [ ] Pembuat perjalanan dapat mencari dan mengundang partisipan menggunakan *username* (mengirim notifikasi *in-app*) atau email (undangan kalender).
-- [ ] Partisipan yang diundang via *username* dapat melihat undangan di tab "Undangan" pada halaman Beranda, serta dapat memilih untuk menerima atau menolak.
-- [ ] Undangan yang dikirim via email berhasil memicu pengiriman undangan *event* ke Google Calendar target via Google Calendar API.
-- [ ] Khusus untuk status tanggal "Belum Pasti", muncul *banner* "Butuh Voting Tanggal" di halaman detail, dan seluruh partisipan bisa memberikan suara (*vote*) pada kandidat tanggal yang tersedia.
-- [ ] **Hanya pembuat perjalanan (creator)** yang memiliki akses untuk menekan tombol "Kunci Tanggal Ini" berdasarkan hasil *voting*.
-- [ ] Proses penguncian tanggal otomatis mengubah status trip menjadi *fixed* dan langsung menyinkronkan jadwal sebagai *event* di Google Calendar seluruh partisipan.
-- [ ] Ruang obrolan (*Chat*) internal hanya dapat diakses oleh pengguna yang sudah berstatus sebagai partisipan resmi di perjalanan tersebut.
-- [ ] Pesan di dalam grup *chat* terkirim dan diterima secara berurutan (*chronological order*) sesuai waktu kirim.
+## 4. Manajemen Perjalanan & Destinasi
+- [ ] Form buat perjalanan via FAB "+" — modal full-screen (`Screen4Create`).
+- [ ] Input nama (wajib), tags dinamis (chip + hapus), kalender rentang tanggal.
+- [ ] Tombol "+ Tambah Kandidat Tanggal" menambah kalender kandidat (`Screen30MultiDatePicker`).
+- [ ] Validasi form menampilkan error inline merah saat field wajib kosong (`Screen27FormValidation`).
+- [ ] 1 tanggal → `status=fixed`; >1 tanggal → `status=voting_pending`.
+- [ ] Detail trip punya 3 tab: **Destinasi · Voting · Chat** (`Screen5Destinations`, `Screen6Voting`, `Screen7Chat`).
+- [ ] Bottom sheet tambah destinasi: nama (wajib), maps link, referensi sosmed (`Screen13BottomSheetDestinasi`).
+- [ ] Tap destinasi → detail sheet dengan snippet peta & link referensi (`Screen29DestinationDetail`).
+- [ ] Empty state destinasi + tombol tambah.
+- [ ] Card destinasi: tombol buka Maps dan ikon referensi media sosial.
 
-## 5. Wishlist
-- [ ] Pengguna dapat membuat item Wishlist baru melalui tombol FAB "+" dengan mengisi nama tempat, tautan pendukung, *tags*, dan memilih skala prioritas (Tinggi, Menengah, Rendah).
-- [ ] Daftar Wishlist berhasil ditampilkan dalam bentuk *Grid* atau *List View*.
-- [ ] Fitur *Filter* dan *Sort* di bagian atas halaman berfungsi dengan benar untuk menyaring destinasi berdasarkan *Tags* atau mengurutkannya sesuai Tingkat Prioritas.
-- [ ] Halaman Wishlist menampilkan status kosong jika pengguna belum pernah menyimpan destinasi impian.
+## 5. Kolaborasi, Voting & Grup Chat
+- [ ] Undang partisipan via username atau email — bottom sheet (`Screen14BottomSheetUndang`).
+- [ ] Undangan pending tampil di tab "Undangan" dan layar Notifikasi.
+- [ ] Tab Voting: card kandidat + vote count + tombol Vote (`Screen6Voting`).
+- [ ] Hanya creator yang bisa "Kunci Tanggal Ini".
+- [ ] Setelah lock: banner "Jadwal Dikunci" di tab Voting (`Screen19StatusLocked`).
+- [ ] Modal sukses sync kalender tampil setelah lock (`Screen31CalendarSyncModal`).
+- [ ] Chat: bubbles chronological, input kirim, empty state (`Screen18EmptyChat`).
+- [ ] Long press pesan: menu Balas, Salin Teks, Hapus (`Screen28ChatLongPress`).
+- [ ] Chat hanya bisa diakses partisipan resmi.
+
+## 6. Wishlist
+- [ ] Grid/List view + filter/sort by tags & prioritas (`Screen8Wishlist`).
+- [ ] FAB "+" → bottom sheet form: nama, link, tags, prioritas (`Screen15BottomSheetWishlist`).
+- [ ] Empty state saat wishlist kosong.
+
+## 7. System States & Design
+- [ ] Skeleton loading tampil saat fetch data (`Screen22SkeletonLoading`).
+- [ ] Toast success (teal), error (coral), offline/info (`Screen23ToastComponents`).
+- [ ] Error 404/offline screen + tombol retry (`Screen24Error`).
+- [ ] Warna, typography, radius mengikuti design tokens (`Screen32DesignTokens`, `colors.ts`).
+- [ ] Bottom nav: Beranda, Cari, [+], Wishlist, Profil — tab aktif coral, inactive muted.
+- [ ] Dark mode variant Beranda (`Screen26DarkBeranda`) — opsional M12.

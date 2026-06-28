@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <h1>Atur Perjalanan — Auth Test</h1>
+  <div id="g_id_onload"
+       data-client_id="463752801012-glj7j2ng20md0s52bp1luc3neen1jvdd.apps.googleusercontent.com"
+       data-callback="onLogin"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+  <pre id="token" style="word-break:break-all;white-space:pre-wrap;"></pre>
+  <script>
+    function onLogin(response) {
+      document.getElementById('token').textContent = response.credential;
+      console.log('ID Token:', response.credential);
+    }
+  </script>
+</body>
+</html>

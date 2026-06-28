@@ -118,36 +118,40 @@ atur-perjalanan/
 │   │   │   └── errors.go         # Typed domain errors
 │   │   ├── handler/              # HTTP layer (Gin handlers)
 │   │   │   ├── auth_handler.go
-│   │   │   ├── trip_handler.go
+│   │   │   ├── trip_handler.go   # trips + chat (messages) + voting endpoints
 │   │   │   ├── user_handler.go
 │   │   │   ├── wishlist_handler.go
-│   │   │   └── chat_handler.go
+│   │   │   └── response.go       # shared error envelope + DTO helpers
 │   │   ├── middleware/
 │   │   │   ├── auth.go           # JWT extraction & validation
 │   │   │   ├── rate_limiter.go
 │   │   │   └── request_id.go
 │   │   ├── service/              # Business logic layer
-│   │   │   ├── auth_service.go
-│   │   │   ├── trip_service.go
-│   │   │   ├── user_service.go
-│   │   │   ├── wishlist_service.go
-│   │   │   └── chat_service.go
-│   │   ├── repository/           # Data access layer
+│   │   │   ├── trip_service.go   # trips, invitations, voting, chat
+│   │   │   ├── user_service.go   # auth upsert, profile, follow, search
+│   │   │   └── wishlist_service.go
+│   │   ├── repository/           # Data access layer (one file per table)
 │   │   │   ├── user_repo.go
+│   │   │   ├── follow_repo.go
 │   │   │   ├── trip_repo.go
-│   │   │   ├── wishlist_repo.go
-│   │   │   └── chat_repo.go
+│   │   │   ├── trip_invitation_repo.go
+│   │   │   ├── trip_date_candidate_repo.go
+│   │   │   ├── trip_destination_repo.go
+│   │   │   ├── trip_message_repo.go
+│   │   │   └── wishlist_repo.go
 │   │   └── platform/
 │   │       ├── database/
 │   │       │   └── postgres.go   # pgx pool initialization
+│   │       ├── jwtutil/
+│   │       │   └── jwtutil.go    # HS256 sign / verify
 │   │       └── googleapi/
 │   │           ├── auth.go       # ID token verification
-│   │           └── calendar.go   # Google Calendar API client
+│   │           └── calendar.go   # Google Calendar API client (M11)
 │   ├── migrations/               # SQL migration files (golang-migrate)
-│   │   ├── 000001_create_users.up.sql
-│   │   ├── 000001_create_users.down.sql
-│   │   ├── 000002_create_follows.up.sql
-│   │   └── ...
+│   │   ├── 000001_create_extensions.up.sql
+│   │   ├── 000002_create_users.up.sql
+│   │   ├── 000003_create_follows.up.sql
+│   │   └── ...                   # 11 sequential .up.sql / .down.sql pairs
 │   ├── go.mod
 │   └── go.sum
 │
@@ -174,11 +178,17 @@ atur-perjalanan/
 │   │           └── ui/
 │   └── iosApp/                   # iOS-specific SwiftUI
 │
+├── figma/                        # Figma Make export — 32-screen React preview (design reference only)
+│   ├── src/app/components/screens/  # Screen1Auth … Screen32DesignTokens
+│   └── src/app/components/colors.ts # Canonical design tokens
+│
 ├── docs/
 │   ├── BRIEF.md
 │   ├── PRD.md
 │   ├── WORKFLOW.md
 │   ├── ACCEPTANCE_CRITERIA.md
+│   ├── FIGMA.md                  # Screen inventory, tokens, API gap analysis
+│   ├── MILESTONES.md
 │   └── ARCHITECTURE.md           # This file
 │
 ├── .env.example                  # Template for required env vars (no secrets)
@@ -363,6 +373,8 @@ CREATE TABLE trips (
     start_date  DATE,
     end_date    DATE,
     is_public   BOOLEAN NOT NULL DEFAULT FALSE,
+    cover_image_url TEXT,              -- nullable; default asset when NULL (M5.1)
+    voting_deadline TIMESTAMPTZ,       -- set for voting_pending trips (M5.1)
     deleted_at  TIMESTAMPTZ,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -560,9 +572,11 @@ Each service and repository is defined as a Go interface in `internal/domain`. T
 type TripRepository interface {
     Create(ctx context.Context, trip *Trip) error
     FindByID(ctx context.Context, id uuid.UUID) (*Trip, error)
-    FindByParticipant(ctx context.Context, userID uuid.UUID) ([]*Trip, error)
+    ListByParticipant(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*Trip, error)
     Update(ctx context.Context, trip *Trip) error
     SoftDelete(ctx context.Context, id uuid.UUID) error
+    IsParticipant(ctx context.Context, tripID, userID uuid.UUID) (bool, error)
+    IsCreator(ctx context.Context, tripID, userID uuid.UUID) (bool, error)
 }
 
 type TripService interface {
@@ -581,16 +595,24 @@ type TripService interface {
 │   └── POST   /complete-registration    # Set username for new users
 ├── users/
 │   ├── GET    /me                       # Get current user profile
-│   ├── PUT    /me                       # Update bio, is_public
+│   ├── PUT    /me                       # Update bio, is_public (account privacy)
+│   ├── GET    /check-username           # Real-time username availability (M5.1)
 │   ├── GET    /search                   # Search users by name (trigram-based, cursor paginated)
-│   ├── GET    /:username                # Get public profile
+│   ├── GET    /:username                # Profile lookup (public or limited private view)
+│   ├── GET    /:username/trips          # Profile trip grid (respects privacy; M5.1)
 │   ├── POST   /:username/follow         # Follow a user
 │   └── DELETE /:username/follow         # Unfollow a user
+├── notifications/                       # (M5.1)
+│   ├── GET    /                         # List in-app notifications
+│   ├── GET    /unread-count             # Badge count for bell icon
+│   ├── PUT    /:id/read                 # Mark one notification read
+│   └── PUT    /read-all                 # Mark all read
 ├── trips/
-│   ├── GET    /                         # List trips for authenticated user
+│   ├── GET    /                         # List trips (?tab=upcoming|completed; M5.1)
 │   ├── POST   /                         # Create a trip
+│   ├── GET    /invitations              # List pending invitations for authenticated user
 │   ├── GET    /:tripId                  # Get trip detail
-│   ├── PUT    /:tripId                  # Update trip info
+│   ├── PUT    /:tripId                  # Update trip info (+ optional cover_image_url, voting_deadline)
 │   ├── DELETE /:tripId                  # Soft-delete trip (creator only)
 │   ├── POST   /:tripId/invitations      # Invite participant
 │   ├── PUT    /:tripId/invitations/:id  # Accept / decline invitation
@@ -601,14 +623,62 @@ type TripService interface {
 │   ├── POST   /:tripId/candidates/:id/vote    # Cast a vote
 │   ├── DELETE /:tripId/candidates/:id/vote    # Retract a vote
 │   ├── POST   /:tripId/candidates/:id/lock    # Lock date (creator only)
-│   └── GET    /:tripId/messages         # Paginated chat messages
-│   └── POST   /:tripId/messages         # Send chat message
+│   ├── GET    /:tripId/messages         # Paginated chat messages
+│   ├── POST   /:tripId/messages         # Send chat message
+│   └── DELETE /:tripId/messages/:messageId    # Soft-delete own message (M5.1)
 └── wishlists/
     ├── GET    /                          # List user's wishlists
     ├── POST   /                          # Create wishlist item
     ├── PUT    /:wishlistId               # Update wishlist item
     └── DELETE /:wishlistId               # Soft-delete wishlist item
 ```
+
+> **Figma-driven API gaps (M5.1)**: Implementasi lengkap di milestone M5.1 — notifications, delete chat message, username check, trip tab filter, profile/trip grid, enriched list responses. Detail: `docs/FIGMA.md § Kebutuhan API dari Desain`, `docs/MILESTONES.md § M5.1`.
+
+### 4.3.1 Privacy Model (Instagram-style)
+
+Two independent flags control visibility:
+
+| Flag | Table | Meaning |
+|------|-------|---------|
+| Account privacy | `users.is_public` | `false` → private account; profile content gated to followers + owner |
+| Profile grid trip | `trips.is_public` | Creator opts in which trips appear on their profile grid |
+
+**Authorization matrix** for `GET /v1/users/:username` and `GET /v1/users/:username/trips`:
+
+| Account | Viewer | `GET /:username` | `GET /:username/trips` |
+|---------|--------|------------------|------------------------|
+| Public | Anyone | Full profile (`can_view_content: true`) | Creator trips where `trips.is_public = true` |
+| Public | Owner | Full | All creator trips |
+| Private | Stranger (not follower) | **Limited** profile: `id`, `username`, `name`, `avatar_url`, `followers_count`, `following_count`, `is_public`, `is_following`, `can_view_content: false` — **no `bio`, no email** | `403 PROFILE_PRIVATE` |
+| Private | Follower | Full profile (`can_view_content: true`) | Creator trips where `trips.is_public = true` |
+| Private | Owner | Full | All creator trips |
+
+**Breaking change from M5**: Private accounts currently return `404 USER_NOT_FOUND` to strangers. M5.1 returns a **limited profile** (Instagram-style discoverability) so search → profile → Follow still works.
+
+**Trip list tabs** (`GET /v1/trips?tab=`):
+
+| Tab | Rule |
+|-----|------|
+| `upcoming` (default) | Participant trips where `end_date IS NULL OR end_date >= CURRENT_DATE` (includes all `voting_pending`) |
+| `completed` | `end_date IS NOT NULL AND end_date < CURRENT_DATE` |
+| Invitations | Separate endpoint `GET /v1/trips/invitations` (unchanged) |
+
+**Voting deadline** (`trips.voting_deadline`, set when `candidates.length > 1`):
+
+- Default: `LEAST(created_at + 14 days, MIN(candidates.start_date) - 3 days)`, clamped ≥ `created_at + 7 days`
+- Cleared when trip locks (`status = fixed`)
+- Background job sends `voting` notifications at H-7d, H-1d, H-1h before deadline to participants who have not voted
+
+**Cover image** (`trips.cover_image_url`, nullable):
+
+- M5.1: column + server-side default URL when NULL (tag/hash-based static assets)
+- File upload to object storage deferred to M8+ mobile; optional external HTTPS URL via `PUT /trips/:id`
+
+**Scalability hooks** (no breaking changes planned):
+
+- `GET /users/:username/trips?role=created|participated|all` — MVP uses `created` only
+- Follow **requests** for private accounts (pending approval) — post-MVP; MVP keeps instant follow
 
 ### 4.4 Authentication Middleware
 

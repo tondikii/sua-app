@@ -1,0 +1,1609 @@
+{
+  "info": {
+    "_postman_id": "atur-perjalanan-api-v1",
+    "name": "Atur Perjalanan API (M0–M5.1)",
+    "description": "# Cara pakai\n\n1. Import collection ini + environment **Atur Perjalanan — Local**\n2. Pilih environment **Atur Perjalanan — Local** (kanan atas Postman)\n3. Isi `google_id_token_a` dari halaman login Google (akun Alice)\n4. Jalankan folder **01 — Auth (User A)** berurutan\n5. Isi `google_id_token_b` (akun Google lain), jalankan **02 — Auth (User B)**\n6. Lanjut folder berikutnya secara berurutan\n\n**Catatan:** Google ID token expired ~1 jam. App JWT (`token_a`/`token_b`) expired 24 jam — diisi otomatis oleh Tests script.\n\n**M5.1:** Folder **10 — Notifications & Gaps** mencakup endpoint baru (check-username, notifications, tab filter, soft-delete message, privacy trips). Response enrichments (cover_image_url, participants_preview, embedded sender/inviter) divalidasi di folder 03–07.\n\n**Prasyarat:** `make up && make migrate-up && make run`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "00 — Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status ok', () => {",
+                  "    pm.expect(pm.response.json().status).to.eql('ok');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 — Auth (User A)",
+      "item": [
+        {
+          "name": "POST Auth Google (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('token_a', body.access_token);",
+                  "pm.test('access_token exists', () => pm.expect(body.access_token).to.be.a('string').and.not.empty);",
+                  "if (body.is_new_user) {",
+                  "    console.log('User A is NEW — jalankan Complete Registration berikutnya');",
+                  "} else {",
+                  "    console.log('User A is RETURNING — skip Complete Registration');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"{{google_id_token_a}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/google"
+          }
+        },
+        {
+          "name": "POST Complete Registration (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('username set', () => {",
+                  "    pm.expect(pm.response.json().user.username).to.eql(pm.environment.get('username_a'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_a}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/complete-registration"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — Auth (User B)",
+      "item": [
+        {
+          "name": "POST Auth Google (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.environment.set('token_b', body.access_token);",
+                  "pm.test('access_token exists', () => pm.expect(body.access_token).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"{{google_id_token_b}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/google"
+          }
+        },
+        {
+          "name": "POST Complete Registration (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('username set', () => {",
+                  "    pm.expect(pm.response.json().user.username).to.eql(pm.environment.get('username_b'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_b}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/auth/complete-registration"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Users & Social",
+      "item": [
+        {
+          "name": "GET Me (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('email present on own profile', () => {",
+                  "    pm.expect(pm.response.json().email).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/me"
+          }
+        },
+        {
+          "name": "GET Search Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/search?q={{username_b}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", "search"],
+              "query": [{ "key": "q", "value": "{{username_b}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET Check Username — Available",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('new username available', () => {",
+                  "    pm.expect(pm.response.json().available).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/check-username?username=unique_handle_99999",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", "check-username"],
+              "query": [{ "key": "username", "value": "unique_handle_99999" }]
+            }
+          }
+        },
+        {
+          "name": "GET Check Username — Taken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('existing username not available', () => {",
+                  "    pm.expect(pm.response.json().available).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/users/check-username?username={{username_a}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "users", "check-username"],
+              "query": [{ "key": "username", "value": "{{username_a}}" }]
+            }
+          }
+        },
+        {
+          "name": "GET Public Profile (no auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.test('profile view fields present', () => {",
+                  "    pm.expect(p).to.have.property('followers_count');",
+                  "    pm.expect(p).to.have.property('following_count');",
+                  "    pm.expect(p).to.have.property('public_trip_count');",
+                  "    pm.expect(p).to.have.property('can_view_content');",
+                  "    pm.expect(p).to.have.property('is_following');",
+                  "});",
+                  "pm.test('public profile viewable', () => pm.expect(p.can_view_content).to.eql(true));",
+                  "pm.test('no email on public profile', () => pm.expect(p).to.not.have.property('email'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}"
+          }
+        },
+        {
+          "name": "POST Follow User B (from A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}/follow"
+          }
+        },
+        {
+          "name": "PUT Me — Set Private (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('is_public false', () => pm.expect(pm.response.json().is_public).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Profil privat untuk testing\",\n  \"is_public\": false\n}"
+            },
+            "url": "{{base_url}}/v1/users/me"
+          }
+        },
+        {
+          "name": "GET Private Profile as Follower (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.test('follower can view private content', () => pm.expect(p.can_view_content).to.eql(true));",
+                  "pm.test('is_following true', () => pm.expect(p.is_following).to.eql(true));",
+                  "pm.test('bio visible to follower', () => pm.expect(p.bio).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}"
+          }
+        },
+        {
+          "name": "GET Private Profile as Stranger (no auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — limited profile, not 404', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.test('can_view_content false', () => pm.expect(p.can_view_content).to.eql(false));",
+                  "pm.test('bio hidden', () => pm.expect(p.bio).to.be.null);",
+                  "pm.test('counts still visible', () => {",
+                  "    pm.expect(p.followers_count).to.be.a('number');",
+                  "    pm.expect(p.following_count).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}"
+          }
+        },
+        {
+          "name": "GET User Trips as Stranger (expect 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 PROFILE_PRIVATE', () => pm.response.to.have.status(403));",
+                  "pm.test('error code PROFILE_PRIVATE', () => {",
+                  "    pm.expect(pm.response.json().error.code).to.eql('PROFILE_PRIVATE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}/trips"
+          }
+        },
+        {
+          "name": "PUT Me — Set Public Again (User B)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_public\": true\n}"
+            },
+            "url": "{{base_url}}/v1/users/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — Trips (Fixed Date)",
+      "item": [
+        {
+          "name": "POST Create Trip (Fixed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const trip = pm.response.json();",
+                  "pm.environment.set('trip_id', trip.id);",
+                  "pm.test('status fixed', () => pm.expect(trip.status).to.eql('fixed'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Trip Bali\",\n  \"tags\": [\"pantai\", \"liburan\"],\n  \"start_date\": \"2026-08-01T00:00:00Z\",\n  \"end_date\": \"2026-08-05T00:00:00Z\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/"
+          }
+        },
+        {
+          "name": "GET List Trips (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const trips = pm.response.json();",
+                  "pm.test('returns array not null', () => pm.expect(trips).to.be.an('array'));",
+                  "if (trips.length > 0) {",
+                  "    const t = trips[0];",
+                  "    pm.test('cover_image_url present', () => pm.expect(t).to.have.property('cover_image_url'));",
+                  "    pm.test('participant_count present', () => pm.expect(t.participant_count).to.be.a('number'));",
+                  "    pm.test('participants_preview is array', () => pm.expect(t.participants_preview).to.be.an('array'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/"
+          }
+        },
+        {
+          "name": "GET Trip Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json();",
+                  "pm.test('cover_image_url present', () => pm.expect(t).to.have.property('cover_image_url'));",
+                  "pm.test('participant_count >= 1', () => pm.expect(t.participant_count).to.be.at.least(1));",
+                  "pm.test('participants_preview is array', () => pm.expect(t.participants_preview).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}"
+          }
+        },
+        {
+          "name": "PUT Update Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('name updated', () => pm.expect(pm.response.json().name).to.eql('Trip Bali Updated'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Trip Bali Updated\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — Invitations",
+      "item": [
+        {
+          "name": "POST Invite User B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_b}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/invitations"
+          }
+        },
+        {
+          "name": "GET My Invitations (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const invs = pm.response.json();",
+                  "pm.test('has pending invitation', () => pm.expect(invs.length).to.be.above(0));",
+                  "if (invs.length > 0) {",
+                  "    const inv = invs[0];",
+                  "    pm.environment.set('invitation_id', inv.id);",
+                  "    pm.test('embedded trip object', () => {",
+                  "        pm.expect(inv.trip).to.be.an('object');",
+                  "        pm.expect(inv.trip).to.have.property('id');",
+                  "        pm.expect(inv.trip).to.have.property('name');",
+                  "        pm.expect(inv.trip).to.have.property('cover_image_url');",
+                  "    });",
+                  "    pm.test('embedded inviter object', () => {",
+                  "        pm.expect(inv.inviter).to.be.an('object');",
+                  "        pm.expect(inv.inviter).to.have.property('username');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/invitations"
+          }
+        },
+        {
+          "name": "PUT Decline Invitation (accept: false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 — decline must work', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": false\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/invitations/{{invitation_id}}"
+          }
+        },
+        {
+          "name": "POST Invite User B (again)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_b}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/invitations"
+          }
+        },
+        {
+          "name": "GET My Invitations (User B) — refresh ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const invs = pm.response.json();",
+                  "if (invs.length > 0) pm.environment.set('invitation_id', invs[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/invitations"
+          }
+        },
+        {
+          "name": "PUT Accept Invitation (accept: true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 — accept must work', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/invitations/{{invitation_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 — Voting & Lock Date",
+      "item": [
+        {
+          "name": "POST Create Trip (Voting)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const trip = pm.response.json();",
+                  "pm.environment.set('voting_trip_id', trip.id);",
+                  "pm.test('status voting_pending', () => pm.expect(trip.status).to.eql('voting_pending'));",
+                  "pm.test('voting_deadline set', () => pm.expect(trip.voting_deadline).to.not.be.null);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Trip Voting\",\n  \"tags\": [\"liburan\"],\n  \"candidates\": [\n    {\n      \"start_date\": \"2026-09-01T00:00:00Z\",\n      \"end_date\": \"2026-09-05T00:00:00Z\"\n    },\n    {\n      \"start_date\": \"2026-09-10T00:00:00Z\",\n      \"end_date\": \"2026-09-15T00:00:00Z\"\n    }\n  ]\n}"
+            },
+            "url": "{{base_url}}/v1/trips/"
+          }
+        },
+        {
+          "name": "POST Invite User B to Voting Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_b}}\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/invitations"
+          }
+        },
+        {
+          "name": "GET My Invitations — Voting Trip (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const votingTripId = pm.environment.get('voting_trip_id');",
+                  "const invs = pm.response.json().filter(i => i.trip && i.trip.id === votingTripId);",
+                  "pm.test('voting trip invitation found', () => pm.expect(invs.length).to.be.above(0));",
+                  "if (invs.length > 0) pm.environment.set('invitation_id', invs[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/invitations"
+          }
+        },
+        {
+          "name": "PUT Accept Voting Trip Invitation (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/invitations/{{invitation_id}}"
+          }
+        },
+        {
+          "name": "GET Date Candidates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const candidates = pm.response.json();",
+                  "pm.test('has candidates', () => pm.expect(candidates.length).to.be.above(0));",
+                  "if (candidates.length > 0) {",
+                  "    const c = candidates[0];",
+                  "    pm.environment.set('candidate_id', c.id);",
+                  "    pm.test('user_has_voted field present', () => pm.expect(c).to.have.property('user_has_voted'));",
+                  "    pm.test('voters_preview is array', () => pm.expect(c.voters_preview).to.be.an('array'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/candidates"
+          }
+        },
+        {
+          "name": "POST Vote (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/candidates/{{candidate_id}}/vote"
+          }
+        },
+        {
+          "name": "POST Lock Date — Non-creator (expect 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 for non-creator', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/candidates/{{candidate_id}}/lock"
+          }
+        },
+        {
+          "name": "POST Lock Date — Creator (expect 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}/candidates/{{candidate_id}}/lock"
+          }
+        },
+        {
+          "name": "GET Voting Trip — verify fixed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status is fixed', () => pm.expect(pm.response.json().status).to.eql('fixed'));",
+                  "pm.test('dates set', () => {",
+                  "    pm.expect(pm.response.json().start_date).to.not.be.null;",
+                  "    pm.expect(pm.response.json().end_date).to.not.be.null;",
+                  "});",
+                  "pm.test('voting_deadline cleared after lock', () => pm.expect(pm.response.json().voting_deadline).to.be.null);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 — Destinations & Chat",
+      "item": [
+        {
+          "name": "POST Add Destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('destination_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"place_name\": \"Pantai Kuta\",\n  \"maps_link\": \"https://maps.google.com\",\n  \"reference_link\": \"https://instagram.com/p/example\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/destinations"
+          }
+        },
+        {
+          "name": "GET Destinations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/destinations"
+          }
+        },
+        {
+          "name": "POST Send Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('message_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Halo semua, siap berangkat?\"\n}"
+            },
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/messages"
+          }
+        },
+        {
+          "name": "GET Messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const msgs = pm.response.json();",
+                  "pm.test('returns array', () => pm.expect(msgs).to.be.an('array'));",
+                  "if (msgs.length > 0) {",
+                  "    const m = msgs[0];",
+                  "    if (!pm.environment.get('message_id')) pm.environment.set('message_id', m.id);",
+                  "    pm.test('embedded sender object', () => {",
+                  "        pm.expect(m.sender).to.be.an('object');",
+                  "        pm.expect(m.sender).to.have.property('id');",
+                  "        pm.expect(m.sender).to.have.property('username');",
+                  "    });",
+                  "    pm.test('no bare sender_id', () => pm.expect(m).to.not.have.property('sender_id'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/messages"
+          }
+        },
+        {
+          "name": "DELETE Destination",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/destinations/{{destination_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 — Wishlists",
+      "item": [
+        {
+          "name": "POST Create Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('wishlist_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"place_name\": \"Labuan Bajo\",\n  \"link\": \"https://maps.google.com/labuanbajo\",\n  \"tags\": [\"nature\", \"snorkeling\"],\n  \"priority_level\": \"high\"\n}"
+            },
+            "url": "{{base_url}}/v1/wishlists/"
+          }
+        },
+        {
+          "name": "GET List Wishlists",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/wishlists/?priority=high&tag=nature",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "wishlists", ""],
+              "query": [
+                { "key": "priority", "value": "high" },
+                { "key": "tag", "value": "nature" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT Update Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"place_name\": \"Labuan Bajo (Updated)\",\n  \"priority_level\": \"medium\"\n}"
+            },
+            "url": "{{base_url}}/v1/wishlists/{{wishlist_id}}"
+          }
+        },
+        {
+          "name": "DELETE Wishlist (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/wishlists/{{wishlist_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 — Notifications & Gaps (M5.1)",
+      "item": [
+        {
+          "name": "GET List Trips — tab=upcoming",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/trips/?tab=upcoming",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "trips", ""],
+              "query": [{ "key": "tab", "value": "upcoming" }]
+            }
+          }
+        },
+        {
+          "name": "GET List Trips — tab=completed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/trips/?tab=completed",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "trips", ""],
+              "query": [{ "key": "tab", "value": "completed" }]
+            }
+          }
+        },
+        {
+          "name": "GET User Trips — Follower (User A views B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const trips = pm.response.json();",
+                  "pm.test('returns array', () => pm.expect(trips).to.be.an('array'));",
+                  "if (trips.length > 0) {",
+                  "    pm.test('enriched trip fields', () => {",
+                  "        pm.expect(trips[0]).to.have.property('cover_image_url');",
+                  "        pm.expect(trips[0]).to.have.property('participant_count');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/users/{{username_b}}/trips"
+          }
+        },
+        {
+          "name": "GET Notifications (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const notifs = pm.response.json();",
+                  "pm.test('returns array', () => pm.expect(notifs).to.be.an('array'));",
+                  "if (notifs.length > 0) {",
+                  "    pm.environment.set('notification_id', notifs[0].id);",
+                  "    pm.test('notification has type', () => pm.expect(notifs[0].type).to.be.oneOf(['invite', 'follow', 'voting_deadline', 'destination_update']));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/notifications/"
+          }
+        },
+        {
+          "name": "GET Notifications Unread Count (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('unread_count is number', () => {",
+                  "    pm.expect(pm.response.json().unread_count).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/notifications/unread-count"
+          }
+        },
+        {
+          "name": "PUT Mark Notification Read (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": "{{base_url}}/v1/notifications/{{notification_id}}/read"
+          }
+        },
+        {
+          "name": "PUT Mark All Notifications Read (User B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": "{{base_url}}/v1/notifications/read-all"
+          }
+        },
+        {
+          "name": "GET Unread Count After Mark All (expect 0)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('unread_count is 0', () => pm.expect(pm.response.json().unread_count).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/notifications/unread-count"
+          }
+        },
+        {
+          "name": "DELETE Message — Non-sender (expect 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 for non-sender', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_b}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/messages/{{message_id}}"
+          }
+        },
+        {
+          "name": "DELETE Message — Sender (User A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/messages/{{message_id}}"
+          }
+        },
+        {
+          "name": "GET Messages After Delete — soft-deleted excluded",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const deletedId = pm.environment.get('message_id');",
+                  "const msgs = pm.response.json();",
+                  "const found = msgs.find(m => m.id === deletedId);",
+                  "pm.test('deleted message not in list', () => pm.expect(found).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}/messages"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 — Cleanup",
+      "item": [
+        {
+          "name": "DELETE Trip (soft delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{trip_id}}"
+          }
+        },
+        {
+          "name": "DELETE Voting Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token_a}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/v1/trips/{{voting_trip_id}}"
+          }
+        }
+      ]
+    }
+  ]
+}

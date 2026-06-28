@@ -92,3 +92,34 @@ func toUserDTO(u *domain.User) userDTO {
 		CreatedAt: u.CreatedAt,
 	}
 }
+
+// profileViewDTO is the privacy-aware public profile returned by GET /v1/users/:username.
+type profileViewDTO struct {
+	ID             string  `json:"id"`
+	Username       string  `json:"username"`
+	Name           string  `json:"name"`
+	AvatarURL      *string `json:"avatar_url"`
+	Bio            *string `json:"bio"`
+	IsPublic       bool    `json:"is_public"`
+	FollowersCount int     `json:"followers_count"`
+	FollowingCount int     `json:"following_count"`
+	PublicTripCount int    `json:"public_trip_count"`
+	IsFollowing    bool    `json:"is_following"`
+	CanViewContent bool    `json:"can_view_content"`
+}
+
+func toProfileViewDTO(v *domain.ProfileView) profileViewDTO {
+	return profileViewDTO{
+		ID:             v.ID.String(),
+		Username:       v.Username,
+		Name:           v.Name,
+		AvatarURL:      v.AvatarURL,
+		Bio:            v.Bio,
+		IsPublic:       v.IsPublic,
+		FollowersCount: v.FollowersCount,
+		FollowingCount: v.FollowingCount,
+		PublicTripCount: v.PublicTripCount,
+		IsFollowing:    v.IsFollowing,
+		CanViewContent: v.CanViewContent,
+	}
+}

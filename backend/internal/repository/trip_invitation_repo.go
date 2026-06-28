@@ -63,6 +63,47 @@ ORDER BY created_at DESC`
 	return invitations, rows.Err()
 }
 
+// FindPendingByUserEnriched returns pending invitations with embedded trip and inviter data.
+func (r *tripInvitationRepo) FindPendingByUserEnriched(ctx context.Context, userID uuid.UUID) ([]*domain.InvitationEnriched, error) {
+	const query = `
+SELECT i.id, i.trip_id, i.invited_by, i.invited_user_id, i.invited_email, i.method, i.status, i.created_at, i.updated_at,
+       t.name, t.cover_image_url,
+       u.id, u.name, u.username, u.avatar_url
+FROM trip_invitations i
+JOIN trips t ON t.id = i.trip_id
+JOIN users u ON u.id = i.invited_by
+WHERE i.invited_user_id = $1 AND i.status = 'pending'
+ORDER BY i.created_at DESC`
+
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("trip_invitation_repo: FindPendingByUserEnriched: %w", err)
+	}
+	defer rows.Close()
+
+	var result []*domain.InvitationEnriched
+	for rows.Next() {
+		var e domain.InvitationEnriched
+		var tripCoverURL *string
+		if err := rows.Scan(
+			&e.ID, &e.TripID, &e.InvitedBy, &e.InvitedUserID, &e.InvitedEmail,
+			&e.Method, &e.Status, &e.CreatedAt, &e.UpdatedAt,
+			&e.Trip.Name, &tripCoverURL,
+			&e.Inviter.ID, &e.Inviter.Name, &e.Inviter.Username, &e.Inviter.AvatarURL,
+		); err != nil {
+			return nil, fmt.Errorf("trip_invitation_repo: FindPendingByUserEnriched scan: %w", err)
+		}
+		e.Trip.ID = e.TripID
+		if tripCoverURL != nil {
+			e.Trip.CoverImageURL = *tripCoverURL
+		} else {
+			e.Trip.CoverImageURL = domain.DefaultCoverImageURL
+		}
+		result = append(result, &e)
+	}
+	return result, rows.Err()
+}
+
 func (r *tripInvitationRepo) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.InvitationStatus) error {
 	const query = `
 UPDATE trip_invitations

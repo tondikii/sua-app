@@ -24,30 +24,33 @@ func NewTripRepository(db *pgxpool.Pool) domain.TripRepository {
 
 func (r *tripRepo) Create(ctx context.Context, trip *domain.Trip) error {
 	const query = `
-INSERT INTO trips (id, creator_id, name, tags, status, start_date, end_date, is_public)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+INSERT INTO trips (id, creator_id, name, tags, status, start_date, end_date, is_public, cover_image_url, voting_deadline)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 	tagsJSON, err := json.Marshal(trip.Tags)
 	if err != nil {
 		return fmt.Errorf("trip_repo: marshal tags: %w", err)
 	}
 	_, err = r.db.Exec(ctx, query,
 		trip.ID, trip.CreatorID, trip.Name, tagsJSON, trip.Status,
-		trip.StartDate, trip.EndDate, trip.IsPublic,
+		trip.StartDate, trip.EndDate, trip.IsPublic, trip.CoverImageURL, trip.VotingDeadline,
 	)
 	return mapPgError(err)
 }
 
 func (r *tripRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Trip, error) {
 	const query = `
-SELECT id, creator_id, name, tags, status, start_date, end_date, is_public, deleted_at, created_at, updated_at
+SELECT id, creator_id, name, tags, status, start_date, end_date, is_public,
+       cover_image_url, voting_deadline, deleted_at, created_at, updated_at
 FROM trips WHERE id = $1 AND deleted_at IS NULL`
 	row := r.db.QueryRow(ctx, query, id)
 	return scanTrip(row)
 }
 
-func (r *tripRepo) FindByParticipant(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*domain.Trip, error) {
+// ListByParticipant returns trips the user belongs to, keyset-paginated by trip ID.
+func (r *tripRepo) ListByParticipant(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*domain.Trip, error) {
 	const base = `
-SELECT t.id, t.creator_id, t.name, t.tags, t.status, t.start_date, t.end_date, t.is_public, t.deleted_at, t.created_at, t.updated_at
+SELECT t.id, t.creator_id, t.name, t.tags, t.status, t.start_date, t.end_date, t.is_public,
+       t.cover_image_url, t.voting_deadline, t.deleted_at, t.created_at, t.updated_at
 FROM trips t
 JOIN trip_participants p ON p.trip_id = t.id
 WHERE p.user_id = $1 AND t.deleted_at IS NULL`
@@ -60,7 +63,59 @@ WHERE p.user_id = $1 AND t.deleted_at IS NULL`
 	query += ` ORDER BY t.id ASC LIMIT $` + fmt.Sprint(len(args))
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, fmt.Errorf("trip_repo: FindByParticipant: %w", err)
+		return nil, fmt.Errorf("trip_repo: ListByParticipant: %w", err)
+	}
+	defer rows.Close()
+	return scanTrips(rows)
+}
+
+// ListByParticipantFiltered is like ListByParticipant but applies an optional tab filter.
+// tab values: "upcoming" | "completed" | "" (all).
+func (r *tripRepo) ListByParticipantFiltered(ctx context.Context, userID uuid.UUID, tab string, cursor *uuid.UUID, limit int) ([]*domain.Trip, error) {
+	base := `
+SELECT t.id, t.creator_id, t.name, t.tags, t.status, t.start_date, t.end_date, t.is_public,
+       t.cover_image_url, t.voting_deadline, t.deleted_at, t.created_at, t.updated_at
+FROM trips t
+JOIN trip_participants p ON p.trip_id = t.id
+WHERE p.user_id = $1 AND t.deleted_at IS NULL`
+
+	switch tab {
+	case "upcoming":
+		base += ` AND (t.status = 'voting_pending' OR (t.status = 'fixed' AND t.end_date >= CURRENT_DATE))`
+	case "completed":
+		base += ` AND t.status = 'fixed' AND t.end_date < CURRENT_DATE`
+	}
+
+	args := []any{userID, limit}
+	if cursor != nil {
+		base += ` AND t.id > $2`
+		args = []any{userID, *cursor, limit}
+	}
+	base += ` ORDER BY t.id ASC LIMIT $` + fmt.Sprint(len(args))
+
+	rows, err := r.db.Query(ctx, base, args...)
+	if err != nil {
+		return nil, fmt.Errorf("trip_repo: ListByParticipantFiltered: %w", err)
+	}
+	defer rows.Close()
+	return scanTrips(rows)
+}
+
+// ListByCreator returns trips created by ownerID, optionally restricting to public ones.
+func (r *tripRepo) ListByCreator(ctx context.Context, ownerID uuid.UUID, publicOnly bool) ([]*domain.Trip, error) {
+	query := `
+SELECT id, creator_id, name, tags, status, start_date, end_date, is_public,
+       cover_image_url, voting_deadline, deleted_at, created_at, updated_at
+FROM trips
+WHERE creator_id = $1 AND deleted_at IS NULL`
+	if publicOnly {
+		query += ` AND is_public = TRUE`
+	}
+	query += ` ORDER BY created_at DESC`
+
+	rows, err := r.db.Query(ctx, query, ownerID)
+	if err != nil {
+		return nil, fmt.Errorf("trip_repo: ListByCreator: %w", err)
 	}
 	defer rows.Close()
 	return scanTrips(rows)
@@ -69,13 +124,17 @@ WHERE p.user_id = $1 AND t.deleted_at IS NULL`
 func (r *tripRepo) Update(ctx context.Context, trip *domain.Trip) error {
 	const query = `
 UPDATE trips
-SET name = $1, tags = $2, start_date = $3, end_date = $4, updated_at = NOW()
-WHERE id = $5 AND deleted_at IS NULL`
+SET name = $1, tags = $2, status = $3, start_date = $4, end_date = $5,
+    cover_image_url = $6, voting_deadline = $7, updated_at = NOW()
+WHERE id = $8 AND deleted_at IS NULL`
 	tagsJSON, err := json.Marshal(trip.Tags)
 	if err != nil {
 		return fmt.Errorf("trip_repo: marshal tags: %w", err)
 	}
-	 tag, err := r.db.Exec(ctx, query, trip.Name, tagsJSON, trip.StartDate, trip.EndDate, trip.ID)
+	tag, err := r.db.Exec(ctx, query,
+		trip.Name, tagsJSON, trip.Status, trip.StartDate, trip.EndDate,
+		trip.CoverImageURL, trip.VotingDeadline, trip.ID,
+	)
 	if err != nil {
 		return mapPgError(err)
 	}
@@ -119,16 +178,90 @@ func (r *tripRepo) IsCreator(ctx context.Context, tripID, userID uuid.UUID) (boo
 	return exists, nil
 }
 
-func (r *tripRepo) ListByParticipant(ctx context.Context, userID uuid.UUID, cursor *uuid.UUID, limit int) ([]*domain.Trip, error) {
-	return r.FindByParticipant(ctx, userID, cursor, limit)
+// GetParticipantsInfo fetches participant counts and up-to-previewLimit user summaries
+// for each of the given trip IDs in a single query.
+func (r *tripRepo) GetParticipantsInfo(ctx context.Context, tripIDs []uuid.UUID, previewLimit int) (map[uuid.UUID]*domain.ParticipantsInfo, error) {
+	if len(tripIDs) == 0 {
+		return map[uuid.UUID]*domain.ParticipantsInfo{}, nil
+	}
+
+	// Build a CTE that ranks participants per trip so we can grab the first N.
+	const query = `
+WITH ranked AS (
+    SELECT
+        tp.trip_id,
+        u.id        AS user_id,
+        u.name,
+        u.username,
+        u.avatar_url,
+        ROW_NUMBER() OVER (PARTITION BY tp.trip_id ORDER BY tp.joined_at ASC) AS rn,
+        COUNT(*) OVER (PARTITION BY tp.trip_id)                              AS total
+    FROM trip_participants tp
+    JOIN users u ON u.id = tp.user_id
+    WHERE tp.trip_id = ANY($1)
+)
+SELECT trip_id, user_id, name, username, avatar_url, rn, total
+FROM ranked
+WHERE rn <= $2
+ORDER BY trip_id, rn`
+
+	rows, err := r.db.Query(ctx, query, tripIDs, previewLimit)
+	if err != nil {
+		return nil, fmt.Errorf("trip_repo: GetParticipantsInfo: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[uuid.UUID]*domain.ParticipantsInfo)
+	for rows.Next() {
+		var tripID, userID uuid.UUID
+		var name, username string
+		var avatarURL *string
+		var rn, total int
+		if err := rows.Scan(&tripID, &userID, &name, &username, &avatarURL, &rn, &total); err != nil {
+			return nil, fmt.Errorf("trip_repo: GetParticipantsInfo scan: %w", err)
+		}
+		info, ok := result[tripID]
+		if !ok {
+			info = &domain.ParticipantsInfo{Count: total}
+			result[tripID] = info
+		}
+		info.Preview = append(info.Preview, &domain.UserSummary{
+			ID:        userID,
+			Name:      name,
+			Username:  username,
+			AvatarURL: avatarURL,
+		})
+	}
+	return result, rows.Err()
 }
 
-func scanTrip(row rowScanner) (*domain.Trip, error) {
-	var t domain.Trip
+// ListParticipantIDs returns all participant user IDs for a trip.
+func (r *tripRepo) ListParticipantIDs(ctx context.Context, tripID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT user_id FROM trip_participants WHERE trip_id = $1`, tripID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("trip_repo: ListParticipantIDs: %w", err)
+	}
+	defer rows.Close()
+	var ids []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("trip_repo: ListParticipantIDs scan: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+func scanTrip(row rowScanner) (*domain.Trip, error) {	var t domain.Trip
 	var tagsJSON []byte
 	err := row.Scan(
 		&t.ID, &t.CreatorID, &t.Name, &tagsJSON, &t.Status,
-		&t.StartDate, &t.EndDate, &t.IsPublic, &t.DeletedAt, &t.CreatedAt, &t.UpdatedAt,
+		&t.StartDate, &t.EndDate, &t.IsPublic,
+		&t.CoverImageURL, &t.VotingDeadline,
+		&t.DeletedAt, &t.CreatedAt, &t.UpdatedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

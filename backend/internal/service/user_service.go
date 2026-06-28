@@ -10,13 +10,15 @@ import (
 )
 
 type userService struct {
-	users   domain.UserRepository
-	follows domain.FollowRepository
+	users         domain.UserRepository
+	follows       domain.FollowRepository
+	notifications domain.NotificationWriter // optional; nil = skip notifications
 }
 
 // NewUserService returns a domain.UserService backed by the provided repositories.
-func NewUserService(users domain.UserRepository, follows domain.FollowRepository) domain.UserService {
-	return &userService{users: users, follows: follows}
+// notifications may be nil; when nil notification writes are skipped silently.
+func NewUserService(users domain.UserRepository, follows domain.FollowRepository, notifications domain.NotificationWriter) domain.UserService {
+	return &userService{users: users, follows: follows, notifications: notifications}
 }
 
 // UpsertFromGoogle finds or creates a user from a verified Google ID token payload.
@@ -86,19 +88,70 @@ func (s *userService) CompleteRegistration(ctx context.Context, userID uuid.UUID
 	return user, nil
 }
 
-// GetProfile returns a user's public profile. Returns ErrNotFound for private
-// profiles when the viewer is not the profile owner.
-func (s *userService) GetProfile(ctx context.Context, username string, viewerID *uuid.UUID) (*domain.User, error) {
+// GetProfile looks up a user by username without privacy enforcement.
+// Used internally by follow/unfollow handlers that need the raw user record.
+func (s *userService) GetProfile(ctx context.Context, username string, _ *uuid.UUID) (*domain.User, error) {
+	return s.users.FindByUsername(ctx, username)
+}
+
+// GetProfileView returns the privacy-aware public profile for GET /v1/users/:username.
+// Private accounts return a limited view with can_view_content=false for non-followers.
+func (s *userService) GetProfileView(ctx context.Context, username string, viewerID *uuid.UUID) (*domain.ProfileView, error) {
 	user, err := s.users.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
-	if !user.IsPublic {
-		if viewerID == nil || *viewerID != user.ID {
-			return nil, domain.ErrNotFound
+
+	view := &domain.ProfileView{User: *user}
+
+	// Determine can_view_content.
+	isOwner := viewerID != nil && *viewerID == user.ID
+	if isOwner {
+		view.CanViewContent = true
+	} else if user.IsPublic {
+		view.CanViewContent = true
+	} else if viewerID != nil {
+		following, err := s.follows.IsFollowing(ctx, *viewerID, user.ID)
+		if err != nil {
+			return nil, fmt.Errorf("user_service: check following: %w", err)
+		}
+		view.CanViewContent = following
+		view.IsFollowing = following
+	}
+	// If !can_view_content: hide bio.
+	if !view.CanViewContent {
+		view.Bio = nil
+	}
+	// Always populate counts (visible even for private profiles per spec).
+	view.FollowersCount, err = s.follows.CountFollowers(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("user_service: count followers: %w", err)
+	}
+	view.FollowingCount, err = s.follows.CountFollowing(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("user_service: count following: %w", err)
+	}
+	view.PublicTripCount, err = s.users.CountPublicTrips(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("user_service: count public trips: %w", err)
+	}
+	// is_following for non-owner viewers (may already be set above if private).
+	if !isOwner && viewerID != nil && !view.IsFollowing {
+		view.IsFollowing, err = s.follows.IsFollowing(ctx, *viewerID, user.ID)
+		if err != nil {
+			return nil, fmt.Errorf("user_service: is_following: %w", err)
 		}
 	}
-	return user, nil
+	return view, nil
+}
+
+// CheckUsernameAvailable returns true when the username is not taken.
+func (s *userService) CheckUsernameAvailable(ctx context.Context, username string) (bool, error) {
+	taken, err := s.users.IsUsernameTaken(ctx, username)
+	if err != nil {
+		return false, fmt.Errorf("user_service: check username: %w", err)
+	}
+	return !taken, nil
 }
 
 // UpdateProfile applies partial updates to the authenticated user's own profile.
@@ -130,7 +183,16 @@ func (s *userService) Follow(ctx context.Context, followerID, followingID uuid.U
 	if _, err := s.users.FindByID(ctx, followingID); err != nil {
 		return err
 	}
-	return s.follows.Create(ctx, followerID, followingID)
+	if err := s.follows.Create(ctx, followerID, followingID); err != nil {
+		return err
+	}
+	// Best-effort notification (non-blocking).
+	if s.notifications != nil {
+		go func() {
+			_ = s.notifications.NotifyFollow(context.Background(), followingID, followerID)
+		}()
+	}
+	return nil
 }
 
 func (s *userService) Unfollow(ctx context.Context, followerID, followingID uuid.UUID) error {

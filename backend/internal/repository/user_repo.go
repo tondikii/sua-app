@@ -82,17 +82,38 @@ func (r *userRepo) IsUsernameTaken(ctx context.Context, username string) (bool, 
 	return exists, nil
 }
 
-// SearchByQuery performs a case-insensitive trigram search across username and name.
-// Only public profiles are returned. cursor is reserved for future keyset pagination.
-func (r *userRepo) SearchByQuery(ctx context.Context, query string, limit int, _ *uuid.UUID) ([]*domain.User, error) {
-	const sql = `
+// CountPublicTrips returns the number of public, non-deleted trips where userID is a participant.
+func (r *userRepo) CountPublicTrips(ctx context.Context, userID uuid.UUID) (int, error) {
+	var n int
+	err := r.db.QueryRow(ctx,
+		`SELECT COUNT(*) FROM trips t
+         JOIN trip_participants p ON p.trip_id = t.id
+         WHERE p.user_id = $1 AND t.is_public = TRUE AND t.deleted_at IS NULL`,
+		userID,
+	).Scan(&n)
+	if err != nil {
+		return 0, fmt.Errorf("user_repo: CountPublicTrips: %w", err)
+	}
+	return n, nil
+}
+
+// SearchByQuery performs a case-insensitive search across username and name for public profiles.
+// Results are ordered by id ASC for stable keyset pagination; pass the last returned id as cursor.
+func (r *userRepo) SearchByQuery(ctx context.Context, query string, limit int, cursor *uuid.UUID) ([]*domain.User, error) {
+	const base = `
 		SELECT id, google_id, email, name, username, avatar_url, bio, is_public, created_at, updated_at
 		FROM users
 		WHERE is_public = true
-		  AND (username ILIKE '%' || $1 || '%' OR name ILIKE '%' || $1 || '%')
-		ORDER BY username ASC
-		LIMIT $2`
-	rows, err := r.db.Query(ctx, sql, query, limit)
+		  AND (username ILIKE '%' || $1 || '%' OR name ILIKE '%' || $1 || '%')`
+	sql := base
+	args := []any{query, limit}
+	if cursor != nil {
+		sql += ` AND id > $2`
+		args = []any{query, *cursor, limit}
+	}
+	sql += ` ORDER BY id ASC LIMIT $` + fmt.Sprint(len(args))
+
+	rows, err := r.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("user_repo: SearchByQuery: %w", err)
 	}
@@ -114,6 +135,11 @@ func (r *userRepo) SearchByQuery(ctx context.Context, query string, limit int, _
 // rowScanner is satisfied by both pgx.Row and pgx.Rows.
 type rowScanner interface {
 	Scan(dest ...any) error
+}
+
+// isNoRows returns true for pgx.ErrNoRows so callers can produce domain.ErrNotFound.
+func isNoRows(err error) bool {
+	return errors.Is(err, pgx.ErrNoRows)
 }
 
 func scanUser(row rowScanner) (*domain.User, error) {

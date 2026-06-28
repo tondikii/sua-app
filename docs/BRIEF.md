@@ -23,4 +23,4 @@ Atur Perjalanan hadir sebagai *hub* terpusat yang menjembatani inspirasi liburan
 * **Nama**: Atur Perjalanan (Sebuah *call-to-action* yang jelas dan fungsional).
 * **Vibe**: Energik, kolaboratif, solutif, dan sosial.
 * **Tone**: *Fun*, *playful*, santai, dan bersahabat—tidak kaku seperti aplikasi produktivitas korporat.
-* **Color Palette**: Sunset & Beach (Pure white canvas, dark charcoal text, Warm Coral strictly for active tabs/primary buttons, Soft Teal for secondary accents/icons). 
+* **Visual Identity**: Palette Sunset & Beach dengan warna Warm Coral primary, Soft Teal secondary, dan typography Plus Jakarta Sans. Detail lengkap (HEX, spacing, radius): [docs/FIGMA.md § Design Tokens](docs/FIGMA.md#-design-tokens). 

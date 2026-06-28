@@ -1,93 +1,174 @@
 # WorkFlow - Atur Perjalanan
 
-Dokumen ini mencatat alur kerja (*workflow*) pengguna dari awal membuka aplikasi hingga menggunakan seluruh fitur di dalamnya. Alur ini juga dirancang sebagai panduan pembuatan antarmuka (UI/UX) dan skema basis data (*database*).
+> **Tujuan dokumen ini**: Mendokumentasikan alur kerja pengguna (*user workflows*) dari awal membuka aplikasi hingga menggunakan seluruh fitur. Alur selaras dengan **32 layar high-fidelity** Figma (lihat `docs/FIGMA.md` untuk inventori lengkap) dan **5 tab Bottom Navigation Bar** utama.
 
 ---
 
 ## Struktur Navigasi Utama (Bottom Tab Bar)
-Untuk panduan UI/UX, aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu utama:
-1. **Beranda (Home)**: Daftar perjalanan.
-2. **Pencarian (Explore)**: Mencari pengguna lain.
-3. **[+] Buat (Create)**: Tombol *Floating Action Button* (FAB) di tengah untuk membuat perjalanan.
-4. **Wishlist**: Daftar destinasi impian.
-5. **Profil**: Halaman akun pengguna.
+
+Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/components/BottomNav.tsx`):
+
+| Posisi | Label | Fungsi |
+|--------|-------|--------|
+| 1 | **Beranda** | Daftar perjalanan (tab Mendatang / Selesai / Undangan) |
+| 2 | **Cari** | Pencarian pengguna lain |
+| 3 | **[+]** | FAB tengah — buat perjalanan baru |
+| 4 | **Wishlist** | Daftar destinasi impian |
+| 5 | **Profil** | Halaman akun pengguna |
 
 ---
 
 ## 1. Onboarding Layar Awal (Frontend)
-* Saat aplikasi pertama kali dibuka setelah instalasi, Frontend (FE) akan mengecek status (*flag*) pengguna.
-* Jika ini adalah kali pertama pengguna membuka aplikasi, sistem akan menampilkan layar *Onboarding*.
-* **UI/UX**: Layar ini menampilkan *slider/carousel* ilustrasi untuk mengedukasi pengguna mengenai apa itu "Atur Perjalanan" dan bagaimana aplikasi ini dapat membantu merencanakan liburan (Manajemen Perjalanan, Voting Jadwal, Grup Chat).
-* Setelah melewati layar perkenalan, pengguna diarahkan ke halaman Autentikasi.
+
+* **Layar Figma**: `Screen9EduOnboarding`, `Screen25Splash`
+* Saat aplikasi pertama kali dibuka, tampil **Splash Screen** singkat, lalu FE mengecek flag first-launch.
+* Jika pertama kali: tampilkan carousel onboarding (hero image + 3 slide fitur: Manajemen Perjalanan, Voting Jadwal, Grup Chat).
+* Setelah onboarding selesai, arahkan ke halaman Autentikasi.
 
 ## 2. Autentikasi (Google Sign-In)
-* **UI/UX**: Halaman bersih dengan logo aplikasi dan satu tombol utama "Lanjutkan dengan Google".
-* Sistem mengambil data profil dasar dari Google (Email, Nama, Avatar) dan menyimpannya ke dalam *database*.
-* **Bagi Pengguna Baru**: Diarahkan ke form pengisian untuk membuat *username* unik terlebih dahulu sebelum masuk ke sistem utama.
-* **Bagi Pengguna Lama**: Sistem memvalidasi sesi secara otomatis dan langsung mengarahkan pengguna ke halaman Beranda.
-* **Interaksi Data**: Menyimpan atau memvalidasi baris di tabel `users` (`id`, `google_id`, `email`, `name`, `username`, `avatar_url`).
+
+* **Layar Figma**: `Screen1Auth`, `Screen10Username`
+* **UI/UX**: Halaman bersih dengan logo aplikasi dan tombol "Lanjutkan dengan Google" (Warm Coral `#FF6B6B`).
+* Sistem mengambil data profil dasar dari Google (Email, Nama, Avatar) dan menyimpannya ke *database*.
+* **Pengguna Baru**: Diarahkan ke form pembuatan *username* unik dengan validasi real-time (`Screen10Username`).
+* **Pengguna Lama**: Langsung ke Beranda.
+* **Interaksi Data**: Upsert tabel `users`; `POST /v1/auth/google` → `POST /v1/auth/complete-registration` (jika baru).
 
 ## 3. Beranda (Home) - Tab 1
-* Setelah berhasil masuk, pengguna diarahkan ke halaman Beranda.
-* **UI/UX & Layout**:
-  * **Header**: *icon* lonceng untuk Notifikasi (undangan trip, *follow* baru).
-  * **Tab View**: Terdapat *segmented control* atau *swipeable tabs* dengan kategori: "Mendatang", "Selesai", dan "Undangan".
-  * **Komponen Card**: Setiap perjalanan ditampilkan dalam bentuk *Card* modern (mirip Airbnb). *Card* memuat Judul Trip, *Tags* (berupa *chips*), Rentang Tanggal, dan *Stacked Avatars* (foto profil kecil yang bertumpuk) dari para partisipan.
-* **Interaksi Data**:
-  * FE melakukan *fetch* data dari tabel `trips` yang di-*join* dengan tabel `trip_participants` berdasarkan `user_id` pengguna yang sedang masuk.
-  * **Data yang ditampilkan**: `trip_id`, `trip_name`, `tags`, `start_date`, `end_date`, `status`, dan relasi ke `users.avatar` untuk menampilkan wajah partisipan.
+
+* **Layar Figma**: `Screen2Home`, `Screen17EmptyBeranda`, `Screen26DarkBeranda`
+* **Header**: Ikon lonceng Notifikasi dengan badge unread → navigasi ke layar Notifikasi (§11).
+* **Tab View**: "Mendatang", "Selesai", "Undangan" (*segmented control*).
+* **Trip Card** (`Screen2Home`):
+  * Cover image hero di bagian atas card
+  * Judul trip, Tags (chips teal), rentang tanggal, stacked avatars partisipan
+* **Empty State** (`Screen17EmptyBeranda`): Ilustrasi + CTA buat perjalanan pertama.
+* **Interaksi Data**: `GET /v1/trips` (filter by status/tab), `GET /v1/trips/invitations` (tab Undangan).
 
 ## 4. Pencarian & Profil - Tab 2 & Tab 5
-* **Alur Pencarian (Tab 2 - Explore)**:
-  * **UI/UX**: Halaman berisi *Search Bar* di bagian atas. Saat mengetik, muncul *list view* hasil pencarian. Setiap baris menampilkan Avatar, Username, Nama Asli, dan tombol "Follow/Unfollow".
-  * **Interaksi Data**: FE mengirim *query* pencarian via API. Backend (BE) mencari `LIKE %query%` di tabel `users` pada kolom `username` dan `name`.
-* **Alur Profil Pribadi (Tab 5 - Profile)**:
-  * **UI/UX**: Menampilkan Foto Profil besar, Username, Bio singkat, angka statistik "Followers" & "Following". Di bawahnya terdapat *Grid* riwayat perjalanan publik. Terdapat tombol "Edit Profil".
-  * **Interaksi Data**: FE mengambil data dari tabel `users`, menghitung baris di tabel `follows` untuk statistik, dan menarik `trips` dengan `is_public = true`.
 
-## 5. Pembuatan Perjalanan (Trip Initialization) - Tab 3 [+]
-* Pengguna menekan tombol "+" di tengah *Bottom Navigation*.
-* **UI/UX & Layout**:
-  * Menggunakan *Modal Full-Screen* atau *Bottom Sheet*.
-  * **Form Info**: Input "Nama Perjalanan", dan input dinamis untuk "Tags" (ketik lalu *enter* menjadi *Chip*).
-  * **Date Picker**: Form langsung menampilkan satu input rentang kalender (*Start* - *End*).
-  * **Tombol "Tambah Kandidat Tanggal"**: Berada di bawah input kalender utama. Jika ditekan, akan memunculkan rentang kalender baru (menambah *Card* kandidat tanggal ke bawah form) dan menyediakan ikon hapus pada setiap kandidat tambahan.
+* **Layar Figma**: `Screen12SearchUser`, `Screen3Profile`, `Screen16EditProfil`, `Screen20PublicProfile`, `Screen21Settings`
+
+### Pencarian (Tab Cari)
+* Search bar + list hasil: Avatar, Username, Nama, tombol Follow/Unfollow.
+* **Interaksi Data**: `GET /v1/users/search`, `POST/DELETE /v1/users/:username/follow`.
+
+### Profil Pribadi (Tab Profil)
+* Foto, username, bio, statistik Followers/Following, grid trip, tombol Edit Profil & Pengaturan.
+* **Interaksi Data**: `GET /v1/users/me`, `GET /v1/users/me/trips` (semua trip creator).
+
+### Profil User Lain (`Screen20PublicProfile`)
+* Dibuka saat tap hasil pencarian.
+* **Akun publik**: profil lengkap + grid trip (`trips.is_public=true` milik creator).
+* **Akun privat** (Instagram-style): non-follower hanya melihat avatar, username, nama, stats, tombol Follow, dan banner *"Akun ini privat"* — **tanpa bio dan tanpa grid trip**.
+* **Follower akun privat**: profil lengkap + grid trip (`trips.is_public=true`).
+* **Interaksi Data**: `GET /v1/users/:username` (field `can_view_content`), `GET /v1/users/:username/trips` (403 jika privat & bukan follower).
+
+### Edit Profil (`Screen16EditProfil`)
+* Edit bio + toggle akun privat/publik (`is_public`).
+* **Interaksi Data**: `PUT /v1/users/me`.
+
+## 5. Pembuatan Perjalanan - Tab [+]
+
+* **Layar Figma**: `Screen4Create`, `Screen30MultiDatePicker`, `Screen27FormValidation`
+* **UI/UX**: Modal full-screen (`Screen4Create`) dengan form:
+  * Input "Nama Perjalanan" (wajib — validasi error di `Screen27FormValidation`)
+  * Tags dinamis (ketik → chip teal, tombol × hapus)
+  * Kalender rentang tanggal (start–end) dengan navigasi bulan
+  * Tombol "+ Tambah Kandidat Tanggal" (dashed border) → menambah card kalender baru (`Screen30MultiDatePicker`)
+  * CTA sticky "Buat Perjalanan" (Warm Coral)
 * **Interaksi Data**:
-  * BE membuat *record* di tabel `trips` (`trip_id`, `trip_name`, `tags`, `creator_id`).
-  * **Jika Hanya 1 Rentang Tanggal**: Menyimpan `start_date` dan `end_date` langsung ke tabel `trips`, lalu set status `fixed`.
-  * **Jika Lebih dari 1 Rentang Tanggal**: Set status `trips` ke `voting_pending`. Menyimpan seluruh rentang waktu yang diinput ke tabel `trip_date_candidates` (`candidate_id`, `trip_id`, `start_date`, `end_date`).
+  * 1 rentang tanggal → `status=fixed`, simpan `start_date`/`end_date` di `trips`
+  * >1 rentang → `status=voting_pending`, simpan ke `trip_date_candidates`
+  * `POST /v1/trips`
 
-## 6. Pengisian Destinasi Perjalanan
-* Di dalam halaman *Detail Trip*, pengguna masuk ke tab "Destinasi".
-* **UI/UX & Layout**:
-  * Menampilkan *Vertical List* tempat yang akan dikunjungi. Jika kosong, tampilkan *Empty State* (ilustrasi + tombol "Tambah Destinasi").
-  * Menekan tombol memunculkan *Bottom Sheet* berisi form: "Nama Tempat" (Wajib), "Link Google Maps" (Opsional), "Link Referensi TikTok/IG" (Opsional).
-  * Tempat yang ditambahkan muncul sebagai *Card* dengan tombol kecil "Buka Peta" atau ikon referensi sosial media.
-* **Interaksi Data**: BE menyimpan data ke tabel `trip_destinations` (`destination_id`, `trip_id`, `place_name`, `maps_link`, `reference_link`).
+## 6. Detail Perjalanan — Tab Destinasi · Voting · Chat
+
+* **Layar Figma**: `Screen5Destinations`, `Screen6Voting`, `Screen7Chat`, `Screen13BottomSheetDestinasi`, `Screen29DestinationDetail`
+* Header: judul trip, tanggal/anggota, tombol back, menu `⋯`, tombol "+ Undang Teman".
+* **3 Tab** (bukan "Info"): **Destinasi · Voting · Chat**
+
+### Tab Destinasi
+* Vertical list destinasi dengan emoji/ikon, nama, lokasi.
+* Empty state + tombol "Tambah Destinasi".
+* Bottom sheet form (`Screen13BottomSheetDestinasi`): Nama Tempat (wajib), Link Google Maps, Link Referensi TikTok/IG.
+* Tap card → **Detail Destinasi sheet** (`Screen29DestinationDetail`): snippet peta, tombol Buka Maps, link referensi media sosial.
+* **Interaksi Data**: `GET/POST/DELETE /v1/trips/:id/destinations`
+
+### Tab Voting
+* Lihat §8. Saat `status=fixed`, tampilkan state terkunci (`Screen19StatusLocked`).
+
+### Tab Chat
+* Lihat §9.
 
 ## 7. Mengundang Partisipan & Kolaborasi
-* Di halaman *Detail Trip*, terdapat tombol "+ Undang Teman".
-* **UI/UX & Layout**: Muncul *Bottom Sheet* dengan kolom pencarian *username* atau input alamat email.
-* **Interaksi Data**:
-  * **Via Username**: Menyimpan ke tabel `trip_invitations` (`trip_id`, `invited_user_id`, `status='pending'`). Saat diterima, BE menambahkan pengguna ke `trip_participants` dan otomatis menambahkan *record* saling mengikuti di tabel `follows`.
-  * **Via Email**: BE langsung menembak *Google Calendar API* untuk mengirim undangan *event*.
 
-## 8. Voting Tanggal (Jika Jadwal Belum Pasti)
-* Berlaku untuk perjalanan dengan status `voting_pending`.
-* **UI/UX & Layout**: Di bagian atas *Detail Trip*, muncul *Banner* "Butuh Voting Tanggal". Mengkliknya membuka halaman berisi *Card* kandidat tanggal. Setiap partisipan dapat menekan tombol "Vote" (ikon jempol/ceklis) pada tanggal yang cocok.
-* **Penguncian Tanggal**: Pembuat perjalanan dapat melihat jumlah *vote* dan menekan tombol "Kunci Tanggal Ini" pada opsi dengan suara terbanyak.
+* **Layar Figma**: `Screen14BottomSheetUndang`
+* Bottom sheet: cari username atau input email.
 * **Interaksi Data**:
-  * *Voting*: Menyimpan data ke tabel `trip_date_votes` (`candidate_id`, `user_id`).
-  * *Penguncian*: BE memperbarui `start_date` dan `end_date` di tabel `trips`, mengubah status menjadi `fixed`, lalu memicu (*trigger*) *Google Calendar API* untuk sinkronisasi jadwal ke kalender seluruh partisipan.
+  * Via Username → `trip_invitations` (status pending); notifikasi in-app (§11)
+  * Via Email → Google Calendar API event invite (M11)
+  * Terima undangan → mutual follow otomatis + `trip_participants`
+
+## 8. Voting Tanggal
+
+* **Layar Figma**: `Screen6Voting`, `Screen19StatusLocked`, `Screen31CalendarSyncModal`
+* Berlaku untuk `status=voting_pending`.
+* Tab Voting menampilkan card kandidat tanggal + jumlah vote + tombol Vote.
+* Creator: tombol "Kunci Tanggal Ini" pada kandidat terpilih.
+* Setelah lock (`status=fixed`): banner teal "Jadwal Dikunci" (`Screen19StatusLocked`) + modal sukses sync kalender (`Screen31CalendarSyncModal`).
+* **Interaksi Data**: `trip_date_votes`, lock → update `trips`, trigger Google Calendar sync.
 
 ## 9. Grup Chat Internal Perjalanan
-* Di dalam *Detail Trip*, terdapat tab khusus "Chat".
-* **UI/UX & Layout**: Antarmuka *chat* standar (seperti WhatsApp/Telegram). Terdapat area pesan (*message bubbles*), kolom input teks di bawah, dan tombol kirim.
-* **Interaksi Data**: Menyimpan dan mengambil (*fetch real-time* jika memungkinkan) data dari tabel `trip_messages` (`message_id`, `trip_id`, `sender_id`, `message_text`, `created_at`).
 
-## 10. Wishlist (Daftar Keinginan) - Tab 4
-* **UI/UX & Layout**:
-  * Menampilkan *Grid* atau *List View* dari destinasi yang disimpan pengguna.
-  * Memiliki opsi *Filter/Sort* di bagian atas berdasarkan *Tags* atau Tingkat Prioritas.
-  * Terdapat tombol FAB "+" untuk menambah *Wishlist* baru. Form pengisian meminta: Nama Tempat, Link Referensi/Peta, *Tags*, dan Pemilihan Prioritas (Tinggi, Menengah, Rendah).
-* **Interaksi Data**: Menyimpan ke tabel `wishlists` (`wishlist_id`, `user_id`, `place_name`, `link`, `tags`, `priority_level`).
+* **Layar Figma**: `Screen7Chat`, `Screen18EmptyChat`, `Screen28ChatLongPress`
+* Chat bubbles (coral = pesan sendiri, putih = pesan orang lain), input + kirim + lampiran (UI).
+* Header chat: nama grup, jumlah anggota aktif, mini avatars.
+* **Empty State** (`Screen18EmptyChat`): ilustrasi + prompt mulai obrolan.
+* **Long Press** (`Screen28ChatLongPress`): menu konteks → Balas, Salin Teks, Hapus (pesan sendiri).
+* **Interaksi Data**: `GET/POST /v1/trips/:id/messages` (cursor-paginated, chronological).
+
+## 10. Wishlist - Tab 4
+
+* **Layar Figma**: `Screen8Wishlist`, `Screen15BottomSheetWishlist`
+* Grid/List view + Filter/Sort bar (tags, prioritas).
+* FAB "+" → bottom sheet form: Nama Tempat, Link, Tags, Prioritas (Tinggi/Menengah/Rendah).
+* **Interaksi Data**: `GET/POST/PUT/DELETE /v1/wishlists`
+
+## 11. Notifikasi
+
+* **Layar Figma**: `Screen11Notifikasi`
+* Diakses via ikon lonceng di Beranda.
+* Tipe notifikasi:
+  * **Undangan trip** — aksi Terima / Tolak
+  * **Follow baru** — aksi Follow back
+  * **Voting deadline** — aksi Vote (deep link ke tab Voting)
+  * **Update destinasi** — tap navigasi ke trip detail
+* Badge unread di ikon lonceng; mark-as-read saat dibuka.
+* **Interaksi Data**: ⚠️ Membutuhkan endpoint notifications (belum ada di M5). Sementara bisa di-*compose* dari `trip_invitations` + polling/events.
+
+## 12. Pengaturan
+
+* **Layar Figma**: `Screen21Settings`
+* Diakses dari Profil. Grup menu:
+  * **Akun**: Notifikasi (push prefs), Privasi & Keamanan (link ke toggle `is_public`)
+  * **Dukungan**: Bantuan & FAQ, Syarat & Ketentuan, Tentang Aplikasi (versi)
+  * **Logout**: Hapus token lokal + redirect ke Sign In
+* **Interaksi Data**: Sebagian local-only; push prefs membutuhkan endpoint terpisah (post-MVP).
+
+## 13. System States & Micro-interactions
+
+* **Layar Figma**: `Screen22SkeletonLoading`, `Screen23ToastComponents`, `Screen24Error`, `Screen25Splash`, `Screen26DarkBeranda`, `Screen27FormValidation`, `Screen32DesignTokens`
+
+| State | Deskripsi | Trigger |
+|-------|-----------|---------|
+| **Splash** | Logo coral + loading | App cold start |
+| **Skeleton** | Shimmer placeholder card/list | Fetch data in-progress |
+| **Toast Success** | Teal snackbar (contoh: "Perjalanan berhasil dibuat") | Aksi sukses |
+| **Toast Error** | Coral snackbar + tombol Retry | API error |
+| **Toast Offline** | Info banner "Tidak ada koneksi" | Network unreachable |
+| **Error 404/Offline** | Ilustrasi compass + CTA "Coba Lagi" | Halaman/route tidak ditemukan atau offline |
+| **Form Validation** | Border merah `#E53935` + pesan error inline | Submit form invalid |
+| **Dark Mode** | Variant Beranda dengan palette gelap | System theme / user preference (M12) |
+
+Design tokens lengkap: `Screen32DesignTokens.tsx` / `figma/src/app/components/colors.ts`.

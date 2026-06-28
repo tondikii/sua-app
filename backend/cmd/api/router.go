@@ -1,22 +1,23 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/sudutkode/atur-perjalanan/backend/internal/config"
 	"github.com/sudutkode/atur-perjalanan/backend/internal/handler"
+	"github.com/sudutkode/atur-perjalanan/backend/internal/jobs"
 	"github.com/sudutkode/atur-perjalanan/backend/internal/middleware"
 	"github.com/sudutkode/atur-perjalanan/backend/internal/repository"
 	"github.com/sudutkode/atur-perjalanan/backend/internal/service"
 )
 
 // buildRouter is the composition root: it wires repositories → services → handlers
-// and registers all HTTP routes. Add new phases here as they are implemented.
+// and registers all HTTP routes.
 func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	if cfg.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -24,45 +25,47 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 	r := gin.New()
 	r.Use(gin.Recovery())
-	r.Use(requestIDMiddleware())
+	r.Use(middleware.RequestID())
 
 	// ── Repositories ──────────────────────────────────────────────────────────
-	userRepo   := repository.NewUserRepository(pool)
+	userRepo := repository.NewUserRepository(pool)
 	followRepo := repository.NewFollowRepository(pool)
-    wishlistRepo := repository.NewWishlistRepository(pool)
-
-	// ── Services ──────────────────────────────────────────────────────────────
-	userSvc := service.NewUserService(userRepo, followRepo)
-	wishlistSvc := service.NewWishlistService(wishlistRepo)
-
-	// ── Repositories ──────────────────────────────────────────────────────────
+	wishlistRepo := repository.NewWishlistRepository(pool)
 	tripRepo := repository.NewTripRepository(pool)
-	tripParticipantRepo := repository.NewTripParticipantRepository(pool)
 	tripInvitationRepo := repository.NewTripInvitationRepository(pool)
 	tripCandidateRepo := repository.NewTripDateCandidateRepository(pool)
 	tripDestinationRepo := repository.NewTripDestinationRepository(pool)
 	tripMessageRepo := repository.NewTripMessageRepository(pool)
+	notificationRepo := repository.NewNotificationRepository(pool)
 
 	// ── Services ──────────────────────────────────────────────────────────────
+	notificationSvc := service.NewNotificationService(notificationRepo, tripRepo)
+	userSvc := service.NewUserService(userRepo, followRepo, notificationSvc)
+	wishlistSvc := service.NewWishlistService(wishlistRepo)
 	tripSvc := service.NewTripService(
 		tripRepo,
-		tripParticipantRepo,
 		tripInvitationRepo,
 		tripCandidateRepo,
 		tripDestinationRepo,
 		tripMessageRepo,
 		userRepo,
+		followRepo,
 		pool,
+		notificationSvc,
 	)
 
-	// ── Handlers ─────────────────────────────────────────────────────────────-
-	jwtSecret  := []byte(cfg.JWTSecret)
+	// ── Background jobs ────────────────────────────────────────────────────────
+	jobs.StartVotingReminder(context.Background(), notificationRepo, notificationSvc)
+
+	// ── Handlers ──────────────────────────────────────────────────────────────
+	jwtSecret := []byte(cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(userSvc, cfg.GoogleClientID, jwtSecret)
 	tripHandler := handler.NewTripHandler(tripSvc)
-	userHandler := handler.NewUserHandler(userSvc)
+	userHandler := handler.NewUserHandler(userSvc, tripSvc)
 	wishlistHandler := handler.NewWishlistHandler(wishlistSvc)
+	notificationHandler := handler.NewNotificationHandler(notificationSvc)
 
-	// ── Health check — unauthenticated ────────────────────────────────────────
+	// ── Health check — unauthenticated, not rate-limited ──────────────────────
 	r.GET("/health", func(c *gin.Context) {
 		if err := pool.Ping(c.Request.Context()); err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{
@@ -77,10 +80,11 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		})
 	})
 
-	// ── v1 API ────────────────────────────────────────────────────────────────
+	// ── v1 API — rate-limited ─────────────────────────────────────────────────
 	v1 := r.Group("/v1")
+	v1.Use(middleware.RateLimiter(120))
 
-	// Phase 2 — Authentication
+	// Auth
 	auth := v1.Group("/auth")
 	{
 		auth.POST("/google", authHandler.PostGoogle)
@@ -90,25 +94,11 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		)
 	}
 
-	// Phase 3 — Trip APIs
+	// Trips, Users, Wishlists, Notifications
 	tripHandler.RegisterRoutes(v1, jwtSecret)
-
-	// Phase 4 — Users & Wishlists
 	userHandler.RegisterRoutes(v1, jwtSecret)
 	wishlistHandler.RegisterRoutes(v1, jwtSecret)
+	notificationHandler.RegisterRoutes(v1, jwtSecret)
 
 	return r
-}
-
-// requestIDMiddleware propagates or generates a correlation ID for every request.
-func requestIDMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		reqID := c.GetHeader("X-Request-ID")
-		if reqID == "" {
-			reqID = uuid.NewString()
-		}
-		c.Set("requestID", reqID)
-		c.Header("X-Request-ID", reqID)
-		c.Next()
-	}
 }

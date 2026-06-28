@@ -19,7 +19,7 @@
 
 .PHONY: help up down logs ps \
         migrate-up migrate-down migrate-create \
-        build run test lint tidy
+        build run test test-integration lint tidy
 
 # Load root .env so DATABASE_URL is available for migrate-* targets.
 # Variables with spaces or special chars in .env may need quoting.
@@ -61,8 +61,11 @@ build: ## Compile the backend binary → backend/bin/api
 run: ## Run the Go backend server (reads backend/.env)
 	cd backend && go run ./cmd/api
 
-test: ## Run all backend tests with the race detector
+test: ## Run all backend unit tests with the race detector
 	cd backend && go test -race -cover ./...
+
+test-integration: ## Run integration tests against a real DB (requires TEST_DATABASE_URL)
+	cd backend && go test -race -tags integration -v ./internal/service/
 
 lint: ## Run go vet across all packages
 	cd backend && go vet ./...
