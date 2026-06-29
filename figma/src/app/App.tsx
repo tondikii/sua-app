@@ -25,6 +25,8 @@ import { Screen10PublicProfile } from './components/screens/Screen10PublicProfil
 import { Screen36ProfileEmptyTrip } from './components/screens/Screen36ProfileEmptyTrip';
 import { Screen37PublicProfileEmptyTrip } from './components/screens/Screen37PublicProfileEmptyTrip';
 import { Screen11Settings } from './components/screens/Screen11Settings';
+import { Screen38SettingsDeleteAccount } from './components/screens/Screen38SettingsDeleteAccount';
+import { Screen39SettingsHelpFaq } from './components/screens/Screen39SettingsHelpFaq';
 
 // §5 Pembuatan Perjalanan
 import { Screen12Create } from './components/screens/Screen12Create';
@@ -73,7 +75,7 @@ type WorkflowSection = {
   screens: { index: number; label: string; component: ReactElement }[];
 };
 
-/** Pengelompokan selaras dengan docs/WORKFLOW.md §1–§13 · nomor layar 1–37 mengikuti urutan section */
+/** Pengelompokan selaras dengan docs/WORKFLOW.md §1–§13 · nomor layar 1–39 mengikuti urutan section */
 const workflowSections: WorkflowSection[] = [
   {
     id: 1,
@@ -121,6 +123,8 @@ const workflowSections: WorkflowSection[] = [
       { index: 36, label: 'Profil — Empty Trip', component: <Screen36ProfileEmptyTrip /> },
       { index: 9, label: 'Edit Profil', component: <Screen9EditProfil /> },
       { index: 11, label: 'Pengaturan', component: <Screen11Settings /> },
+      { index: 39, label: 'Bantuan & FAQ', component: <Screen39SettingsHelpFaq /> },
+      { index: 38, label: 'Hapus Akun', component: <Screen38SettingsDeleteAccount /> },
     ],
   },
   {
@@ -288,7 +292,7 @@ export default function App() {
         </div>
 
         <p style={{ color: '#9091A0', fontSize: 15, margin: '0 0 22px', fontWeight: 500 }}>
-          Mobile App UI · 37 Layar High-Fidelity · Layar 1–37 selaras urutan docs/WORKFLOW.md
+          Mobile App UI · 39 Layar High-Fidelity · Layar 1–39 selaras urutan docs/WORKFLOW.md
         </p>
 
         {/* Palette swatches */}

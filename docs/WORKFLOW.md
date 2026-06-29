@@ -49,6 +49,8 @@ Setiap layar muncul **sekali** di preview bundle, dikelompokkan ke bagian workfl
 | 36 | `Screen36ProfileEmptyTrip` | §4 Pencarian & Profil | — |
 | 9 | `Screen9EditProfil` | §4 Pencarian & Profil | — |
 | 11 | `Screen11Settings` | §4 Pencarian & Profil | §12 |
+| 38 | `Screen38SettingsDeleteAccount` | §4 Pencarian & Profil | §12 |
+| 39 | `Screen39SettingsHelpFaq` | §4 Pencarian & Profil | §12 |
 | 12 | `Screen12Create` | §5 Pembuatan Perjalanan | — |
 | 13 | `Screen13MultiDatePicker` | §5 Pembuatan Perjalanan | — |
 | 14 | `Screen14FormValidation` | §5 Pembuatan Perjalanan | §13 |
@@ -126,7 +128,7 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## 4. Pencarian & Profil - Tab 2 & Tab 5
 
-* **Layar Figma**: `Screen35SearchIdle`, `Screen7SearchUser`, `Screen10PublicProfile`, `Screen8Profile`, `Screen36ProfileEmptyTrip`, `Screen9EditProfil`, `Screen11Settings`
+* **Layar Figma**: `Screen35SearchIdle`, `Screen7SearchUser`, `Screen10PublicProfile`, `Screen8Profile`, `Screen36ProfileEmptyTrip`, `Screen9EditProfil`, `Screen11Settings`, `Screen39SettingsHelpFaq`, `Screen38SettingsDeleteAccount`
 * **Urutan preview §4**: Cari idle → Cari hasil → Profil publik (dari hasil) → Profil pribadi → Edit profil → Pengaturan.
 
 ### Pencarian (Tab Cari)
@@ -236,13 +238,43 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## 12. Pengaturan
 
-* **Layar Figma**: `Screen11Settings` (dikelompokkan di §4 bersama Profil)
-* **Entry**: Tombol Pengaturan dari Profil pribadi (§4).
-* Grup menu:
-  * **Akun**: Notifikasi (push prefs), Privasi & Keamanan (deep link ke toggle `is_public` di Edit Profil §4)
-  * **Dukungan**: Bantuan & FAQ, Syarat & Ketentuan, Tentang Aplikasi (versi)
-  * **Logout**: Hapus token lokal + redirect ke Sign In (§2)
-* **Interaksi Data**: Sebagian local-only; push prefs membutuhkan endpoint terpisah (post-MVP).
+* **Layar Figma**: `Screen11Settings`, `Screen39SettingsHelpFaq`, `Screen38SettingsDeleteAccount`
+* **Entry**: Ikon Pengaturan dari Profil pribadi (§4).
+
+### Kepatuhan Google Play Store (2025–2026)
+
+| Item menu | Wajib Play? | Catatan |
+|-----------|-------------|---------|
+| **Kebijakan Privasi** | **Ya** | Harus ada di app dengan label jelas + link di Play Console & Data safety form |
+| **Hapus Akun** | **Ya** | Wajib jika user bisa buat akun; butuh jalur in-app + URL web di Play Console |
+| **Syarat & Ketentuan** | Tidak wajib | Best practice; sering digabung dengan privasi |
+| **Notifikasi** | Tidak wajib | *Ditunda* — belum ada toggle off push |
+| **Privasi & Keamanan** | Tidak wajib label ini | *Phase berikutnya* — toggle `is_public` |
+| **Bantuan & FAQ** | Tidak wajib | Membantu dukungan pengguna |
+| **Tentang Aplikasi** | Tidak wajib | Versi ditampilkan sebagai teks footer di `Screen11Settings` |
+| **Keluar** | Tidak wajib | Diharapkan untuk app ber-autentikasi |
+
+> **Di luar app (wajib di Play Console)**: Data safety form, URL kebijakan privasi, URL penghapusan akun web.
+
+### Sub-layar yang disarankan (belum semua ada di Figma)
+
+| Menu | Layar berikutnya | Isi utama |
+|------|------------------|-----------|
+| Notifikasi | — | *Ditunda MVP* | — |
+| Privasi & Keamanan | — | *Phase berikutnya* | Toggle `is_public` |
+| Hapus Akun | `Screen38SettingsDeleteAccount` | Peringatan ringkas, konfirmasi username | `DELETE /v1/users/me` |
+| Bantuan & FAQ | `Screen39SettingsHelpFaq` | Accordion FAQ + email kontak | — |
+| Kebijakan Privasi | WebView / in-app browser | URL `https://…/privacy` — konten legal |
+| Syarat & Ketentuan | WebView | URL `https://…/terms` |
+| Tentang Aplikasi | Footer `Screen11Settings` | Teks versi saja | — |
+| Keluar | Dialog konfirmasi | "Yakin keluar?" → hapus token lokal → §2 Auth |
+
+* Grup menu (`Screen11Settings`):
+  * **Bantuan & Legal**: Bantuan & FAQ, Kebijakan Privasi, Syarat & Ketentuan
+  * **Akun**: Hapus Akun
+  * **Keluar**: Hapus token lokal + redirect ke Sign In (§2)
+  * **Footer**: `Atur Perjalanan · v2.4.1` (bukan menu item)
+* **Interaksi Data**: `DELETE /v1/users/me` (hapus akun); push prefs endpoint terpisah (post-MVP).
 
 ## 13. System States & Micro-interactions
 
