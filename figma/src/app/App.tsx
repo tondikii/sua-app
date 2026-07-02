@@ -19,6 +19,7 @@ import { Screen34HomeUndangan } from './components/screens/Screen34HomeUndangan'
 // §4 Pencarian & Profil
 import { Screen35SearchIdle } from './components/screens/Screen35SearchIdle';
 import { Screen7SearchUser } from './components/screens/Screen7SearchUser';
+import { Screen40SearchNoResults } from './components/screens/Screen40SearchNoResults';
 import { Screen8Profile } from './components/screens/Screen8Profile';
 import { Screen9EditProfil } from './components/screens/Screen9EditProfil';
 import { Screen10PublicProfile } from './components/screens/Screen10PublicProfile';
@@ -32,6 +33,7 @@ import { Screen39SettingsHelpFaq } from './components/screens/Screen39SettingsHe
 import { Screen12Create } from './components/screens/Screen12Create';
 import { Screen13MultiDatePicker } from './components/screens/Screen13MultiDatePicker';
 import { Screen14FormValidation } from './components/screens/Screen14FormValidation';
+import { Screen41CreateTripNoDate } from './components/screens/Screen41CreateTripNoDate';
 
 // §6 Detail Perjalanan
 import { Screen15Destinations } from './components/screens/Screen15Destinations';
@@ -112,11 +114,12 @@ const workflowSections: WorkflowSection[] = [
   {
     id: 4,
     title: '4. Pencarian & Profil — Tab 2 & 5',
-    subtitle: 'Cari (idle & hasil) · Profil publik · Profil pribadi · Empty trip · Edit · Pengaturan',
+    subtitle: 'Cari (idle, hasil & kosong) · Profil publik · Profil pribadi · Empty trip · Edit · Pengaturan',
     accent: '#4ECDC4',
     screens: [
       { index: 35, label: 'Cari — Idle', component: <Screen35SearchIdle /> },
       { index: 7, label: 'Cari — Hasil', component: <Screen7SearchUser /> },
+      { index: 40, label: 'Cari — Tidak Ada Hasil', component: <Screen40SearchNoResults /> },
       { index: 10, label: 'Profil Publik', component: <Screen10PublicProfile /> },
       { index: 37, label: 'Profil Publik — Empty Trip', component: <Screen37PublicProfileEmptyTrip /> },
       { index: 8, label: 'Profil & Eksplorasi', component: <Screen8Profile /> },
@@ -130,12 +133,13 @@ const workflowSections: WorkflowSection[] = [
   {
     id: 5,
     title: '5. Pembuatan Perjalanan — Tab [+]',
-    subtitle: 'Form buat trip · Multi kandidat tanggal · Validasi form',
+    subtitle: 'Form buat trip · Multi kandidat tanggal · Validasi form · Tanggal belum dipilih',
     accent: '#FF6B6B',
     screens: [
       { index: 12, label: 'Buat Perjalanan', component: <Screen12Create /> },
       { index: 13, label: 'Multi Kandidat Tanggal', component: <Screen13MultiDatePicker /> },
-      { index: 14, label: 'Form Validation', component: <Screen14FormValidation /> },
+      { index: 14, label: 'Form Validation — Nama', component: <Screen14FormValidation /> },
+      { index: 41, label: 'Form Validation — Tanggal', component: <Screen41CreateTripNoDate /> },
     ],
   },
   {
@@ -292,7 +296,7 @@ export default function App() {
         </div>
 
         <p style={{ color: '#9091A0', fontSize: 15, margin: '0 0 22px', fontWeight: 500 }}>
-          Mobile App UI · 39 Layar High-Fidelity · Layar 1–39 selaras urutan docs/WORKFLOW.md
+          Mobile App UI · 41 Layar High-Fidelity · Layar 1–41 selaras urutan docs/WORKFLOW.md
         </p>
 
         {/* Palette swatches */}

@@ -24,8 +24,8 @@ export function Screen3Auth() {
         fontFamily: FONT,
       }}
     >
-      {/* Hero image area — 58% of screen */}
-      <div style={{ flex: '0 0 58%', position: 'relative', overflow: 'hidden', backgroundColor: '#D4C8BC' }}>
+      {/* Hero — proporsi lebih kecil agar konten bawah tidak terpotong */}
+      <div style={{ flex: '0 0 46%', position: 'relative', overflow: 'hidden', backgroundColor: '#D4C8BC', flexShrink: 0 }}>
         <img
           src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=700&fit=crop&auto=format"
           alt="Perjalanan indah menanti"
@@ -40,7 +40,6 @@ export function Screen3Auth() {
           }}
         />
 
-        {/* Logo — sits inside hero, accounting for dynamic island */}
         <div
           style={{
             position: 'absolute',
@@ -55,17 +54,17 @@ export function Screen3Auth() {
         >
           <div
             style={{
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               backgroundColor: C.coral,
-              borderRadius: 18,
+              borderRadius: 16,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               boxShadow: `0 10px 28px ${C.coral}60`,
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="white" stroke="none" />
             </svg>
@@ -74,7 +73,7 @@ export function Screen3Auth() {
             <h1
               style={{
                 color: 'white',
-                fontSize: 26,
+                fontSize: 24,
                 fontWeight: 800,
                 margin: 0,
                 letterSpacing: -0.5,
@@ -83,27 +82,37 @@ export function Screen3Auth() {
             >
               Atur Perjalanan
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, margin: '5px 0 0', textShadow: '0 1px 6px rgba(0,0,0,0.3)' }}>
+            <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, margin: '4px 0 0', textShadow: '0 1px 6px rgba(0,0,0,0.3)' }}>
               Rencanakan. Jelajahi. Kenang.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Bottom content */}
-      <div style={{ flex: 1, backgroundColor: C.white, padding: '28px 24px 32px', display: 'flex', flexDirection: 'column' }}>
+      {/* Bottom content — scrollable jika layar sempit */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          backgroundColor: C.white,
+          padding: '22px 24px 34px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+        }}
+      >
         <h2 style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.4 }}>
           Mulai Perjalananmu
         </h2>
-        <p style={{ fontSize: 13, color: C.muted, margin: '7px 0 24px', lineHeight: 1.65 }}>
+        <p style={{ fontSize: 13, color: C.muted, margin: '6px 0 20px', lineHeight: 1.6 }}>
           Bergabung dan rencanakan perjalanan seru bersama orang-orang tersayang.
         </p>
 
-        {/* Primary CTA */}
         <button
+          type="button"
           style={{
             width: '100%',
-            height: 54,
+            height: 52,
             backgroundColor: C.coral,
             color: 'white',
             border: 'none',
@@ -117,24 +126,24 @@ export function Screen3Auth() {
             cursor: 'pointer',
             boxShadow: `0 10px 28px ${C.coral}45`,
             fontFamily: FONT,
+            flexShrink: 0,
           }}
         >
           <GoogleIcon />
           Lanjutkan dengan Google
         </button>
 
-        {/* Divider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0', flexShrink: 0 }}>
           <div style={{ flex: 1, height: 1, backgroundColor: C.border }} />
           <span style={{ fontSize: 12, color: C.mutedLight }}>atau</span>
           <div style={{ flex: 1, height: 1, backgroundColor: C.border }} />
         </div>
 
-        {/* Secondary */}
         <button
+          type="button"
           style={{
             width: '100%',
-            height: 50,
+            height: 48,
             backgroundColor: 'transparent',
             color: C.charcoal,
             border: `1.5px solid ${C.border}`,
@@ -143,12 +152,13 @@ export function Screen3Auth() {
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: FONT,
+            flexShrink: 0,
           }}
         >
           Masuk dengan Email
         </button>
 
-        <p style={{ fontSize: 11, color: C.mutedLight, textAlign: 'center', marginTop: 20, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 11, color: C.mutedLight, textAlign: 'center', marginTop: 18, lineHeight: 1.65, flexShrink: 0 }}>
           Dengan melanjutkan, kamu menyetujui{' '}
           <span style={{ color: C.coral, fontWeight: 600 }}>Syarat & Ketentuan</span> serta{' '}
           <span style={{ color: C.coral, fontWeight: 600 }}>Kebijakan Privasi</span> kami.

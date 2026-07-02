@@ -1,0 +1,191 @@
+import type { ReactNode } from 'react';
+import { Search, X } from 'lucide-react';
+import { C, AVATAR_COLORS, FONT } from '../colors';
+import { HeaderTextButton } from '../ui/ScreenChrome';
+
+export type SearchUser = {
+  id: number;
+  name: string;
+  username: string;
+  initial: string;
+  color?: string;
+  avatarGradient?: string;
+  trips?: number;
+  following?: boolean;
+};
+
+export const RINA_GRADIENT = `linear-gradient(135deg, ${C.teal} 0%, #7FE3DE 100%)`;
+
+export const SEARCH_RECENT: SearchUser[] = [
+  {
+    id: 1,
+    name: 'Rina Dwi Lestari',
+    username: 'rinadwi_travel',
+    initial: 'R',
+    avatarGradient: RINA_GRADIENT,
+    trips: 28,
+  },
+  {
+    id: 2,
+    name: 'Andi Firmansyah',
+    username: 'andifirman',
+    initial: 'A',
+    color: AVATAR_COLORS[1],
+    trips: 12,
+  },
+];
+
+export const SEARCH_RESULTS: SearchUser[] = [
+  {
+    id: 1,
+    name: 'Rina Dwi Lestari',
+    username: 'rinadwi_travel',
+    initial: 'R',
+    avatarGradient: RINA_GRADIENT,
+    following: false,
+    trips: 28,
+  },
+  {
+    id: 2,
+    name: 'Karina Putri',
+    username: 'karina_putri',
+    initial: 'K',
+    color: AVATAR_COLORS[4],
+    following: false,
+    trips: 5,
+  },
+];
+
+type SearchBarProps = {
+  query?: string;
+  focused?: boolean;
+  rightAction?: ReactNode;
+};
+
+export function SearchBar({ query, focused = false, rightAction }: SearchBarProps) {
+  const isActive = focused || Boolean(query);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          backgroundColor: C.light,
+          borderRadius: 14,
+          padding: '12px 16px',
+          border: `1.5px solid ${isActive ? C.coral : C.border}`,
+          boxShadow: isActive ? `0 0 0 3px ${C.coralLight}` : 'none',
+        }}
+      >
+        <Search size={16} color={isActive ? C.coral : C.muted} strokeWidth={2.5} />
+        {query ? (
+          <span style={{ fontSize: 14, color: C.charcoal, fontWeight: 500, flex: 1 }}>{query}</span>
+        ) : (
+          <span style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500, flex: 1 }}>
+            Cari nama atau username...
+          </span>
+        )}
+        {query && (
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              backgroundColor: C.muted,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <X size={11} color="white" strokeWidth={3} />
+          </div>
+        )}
+      </div>
+      {rightAction}
+    </div>
+  );
+}
+
+type SearchUserRowProps = {
+  user: SearchUser;
+  variant: 'recent' | 'result';
+  showBorder?: boolean;
+  highlight?: boolean;
+};
+
+export function SearchUserRow({ user, variant, showBorder = true, highlight = false }: SearchUserRowProps) {
+  const avatarSize = 44;
+  const avatarBg = user.avatarGradient ?? user.color ?? AVATAR_COLORS[0];
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '12px 0',
+        borderBottom: showBorder ? `1px solid ${C.border}` : 'none',
+        cursor: highlight ? 'pointer' : 'default',
+      }}
+    >
+      <div
+        style={{
+          width: avatarSize,
+          height: avatarSize,
+          background: avatarBg,
+          borderRadius: 15,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 16,
+          fontWeight: 800,
+          color: 'white',
+          flexShrink: 0,
+        }}
+      >
+        {user.initial}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.2 }}>
+          {user.name}
+        </p>
+        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>@{user.username}</p>
+        {variant === 'result' && user.trips !== undefined && (
+          <p style={{ fontSize: 11, color: C.mutedLight, margin: '2px 0 0', fontWeight: 500 }}>
+            {user.trips} perjalanan
+          </p>
+        )}
+      </div>
+      {variant === 'result' && (
+        <button
+          type="button"
+          style={{
+            height: 34,
+            padding: '0 14px',
+            backgroundColor: user.following ? C.tealLight : 'transparent',
+            color: user.following ? C.teal : C.charcoal,
+            border: user.following ? `1.5px solid ${C.teal}40` : `1.5px solid ${C.border}`,
+            borderRadius: 10,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: FONT,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {user.following ? '✓ Mengikuti' : 'Ikuti'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function SearchCancelButton() {
+  return <HeaderTextButton>Batal</HeaderTextButton>;
+}
