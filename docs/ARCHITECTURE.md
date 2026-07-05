@@ -128,11 +128,10 @@ atur-perjalanan/
 │   │   │   └── request_id.go
 │   │   ├── service/              # Business logic layer
 │   │   │   ├── trip_service.go   # trips, invitations, voting, chat
-│   │   │   ├── user_service.go   # auth upsert, profile, follow, search
+│   │   │   ├── user_service.go   # auth upsert, profile, search
 │   │   │   └── wishlist_service.go
 │   │   ├── repository/           # Data access layer (one file per table)
 │   │   │   ├── user_repo.go
-│   │   │   ├── follow_repo.go
 │   │   │   ├── trip_repo.go
 │   │   │   ├── trip_invitation_repo.go
 │   │   │   ├── trip_date_candidate_repo.go
@@ -150,8 +149,7 @@ atur-perjalanan/
 │   ├── migrations/               # SQL migration files (golang-migrate)
 │   │   ├── 000001_create_extensions.up.sql
 │   │   ├── 000002_create_users.up.sql
-│   │   ├── 000003_create_follows.up.sql
-│   │   └── ...                   # 11 sequential .up.sql / .down.sql pairs
+│   │   └── ...                   # sequential .up.sql / .down.sql pairs
 │   ├── go.mod
 │   └── go.sum
 │
@@ -201,13 +199,60 @@ atur-perjalanan/
 
 ## 3. Database Architecture & Schema Strategy
 
+> **Design sync (Juli 2026)**: Dokumen ini membedakan **schema/API yang sudah ada di repo** (migrasi `000001`–`000015`, handler Go) vs **target desain Figma** (`figma/`, `docs/WORKFLOW.md`). Implementasi gap → milestone **M5.2** (lihat `docs/MILESTONES.md`). UI memakai label **Itinerary/aktivitas**; tabel/endpoint saat ini masih `trip_destinations` / `/destinations`.
+
+### 3.0 Migration Inventory (Implemented)
+
+| Migrasi | Isi |
+|---------|-----|
+| `000001` | Extension `pg_trgm`; fungsi `trigger_set_updated_at()` |
+| `000002` | Tabel `users` (+ `is_public`, trigram index username/name) |
+| `000003` | Tabel `follows` (composite PK; belum dipakai UI MVP) |
+| `000004` | Tabel `trips` (status, dates, tags, `is_public`, soft delete) |
+| `000005` | Tabel `trip_participants` |
+| `000006` | Tabel `trip_invitations` (username \| email) |
+| `000007` | Tabel `trip_date_candidates` |
+| `000008` | Tabel `trip_date_votes` |
+| `000009` | Tabel `trip_destinations` (minimal: place, maps, 1 ref link, sort_order) |
+| `000010` | Tabel `trip_messages` (text only) |
+| `000011` | Tabel `wishlists` (minimal: place, link, tags, priority) |
+| `000012` | Alter `trips`: +`cover_image_url`, +`voting_deadline` |
+| `000013` | Alter `trip_messages`: +`deleted_at` (soft delete) |
+| `000014` | Enum `notification_type` + tabel `notifications` |
+| `000015` | View `user_follow_counts` (belum dipakai repo Go; counts via query langsung) |
+
+**Total: 15 migrasi.** Semua definisi tabel di §3.3 di bawah ini yang **tidak** punya label 🔜 sudah tercermin di migrasi di atas.
+
+### 3.0.1 Design Sync Status Matrix
+
+Status vs **112 layar Figma** (`docs/FIGMA.md`, `docs/WORKFLOW.md`):
+
+| Domain UI | Layar (§) | Schema DB | API | Catatan |
+|-----------|-----------|-----------|-----|---------|
+| Auth + username | §2 (3–4) | ✅ `users` | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` | — |
+| Beranda tabs + undangan | §3 (5–6, 33–34) | ✅ | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id` | Tab Undangan = endpoint terpisah |
+| Notifikasi | §3 (27) | ✅ `notifications` | ✅ CRUD read + unread-count | Tipe `follow` ditunda post-MVP |
+| Pencarian + profil publik | §4 (35, 7, 10) | ✅ | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` | Riwayat search = lokal |
+| Profil + edit | §5 (8–9) | ✅ | ✅ `GET/PUT /users/me` | 🔜 social URL, avatar upload, `DELETE /users/me` |
+| Create trip + undang | §6 (12–14, 57–82, 20, 43–45) | ⚠️ partial | ⚠️ partial | 🔜 `is_all_day`, `start_time`, `end_time`; batalkan undangan |
+| Itinerary / aktivitas | §7 (15, 72, 18–93) | ⚠️ thin | ⚠️ thin | 🔜 times, kind, cover, multi-ref, `PUT` edit |
+| Voting multi-tipe | §8 (16, 42–66) | ❌ no `trip_polls` | ⚠️ date only | Tanggal via `candidates`; Aktivitas/Lainnya → M5.2/M9 |
+| Chat text | §9 (17, 23–24) | ✅ text + soft delete | ✅ GET/POST/DELETE messages | — |
+| Chat media + reply | §9 (97–106) | ❌ | ❌ | 🔜 `media_type`, upload, `reply_to_id` |
+| Media tab + cover | §10 (41, 98) | ❌ no `trip_documents` | ❌ | 🔜 upload, list, set cover |
+| Kelola trip | §11 (50–52) | ✅ partial | ⚠️ partial | 🔜 list members, remove member, cancel invite |
+| Wishlist | §12 (108–120) | ⚠️ thin | ✅ CRUD basic | 🔜 times, location, notes, convert atomic |
+| Google Calendar | §11 (22) | — | ❌ | M11 |
+
+Legenda: ✅ selaras desain · ⚠️ ada tapi field/kontrak kurang · ❌ belum ada · 🔜 target M5.2 kecuali disebut lain.
+
 ### 3.1 General Rules
 
 | Rule | Specification |
 |---|---|
 | **Primary Keys** | `UUID v4` (generated at the application layer via `uuid.New()`). Avoids sequential ID enumeration attacks. |
 | **Timestamps** | All tables include `created_at TIMESTAMPTZ DEFAULT NOW()`. Mutable records also include `updated_at TIMESTAMPTZ DEFAULT NOW()`. |
-| **Soft Deletes** | Used only on `trips` and `wishlists` via `deleted_at TIMESTAMPTZ NULL`. All queries against these tables **must** include a `WHERE deleted_at IS NULL` predicate. Hard deletes are used for ephemeral join/vote records. |
+| **Soft Deletes** | `trips`, `wishlists`, dan `trip_messages` memakai `deleted_at TIMESTAMPTZ NULL`. Semua query **wajib** `WHERE deleted_at IS NULL` (kecuali admin/audit). Hard delete untuk join/vote records. |
 | **Migrations** | Managed by `golang-migrate`. All schema changes are versioned, sequential `.up.sql` / `.down.sql` files. Direct DDL on production is forbidden. |
 | **Character Encoding** | `UTF-8` (PostgreSQL `ENCODING 'UTF8'`). |
 | **Text Search** | Tag-based filtering uses the `GIN` index on `jsonb` columns. Full-text search (username/name) uses `pg_trgm` with a `GIN` index. |
@@ -224,14 +269,8 @@ erDiagram
         varchar username UK
         text avatar_url
         text bio
-        boolean is_public
         timestamptz created_at
         timestamptz updated_at
-    }
-    follows {
-        uuid follower_id FK
-        uuid following_id FK
-        timestamptz created_at
     }
     trips {
         uuid id PK
@@ -302,7 +341,6 @@ erDiagram
         timestamptz updated_at
     }
 
-    users ||--o{ follows : "follower_id / following_id"
     users ||--o{ trips : "creator_id"
     trips ||--o{ trip_participants : "trip_id"
     users ||--o{ trip_participants : "user_id"
@@ -328,68 +366,44 @@ CREATE TABLE users (
     username    VARCHAR(50)  NOT NULL UNIQUE,
     avatar_url  TEXT,
     bio         TEXT,
-    is_public   BOOLEAN NOT NULL DEFAULT TRUE,
+    is_public   BOOLEAN NOT NULL DEFAULT TRUE,   -- post-MVP account privacy; MVP: profil publik
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- Indexes
-CREATE INDEX idx_users_username_trgm ON users USING GIN (username gin_trgm_ops);
-CREATE INDEX idx_users_name_trgm     ON users USING GIN (name gin_trgm_ops);
--- Prerequisite: CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
-> **Relationship**: Self-referential M:N via `follows`. No direct FK within this table.
+> 🔜 **M5.2 (desain `Screen9EditProfil`)**: kolom opsional `website_url TEXT`, `location_label TEXT` untuk link sosial & pin lokasi di kartu profil.
 
 ---
 
-#### `follows`
-```sql
-CREATE TABLE follows (
-    follower_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    following_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (follower_id, following_id),
-    CONSTRAINT no_self_follow CHECK (follower_id <> following_id)
-);
-
--- Indexes
-CREATE INDEX idx_follows_following_id ON follows (following_id);
-```
-
-> **Relationship**: M:N self-join on `users`. The composite PK `(follower_id, following_id)` enforces uniqueness and serves as the primary lookup key.
-
----
-
-#### `trips`
+#### `trips` *(000004 + 000012 — implemented)*
 ```sql
 CREATE TABLE trips (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_id  UUID NOT NULL REFERENCES users(id),
-    name        VARCHAR(255) NOT NULL,
-    tags        JSONB NOT NULL DEFAULT '[]',
-    status      VARCHAR(20) NOT NULL DEFAULT 'voting_pending'
-                    CHECK (status IN ('voting_pending', 'fixed')),
-    start_date  DATE,
-    end_date    DATE,
-    is_public   BOOLEAN NOT NULL DEFAULT FALSE,
-    cover_image_url TEXT,              -- nullable; default asset when NULL (M5.1)
-    voting_deadline TIMESTAMPTZ,       -- set for voting_pending trips (M5.1)
-    deleted_at  TIMESTAMPTZ,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    creator_id      UUID NOT NULL REFERENCES users(id),
+    name            VARCHAR(255) NOT NULL,
+    tags            JSONB NOT NULL DEFAULT '[]',
+    status          VARCHAR(20) NOT NULL DEFAULT 'voting_pending'
+                        CHECK (status IN ('voting_pending', 'fixed')),
+    start_date      DATE,
+    end_date        DATE,
+    is_public       BOOLEAN NOT NULL DEFAULT FALSE,
+    cover_image_url TEXT,              -- M5.1; default resolver di service layer
+    voting_deadline TIMESTAMPTZ,       -- M5.1; set saat create dengan >1 kandidat; clear on lock
+    deleted_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT valid_date_range CHECK (
         start_date IS NULL OR end_date IS NULL OR start_date <= end_date
     )
 );
-
--- Indexes
-CREATE INDEX idx_trips_creator_id ON trips (creator_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_trips_status     ON trips (status)     WHERE deleted_at IS NULL;
-CREATE INDEX idx_trips_tags       ON trips USING GIN (tags);
 ```
 
-> **Relationship**: 1:N with `users` (creator). M:N with `users` via `trip_participants`. 1:N with `trip_date_candidates`, `trip_destinations`, `trip_messages`, `trip_invitations`.
+> 🔜 **M5.2 (desain §6 `Screen12`–`Screen13`)**: `is_all_day BOOLEAN DEFAULT TRUE`, `start_time TIME`, `end_time TIME` — waktu perjalanan non-sepanjang-hari.
+>
+> 🔜 **M5.2b (desain §10 `Screen41`)**: `cover_document_id UUID REFERENCES trip_documents(id)` — cover dari media trip (menggantikan URL manual).
+
+> **Relationship**: 1:N dengan `users` (creator). M:N via `trip_participants`. 1:N dengan kandidat tanggal, aktivitas, pesan, undangan. 🔜 `trip_documents`, `trip_polls` (§3.5).
 
 ---
 
@@ -471,21 +485,52 @@ CREATE INDEX idx_trip_date_votes_user_id ON trip_date_votes (user_id);
 
 ---
 
-#### `trip_destinations`
+#### `trip_destinations` *(000009 — implemented; UI = aktivitas itinerary)*
+> **UI mapping**: Tab Itinerary di Figma. Endpoint: `/v1/trips/:id/destinations`. Rename ke `trip_activities` post-MVP jika diperlukan.
+
 ```sql
+-- ── Implemented (000009) ──
 CREATE TABLE trip_destinations (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     trip_id        UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
     place_name     VARCHAR(255) NOT NULL,
     maps_link      TEXT,
-    reference_link TEXT,
+    reference_link TEXT,              -- single link only today
     sort_order     INTEGER NOT NULL DEFAULT 0,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- Indexes
-CREATE INDEX idx_trip_destinations_trip_id ON trip_destinations (trip_id);
 ```
+
+> 🔜 **M5.2 — enrich aktivitas** (selaras `ActivityDraft` di `ActivityParts.tsx`):
+
+```sql
+-- Target columns (migration 000016+)
+ALTER TABLE trip_destinations
+    ADD COLUMN activity_date     DATE,           -- hari itinerary (derived from trip range)
+    ADD COLUMN start_time        TIME NOT NULL DEFAULT '09:00',
+    ADD COLUMN end_time          TIME NOT NULL DEFAULT '10:00',
+    ADD COLUMN kind              VARCHAR(20) DEFAULT 'activity'
+        CHECK (kind IN ('gather','transport','meal','activity','destination')),
+    ADD COLUMN description       TEXT,
+    ADD COLUMN location_label    TEXT,
+    ADD COLUMN ref_links         JSONB NOT NULL DEFAULT '[]',  -- [{url, label?}]
+    ADD COLUMN cover_source      VARCHAR(20) DEFAULT 'none'
+        CHECK (cover_source IN ('none','maps','trip_media','device','icon')),
+    ADD COLUMN cover_icon        VARCHAR(50),    -- icon id when cover_source=icon
+    ADD COLUMN cover_document_id UUID,           -- FK trip_documents when cover_source=trip_media
+    ADD COLUMN thumbnail_url     TEXT;           -- resolved from maps_link via Places/Static API
+```
+
+| Figma field (`ActivityDraft`) | Target column |
+|-------------------------------|---------------|
+| `title` | `place_name` |
+| `startTime` / `endTime` | `start_time` / `end_time` |
+| `kind` | `kind` |
+| `location` / `mapsPlaceName` | `location_label` |
+| `description` | `description` |
+| `maps_link` (form) | `maps_link` |
+| `refLinks[]` | `ref_links` JSONB |
+| `coverSource` / `coverIcon` / `coverUrl` | `cover_source`, `cover_icon`, `thumbnail_url`, `cover_document_id` |
 
 ---
 
@@ -496,18 +541,63 @@ CREATE TABLE trip_messages (
     trip_id      UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
     sender_id    UUID NOT NULL REFERENCES users(id),
     message_text TEXT NOT NULL,
+    deleted_at   TIMESTAMPTZ,              -- soft delete (M5.1); sender-only DELETE endpoint
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexes
-CREATE INDEX idx_trip_messages_trip_created ON trip_messages (trip_id, created_at DESC);
+CREATE INDEX idx_trip_messages_trip_active
+    ON trip_messages (trip_id, created_at DESC)
+    WHERE deleted_at IS NULL;
 ```
 
-> **Note**: The composite index on `(trip_id, created_at DESC)` directly serves the primary chat query: fetch the N most recent messages for a given trip.
+> **Note**: Index partial `(trip_id, created_at DESC) WHERE deleted_at IS NULL` melayani query chat utama: N pesan terbaru per trip. Long-press delete (Figma `Screen24`) → set `deleted_at`, bukan hard delete.
 
 ---
 
-#### `wishlists`
+#### `notifications` *(M5.1)*
+```sql
+CREATE TYPE notification_type AS ENUM (
+    'invite', 'follow', 'voting_deadline', 'destination_update'
+);
+
+CREATE TABLE notifications (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type        notification_type NOT NULL,
+    actor_id    UUID REFERENCES users(id) ON DELETE SET NULL,
+    trip_id     UUID REFERENCES trips(id) ON DELETE CASCADE,
+    payload     JSONB NOT NULL DEFAULT '{}',
+    is_read     BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_unread
+    ON notifications (user_id, created_at DESC)
+    WHERE is_read = FALSE;
+```
+
+> **UI**: Tab Beranda bell → `Screen27Notifikasi`. Badge unread via `GET /v1/notifications/unread-count`.
+
+---
+
+#### `user_follow_counts` *(view — migration 000015; post-MVP follow feature)*
+```sql
+CREATE OR REPLACE VIEW user_follow_counts AS
+SELECT u.id AS user_id,
+       COUNT(DISTINCT f_in.follower_id)  AS followers_count,
+       COUNT(DISTINCT f_out.following_id) AS following_count
+FROM users u
+LEFT JOIN follows f_in  ON f_in.following_id  = u.id
+LEFT JOIN follows f_out ON f_out.follower_id  = u.id
+GROUP BY u.id;
+```
+
+> View sudah tersedia; fitur follow UI/API ditunda post-MVP (lihat §4.3.1).
+
+---
+
+#### `wishlists` *(000011 — implemented)*
 ```sql
 CREATE TABLE wishlists (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -521,12 +611,28 @@ CREATE TABLE wishlists (
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
--- Indexes
-CREATE INDEX idx_wishlists_user_id      ON wishlists (user_id)  WHERE deleted_at IS NULL;
-CREATE INDEX idx_wishlists_priority     ON wishlists (user_id, priority_level) WHERE deleted_at IS NULL;
-CREATE INDEX idx_wishlists_tags         ON wishlists USING GIN (tags);
 ```
+
+> 🔜 **M5.2 — enrich wishlist** (selaras `WishlistItem` di `WishlistParts.tsx`, §12):
+
+```sql
+ALTER TABLE wishlists
+    ADD COLUMN start_time      TIME,
+    ADD COLUMN end_time        TIME,
+    ADD COLUMN location_label  TEXT,
+    ADD COLUMN notes           TEXT,
+    ADD COLUMN thumbnail_url   TEXT;
+```
+
+| Figma field | Target column | API enum |
+|-------------|---------------|----------|
+| `name` | `place_name` | — |
+| `startTime` / `endTime` | `start_time` / `end_time` | — |
+| `priority` Tinggi/Menengah/Rendah | `priority_level` | `high` / `medium` / `low` |
+| `location` | `location_label` | — |
+| `link` | `link` | — |
+| `notes` | `notes` | — |
+| `image` | `thumbnail_url` | resolved or default asset |
 
 ### 3.4 Transaction Safety Rules
 
@@ -534,10 +640,83 @@ All operations that mutate more than one table **must** execute inside an explic
 
 | Operation | Tables Mutated in Transaction |
 |---|---|
-| Accept trip invitation (username) | `trip_invitations` (status→accepted), `trip_participants` (INSERT), `follows` (INSERT mutual, `ON CONFLICT DO NOTHING`) |
-| Lock trip date | `trips` (start/end date, status→fixed), `trip_date_candidates` (no change), trigger Google Calendar call *after* commit |
-| Create trip with date candidates | `trips` (INSERT), `trip_date_candidates` (bulk INSERT) |
-| Google Calendar sync | Executed **outside** the DB transaction, after a successful commit. Use a background job or idempotent retry queue — never block the HTTP response on an external API call. |
+| Accept trip invitation (username) | `trip_invitations` (status→accepted), `trip_participants` (INSERT) |
+| Lock trip date poll | `trips` (dates, status→fixed, clear `voting_deadline`), `trip_date_candidates` winner applied |
+| Create trip with date candidates | `trips` (INSERT), `trip_date_candidates` (bulk INSERT), set `voting_deadline` |
+| 🔜 Wishlist → trip convert (§12) | `trips` (INSERT), `trip_destinations` (1 aktivitas hari 1), `wishlists` (soft DELETE) — **atomic** |
+| 🔜 Set trip cover from media (§10) | `trips.cover_document_id`, clear previous cover flag on old document |
+| Calendar event (post-lock) | User-confirmed modal → create event for invitees (M11). Background job after commit. |
+
+### 3.5 Design-Target Tables (Belum Dimigrasi)
+
+Skema di bawah **wajib** ada sebelum mobile M8–M10 bisa 1:1 dengan Figma. Milestone implementasi: **M5.2** (`docs/MILESTONES.md`).
+
+#### `trip_documents` 🔜 M5.2b *(desain §10)*
+```sql
+CREATE TABLE trip_documents (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id     UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    uploaded_by UUID NOT NULL REFERENCES users(id),
+    media_type  VARCHAR(10) NOT NULL CHECK (media_type IN ('photo', 'video')),
+    storage_url TEXT NOT NULL,
+    from_chat   BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+> Cover trip: `trips.cover_document_id` → salah satu row. UI: tab Media → "Jadikan Cover" (`Screen41`).
+
+#### `trip_polls` + options + votes 🔜 M5.2c *(desain §8)*
+```sql
+CREATE TABLE trip_polls (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    trip_id     UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    poll_type   VARCHAR(20) NOT NULL CHECK (poll_type IN ('tanggal', 'destinasi', 'lainnya')),
+    title       VARCHAR(255) NOT NULL,
+    status      VARCHAR(20) NOT NULL DEFAULT 'active'
+                    CHECK (status IN ('active', 'locked', 'cancelled', 'expired')),
+    deadline    TIMESTAMPTZ,
+    locked_at   TIMESTAMPTZ,
+    created_by  UUID NOT NULL REFERENCES users(id),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE trip_poll_options (
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    poll_id      UUID NOT NULL REFERENCES trip_polls(id) ON DELETE CASCADE,
+    label        TEXT NOT NULL,
+    sort_order   INTEGER NOT NULL DEFAULT 0,
+    candidate_id UUID REFERENCES trip_date_candidates(id)
+);
+
+CREATE TABLE trip_poll_votes (
+    poll_id     UUID NOT NULL REFERENCES trip_polls(id) ON DELETE CASCADE,
+    option_id   UUID NOT NULL REFERENCES trip_poll_options(id) ON DELETE CASCADE,
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (poll_id, user_id)
+);
+```
+> Auto-create poll `tanggal` saat trip create dengan >1 kandidat. UI: max 1 Tanggal + 1 Aktivitas (`destinasi`) aktif (`VotingParts.tsx`).
+
+#### `trip_message_reads` 🔜 M5.2d *(badge unread chat — §9)*
+```sql
+CREATE TABLE trip_message_reads (
+    trip_id      UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    last_read_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (trip_id, user_id)
+);
+```
+
+#### Chat media columns 🔜 M5.2e *(§9 Screen97–106)*
+```sql
+ALTER TABLE trip_messages
+    ADD COLUMN message_kind   VARCHAR(10) NOT NULL DEFAULT 'text'
+        CHECK (message_kind IN ('text', 'photo', 'video')),
+    ADD COLUMN media_url      TEXT,
+    ADD COLUMN media_duration INTERVAL,
+    ADD COLUMN reply_to_id    UUID REFERENCES trip_messages(id);
+```
 
 ---
 
@@ -588,73 +767,199 @@ type TripService interface {
 
 ### 4.3 API Versioning & Routing
 
+Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**. Rate limit: **120 req/min** per IP (`middleware.RateLimiter`).
+
+#### 4.3.0 Implemented Endpoints (35 — M0–M5.1 ✅)
+
+| Method | Path | Auth | Handler | Desain / § |
+|--------|------|------|---------|------------|
+| GET | `/health` | Public | inline | — |
+| POST | `/v1/auth/google` | Public | `PostGoogle` | §2 |
+| POST | `/v1/auth/complete-registration` | JWT | `PostCompleteRegistration` | §2 |
+| GET | `/v1/users/check-username?username=` | Public | `GetCheckUsername` | §2 Screen4 |
+| GET | `/v1/users/search?q=&limit=&cursor=` | Public | `Search` | §4, §6 undang |
+| GET | `/v1/users/me` | JWT | `GetMe` | §5 |
+| PUT | `/v1/users/me` | JWT | `PutMe` `{bio?, is_public?}` | §5 |
+| GET | `/v1/users/:username` | Optional JWT | `GetProfile` | §4, §5 |
+| GET | `/v1/users/:username/trips` | Optional JWT | `GetUserTrips` | §4, §5 |
+| POST | `/v1/users/:username/follow` | JWT | `PostFollow` | post-MVP |
+| DELETE | `/v1/users/:username/follow` | JWT | `DeleteFollow` | post-MVP |
+| GET | `/v1/notifications/?cursor=` | JWT | `ListNotifications` | §3 Screen27 |
+| GET | `/v1/notifications/unread-count` | JWT | `GetUnreadCount` | §3 badge |
+| PUT | `/v1/notifications/:id/read` | JWT | `MarkRead` | §3 |
+| PUT | `/v1/notifications/read-all` | JWT | `MarkAllRead` | §3 |
+| GET | `/v1/trips/?tab=upcoming\|completed&cursor=` | JWT | `GetTrips` enriched | §3 |
+| POST | `/v1/trips/` | JWT | `PostTrip` | §6 |
+| GET | `/v1/trips/invitations` | JWT | `GetMyInvitations` enriched | §3 tab Undangan |
+| GET | `/v1/trips/:tripId` | JWT | `GetTrip` enriched | §7–§11 |
+| PUT | `/v1/trips/:tripId` | JWT | `PutTrip` | §11 Screen51 |
+| DELETE | `/v1/trips/:tripId` | JWT | `DeleteTrip` soft | §11 Screen52 |
+| POST | `/v1/trips/:tripId/invitations` | JWT | `PostTripInvitation` `{username\|email}` | §6, §11 |
+| PUT | `/v1/trips/:tripId/invitations/:id` | JWT | `PutTripInvitation` `{accept: bool}` | §3, §6 |
+| GET | `/v1/trips/:tripId/candidates` | JWT | `GetTripDateCandidates` enriched | §8 tanggal |
+| POST | `/v1/trips/:tripId/candidates/:candidateId/vote` | JWT | `PostTripCandidateVote` | §8 |
+| DELETE | `/v1/trips/:tripId/candidates/:candidateId/vote` | JWT | `DeleteTripCandidateVote` | §8 |
+| POST | `/v1/trips/:tripId/candidates/:candidateId/lock` | JWT | `PostTripCandidateLock` creator | §8 Screen21 |
+| GET | `/v1/trips/:tripId/destinations` | JWT | `GetTripDestinations` | §7 |
+| POST | `/v1/trips/:tripId/destinations` | JWT | `PostTripDestination` | §7 |
+| DELETE | `/v1/trips/:tripId/destinations/:destinationId` | JWT | `DeleteTripDestination` | §7 Screen93 |
+| GET | `/v1/trips/:tripId/messages?cursor=` | JWT | `GetTripMessages` enriched | §9 |
+| POST | `/v1/trips/:tripId/messages` | JWT | `PostTripMessage` `{message}` | §9 |
+| DELETE | `/v1/trips/:tripId/messages/:messageId` | JWT | `DeleteTripMessage` soft | §9 Screen24 |
+| GET | `/v1/wishlists/?priority=&tag[]=&cursor=` | JWT | `GetWishlists` | §12 |
+| POST | `/v1/wishlists/` | JWT | `PostWishlist` | §12 |
+| PUT | `/v1/wishlists/:id` | JWT | `PutWishlist` | §12 Screen114 |
+| DELETE | `/v1/wishlists/:id` | JWT | `DeleteWishlist` soft | §12 Screen116 |
+
+#### 4.3.1 Request/Response Contracts (Implemented)
+
+**`POST /v1/trips/`** — selaras §6 create trip:
+
+```json
+{
+  "name": "Lombok Weekend Escape",
+  "tags": ["#Pantai", "#Alam"],
+  "start_date": "2026-06-19",
+  "end_date": "2026-06-22",
+  "candidates": [],
+  "cover_image_url": null
+}
+```
+
+| Mode | Body | DB effect |
+|------|------|-----------|
+| Tanggal pasti | `start_date` + `end_date`, `candidates` kosong | `status=fixed` |
+| Multi-kandidat | `candidates[{start_date,end_date}]` (2–3), dates null | `status=voting_pending`, rows di `trip_date_candidates`, `voting_deadline` auto-set |
+
+> 🔜 M5.2: tambah `is_all_day`, `start_time`, `end_time`, `voting_deadline` optional override.
+
+**`POST /v1/trips/:tripId/destinations`** — aktivitas minimal (§7):
+
+```json
+{
+  "place_name": "Pantai Tanjung Aan",
+  "maps_link": "https://maps.app.goo.gl/...",
+  "reference_link": "https://tiktok.com/..."
+}
+```
+
+> 🔜 M5.2: payload penuh selaras `ActivityDraft` (times, kind, ref_links[], cover_*).
+
+**`PUT /v1/trips/:tripId/invitations/:id`** — Terima/Tolak undangan (§3 tab Undangan, §6):
+
+```json
+{ "accept": true }
+```
+
+**Trip enriched response** (list/detail/invitations): `cover_image_url`, `participant_count`, `participants_preview[]`, `voting_deadline`.
+
+#### 4.3.2 Design-Gap Endpoints (Target M5.2 🔜)
+
+Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 112 layar Figma:
+
+| Priority | Method | Path | Desain | § |
+|----------|--------|------|--------|---|
+| P0 | PUT | `/v1/trips/:tripId/destinations/:id` | Edit aktivitas (`Screen88`) | §7 |
+| P0 | GET | `/v1/trips/:tripId/members` | Daftar anggota + pending (`Screen50`) | §11 |
+| P0 | DELETE | `/v1/trips/:tripId/invitations/:id` | Batalkan undangan pending (`Screen45`) | §6, §11 |
+| P0 | POST | `/v1/wishlists/:id/convert-to-trip` | Jadikan Perjalanan atomic (`Screen117`–`120`) | §12 |
+| P1 | DELETE | `/v1/users/me` | Hapus akun (`Screen38`) | §5 |
+| P1 | POST/GET/DELETE | `/v1/trips/:tripId/documents` | Media tab upload/list/delete | §10 |
+| P1 | PUT | `/v1/trips/:tripId/cover` | `{document_id}` set cover dari media | §10 |
+| P1 | POST | `/v1/trips/:tripId/messages` (multipart) | Kirim foto/video + caption | §9 |
+| P1 | PUT | `/v1/trips/:tripId/messages/read` | Mark chat read (unread badge) | §9 |
+| P2 | CRUD | `/v1/trips/:tripId/polls` + `…/vote` + `…/lock` | Multi-voting Aktivitas/Lainnya | §8 |
+| P2 | DELETE | `/v1/trips/:tripId/members/:userId` | Keluarkan anggota (creator) | §11 |
+| P3 | POST | `/v1/auth/logout` | Revoke refresh (opsional; local OK) | §5 |
+| M11 | POST | `/v1/integrations/google-calendar/events` | Tambah ke kalender (`Screen22`) | §11 |
+
+#### 4.3.3 Workflow → API Quick Map
+
+| WORKFLOW § | Primary endpoints (✅ = implemented) |
+|------------|--------------------------------------|
+| §1 Onboarding | — (local flag) |
+| §2 Auth | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` |
+| §3 Beranda | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id`, ✅ notifications |
+| §4 Pencarian | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` |
+| §5 Profil | ✅ `GET/PUT /users/me`, `GET /:username/trips` (own username); 🔜 `DELETE /users/me` |
+| §6 Create + undang | ✅ `POST /trips`, `POST …/invitations`; 🔜 trip times, 🔜 cancel invite |
+| §7 Itinerary | ✅ list/add/delete destinations; 🔜 `PUT` edit, enriched fields |
+| §8 Voting | ✅ date candidates/vote/lock; 🔜 polls CRUD (Aktivitas/Lainnya) |
+| §9 Chat | ✅ text messages + delete; 🔜 media, 🔜 read cursor |
+| §10 Media | 🔜 documents + cover |
+| §11 Kelola | ✅ `PUT/DELETE /trips/:id`; 🔜 members, 🔜 calendar M11 |
+| §12 Wishlist | ✅ CRUD wishlists; 🔜 convert atomic |
+| §13 System | — (client patterns) |
+
+#### 4.3.4 Route Tree (Reference)
+
 ```
 /v1/
 ├── auth/
 │   ├── POST   /google                   # Exchange Google ID token for app JWT
-│   └── POST   /complete-registration    # Set username for new users
+│   └── POST   /complete-registration    # Set username for new users (JWT required)
 ├── users/
-│   ├── GET    /me                       # Get current user profile
-│   ├── PUT    /me                       # Update bio, is_public (account privacy)
-│   ├── GET    /check-username           # Real-time username availability (M5.1)
-│   ├── GET    /search                   # Search users by name (trigram-based, cursor paginated)
-│   ├── GET    /:username                # Profile lookup (public or limited private view)
-│   ├── GET    /:username/trips          # Profile trip grid (respects privacy; M5.1)
-│   ├── POST   /:username/follow         # Follow a user
-│   └── DELETE /:username/follow         # Unfollow a user
-├── notifications/                       # (M5.1)
-│   ├── GET    /                         # List in-app notifications
-│   ├── GET    /unread-count             # Badge count for bell icon
-│   ├── PUT    /:id/read                 # Mark one notification read
-│   └── PUT    /read-all                 # Mark all read
+│   ├── GET    /check-username           # Real-time username availability ✅
+│   ├── GET    /search                   # Search users (trigram, cursor paginated)
+│   ├── GET    /me                       # Current user profile
+│   ├── PUT    /me                       # Update bio, is_public
+│   ├── GET    /:username                # Profile lookup (optional auth)
+│   ├── GET    /:username/trips          # Profile trip grid ✅
+│   ├── POST   /:username/follow         # post-MVP (code exists)
+│   └── DELETE /:username/follow         # post-MVP
+├── notifications/                       # ✅ M5.1
+│   ├── GET    /
+│   ├── GET    /unread-count
+│   ├── PUT    /:id/read
+│   └── PUT    /read-all
 ├── trips/
-│   ├── GET    /                         # List trips (?tab=upcoming|completed; M5.1)
-│   ├── POST   /                         # Create a trip
-│   ├── GET    /invitations              # List pending invitations for authenticated user
-│   ├── GET    /:tripId                  # Get trip detail
-│   ├── PUT    /:tripId                  # Update trip info (+ optional cover_image_url, voting_deadline)
-│   ├── DELETE /:tripId                  # Soft-delete trip (creator only)
-│   ├── POST   /:tripId/invitations      # Invite participant
-│   ├── PUT    /:tripId/invitations/:id  # Accept / decline invitation
-│   ├── GET    /:tripId/destinations     # List destinations
-│   ├── POST   /:tripId/destinations     # Add destination
-│   ├── DELETE /:tripId/destinations/:id # Remove destination
-│   ├── GET    /:tripId/candidates       # List date candidates + vote counts
-│   ├── POST   /:tripId/candidates/:id/vote    # Cast a vote
-│   ├── DELETE /:tripId/candidates/:id/vote    # Retract a vote
-│   ├── POST   /:tripId/candidates/:id/lock    # Lock date (creator only)
-│   ├── GET    /:tripId/messages         # Paginated chat messages
-│   ├── POST   /:tripId/messages         # Send chat message
-│   └── DELETE /:tripId/messages/:messageId    # Soft-delete own message (M5.1)
+│   ├── GET    /                         # ?tab=upcoming|completed ✅
+│   ├── POST   /
+│   ├── GET    /invitations
+│   ├── GET    /:tripId
+│   ├── PUT    /:tripId
+│   ├── DELETE /:tripId
+│   ├── POST   /:tripId/invitations
+│   ├── PUT    /:tripId/invitations/:id  # {accept: bool}
+│   ├── GET    /:tripId/destinations     # UI: tab Itinerary / aktivitas
+│   ├── POST   /:tripId/destinations
+│   ├── DELETE /:tripId/destinations/:id
+│   ├── GET    /:tripId/candidates       # Date voting only (legacy → poll tanggal)
+│   ├── POST   /:tripId/candidates/:id/vote
+│   ├── DELETE /:tripId/candidates/:id/vote
+│   ├── POST   /:tripId/candidates/:id/lock
+│   ├── GET    /:tripId/messages
+│   ├── POST   /:tripId/messages         # text only today
+│   └── DELETE /:tripId/messages/:messageId
 └── wishlists/
-    ├── GET    /                          # List user's wishlists
-    ├── POST   /                          # Create wishlist item
-    ├── PUT    /:wishlistId               # Update wishlist item
-    └── DELETE /:wishlistId               # Soft-delete wishlist item
+    ├── GET    /
+    ├── POST   /
+    ├── PUT    /:id
+    └── DELETE /:id
 ```
 
-> **Figma-driven API gaps (M5.1)**: Implementasi lengkap di milestone M5.1 — notifications, delete chat message, username check, trip tab filter, profile/trip grid, enriched list responses. Detail: `docs/FIGMA.md § Kebutuhan API dari Desain`, `docs/MILESTONES.md § M5.1`.
+> **M5.1 ✅ selesai**: Notifications, delete chat, username check, trip tabs, profile trips, enriched responses, voting reminder cron.
+>
+> **M5.2 🔜**: Tutup gap §4.3.2 + schema §3.5 sebelum mobile M6–M10. Detail checklist: `docs/MILESTONES.md § M5.2`.
 
-### 4.3.1 Privacy Model (Instagram-style)
+> **UI ↔ Backend naming**: Figma/preview memakai **Itinerary / aktivitas**; API & tabel saat ini memakai `trip_destinations` dan path `/destinations`. Voting type `destinasi` di UI ditampilkan sebagai label **Aktivitas**.
 
-Two independent flags control visibility:
+### 4.3.5 Profile & Trip Visibility
+
+MVP fokus pada *trip planner* — tidak ada sistem follow/follower. Pencarian user tersedia untuk mengundang partisipan trip.
 
 | Flag | Table | Meaning |
 |------|-------|---------|
-| Account privacy | `users.is_public` | `false` → private account; profile content gated to followers + owner |
-| Profile grid trip | `trips.is_public` | Creator opts in which trips appear on their profile grid |
+| Profile grid trip | `trips.is_public` | Creator opts in which trips appear on their public profile grid |
 
 **Authorization matrix** for `GET /v1/users/:username` and `GET /v1/users/:username/trips`:
 
-| Account | Viewer | `GET /:username` | `GET /:username/trips` |
-|---------|--------|------------------|------------------------|
-| Public | Anyone | Full profile (`can_view_content: true`) | Creator trips where `trips.is_public = true` |
-| Public | Owner | Full | All creator trips |
-| Private | Stranger (not follower) | **Limited** profile: `id`, `username`, `name`, `avatar_url`, `followers_count`, `following_count`, `is_public`, `is_following`, `can_view_content: false` — **no `bio`, no email** | `403 PROFILE_PRIVATE` |
-| Private | Follower | Full profile (`can_view_content: true`) | Creator trips where `trips.is_public = true` |
-| Private | Owner | Full | All creator trips |
+| Viewer | `GET /:username` | `GET /:username/trips` |
+|--------|------------------|------------------------|
+| Anyone | Full profile (bio, avatar, `public_trip_count`) | Creator trips where `trips.is_public = true` |
+| Owner | Full | All creator trips |
 
-**Breaking change from M5**: Private accounts currently return `404 USER_NOT_FOUND` to strangers. M5.1 returns a **limited profile** (Instagram-style discoverability) so search → profile → Follow still works.
+> **Post-MVP (deferred)**: Sistem follow/follower, akun privat berbasis follower (`users.is_public`), endpoint `POST/DELETE /:username/follow`, mutual follow saat terima undangan, notifikasi tipe `follow`.
 
 **Trip list tabs** (`GET /v1/trips?tab=`):
 
@@ -670,15 +975,20 @@ Two independent flags control visibility:
 - Cleared when trip locks (`status = fixed`)
 - Background job sends `voting` notifications at H-7d, H-1d, H-1h before deadline to participants who have not voted
 
-**Cover image** (`trips.cover_image_url`, nullable):
+**Trip detail tab counters** (`TripDetailTabs`):
+- Itinerary → aktivitas count
+- Voting → active polls count (tab hidden when 0)
+- Chat → **unread messages only** (`trip_messages` read cursor per user)
+- Media → `trip_documents.length` (**badge always shown, including 0**)
 
-- M5.1: column + server-side default URL when NULL (tag/hash-based static assets)
-- File upload to object storage deferred to M8+ mobile; optional external HTTPS URL via `PUT /trips/:id`
+**Cover image** (`trips.cover_document_id`, nullable):
+- Selected from trip media via tab Media UI ("Jadikan Cover").
+- Beranda card resolves URL from linked document; default gradient/asset when NULL.
+- File upload to object storage deferred to M8+ mobile.
 
 **Scalability hooks** (no breaking changes planned):
 
 - `GET /users/:username/trips?role=created|participated|all` — MVP uses `created` only
-- Follow **requests** for private accounts (pending approval) — post-MVP; MVP keeps instant follow
 
 ### 4.4 Authentication Middleware
 

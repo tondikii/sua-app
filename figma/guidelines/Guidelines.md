@@ -1,61 +1,53 @@
-**Add your own guidelines here**
-<!--
+# Atur Perjalanan — Figma Preview Guidelines
 
-System Guidelines
+Panduan untuk AI agents & developer saat mengedit bundle React di `figma/`.
 
-Use this file to provide the AI with rules and guidelines you want it to follow.
-This template outlines a few examples of things you can add. You can add your own sections and format it to suit your needs
+## Sumber kebenaran
 
-TIP: More context isn't always better. It can confuse the LLM. Try and add the most important rules you need
+| Dokumen | Isi |
+|---------|-----|
+| `figma/src/app/App.tsx` | Registry **112 layar**, §1–§13 |
+| `figma/src/app/components/colors.ts` | Design tokens (`C.*`, `FONT`) — **wajib** dipakai, jangan hardcode hex |
+| `docs/WORKFLOW.md` | Alur user + kontrak API per § (✅ vs 🔜 M5.2) |
+| `docs/FIGMA.md` | Inventori layar, gap API, onboarding copy |
+| `docs/ARCHITECTURE.md` | **Schema §3**, endpoint §4.3 — sumber kebenaran teknis BE |
+| `docs/MILESTONES.md` | M5.2 = target implementasi gap BE |
 
-# General guidelines
+## Konvensi layar
 
-Any general rules you want the AI to follow.
-For example:
+- File: `Screen{N}{PascalCase}.tsx` — nomor **N** = indeks registry (boleh non-sequential).
+- Setiap layar muncul **sekali** di `App.tsx` (no cross-section duplicate).
+- Phone frame label: "Layar N" dari field `index` registry.
+- Shared UI trip: `figma/src/app/components/trip/` (`ItineraryParts`, `ActivityParts`, `VotingParts`, `ChatParts`, …).
 
-* Only use absolute positioning when necessary. Opt for responsive and well structured layouts that use flexbox and grid by default
-* Refactor code as you go to keep code clean
-* Keep file sizes small and put helper functions and components in their own files.
+## Naming UI vs backend
 
---------------
+| UI (Figma) | Backend (unchanged MVP) |
+|------------|-------------------------|
+| Itinerary / aktivitas | `trip_destinations`, `/destinations` |
+| Voting tipe Aktivitas | poll type `destinasi` |
+| Undang via search | Tidak ada saran teman (`Screen83` dihapus) |
 
-# Design system guidelines
-Rules for how the AI should make generations look like your company's design system
+## Layout & styling
 
-Additionally, if you select a design system to use in the prompt box, you can reference
-your design system's components, tokens, variables and components.
-For example:
+- Mobile-first, max width phone frame (~390px).
+- Prefer flexbox/grid; absolute positioning hanya untuk overlay/modal.
+- Spacing & radius konsisten dengan `Screen32DesignTokens`.
+- Bahasa UI: **Bahasa Indonesia** (copy produk).
 
-* Use a base font-size of 14px
-* Date formats should always be in the format “Jun 10”
-* The bottom toolbar should only ever have a maximum of 4 items
-* Never use the floating action button with the bottom toolbar
-* Chips should always come in sets of 3 or more
-* Don't use a dropdown if there are 2 or fewer options
+## Onboarding (`Screen2EduOnboarding`)
 
-You can also create sub sections and add more specific details
-For example:
+4 slide carousel — copy selaras `docs/BRIEF.md` / `docs/WORKFLOW.md §1`:
 
+1. Realisasikan Wacana Liburanmu  
+2. Sepakat Jadwal Susah Banget → Vote Bareng, Hasil Jelas  
+3. Rencana Berserakan → Timeline Harian yang Jelas (+ preview itinerary multi-hari)  
+4. Chat campur aduk → Ruang Diskusi Khusus Trip  
 
-## Button
-The Button component is a fundamental interactive element in our design system, designed to trigger actions or navigate
-users through the application. It provides visual feedback and clear affordances to enhance user experience.
+Sticky pagination dots + fixed CTA; konten scrollable full-screen.
 
-### Usage
-Buttons should be used for important actions that users need to take, such as form submissions, confirming choices,
-or initiating processes. They communicate interactivity and should have clear, action-oriented labels.
+## Sebelum commit perubahan layar
 
-### Variants
-* Primary Button
-  * Purpose : Used for the main action in a section or page
-  * Visual Style : Bold, filled with the primary brand color
-  * Usage : One primary button per section to guide users toward the most important action
-* Secondary Button
-  * Purpose : Used for alternative or supporting actions
-  * Visual Style : Outlined with the primary color, transparent background
-  * Usage : Can appear alongside a primary button for less important actions
-* Tertiary Button
-  * Purpose : Used for the least important actions
-  * Visual Style : Text-only with no border, using primary color
-  * Usage : For actions that should be available but not emphasized
--->
+1. Tambah/update entry di `App.tsx` section yang benar (§1–§13).
+2. `cd figma && npm run build` harus lulus.
+3. Update `docs/FIGMA.md` + `docs/WORKFLOW.md` jika menambah/menghapus layar atau mengubah alur.

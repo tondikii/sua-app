@@ -6,7 +6,7 @@ import { NavHeader, SafeAreaTop } from '../ui/ScreenChrome';
 const FAQ_ITEMS = [
   {
     q: 'Bagaimana cara membuat perjalanan?',
-    a: 'Tap tombol + di tengah tab bar, isi nama perjalanan dan kandidat tanggal, lalu undang teman dari tab Cari atau profil mereka.',
+    a: 'Tap tombol + di tengah tab bar, isi nama perjalanan dan kandidat tanggal, lalu tap Buat Perjalanan. Setelah itu kamu bisa undang teman atau lewati dulu.',
   },
   {
     q: 'Apa itu voting tanggal?',
@@ -14,11 +14,11 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Bagaimana cara mengundang teman?',
-    a: 'Buka detail perjalanan → tap Undang → cari username teman. Mereka akan melihat undangan di tab Undangan di Beranda.',
+    a: 'Setelah buat perjalanan, atau dari detail perjalanan → tap ikon undang di header → cari username teman. Mereka akan melihat undangan di tab Undangan di Beranda.',
   },
   {
-    q: 'Apa bedanya akun publik dan privat?',
-    a: 'Akun privat menyembunyikan bio dan grid perjalanan dari non-pengikut. Akun tetap bisa ditemukan lewat pencarian.',
+    q: 'Siapa yang bisa lihat perjalanan di profil?',
+    a: 'Hanya perjalanan yang kamu tandai publik yang muncul di grid profil. Perjalanan privat hanya terlihat oleh kamu dan partisipan trip.',
   },
   {
     q: 'Bagaimana menghapus akun?',

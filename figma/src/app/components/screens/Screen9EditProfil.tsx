@@ -80,7 +80,6 @@ export function Screen9EditProfil() {
           >
             <User size={16} color={C.muted} strokeWidth={2} />
             <span style={{ fontSize: 15, color: C.charcoal, fontWeight: 500, flex: 1 }}>Budi Santoso</span>
-            <CheckCircle size={16} color={C.teal} strokeWidth={2.5} />
           </div>
         </div>
 
@@ -102,9 +101,6 @@ export function Screen9EditProfil() {
             <AtSign size={16} color={C.muted} strokeWidth={2} />
             <span style={{ fontSize: 15, color: C.charcoal, fontWeight: 500 }}>budi_santoso</span>
           </div>
-          <p style={{ fontSize: 11, color: C.mutedLight, margin: '6px 0 0 4px', fontWeight: 500 }}>
-            Terlihat publik di profil kamu
-          </p>
         </div>
 
         <div>

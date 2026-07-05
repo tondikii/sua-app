@@ -2,16 +2,17 @@
 
 ## 🧩 Masalah (The Problem)
 Merencanakan perjalanan bersama teman sering kali menghadapi hambatan yang membuat rencana sekadar menjadi wacana:
-1. **Kutukan "Wacana" & Bentrok Jadwal**: Rencana liburan sering batal karena sulitnya menentukan tanggal yang cocok untuk semua partisipan. Discussion terlalu panjang tanpa ada keputusan final.
-2. **Inspirasi yang Tercecer**: Referensi tempat estetik di TikTok atau Instagram sering kali hilang, lupa disimpan, atau terpisah dari ruang obrolan grup.
-3. **Koordinasi Tercecer**: Diskusi rencana liburan tenggelam dan tercampur di grup chat sehari-hari, sementara mengajak teman serta memastikan semua pihak mendapat info jadwal masih dilakukan secara manual—menguras energi si pembuat rencana (planner).
+1. **Sepakat Jadwal Susah Banget**: Poll tanggal numpuk di chat, tapi keputusan liburan tidak pernah jadi — minggu ini sibuk, minggu depan juga.
+2. **Rencana Berserakan, Urutan Nggak Jelas**: Link TikTok, pin Maps, catatan di Notes — semua ada, tapi tidak ada yang tahu jam berapa berangkat, ke mana dulu, makan di mana.
+3. **Chat Trip Kecampur**: Obrolan trip nyasar ke grup chat harian — pesan penting tenggelam, foto liburan susah dilacak lagi.
 
 ## 💡 Solusi (The Solution)
-Atur Perjalanan hadir sebagai *hub* terpusat yang menjembatani inspirasi liburan dan eksekusi nyata melalui:
-* **Penentuan Tanggal Fleksibel (Date Voting)**: Mengakomodasi ketidakpastian jadwal dengan fitur pengajuan beberapa kandidat tanggal yang kemudian bisa ditentukan via *voting* oleh seluruh partisipan.
-* **Pusat Informasi & Referensi**: Menyusun daftar destinasi secara rapi, lengkap dengan tautan peta serta kolom opsional untuk menyematkan *link* video/foto referensi (TikTok, Instagram, dll.).
-* **Group Chat per Perjalanan**: Ruang obrolan khusus di setiap proyek perjalanan agar koordinasi tidak bercampur dengan chat harian, dilengkapi undangan praktis via *username* atau email yang otomatis terintegrasi dengan Google Calendar.
-* **Wishlist Terstruktur**: Tabungan destinasi impian dengan sistem *tagging* dan skala prioritas untuk rencana perjalanan di masa mendatang.
+Atur Perjalanan hadir sebagai *hub* terpusat yang menjembatani wacana liburan dan eksekusi nyata melalui:
+* **Vote Bareng, Hasil Jelas**: Multi kandidat tanggal saat buat trip → voting di satu tempat → kunci jadwal. Voting juga untuk aktivitas itinerary dan keputusan lain (multi-voting concurrent).
+* **Timeline Harian yang Jelas**: Itinerary aktivitas berjadwal per jam — urutan hari, waktu senggang, status jalan (lalu/sudah/belum) kelihatan sekilas. Thumbnail Google Maps atau cover icon/media per aktivitas.
+* **Ruang Diskusi Khusus Trip**: Grup chat per perjalanan — ngobrol, kirim foto/video; media otomatis tersimpan rapi di tab Media.
+* **Media & Cover**: Tab Media untuk foto/video trip; cover card Beranda dipilih dari media yang diunggah.
+* **Wishlist Aktivitas**: Tabungan aktivitas impian (waktu, Maps, prioritas) — filter/sort, lalu **Jadikan Perjalanan** untuk konversi ke trip + itinerary.
 
 ## 🎯 Target Audiens (Target Audience)
 * **Si "Planner"**: Anggota grup yang selalu berinisiatif menyusun jadwal dan membutuhkan alat organisasi yang praktis.
@@ -20,6 +21,6 @@ Atur Perjalanan hadir sebagai *hub* terpusat yang menjembatani inspirasi liburan
 
 ## 🎨 Filosofi Brand (Brand Philosophy)
 * **Nama**: Atur Perjalanan (Sebuah *call-to-action* yang jelas dan fungsional).
-* **Vibe**: Energik, kolaboratif, solutif, dan sosial.
+* **Vibe**: Energik, kolaboratif, dan solutif.
 * **Tone**: *Fun*, *playful*, santai, dan bersahabat—tidak kaku seperti aplikasi produktivitas korporat.
-* **Visual Identity**: Palette Sunset & Beach dengan warna Warm Coral primary, Soft Teal secondary, dan typography Plus Jakarta Sans. Detail lengkap (HEX, spacing, radius): [docs/FIGMA.md § Design Tokens](docs/FIGMA.md#-design-tokens). 
+* **Visual Identity**: Palette Sunset & Beach dengan warna Warm Coral primary, Soft Teal secondary, dan typography Plus Jakarta Sans. Detail lengkap (HEX, spacing, radius): [docs/FIGMA.md § Design Tokens](docs/FIGMA.md#-design-tokens).

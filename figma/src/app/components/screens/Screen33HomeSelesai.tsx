@@ -1,6 +1,7 @@
 import {
   HomeHeader,
   HomePageShell,
+  HomeScrollBody,
   HomeTabs,
   TripCard,
   type TripItem,
@@ -13,7 +14,7 @@ const COMPLETED_TRIPS: TripItem[] = [
     title: 'Yogyakarta Heritage Trip',
     image: TRIP_IMAGES.borobudur,
     tags: ['#Budaya', '#Kuliner', '#Sejarah', '#Kota'],
-    dateRange: '12–14 Mar 2026',
+    dateRange: '12–14 Mar 2026 · Sepanjang hari',
     avatars: ['A', 'D', 'R'],
   },
 ];
@@ -26,20 +27,11 @@ export function Screen33HomeSelesai() {
     <HomePageShell>
       <HomeHeader unreadCount={2} />
       <HomeTabs activeTab="selesai" counts={TAB_COUNTS} />
-      <div
-        style={{
-          flex: 1,
-          padding: '20px 22px 0',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-          overflow: 'hidden',
-        }}
-      >
+      <HomeScrollBody>
         {COMPLETED_TRIPS.map((trip) => (
           <TripCard key={trip.id} trip={trip} dimmed />
         ))}
-      </div>
+      </HomeScrollBody>
     </HomePageShell>
   );
 }

@@ -11,6 +11,11 @@ export const C = {
   light: '#F7F7FB',
   white: '#FFFFFF',
   shadow: 'rgba(26,26,46,0.08)',
+  /** Merah danger — hue pure-red (G/B jauh lebih rendah dari coral), cerah tapi jelas bukan primary */
+  danger: '#F94141',
+  dangerDark: '#E83030',
+  dangerLight: '#FFEBEB',
+  dangerBorder: '#F5A8A8',
 };
 
 export const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#FFB347', '#8B7CF6', '#60A5FA', '#F472B6'];

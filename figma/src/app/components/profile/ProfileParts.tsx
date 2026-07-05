@@ -22,7 +22,7 @@ type ProfileIdentity = {
   avatarShadow: string;
 };
 
-/** Header profil tab sendiri — username di tengah (ala Instagram) */
+/** Header profil tab sendiri — username di tengah */
 export function ProfileHeader({ username }: { username: string }) {
   return (
     <div
@@ -158,7 +158,7 @@ export function ProfileCard({
 }: {
   identity: ProfileIdentity;
   stats: ProfileStat[];
-  action: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div
@@ -202,7 +202,7 @@ export function ProfileCard({
           </div>
         </div>
       </div>
-      <div style={{ marginBottom: 14 }}>
+      <div style={{ marginBottom: action ? 14 : 0 }}>
         <ProfileStats stats={stats} />
       </div>
       {action}

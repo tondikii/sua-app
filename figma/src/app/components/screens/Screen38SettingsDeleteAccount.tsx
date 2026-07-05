@@ -1,6 +1,7 @@
 import { UserX } from 'lucide-react';
 import { C, FONT } from '../colors';
 import { NavHeader, SafeAreaTop } from '../ui/ScreenChrome';
+import { DESTRUCTIVE } from '../ui/ConfirmDialogModal';
 
 const USERNAME = 'budi_santoso';
 
@@ -76,16 +77,15 @@ export function Screen38SettingsDeleteAccount() {
           type="button"
           style={{
             width: '100%',
-            height: 52,
-            backgroundColor: '#E53935',
-            color: 'white',
-            border: 'none',
+            height: 50,
+            backgroundColor: DESTRUCTIVE.bg,
+            color: DESTRUCTIVE.text,
+            border: `1.5px solid ${DESTRUCTIVE.border}`,
             borderRadius: 14,
             fontSize: 15,
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: FONT,
-            boxShadow: '0 10px 26px rgba(229,57,53,0.32)',
             marginBottom: 10,
           }}
         >

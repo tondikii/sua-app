@@ -1,28 +1,20 @@
-import { C } from '../colors';
-import {
-  TripNameField,
-  TripTagsField,
-  TripCalendar,
-  AddCandidateDateButton,
-  CreateTripFooter,
-  CreateTripShell,
-} from '../trip/CreateTripParts';
+import { CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/CreateTripParts';
 
+/** [Belum pasti] Validasi — nama & minimal 1 kandidat */
 export function Screen14FormValidation() {
   return (
-    <CreateTripShell
-      footer={<CreateTripFooter disabled errorSummary="1 kolom wajib belum diisi" />}
-    >
-      <TripNameField error="Nama perjalanan tidak boleh kosong." />
-      <TripTagsField tags={[]} />
-
-      <div>
-        <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 10 }}>
-          Pilih Tanggal
-        </label>
-        <TripCalendar muted />
-        <AddCandidateDateButton compact />
-      </div>
+    <CreateTripShell footer={<CreateTripFooter disabled errors={['Nama perjalanan wajib diisi', 'Pilih minimal 1 kandidat tanggal']} />}>
+      <CreateTripFormBody
+        name=""
+        tags={[]}
+        nameError="Nama perjalanan tidak boleh kosong."
+        dateMode="candidates"
+        dateMuted
+        dateError="Pilih rentang tanggal, lalu tambahkan sebagai kandidat."
+        showCandidateList
+        showEmptySlot
+        showAddButton
+      />
     </CreateTripShell>
   );
 }

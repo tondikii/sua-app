@@ -46,11 +46,7 @@ export function Screen8Profile() {
               avatarGradient: `linear-gradient(135deg, ${C.coral} 0%, #FF8E8E 100%)`,
               avatarShadow: `0 8px 20px ${C.coral}40`,
             }}
-            stats={[
-              { value: '234', label: 'Mengikuti' },
-              { value: '89', label: 'Pengikut' },
-              { value: '12', label: 'Perjalanan' },
-            ]}
+            stats={[{ value: '12', label: 'Perjalanan' }]}
             action={<ProfileOwnerActions />}
           />
         </div>

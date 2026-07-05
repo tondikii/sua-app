@@ -1,27 +1,10 @@
-import { C } from '../colors';
-import {
-  TRIP_DRAFT,
-  TripNameField,
-  TripTagsField,
-  TripCalendar,
-  AddCandidateDateButton,
-  CreateTripFooter,
-  CreateTripShell,
-} from '../trip/CreateTripParts';
+import { CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/CreateTripParts';
 
+/** [A] Tanggal pasti — default terisi draft, waktu custom */
 export function Screen12Create() {
   return (
     <CreateTripShell footer={<CreateTripFooter />}>
-      <TripNameField value={TRIP_DRAFT.name} />
-      <TripTagsField tags={TRIP_DRAFT.tags} />
-
-      <div>
-        <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 10 }}>
-          Pilih Tanggal
-        </label>
-        <TripCalendar selectedStart={TRIP_DRAFT.dateStart} selectedEnd={TRIP_DRAFT.dateEnd} />
-        <AddCandidateDateButton />
-      </div>
+      <CreateTripFormBody dateMode="fixed" startTime="08:00" endTime="17:00" />
     </CreateTripShell>
   );
 }

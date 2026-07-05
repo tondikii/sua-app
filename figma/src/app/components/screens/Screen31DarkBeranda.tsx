@@ -1,6 +1,8 @@
 import { Bell, Calendar, Home, Search, Heart, User, Plus } from 'lucide-react';
 import { FONT, AVATAR_COLORS } from '../colors';
 
+import { TRIP_DATE_PENDING } from '../trip/CreateTripParts';
+
 const D = {
   bg: '#0F0F13',
   surface: '#1B1B26',
@@ -22,7 +24,7 @@ const trips = [
     title: 'Lombok Weekend Escape',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=280&fit=crop&auto=format',
     tags: ['#Pantai', '#Alam'],
-    dateRange: '15–18 Jun 2026',
+    dateRange: TRIP_DATE_PENDING,
     avatars: ['R', 'B', 'A', 'D'],
   },
   {
@@ -30,7 +32,7 @@ const trips = [
     title: 'Bali Cultural Retreat',
     image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&h=280&fit=crop&auto=format',
     tags: ['#Budaya', '#Pantai'],
-    dateRange: '3–7 Jul 2026',
+    dateRange: '3–7 Jul 2026 · Sepanjang hari',
     avatars: ['S', 'M', 'R'],
   },
 ];

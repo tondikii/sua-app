@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Search, X } from 'lucide-react';
+import { ChevronRight, Search, X } from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
 import { HeaderTextButton } from '../ui/ScreenChrome';
 
@@ -11,7 +11,6 @@ export type SearchUser = {
   color?: string;
   avatarGradient?: string;
   trips?: number;
-  following?: boolean;
 };
 
 export const RINA_GRADIENT = `linear-gradient(135deg, ${C.teal} 0%, #7FE3DE 100%)`;
@@ -42,7 +41,6 @@ export const SEARCH_RESULTS: SearchUser[] = [
     username: 'rinadwi_travel',
     initial: 'R',
     avatarGradient: RINA_GRADIENT,
-    following: false,
     trips: 28,
   },
   {
@@ -51,7 +49,6 @@ export const SEARCH_RESULTS: SearchUser[] = [
     username: 'karina_putri',
     initial: 'K',
     color: AVATAR_COLORS[4],
-    following: false,
     trips: 5,
   },
 ];
@@ -162,25 +159,7 @@ export function SearchUserRow({ user, variant, showBorder = true, highlight = fa
         )}
       </div>
       {variant === 'result' && (
-        <button
-          type="button"
-          style={{
-            height: 34,
-            padding: '0 14px',
-            backgroundColor: user.following ? C.tealLight : 'transparent',
-            color: user.following ? C.teal : C.charcoal,
-            border: user.following ? `1.5px solid ${C.teal}40` : `1.5px solid ${C.border}`,
-            borderRadius: 10,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: FONT,
-            whiteSpace: 'nowrap',
-            flexShrink: 0,
-          }}
-        >
-          {user.following ? '✓ Mengikuti' : 'Ikuti'}
-        </button>
+        <ChevronRight size={18} color={C.mutedLight} strokeWidth={2.5} style={{ flexShrink: 0 }} />
       )}
     </div>
   );

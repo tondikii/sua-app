@@ -1,34 +1,23 @@
-import { ArrowLeft, MoreHorizontal, AlertTriangle, Lock, ThumbsUp } from 'lucide-react';
-import { C, AVATAR_COLORS, FONT } from '../colors';
-import { BottomNav } from '../BottomNav';
+import { C, FONT } from '../colors';
+import { TRIP_DATE_PENDING, VOTING_DATE_CANDIDATES } from '../trip/CreateTripParts';
+import { TripDetailHeader, TripDetailTabs, TRIP_COUNTS_DATE_PENDING } from '../trip/TripDetailParts';
+import { ITINERARY_VOTING_TITLE, ITINERARY_VOTING_CANDIDATES } from '../trip/ItineraryParts';
+import { CreateVotingFab, VotingCollapseSection, VotingCandidateList } from '../trip/VotingParts';
 
-const candidates = [
-  {
-    id: 1,
-    range: '15 – 18 Jun 2026',
-    days: '4 hari',
-    votes: 4,
-    avatars: ['R', 'B', 'A', 'D'],
-    voted: true,
-  },
-  {
-    id: 2,
-    range: '22 – 25 Jun 2026',
-    days: '4 hari',
-    votes: 2,
-    avatars: ['S', 'M'],
-    voted: false,
-  },
-  {
-    id: 3,
-    range: '1 – 4 Jul 2026',
-    days: '4 hari',
-    votes: 1,
-    avatars: ['R'],
-    voted: false,
-  },
+const destCandidates = ITINERARY_VOTING_CANDIDATES.map((name, i) => ({
+  id: i + 1,
+  name,
+  votes: [3, 2, 1][i],
+  avatars: [['R', 'B', 'A'], ['S', 'M'], ['D']][i],
+  voted: i === 1,
+}));
+
+const otherCandidates = [
+  { id: 1, name: 'Transport: Sewa mobil', votes: 4, avatars: ['R', 'B', 'A', 'D'], voted: false },
+  { id: 2, name: 'Transport: Travel bus', votes: 1, avatars: ['S'], voted: false },
 ];
 
+/** Tab Voting — collapse per jenis, akhiri via menu ⋮ */
 export function Screen16Voting() {
   return (
     <div
@@ -40,200 +29,51 @@ export function Screen16Voting() {
         flexDirection: 'column',
         fontFamily: FONT,
         overflow: 'hidden',
-        position: 'relative',
       }}
     >
-      {/* Dynamic island spacer */}
-      <div style={{ height: 60 }} />
+      <TripDetailHeader title="Lombok Weekend Escape" subtitle={TRIP_DATE_PENDING} />
+      <TripDetailTabs activeTab="voting" counts={TRIP_COUNTS_DATE_PENDING} />
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 20px 0' }}>
-        <div style={{ width: 36, height: 36, backgroundColor: C.light, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <ArrowLeft size={18} color={C.charcoal} strokeWidth={2.5} />
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: 15, fontWeight: 800, color: C.charcoal, margin: 0 }}>Lombok Weekend Escape</h2>
-          <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>Voting Tanggal</p>
-        </div>
-        <div style={{ width: 36, height: 36, backgroundColor: C.light, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <MoreHorizontal size={18} color={C.charcoal} />
-        </div>
-      </div>
-
-      {/* Content tabs */}
-      <div style={{ display: 'flex', margin: '16px 20px 0', borderBottom: `1.5px solid ${C.border}` }}>
-        {[
-          { label: 'Destinasi', active: false },
-          { label: 'Voting', active: true },
-          { label: 'Chat', active: false },
-        ].map((tab) => (
-          <div
-            key={tab.label}
-            style={{
-              paddingBottom: 12,
-              paddingTop: 2,
-              marginRight: 24,
-              cursor: 'pointer',
-              borderBottom: tab.active ? `2.5px solid ${C.coral}` : 'none',
-              marginBottom: -1.5,
-            }}
-          >
-            <span style={{ fontSize: 14, fontWeight: tab.active ? 700 : 500, color: tab.active ? C.coral : C.muted }}>
-              {tab.label}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Coral alert banner */}
       <div
         style={{
-          margin: '16px 20px 0',
-          backgroundColor: C.coral,
-          borderRadius: 16,
-          padding: '14px 16px',
+          flex: 1,
+          minHeight: 0,
+          padding: '16px 20px 28px',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
           gap: 10,
+          overflowY: 'auto',
         }}
       >
-        <AlertTriangle size={18} color="white" fill="rgba(255,255,255,0.3)" strokeWidth={2.5} />
-        <div>
-          <p style={{ color: 'white', fontSize: 14, fontWeight: 800, margin: 0 }}>Butuh Voting Tanggal</p>
-          <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 12, margin: '2px 0 0', fontWeight: 500 }}>
-            4 dari 5 anggota belum memilih
-          </p>
-        </div>
-      </div>
-
-      {/* Candidate cards */}
-      <div style={{ flex: 1, padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
-        {candidates.map((cand) => (
-          <div
-            key={cand.id}
-            style={{
-              backgroundColor: C.white,
-              borderRadius: 18,
-              padding: '16px',
-              boxShadow: cand.voted ? `0 4px 20px ${C.coral}25, 0 0 0 1.5px ${C.coral}` : `0 4px 20px ${C.shadow}`,
-              border: cand.voted ? `1.5px solid ${C.coral}` : `1px solid ${C.border}`,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.2 }}>{cand.range}</p>
-                <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>✈️ {cand.days} perjalanan</p>
-              </div>
-              <div
-                style={{
-                  backgroundColor: cand.voted ? C.coralLight : C.light,
-                  color: cand.voted ? C.coral : C.muted,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  padding: '5px 12px',
-                  borderRadius: 20,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                <ThumbsUp size={12} strokeWidth={2.5} />
-                {cand.votes} suara
-              </div>
-            </div>
-
-            {/* Voter avatars + Vote button */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {cand.avatars.map((init, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                      borderRadius: '50%',
-                      border: '2px solid white',
-                      marginLeft: i > 0 ? -10 : 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: 'white',
-                      zIndex: 10 - i,
-                    }}
-                  >
-                    {init}
-                  </div>
-                ))}
-                {cand.votes > 0 && (
-                  <span style={{ fontSize: 11, color: C.muted, marginLeft: 10, fontWeight: 500 }}>sudah memilih</span>
-                )}
-              </div>
-
-              {cand.voted ? (
-                <div
-                  style={{
-                    backgroundColor: C.tealLight,
-                    color: C.teal,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '7px 14px',
-                    borderRadius: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                  }}
-                >
-                  ✓ Voted
-                </div>
-              ) : (
-                <button
-                  style={{
-                    backgroundColor: C.white,
-                    color: C.charcoal,
-                    border: `1.5px solid ${C.border}`,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: '7px 16px',
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    fontFamily: FONT,
-                  }}
-                >
-                  Vote
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Sticky CTA */}
-      <div style={{ padding: '16px 20px 28px', backgroundColor: C.white, borderTop: `1px solid ${C.border}` }}>
-        <button
-          style={{
-            width: '100%',
-            height: 54,
-            backgroundColor: C.coral,
-            color: 'white',
-            border: 'none',
-            borderRadius: 16,
-            fontSize: 15,
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: `0 10px 28px ${C.coral}45`,
-            fontFamily: FONT,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-          }}
+        <VotingCollapseSection
+          type="tanggal"
+          title="Tanggal Perjalanan"
+          subtitle="Otomatis dari buat perjalanan · 3 kandidat · tenggat 18 Jun"
+          defaultOpen
+          canManage
         >
-          <Lock size={16} strokeWidth={2.5} />
-          Kunci Tanggal Ini
-        </button>
+          <VotingCandidateList items={VOTING_DATE_CANDIDATES} labelKey="range" />
+        </VotingCollapseSection>
+
+        <VotingCollapseSection
+          type="destinasi"
+          title={ITINERARY_VOTING_TITLE}
+          subtitle="3 opsi kuliner · slot 11:30–13:00 · deadline 20 Jun"
+          canManage
+        >
+          <VotingCandidateList items={destCandidates} labelKey="name" />
+        </VotingCollapseSection>
+
+        <VotingCollapseSection
+          type="lainnya"
+          title="Transportasi ke Lombok"
+          subtitle="2 opsi · tanpa tenggat"
+          canManage
+        >
+          <VotingCandidateList items={otherCandidates} labelKey="name" />
+        </VotingCollapseSection>
+
+        <CreateVotingFab />
       </div>
     </div>
   );

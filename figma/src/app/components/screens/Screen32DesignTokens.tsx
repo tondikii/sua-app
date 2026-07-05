@@ -1,12 +1,36 @@
 import { C, FONT } from '../colors';
+import { DESTRUCTIVE } from '../ui/ConfirmDialogModal';
 
-const swatches = [
-  { name: 'Warm Coral', hex: '#FF6B6B', color: '#FF6B6B', textColor: 'white', role: 'Primary / CTA' },
-  { name: 'Soft Teal', hex: '#4ECDC4', color: '#4ECDC4', textColor: 'white', role: 'Secondary / Tag' },
-  { name: 'Charcoal', hex: '#1A1A2E', color: '#1A1A2E', textColor: 'white', role: 'Text / Dark UI' },
-  { name: 'Canvas', hex: '#F7F7FB', color: '#F7F7FB', textColor: '#1A1A2E', role: 'Background', border: true },
-  { name: 'Border', hex: '#EBEBF2', color: '#EBEBF2', textColor: '#9091A0', role: 'Divider / Stroke', border: true },
-  { name: 'Muted', hex: '#9091A0', color: '#9091A0', textColor: 'white', role: 'Placeholder / Label' },
+type Swatch = {
+  name: string;
+  hex: string;
+  role: string;
+  border?: boolean;
+  textColor?: string;
+};
+
+const brandSwatches: Swatch[] = [
+  { name: 'Warm Coral', hex: C.coral, role: 'Primary / CTA', textColor: 'white' },
+  { name: 'Coral Light', hex: C.coralLight, role: 'Primary tint', border: true },
+  { name: 'Coral Dark', hex: C.coralDark, role: 'Primary pressed', textColor: 'white' },
+  { name: 'Soft Teal', hex: C.teal, role: 'Secondary / Tag', textColor: 'white' },
+  { name: 'Teal Light', hex: C.tealLight, role: 'Secondary tint', border: true },
+];
+
+const neutralSwatches: Swatch[] = [
+  { name: 'Charcoal', hex: C.charcoal, role: 'Text / Dark UI', textColor: 'white' },
+  { name: 'Canvas', hex: C.light, role: 'Background', border: true },
+  { name: 'White', hex: C.white, role: 'Surface', border: true },
+  { name: 'Border', hex: C.border, role: 'Divider / Stroke', border: true },
+  { name: 'Muted', hex: C.muted, role: 'Placeholder / Label', textColor: 'white' },
+  { name: 'Muted Light', hex: C.mutedLight, role: 'Hint / Disabled', textColor: 'white' },
+];
+
+const semanticSwatches: Swatch[] = [
+  { name: 'Danger', hex: C.danger, role: 'Delete / Destructive', textColor: 'white' },
+  { name: 'Danger Dark', hex: C.dangerDark, role: 'Danger pressed / border', textColor: 'white' },
+  { name: 'Danger Light', hex: C.dangerLight, role: 'Danger tint / icon bg', border: true },
+  { name: 'Danger Border', hex: C.dangerBorder, role: 'Danger outline', border: true },
 ];
 
 const typeScale = [
@@ -25,6 +49,46 @@ const radii = [
   { label: '2xl', value: '28px', preview: 28 },
 ];
 
+function SwatchGrid({ items }: { items: Swatch[] }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+      {items.map((s) => (
+        <div
+          key={s.name}
+          style={{
+            backgroundColor: C.white,
+            borderRadius: 14,
+            overflow: 'hidden',
+            boxShadow: `0 2px 10px ${C.shadow}`,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div
+            style={{
+              height: 44,
+              backgroundColor: s.hex,
+              border: s.border ? `1px solid ${C.border}` : 'none',
+            }}
+          />
+          <div style={{ padding: '7px 8px' }}>
+            <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: '0 0 1px', lineHeight: 1.2 }}>{s.name}</p>
+            <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 1px', fontFamily: 'monospace' }}>{s.hex}</p>
+            <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{s.role}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <p style={{ fontSize: 10, fontWeight: 800, color: C.muted, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
+      {children}
+    </p>
+  );
+}
+
 export function Screen32DesignTokens() {
   return (
     <div
@@ -41,14 +105,13 @@ export function Screen32DesignTokens() {
     >
       <div style={{ height: 60 }} />
 
-      {/* Header */}
-      <div style={{ padding: '4px 20px 14px', borderBottom: `1px solid #E0DDD8` }}>
+      <div style={{ padding: '4px 20px 14px', borderBottom: `1px solid #E0DDD8`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
           <div style={{ backgroundColor: C.coral, color: 'white', fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
             Referensi Dev
           </div>
           <div style={{ backgroundColor: C.tealLight, color: C.teal, fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
-            v2.4.1
+            v2.5.0
           </div>
         </div>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: '6px 0 2px', letterSpacing: -0.5 }}>
@@ -59,48 +122,75 @@ export function Screen32DesignTokens() {
         </p>
       </div>
 
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {/* ── WARNA ── */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 24 }}>
         <div style={{ padding: '12px 20px 0' }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.muted, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
-            Warna
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {swatches.map((s) => (
-              <div
-                key={s.hex}
-                style={{
-                  backgroundColor: C.white,
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                  boxShadow: `0 2px 10px ${C.shadow}`,
-                  border: `1px solid ${C.border}`,
-                }}
-              >
-                {/* Swatch block */}
-                <div
-                  style={{
-                    height: 44,
-                    backgroundColor: s.color,
-                    border: s.border ? `1px solid ${C.border}` : 'none',
-                  }}
-                />
-                {/* Label */}
-                <div style={{ padding: '7px 8px' }}>
-                  <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: '0 0 1px', lineHeight: 1.2 }}>{s.name}</p>
-                  <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 1px', fontFamily: 'monospace' }}>{s.hex}</p>
-                  <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{s.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <SectionLabel>Brand</SectionLabel>
+          <SwatchGrid items={brandSwatches} />
         </div>
 
-        {/* ── TIPOGRAFI ── */}
         <div style={{ padding: '14px 20px 0' }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.muted, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
-            Tipografi
+          <SectionLabel>Netral</SectionLabel>
+          <SwatchGrid items={neutralSwatches} />
+        </div>
+
+        <div style={{ padding: '14px 20px 0' }}>
+          <SectionLabel>Semantik — Danger</SectionLabel>
+          <SwatchGrid items={semanticSwatches} />
+        </div>
+
+        <div style={{ padding: '14px 20px 0' }}>
+          <SectionLabel>Button States</SectionLabel>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, backgroundColor: C.white, borderRadius: 14, padding: 12, border: `1px solid ${C.border}`, boxShadow: `0 2px 10px ${C.shadow}` }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>Primary</p>
+              <button
+                type="button"
+                style={{
+                  width: '100%',
+                  height: 40,
+                  backgroundColor: C.coral,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  fontFamily: FONT,
+                  boxShadow: `0 6px 18px ${C.coral}40`,
+                }}
+              >
+                CTA
+              </button>
+              <p style={{ fontSize: 8, color: C.mutedLight, margin: '6px 0 0', fontFamily: 'monospace', textAlign: 'center' }}>{C.coral}</p>
+            </div>
+            <div style={{ flex: 1, backgroundColor: C.white, borderRadius: 14, padding: 12, border: `1px solid ${C.border}`, boxShadow: `0 2px 10px ${C.shadow}` }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>Danger</p>
+              <button
+                type="button"
+                style={{
+                  width: '100%',
+                  height: 40,
+                  backgroundColor: DESTRUCTIVE.bg,
+                  color: DESTRUCTIVE.text,
+                  border: `1.5px solid ${DESTRUCTIVE.border}`,
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  fontFamily: FONT,
+                  boxShadow: `0 6px 16px ${DESTRUCTIVE.bg}35`,
+                }}
+              >
+                Hapus
+              </button>
+              <p style={{ fontSize: 8, color: C.mutedLight, margin: '6px 0 0', fontFamily: 'monospace', textAlign: 'center' }}>{C.danger}</p>
+            </div>
+          </div>
+          <p style={{ fontSize: 9, color: C.muted, margin: '8px 0 0', lineHeight: 1.45, fontWeight: 500 }}>
+            Danger pure-red (#F94141) — G/B lebih rendah dari coral (#FF6B6B), jelas state hapus.
           </p>
+        </div>
+
+        <div style={{ padding: '14px 20px 0' }}>
+          <SectionLabel>Tipografi</SectionLabel>
           <div style={{ backgroundColor: C.white, borderRadius: 16, overflow: 'hidden', boxShadow: `0 2px 10px ${C.shadow}`, border: `1px solid ${C.border}` }}>
             {typeScale.map((t, idx) => (
               <div
@@ -139,11 +229,8 @@ export function Screen32DesignTokens() {
           </div>
         </div>
 
-        {/* ── BORDER RADIUS ── */}
         <div style={{ padding: '14px 20px 0' }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.muted, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
-            Border Radius
-          </p>
+          <SectionLabel>Border Radius</SectionLabel>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             {radii.map((r) => (
               <div key={r.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>

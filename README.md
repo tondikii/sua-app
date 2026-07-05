@@ -5,10 +5,10 @@
 Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun *itinerary*, dan berkolaborasi dalam satu platform terpusat.
 
 ## ✨ Fitur Utama (MVP)
-* **Manajemen Perjalanan:** Susun jadwal, destinasi, dan *tagging* perjalanan (termasuk voting tanggal).
-* **Kolaborasi & Chat:** Undang teman (via *username*/email) dan diskusi langsung di grup chat internal perjalanan.
-* **Sosial:** Sistem saling *follow*, profil privat/publik (Instagram-style), dan grid perjalanan di profil.
-* **Wishlist:** Simpan dan urutkan destinasi impian berdasarkan prioritas.
+* **Manajemen Perjalanan:** Susun itinerary (aktivitas berjadwal + waktu), voting multi-tipe, media/cover perjalanan, dan kolaborasi grup.
+* **Kolaborasi & Chat:** Undang teman (username/email — perlakuan sama) dan diskusi di grup chat internal perjalanan.
+* **Profil & Pencarian:** Profil pengguna dengan grid perjalanan publik; cari user untuk undangan trip.
+* **Wishlist Aktivitas:** Simpan aktivitas impian (waktu, Maps, prioritas) — filter/sort, lalu **Jadikan Perjalanan** untuk konversi ke trip + itinerary.
 
 *(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md)).*
 
@@ -17,28 +17,28 @@ Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-te
 * **Backend**: Go (Gin Framework)
 * **Mobile**: Kotlin Multiplatform (KMP)
 * **Database**: PostgreSQL
-* **Integrasi**: Google Sign-In, Google Calendar API
+* **Integrasi**: Google Sign-In, Google Calendar API (tambah event ke kalender sendiri via menu ⋮ — opsional)
 
 ## 🎨 Desain UI (Figma)
 
-Desain high-fidelity (32 layar) diekspor ke folder [`figma/`](figma/). Jalankan preview lokal:
+Desain high-fidelity (**112 layar** — termasuk state variants per pipeline) diekspor ke folder [`figma/`](figma/). Jalankan preview lokal:
 
 ```bash
 cd figma && npm i && npm run dev
 ```
 
-Referensi lengkap: [docs/FIGMA.md](docs/FIGMA.md) — design tokens, inventori layar, dan mapping ke workflow/API.
+Registry layar dikelompokkan **§1–§13** di `figma/src/app/App.tsx` (selaras `docs/WORKFLOW.md`). Referensi lengkap: [docs/FIGMA.md](docs/FIGMA.md).
 
 ## 📚 Direktori Dokumentasi
 Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
 2. [Product Requirements Document (PRD)](docs/PRD.md) - Spesifikasi lengkap MVP.
-3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi selaras dengan 32 layar Figma.
+3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi selaras dengan 112 layar Figma (§1–§13).
 4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur (Checklist UAT).
-5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Struktur monorepo, pola arsitektur kode (Go & KMP), serta skema database lengkap.
-6. [Milestones & Roadmap](docs/MILESTONES.md) - Peta jalan pengembangan dari setup (M0) hingga Play Store release (M15), dengan checklist aksi per milestone. Setiap milestone dapat dikerjakan oleh AI agent secara mandiri.
-7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory (32 layar), gap API, panduan AI agent, dan mapping ke workflow.
+5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Skema DB (§3), **35 endpoint implemented** + gap M5.2 (§4.3), pola Go/KMP.
+6. [Milestones & Roadmap](docs/MILESTONES.md) - M0–M5.1 ✅ · **M5.2 design parity BE** 🔜 · M6+ mobile.
+7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory (112 layar), gap API, panduan AI agent, dan mapping ke workflow.
 
 ## 🚀 Memulai Pengerjaan
 

@@ -92,6 +92,29 @@ export function NotificationBell({ unreadCount }: { unreadCount: number }) {
   );
 }
 
+/** Ruang aman di bawah konten scroll (nav 88px + FAB elevated + jarak napas) */
+const HOME_SCROLL_BOTTOM = 112;
+
+/** Area konten scroll — aman dari BottomNav */
+export function HomeScrollBody({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        minHeight: 0,
+        padding: `20px 22px ${HOME_SCROLL_BOTTOM}px`,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function HomeHeader({ unreadCount }: { unreadCount: number }) {
   return (
     <div
@@ -101,6 +124,7 @@ export function HomeHeader({ unreadCount }: { unreadCount: number }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 12,
+        flexShrink: 0,
       }}
     >
       <h2 style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.5, flex: 1 }}>
@@ -113,7 +137,14 @@ export function HomeHeader({ unreadCount }: { unreadCount: number }) {
 
 export function HomeTabs({ activeTab, counts }: { activeTab: HomeTabId; counts: TabCounts }) {
   return (
-    <div style={{ display: 'flex', margin: '16px 22px 0', borderBottom: `1.5px solid ${C.border}` }}>
+    <div
+      style={{
+        display: 'flex',
+        margin: '16px 22px 0',
+        borderBottom: `1.5px solid ${C.border}`,
+        flexShrink: 0,
+      }}
+    >
       {TAB_LABELS.map((tab) => {
         const active = tab.id === activeTab;
         const count = counts[tab.id];

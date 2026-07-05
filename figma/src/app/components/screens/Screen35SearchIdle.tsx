@@ -21,9 +21,6 @@ export function Screen35SearchIdle() {
       <SafeAreaTop />
 
       <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, margin: '0 0 16px', letterSpacing: -0.5 }}>
-          Cari
-        </h1>
         <SearchBar />
       </div>
 

@@ -1,7 +1,6 @@
 import { HelpCircle, FileText, ChevronRight, LogOut, UserX } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { C, FONT } from '../colors';
-import { BottomNav } from '../BottomNav';
 import { PageHeader, SafeAreaTop } from '../ui/ScreenChrome';
 
 type SettingsItem = {
@@ -179,8 +178,6 @@ export function Screen11Settings() {
           Atur Perjalanan · v2.4.1
         </p>
       </div>
-
-      <BottomNav active="profile" />
     </div>
   );
 }

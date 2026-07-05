@@ -1,8 +1,24 @@
-import { Bell, CheckCircle, UserPlus, CalendarClock, MapPin } from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
 import { BottomNav } from '../BottomNav';
 
-const notifs = [
+type NotifAction = 'terima' | 'tolak' | 'vote';
+
+type NotifItem = {
+  id: number;
+  type: 'invite' | 'voting' | 'activity';
+  icon: string;
+  iconBg: string;
+  avatarInitial: string;
+  avatarColor: string;
+  title: string;
+  highlight?: string;
+  titleSuffix?: string;
+  time: string;
+  unread: boolean;
+  actions: NotifAction[];
+};
+
+const notifs: NotifItem[] = [
   {
     id: 1,
     type: 'invite',
@@ -18,40 +34,42 @@ const notifs = [
   },
   {
     id: 2,
-    type: 'follow',
-    icon: '👤',
-    iconBg: C.tealLight,
-    avatarInitial: 'S',
-    avatarColor: AVATAR_COLORS[1],
-    title: 'Siti mulai mengikuti kamu.',
-    highlight: null,
-    time: '1 jam lalu',
+    type: 'voting',
+    icon: '🗳️',
+    iconBg: '#FFF8ED',
+    avatarInitial: 'G',
+    avatarColor: AVATAR_COLORS[3],
+    title: 'Voting Tanggal',
+    highlight: 'Bali Trip',
+    titleSuffix: 'segera berakhir.',
+    time: '3 jam lalu',
     unread: true,
-    actions: ['follow'],
+    actions: ['vote'],
   },
   {
     id: 3,
     type: 'voting',
     icon: '🗳️',
     iconBg: '#FFF8ED',
-    avatarInitial: 'G',
-    avatarColor: AVATAR_COLORS[3],
-    title: 'Voting tanggal',
-    highlight: 'Bali Trip',
-    titleSuffix: 'segera berakhir! Segera pilih tanggalmu.',
-    time: '3 jam lalu',
+    avatarInitial: 'A',
+    avatarColor: AVATAR_COLORS[1],
+    title: 'Voting Destinasi',
+    highlight: 'Raja Ampat',
+    titleSuffix: 'deadline besok.',
+    time: '5 jam lalu',
     unread: false,
     actions: ['vote'],
   },
   {
     id: 4,
-    type: 'update',
-    icon: '📍',
+    type: 'activity',
+    icon: '📋',
     iconBg: C.tealLight,
     avatarInitial: 'R',
     avatarColor: AVATAR_COLORS[2],
-    title: 'Rina menambahkan destinasi baru:',
-    highlight: 'Bukit Merese',
+    title: 'Rina menambahkan aktivitas',
+    highlight: 'Sunrise di Puncak Jayagiri',
+    titleSuffix: 'di Bali Trip.',
     time: 'Kemarin',
     unread: false,
     actions: [],
@@ -72,16 +90,15 @@ export function Screen27Notifikasi() {
         position: 'relative',
       }}
     >
-      {/* Dynamic island spacer */}
-      <div style={{ height: 60 }} />
+      <div style={{ height: 60, flexShrink: 0 }} />
 
-      {/* Header */}
-      <div style={{ padding: '6px 22px 16px', backgroundColor: C.light }}>
+      <div style={{ padding: '6px 22px 16px', backgroundColor: C.light, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.5 }}>
             Notifikasi
           </h1>
           <button
+            type="button"
             style={{
               backgroundColor: 'transparent',
               border: 'none',
@@ -98,15 +115,16 @@ export function Screen27Notifikasi() {
         </div>
       </div>
 
-      {/* Notif list */}
       <div
         style={{
           flex: 1,
-          padding: '0 16px',
+          minHeight: 0,
+          padding: '0 16px 88px',
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
-          overflow: 'hidden',
+          overflowY: 'auto',
+          overflowX: 'hidden',
         }}
       >
         {notifs.map((n) => (
@@ -119,9 +137,9 @@ export function Screen27Notifikasi() {
               boxShadow: `0 3px 16px ${C.shadow}`,
               border: n.unread ? `1.5px solid ${C.coral}30` : `1px solid ${C.border}`,
               position: 'relative',
+              cursor: n.actions.length === 0 ? 'pointer' : 'default',
             }}
           >
-            {/* Unread dot */}
             {n.unread && (
               <div
                 style={{
@@ -136,9 +154,7 @@ export function Screen27Notifikasi() {
               />
             )}
 
-            {/* Top row: avatar + content + time */}
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              {/* Avatar with type icon badge */}
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <div
                   style={{
@@ -176,12 +192,14 @@ export function Screen27Notifikasi() {
                 </div>
               </div>
 
-              {/* Text */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ flex: 1, minWidth: 0, paddingRight: n.unread ? 12 : 0 }}>
                 <p style={{ fontSize: 13, color: C.charcoal, margin: '0 0 2px', lineHeight: 1.5, fontWeight: 500 }}>
-                  {n.title}{' '}
+                  {n.title}
                   {n.highlight && (
-                    <span style={{ fontWeight: 800, color: C.charcoal }}>{n.highlight}</span>
+                    <>
+                      {' '}
+                      <span style={{ fontWeight: 800, color: C.charcoal }}>{n.highlight}</span>
+                    </>
                   )}
                   {n.titleSuffix && <span> {n.titleSuffix}</span>}
                 </p>
@@ -189,11 +207,11 @@ export function Screen27Notifikasi() {
               </div>
             </div>
 
-            {/* Action buttons */}
             {n.actions.length > 0 && (
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                 {n.actions.includes('terima') && (
                   <button
+                    type="button"
                     style={{
                       flex: 1,
                       height: 36,
@@ -213,6 +231,7 @@ export function Screen27Notifikasi() {
                 )}
                 {n.actions.includes('tolak') && (
                   <button
+                    type="button"
                     style={{
                       flex: 1,
                       height: 36,
@@ -229,29 +248,12 @@ export function Screen27Notifikasi() {
                     Tolak
                   </button>
                 )}
-                {n.actions.includes('follow') && (
-                  <button
-                    style={{
-                      height: 36,
-                      padding: '0 18px',
-                      backgroundColor: C.tealLight,
-                      color: C.teal,
-                      border: `1.5px solid ${C.teal}40`,
-                      borderRadius: 10,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontFamily: FONT,
-                    }}
-                  >
-                    Follow Back
-                  </button>
-                )}
                 {n.actions.includes('vote') && (
                   <button
+                    type="button"
                     style={{
+                      flex: 1,
                       height: 36,
-                      padding: '0 18px',
                       backgroundColor: '#FFF8ED',
                       color: '#F59E0B',
                       border: `1.5px solid #F59E0B30`,
