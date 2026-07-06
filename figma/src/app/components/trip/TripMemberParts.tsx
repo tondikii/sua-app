@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { SearchInput } from '../search/SearchParts';
 import { C, AVATAR_COLORS, FONT } from '../colors';
-import { EmailInvitedRow, InviteUserRow, type EmailInvite, type InviteUser } from './InviteParts';
+import { NavHeader, SafeAreaTop } from '../ui/ScreenChrome';
+import { EmailInvitedRow, InviteUserRow, type PendingInvite, type InviteUser } from './InviteParts';
 
 export type TripMember = {
   id: number;
@@ -14,7 +15,6 @@ export type TripMember = {
 
 export const SAMPLE_TRIP_MEMBERS: TripMember[] = [
   { id: 0, name: 'Kamu (Budi)', username: '@budi_santoso', initial: 'B', color: AVATAR_COLORS[0], role: 'creator' },
-  { id: 1, name: 'Dewi Astuti', username: '@dewi_astuti', initial: 'D', color: AVATAR_COLORS[1], role: 'pending' },
   { id: 2, name: 'Rudi Hermawan', username: '@rudi_travel', initial: 'R', color: AVATAR_COLORS[2], role: 'member' },
   { id: 3, name: 'Fitra Kusuma', username: '@fitrakusuma', initial: 'F', color: AVATAR_COLORS[3], role: 'member' },
 ];
@@ -105,18 +105,9 @@ export function TripMemberRow({ member, canRemove = false }: TripMemberRowProps)
   );
 }
 
-function PanelSectionLabel({ children }: { children: string }) {
+function PanelCountLabel({ children }: { children: string }) {
   return (
-    <p
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-        color: C.muted,
-        margin: '0 0 10px',
-        textTransform: 'uppercase',
-        letterSpacing: 0.6,
-      }}
-    >
+    <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
       {children}
     </p>
   );
@@ -129,62 +120,61 @@ function PanelSectionDivider() {
 type TripMembersPanelProps = {
   members?: TripMember[];
   inviteResults?: InviteUser[];
-  emailInvites?: EmailInvite[];
+  pendingInvites?: PendingInvite[];
   searchValue?: string;
   showInviteSearch?: boolean;
-  /** Konten undang tambahan (hasil email, konfirmasi, dll.) — di atas daftar anggota */
+  /** Konten undang tambahan (hasil cari, dll.) — di atas daftar anggota */
   inviteExtra?: ReactNode;
-  /** true = viewer adalah pembuat trip */
+  /** true = viewer adalah pembuat trip (bisa keluarkan anggota) */
   isCreator?: boolean;
 };
 
-/** Panel undang + anggota — undangan di atas, daftar anggota di bawah konten */
+/** Panel undang + anggota — pending di atas, daftar anggota di bawah */
 export function TripMembersPanel({
   members = SAMPLE_TRIP_MEMBERS,
   inviteResults,
-  emailInvites,
+  pendingInvites,
   searchValue,
   showInviteSearch = false,
   inviteExtra,
   isCreator = true,
 }: TripMembersPanelProps) {
   const hasInviteResults = Boolean(inviteResults && inviteResults.length > 0);
-  const hasEmailInvites = Boolean(emailInvites && emailInvites.length > 0);
-  const hasInviteBlock = showInviteSearch || hasInviteResults || hasEmailInvites || Boolean(inviteExtra);
+  const hasPendingInvites = Boolean(pendingInvites && pendingInvites.length > 0);
+  const hasInviteBlock = showInviteSearch || hasInviteResults || hasPendingInvites || Boolean(inviteExtra);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', fontFamily: FONT }}>
       {hasInviteBlock && (
         <div style={{ flexShrink: 0 }}>
           {showInviteSearch && (
-            <div style={{ marginBottom: hasInviteResults || hasEmailInvites || inviteExtra ? 16 : 0 }}>
+            <div style={{ marginBottom: hasInviteResults || hasPendingInvites || inviteExtra ? 16 : 0 }}>
               <SearchInput value={searchValue} placeholder="Cari username atau email..." />
             </div>
           )}
 
           {hasInviteResults && (
-            <div style={{ marginBottom: hasEmailInvites || inviteExtra ? 16 : 0 }}>
-              <PanelSectionLabel>Hasil · {inviteResults!.length}</PanelSectionLabel>
+            <div style={{ marginBottom: hasPendingInvites || inviteExtra ? 16 : 0 }}>
+              <PanelCountLabel>{inviteResults!.length} hasil</PanelCountLabel>
               {inviteResults!.map((user, idx) => (
                 <InviteUserRow
                   key={user.id}
                   user={user}
                   cancelable={user.invited}
-                  isLast={idx === inviteResults!.length - 1 && !hasEmailInvites && !inviteExtra}
+                  isLast={idx === inviteResults!.length - 1 && !hasPendingInvites && !inviteExtra}
                 />
               ))}
             </div>
           )}
 
-          {hasEmailInvites && (
+          {hasPendingInvites && (
             <div style={{ marginBottom: inviteExtra ? 16 : 0 }}>
-              <PanelSectionLabel>Undangan email · {emailInvites!.length}</PanelSectionLabel>
-              {emailInvites!.map((invite, idx) => (
+              <PanelCountLabel>{pendingInvites!.length} pending</PanelCountLabel>
+              {pendingInvites!.map((invite, idx) => (
                 <EmailInvitedRow
-                  key={invite.email}
+                  key={invite.id}
                   invite={invite}
-                  cancelable={isCreator}
-                  isLast={idx === emailInvites!.length - 1 && !inviteExtra}
+                  isLast={idx === pendingInvites!.length - 1 && !inviteExtra}
                 />
               ))}
             </div>
@@ -197,12 +187,33 @@ export function TripMembersPanel({
       {hasInviteBlock && <PanelSectionDivider />}
 
       <div style={{ flexShrink: 0 }}>
-        <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
-          {members.length} anggota
-        </p>
+        <PanelCountLabel>{members.length} anggota</PanelCountLabel>
         {members.map((member) => (
           <TripMemberRow key={member.id} member={member} canRemove={isCreator} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+/** Halaman daftar anggota trip — shell shared */
+export function TripMembersScreen({ panelProps }: { panelProps: React.ComponentProps<typeof TripMembersPanel> }) {
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        backgroundColor: C.white,
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: FONT,
+        overflow: 'hidden',
+      }}
+    >
+      <SafeAreaTop />
+      <NavHeader title="Anggota Perjalanan" />
+      <div style={{ flex: 1, minHeight: 0, padding: '8px 22px 28px', overflowY: 'auto' }}>
+        <TripMembersPanel {...panelProps} />
       </div>
     </div>
   );

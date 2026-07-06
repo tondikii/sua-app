@@ -1,6 +1,6 @@
 # Acceptance Criteria (Kriteria Penerimaan)
 
-> **Tujuan dokumen ini**: Checklist UAT lengkap untuk memverifikasi bahwa aplikasi mobile sesuai desain Figma (**112 layar**) dan spesifikasi MVP. Referensi: [docs/FIGMA.md](docs/FIGMA.md), [docs/WORKFLOW.md](docs/WORKFLOW.md).
+> **Tujuan dokumen ini**: Checklist UAT lengkap untuk memverifikasi bahwa aplikasi mobile sesuai desain Figma (**125 layar**) dan spesifikasi MVP. Referensi: [docs/FIGMA.md](docs/FIGMA.md), [docs/WORKFLOW.md](docs/WORKFLOW.md).
 
 ---
 
@@ -18,47 +18,51 @@
 - [ ] Tab "Mendatang", "Selesai", "Undangan" memfilter daftar trip (`GET /v1/trips?tab=...`).
 - [ ] Trip card menampilkan cover, judul, tags, rentang tanggal/waktu, stacked avatars.
 - [ ] Empty state tampil saat tidak ada trip (`Screen6EmptyBeranda`).
-- [ ] Layar Notifikasi menampilkan tipe: undangan, voting, aktivitas itinerary (`Screen27Notifikasi`).
+- [ ] Layar Notifikasi menampilkan tipe: undangan, voting, aktivitas itinerary (`Screen9Notifikasi`).
 - [ ] Aksi inline notifikasi berfungsi: terima/tolak undangan, navigasi ke voting/trip.
 
 ## 3. Pencarian (Tab Cari)
-- [ ] Cari idle dengan riwayat (`Screen35SearchIdle`); bottom nav active = search.
-- [ ] Hasil pencarian username/nama — tap baris → profil user (`Screen7SearchUser`).
-- [ ] Empty hasil cari (`Screen40SearchNoResults`).
-- [ ] Profil publik dari hasil cari (`Screen10PublicProfile`, `Screen37PublicProfileEmptyTrip`).
+- [ ] Cari idle dengan riwayat (`Screen10SearchIdle`); bottom nav active = search.
+- [ ] Hasil pencarian username/nama — tap baris → profil user (`Screen11SearchUser`).
+- [ ] Empty hasil cari (`Screen12SearchNoResults`).
+- [ ] Profil publik dari hasil cari (`Screen13PublicProfile`, `Screen14PublicProfileEmptyTrip`).
 
 ## 4. Profil & Pengaturan (Tab Profil)
-- [ ] Profil pribadi: foto, username, bio, grid trip, Edit & Pengaturan (`Screen8Profile`, `Screen36ProfileEmptyTrip`).
-- [ ] Edit profil: bio + link sosial (`Screen9EditProfil`).
-- [ ] Pengaturan: menu akun, bantuan, hapus akun (`Screen11Settings`, `Screen39SettingsHelpFaq`, `Screen38SettingsDeleteAccount`).
+- [ ] Profil pribadi: kartu horizontal (avatar kiri, nama+bio+website kanan), bar stat perjalanan, grid trip (`Screen15Profile`, `Screen16ProfileEmptyTrip`).
+- [ ] Username di header; akses Pengaturan via ikon ⚙ (bukan tombol Edit di kartu).
+- [ ] Edit profil: bio + website/sosial (`Screen18EditProfil`) — akses dari kartu profil di Pengaturan.
+- [ ] Pengaturan: kartu profil teratas → Edit; section Bantuan lalu Akun (`Screen17Settings`, `Screen19SettingsHelpFaq`, `Screen20SettingsDeleteAccount`).
 
 ## 5. Manajemen Perjalanan & Itinerary
-- [ ] Form buat perjalanan via FAB "+" — state variants §6 (`Screen12Create`, `Screen78`, dll.).
+- [ ] Form buat perjalanan via FAB "+" — state variants §6 (`Screen21`–`Screen34`, dll.).
 - [ ] Input nama (wajib), tags, kalender, toggle sepanjang hari + jam.
-- [ ] Multi kandidat tanggal + validasi sekaligus (`Screen13`, `Screen14FormValidation`).
-- [ ] Undang: search kosong → hasil / kosong / terundang — **tanpa** daftar saran teman (`Screen20`, `Screen43`–`Screen45`, `Screen84`).
+- [ ] Multi kandidat tanggal + validasi sekaligus (`Screen31`, `Screen33FormValidation`).
+- [ ] Undang: search kosong → hasil / kosong / terundang / email (`Screen35`–`Screen41`) — **tanpa** daftar saran teman atau konfirmasi email terpisah.
 - [ ] Detail trip **4 tab**: Itinerary · Voting · Chat · Media.
-- [ ] Itinerary: timeline multi-hari, state waktu, empty (`Screen77ItineraryEmpty`, `Screen15`, `Screen72`).
-- [ ] Bottom sheet tambah/edit aktivitas + cover (`Screen18`, `Screen85`–`Screen93`).
-- [ ] Tab Media: unggah, cover, dari chat (`Screen41`, `Screen98`).
+- [ ] Itinerary: timeline multi-hari, state waktu, empty (`Screen42ItineraryEmpty`, `Screen43Destinations`, `Screen44DestinationsFixedDate`).
+- [ ] Bottom sheet tambah/edit aktivitas + cover (`Screen45`–`Screen54`).
+- [ ] Tab Media: unggah, cover, dari chat (`Screen93TripDocuments`, `Screen94MediaFromChat`).
 
 ## 6. Kolaborasi, Voting & Chat
 - [ ] Tab counter: Itinerary (jumlah), Voting (hidden jika 0), Chat (unread), Media (always, incl. 0).
-- [ ] Voting empty: badge 0, CTA buat voting (`Screen107VotingEmpty`).
-- [ ] Multi-voting collapse Tanggal / Aktivitas / Lainnya (`Screen16Voting`).
-- [ ] Sheet buat/edit/hapus voting; pipeline selesai (`Screen42`, `Screen53`–`Screen66`, `Screen21`, `Screen48`–`Screen49`).
-- [ ] Chat: bubbles, lampiran, kirim media (`Screen97`–`Screen106`), empty (`Screen23`), long press + hapus (`Screen24`).
-- [ ] Kelola trip menu ⋮: anggota, edit, hapus, kalender (`Screen50`–`Screen52`, `Screen22`).
+- [ ] Voting empty: badge 0, CTA buat voting (`Screen57VotingEmpty`).
+- [ ] Multi-voting collapse Tanggal / Aktivitas / Lainnya (`Screen56Voting`).
+- [ ] Sheet buat/edit/hapus voting; pipeline selesai (`Screen56`–`Screen75`).
+- [ ] Sheet **Detail Voting** / **Edit Voting** — jenis via badge; voting tanggal **tanpa** field judul di form.
+- [ ] Chat: bubbles, lampiran, kirim media (`Screen77`–`Screen85`), empty (`Screen86`).
+- [ ] Long press: pesan orang lain tanpa Hapus (`Screen87`); pesan sendiri dengan Hapus (`Screen88`).
+- [ ] Balas pesan: quote di bubble — 4 skenario (`Screen89`–`Screen92`).
+- [ ] Kelola trip menu ⋮: anggota + pending (`Screen97`–`Screen102`), edit, hapus, kalender (`Screen103`, `Screen95`, `Screen96`).
 
 ## 7. Wishlist Aktivitas
-- [ ] Header **Wishlist Aktivitas** — grid-only (`Screen25Wishlist`).
-- [ ] Filter prioritas + tag + search; empty states (`Screen108`, `Screen110`).
-- [ ] Form tambah/edit: urutan field + CTA **Simpan Aktivitas** (`Screen111`, `Screen26`, `Screen112`).
-- [ ] Detail + menu ⋮ + Jadikan Perjalanan (`Screen113`–`Screen120`).
+- [ ] Header **Wishlist Aktivitas** — grid-only (`Screen105Wishlist`).
+- [ ] Filter prioritas + tag + search; empty states (`Screen104`, `Screen106`).
+- [ ] Form tambah/edit: urutan field + CTA **Simpan Aktivitas** (`Screen107`, `Screen108`, `Screen109`).
+- [ ] Detail + menu ⋮ + Jadikan Perjalanan (`Screen110`–`Screen117`).
 
 ## 8. System States & Design
-- [ ] Skeleton, toast, error (`Screen28`–`Screen30`).
-- [ ] Design tokens (`Screen32DesignTokens`, `colors.ts`).
+- [ ] Skeleton, toast, error (`Screen118`–`Screen120`).
+- [ ] Design tokens (`Screen125DesignTokens`, `colors.ts`).
 - [ ] Bottom nav: Beranda, Cari, [+], Wishlist, Profil.
-- [ ] Dark mode Beranda opsional (`Screen31DarkBeranda`).
-- [ ] Media viewer (`Screen94`–`Screen96`).
+- [ ] Dark mode Beranda opsional (`Screen124DarkBeranda`).
+- [ ] Media viewer (`Screen121`–`Screen123`).

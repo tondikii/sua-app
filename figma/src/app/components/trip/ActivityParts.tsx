@@ -1050,3 +1050,21 @@ export function ActivitySheetBackdrop({
     </>
   );
 }
+
+type ActivitySheetBackdropConfig = Parameters<typeof ActivitySheetBackdrop>[0];
+
+/** Wrapper layar sheet aktivitas — backdrop itinerary + konten sheet */
+export function ActivitySheetScreen({
+  backdrop,
+  children,
+}: {
+  backdrop: ActivitySheetBackdropConfig;
+  children: ReactNode;
+}) {
+  return (
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+      <ActivitySheetBackdrop {...backdrop} />
+      {children}
+    </div>
+  );
+}

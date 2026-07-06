@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CheckCircle2, Mail, Send, Smartphone } from 'lucide-react';
+import { CheckCircle2, Mail } from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
 import { SearchInput } from '../search/SearchParts';
 import { TRIP_DRAFT } from './CreateTripParts';
@@ -7,17 +7,21 @@ import { TRIP_DRAFT } from './CreateTripParts';
 /** Contoh email untuk mock layar undang via email */
 export const EXAMPLE_INVITE_EMAIL = 'sari.lestari@gmail.com';
 
-export type EmailInviteStatus = 'not_registered' | 'email_sent' | 'pending_accept';
+export type EmailInviteStatus = 'email_sent' | 'pending_accept' | 'rejected';
 
 export type EmailInvite = {
-  email: string;
+  id: string;
   status: EmailInviteStatus;
+  email?: string;
   /** Terisi setelah penerima download & registrasi */
   name?: string;
   username?: string;
   initial?: string;
   color?: string;
 };
+
+/** Alias semantik — undangan pending di daftar anggota */
+export type PendingInvite = EmailInvite;
 
 export type InviteUser = {
   id: number;
@@ -88,7 +92,7 @@ export function InviteShell({
             </div>
           </div>
           <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-            Ajak teman merencanakan bareng. Lewati dulu dan undang nanti lewat ⋮ → Anggota.
+            Ajak teman ke dalam perjalanan. Atau Kamu bisa lewati dulu dan undang di detail perjalanan.
           </p>
         </div>
       )}
@@ -145,6 +149,51 @@ export function InvitePrimaryButton({ label }: { label: string }) {
     >
       {label}
     </button>
+  );
+}
+
+export function InviteSearchResultsBody({ results }: { results: InviteUser[] }) {
+  return (
+    <>
+      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>{results.length} hasil</p>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {results.map((user) => (
+          <InviteUserRow key={user.id} user={user} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+export function InviteInvitedList({
+  users,
+  emailInvite,
+  banner,
+}: {
+  users: InviteUser[];
+  emailInvite?: EmailInvite;
+  banner?: ReactNode;
+}) {
+  return (
+    <>
+      {banner}
+      <p
+        style={{
+          fontSize: 12,
+          color: C.muted,
+          margin: banner ? '16px 0 8px' : '0 0 8px',
+          fontWeight: 600,
+        }}
+      >
+        Sudah diundang
+      </p>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {emailInvite && <EmailInvitedRow invite={emailInvite} />}
+        {users.map((user) => (
+          <InviteInvitedRow key={user.id} user={user} />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -354,76 +403,6 @@ export function EmailInviteSearchResult({ email }: { email: string }) {
   );
 }
 
-/** Konfirmasi kirim undangan email */
-export function EmailInviteConfirmCard({
-  email,
-  tripName = TRIP_DRAFT.name,
-  inviterName = 'Budi',
-}: {
-  email: string;
-  tripName?: string;
-  inviterName?: string;
-}) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div
-        style={{
-          backgroundColor: C.tealLight,
-          borderRadius: 16,
-          padding: '14px 16px',
-          border: `1px solid ${C.teal}30`,
-        }}
-      >
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <Send size={18} color={C.teal} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: C.teal, margin: '0 0 6px', wordBreak: 'break-all' }}>{email}</p>
-            <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-              <strong style={{ color: C.charcoal }}>{inviterName}</strong> mengundang ke{' '}
-              <strong style={{ color: C.charcoal }}>{tripName}</strong> · link Play Store disertakan.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          backgroundColor: C.light,
-          borderRadius: 14,
-          padding: '12px 14px',
-          display: 'flex',
-          gap: 10,
-          alignItems: 'center',
-        }}
-      >
-        <Smartphone size={18} color={C.muted} strokeWidth={2} />
-        <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-          Setelah daftar, undangan muncul di tab Undangan beranda.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        style={{
-          width: '100%',
-          height: 50,
-          backgroundColor: C.coral,
-          color: 'white',
-          border: 'none',
-          borderRadius: 14,
-          fontSize: 15,
-          fontWeight: 800,
-          cursor: 'pointer',
-          fontFamily: FONT,
-          boxShadow: `0 8px 24px ${C.coral}40`,
-        }}
-      >
-        Kirim Email
-      </button>
-    </div>
-  );
-}
-
 /** Banner sukses setelah email undangan terkirim */
 export function EmailInviteSentBanner({ email }: { email: string }) {
   return (
@@ -464,31 +443,67 @@ export function EmailInviteSentBanner({ email }: { email: string }) {
 }
 
 const EMAIL_INVITE_STATUS: Record<EmailInviteStatus, { label: string; color: string; bg: string }> = {
-  not_registered: { label: 'Belum daftar', color: C.muted, bg: C.light },
-  email_sent: { label: 'Email terkirim', color: '#60A5FA', bg: '#EFF6FF' },
-  pending_accept: { label: 'Menunggu', color: C.coral, bg: C.coralLight },
+  email_sent: { label: 'Belum daftar app', color: C.muted, bg: C.light },
+  pending_accept: { label: 'Belum menerima', color: C.coral, bg: C.coralLight },
+  rejected: { label: 'Ditolak', color: C.danger, bg: C.dangerLight },
 };
 
-/** Baris undangan via email — di daftar terundang atau anggota */
+function PendingActionButton({
+  label,
+  variant,
+}: {
+  label: string;
+  variant: 'cancel' | 'reinvite';
+}) {
+  const isCancel = variant === 'cancel';
+  return (
+    <button
+      type="button"
+      style={{
+        height: 34,
+        padding: '0 12px',
+        backgroundColor: isCancel ? 'transparent' : C.coral,
+        color: isCancel ? C.danger : 'white',
+        border: isCancel ? `1.5px solid ${C.danger}40` : 'none',
+        borderRadius: 10,
+        fontSize: 12,
+        fontWeight: 700,
+        cursor: 'pointer',
+        fontFamily: FONT,
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+/** Baris undangan pending / ditolak — di daftar anggota trip */
 export function EmailInvitedRow({
   invite,
-  cancelable = true,
+  canManage = true,
   isLast = false,
 }: {
   invite: EmailInvite;
-  cancelable?: boolean;
+  /** Semua anggota trip bisa batalkan / undang kembali calon anggota */
+  canManage?: boolean;
   isLast?: boolean;
 }) {
   const statusMeta = EMAIL_INVITE_STATUS[invite.status];
-  const displayName = invite.name ?? invite.email;
+  const isEmailOnly = invite.status === 'email_sent';
+  const displayName = invite.name ?? invite.email ?? '—';
   const subtitle =
-    invite.status === 'pending_accept' && invite.username
-      ? invite.username
-      : invite.status === 'email_sent'
-        ? 'Belum daftar app'
-        : invite.email;
-  const initial = invite.initial ?? invite.email.charAt(0).toUpperCase();
+    invite.status === 'rejected'
+      ? 'Undangan ditolak'
+      : invite.status === 'pending_accept' && invite.username
+        ? invite.username
+        : isEmailOnly
+          ? 'Belum daftar app'
+          : (invite.email ?? statusMeta.label);
+  const initial = invite.initial ?? invite.email?.charAt(0).toUpperCase() ?? '?';
   const avatarBg = invite.color ?? C.muted;
+  const isPending = invite.status === 'email_sent' || invite.status === 'pending_accept';
 
   return (
     <div
@@ -505,62 +520,39 @@ export function EmailInvitedRow({
           style={{
             width: 44,
             height: 44,
-            backgroundColor: invite.status === 'email_sent' ? C.light : avatarBg,
+            backgroundColor: isEmailOnly ? C.light : avatarBg,
             borderRadius: 14,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: invite.status === 'email_sent' ? undefined : 16,
+            fontSize: isEmailOnly ? undefined : 16,
             fontWeight: 800,
-            color: invite.status === 'email_sent' ? undefined : 'white',
-            border: invite.status === 'email_sent' ? `1px solid ${C.border}` : 'none',
+            color: isEmailOnly ? undefined : 'white',
+            border: isEmailOnly ? `1px solid ${C.border}` : 'none',
+            opacity: invite.status === 'rejected' ? 0.55 : 1,
           }}
         >
-          {invite.status === 'email_sent' ? (
-            <Mail size={20} color={C.muted} strokeWidth={2.5} />
-          ) : (
-            initial
-          )}
+          {isEmailOnly ? <Mail size={20} color={C.muted} strokeWidth={2.5} /> : initial}
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>{displayName}</p>
+        <p
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: invite.status === 'rejected' ? C.muted : C.charcoal,
+            margin: '0 0 2px',
+            wordBreak: 'break-all',
+          }}
+        >
+          {displayName}
+        </p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, fontWeight: 500 }}>{subtitle}</p>
       </div>
-      {invite.status === 'pending_accept' ? (
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: statusMeta.color,
-            backgroundColor: statusMeta.bg,
-            padding: '4px 10px',
-            borderRadius: 20,
-            flexShrink: 0,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {statusMeta.label}
-        </span>
-      ) : cancelable ? (
-        <button
-          type="button"
-          style={{
-            height: 34,
-            padding: '0 12px',
-            backgroundColor: 'transparent',
-            color: C.danger,
-            border: `1.5px solid ${C.danger}40`,
-            borderRadius: 10,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: FONT,
-            flexShrink: 0,
-          }}
-        >
-          Batalkan
-        </button>
+      {canManage && isPending ? (
+        <PendingActionButton label="Batalkan" variant="cancel" />
+      ) : canManage && invite.status === 'rejected' ? (
+        <PendingActionButton label="Undang kembali" variant="reinvite" />
       ) : (
         <span
           style={{

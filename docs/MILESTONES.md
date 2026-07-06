@@ -196,7 +196,7 @@
 
 **AI Prompt**: *"Let's implement M5.2. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.0.1`, `§3.5`, `§4.3.2`, `docs/WORKFLOW.md`, `docs/FIGMA.md § Kebutuhan API`. Close all design gaps before mobile M6."*
 
-**Tujuan**: Menyelaraskan **database + endpoint** dengan **112 layar Figma** (`docs/WORKFLOW.md`). M5.1 menutup gap dasar; M5.2 menutup gap fitur penuh (itinerary enriched, media, polls, wishlist convert, kelola trip).
+**Tujuan**: Menyelaraskan **database + endpoint** dengan **125 layar Figma** (`docs/WORKFLOW.md`). M5.1 menutup gap dasar; M5.2 menutup gap fitur penuh (itinerary enriched, media, polls, wishlist convert, kelola trip).
 
 **Prasyarat**: M5.1 ✅
 
@@ -314,7 +314,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M8. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §3, §6–§11, §13`, `docs/ACCEPTANCE_CRITERIA.md §2, §5`, `docs/FIGMA.md`. Build the Android Home and Trip screens."*
 
-**Referensi Figma**: `Screen5Home`, `Screen12Create`, `Screen15Destinations`, `Screen18BottomSheetDestinasi`, `Screen6EmptyBeranda`, `Screen14FormValidation`, `Screen19DestinationDetail`, `Screen13MultiDatePicker`, `Screen27Notifikasi`, `Screen28SkeletonLoading`, `Screen29ToastComponents`, `Screen30Error`
+**Referensi Figma**: `Screen5Home`, `Screen22Create`, `Screen43Destinations`, `Screen45BottomSheetDestinasi`, `Screen6EmptyBeranda`, `Screen33FormValidation`, `Screen51DestinationDetail`, `Screen31MultiDatePicker`, `Screen9Notifikasi`, `Screen118SkeletonLoading`, `Screen119ToastComponents`, `Screen120Error`
 
 ### Checklist
 - [ ] Bottom Navigation Bar — Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`)
@@ -322,7 +322,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 - [ ] `TripCard` — cover image, judul, tags, tanggal, stacked avatars
 - [ ] `CreateTripSheet` — modal full-screen: nama, tags, kalender, tambah kandidat tanggal
 - [ ] `TripDetailScreen` — tab **Itinerary · Voting · Chat · Media**
-- [ ] `MediaScreen` — unggah foto/video, set cover dari media (`Screen41TripDocuments`)
+- [ ] `MediaScreen` — unggah foto/video, set cover dari media (`Screen93TripDocuments`)
 - [ ] `ItineraryTab` + `ActivityCard` + `AddActivitySheet` + `ActivityDetailSheet`
 - [ ] `NotificationScreen` — tipe invite / voting (multi-tipe) / aktivitas
 - [ ] Empty, skeleton, toast, error states
@@ -334,15 +334,16 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §8–§9, §11`, `docs/ACCEPTANCE_CRITERIA.md §6`, `docs/FIGMA.md`. Build the Android Collaboration and Chat screens."*
 
-**Referensi Figma**: `Screen16Voting`, `Screen42CreateVoting`, `Screen17Chat`, `Screen20BottomSheetUndang`, `Screen23EmptyChat`, `Screen21StatusLocked`, `Screen24ChatLongPress`, `Screen22CalendarSyncModal`
+**Referensi Figma**: `Screen56Voting`, `Screen64CreateVoting`, `Screen76Chat`, `Screen35BottomSheetUndang`, `Screen86EmptyChat`, `Screen73StatusLocked`, `Screen87ChatLongPress`, `Screen88ChatLongPressOwn`, `Screen89`–`Screen92`, `Screen96CalendarSyncModal`
 
 ### Checklist
 - [ ] `InviteSheet` — cari username atau input email (perlakuan sama)
-- [ ] Tab Voting — **multi-poll hub** + sheet buat voting (`Screen42CreateVoting`)
-- [ ] `VotingLockedModal` — konfirmasi voting selesai setelah lock (`Screen21StatusLocked`)
-- [ ] `CalendarEventModal` — tambah ke Google Calendar via menu ⋮, kalender sendiri saja (`Screen22CalendarSyncModal`)
+- [ ] Tab Voting — **multi-poll hub** + sheet buat voting (`Screen64CreateVoting`)
+- [ ] `VotingLockedModal` — konfirmasi voting selesai setelah lock (`Screen73StatusLocked`)
+- [ ] `CalendarEventModal` — tambah ke Google Calendar via menu ⋮, kalender sendiri saja (`Screen96CalendarSyncModal`)
 - [ ] `ChatScreen` — bubbles + input + empty state
-- [ ] Long-press menu: Balas, Salin, Hapus (`Screen24ChatLongPress`)
+- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri (`Screen87`, `Screen88`)
+- [ ] Reply quote di bubble — 4 skenario (`Screen89`–`Screen92`)
 - [ ] Tombol "Kunci Tanggal Ini" hanya untuk creator
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
@@ -352,7 +353,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 **AI Prompt**: *"Let's implement M10. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §4, §5, §12`, `docs/ACCEPTANCE_CRITERIA.md §3–§4, §7`, `docs/FIGMA.md`. Build the Android Profile and Wishlist screens."*
 
-**Referensi Figma**: `Screen8Profile`, `Screen25Wishlist`, `Screen108`–`Screen120`, `Screen7SearchUser`, `Screen26BottomSheetWishlist`, `Screen9EditProfil`, `Screen10PublicProfile`, `Screen11Settings`
+**Referensi Figma**: `Screen15Profile`, `Screen105Wishlist`, `Screen104`–`Screen117`, `Screen11SearchUser`, `Screen108BottomSheetWishlist`, `Screen18EditProfil`, `Screen13PublicProfile`, `Screen17Settings`
 
 ### Checklist
 - [ ] `ExploreScreen` — search bar + list (Avatar, Username, tap → profil)
@@ -364,7 +365,7 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 - [ ] `AddWishlistSheet` — FAB "+" + form aktivitas (Mulai/Selesai, Nama, Prioritas, Maps, Link)
 - [ ] Wishlist detail, edit, menu ⋮, hapus
 - [ ] **Jadikan Perjalanan** flow — prefill trip → buat → undang → konversi ke itinerary
-- [ ] Empty states: wishlist kosong (`Screen108`), filter kosong (`Screen110`)
+- [ ] Empty states: wishlist kosong (`Screen104`), filter kosong (`Screen106`)
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
 ---
@@ -396,12 +397,12 @@ backend/internal/service/
 
 ## M12 — Figma Design Alignment 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M12. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 112 screens against Android Compose, create gap report, fix misalignments."*
+**AI Prompt**: *"Let's implement M12. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 125 screens against Android Compose, create gap report, fix misalignments."*
 
 **Referensi**: `docs/FIGMA.md`, `figma/src/app/`, `mobile/androidApp/src/main/com/aturperjalanan/android/ui/`
 
 ### Checklist
-- [ ] Semua **112 layar** diaudit (`figma/src/app/App.tsx` workflow sections §1–§13)
+- [ ] Semua **125 layar** diaudit (`figma/src/app/App.tsx` workflow sections §1–§13)
 - [ ] Color palette match `figma/src/app/components/colors.ts` → `Color.kt`
 - [ ] Typography: Plus Jakarta Sans, scale H1–Caption
 - [ ] Trip detail tabs = Itinerary · Voting · Chat · Media (counter; Chat unread only; Media always shows count)

@@ -176,8 +176,8 @@ atur-perjalanan/
 │   │           └── ui/
 │   └── iosApp/                   # iOS-specific SwiftUI
 │
-├── figma/                        # Figma Make export — 32-screen React preview (design reference only)
-│   ├── src/app/components/screens/  # Screen3Auth … Screen32DesignTokens
+├── figma/                        # Figma Make export — 125-screen React preview (design reference only)
+│   ├── src/app/components/screens/  # Screen3Auth … Screen125DesignTokens
 │   └── src/app/components/colors.ts # Canonical design tokens
 │
 ├── docs/
@@ -225,24 +225,24 @@ atur-perjalanan/
 
 ### 3.0.1 Design Sync Status Matrix
 
-Status vs **112 layar Figma** (`docs/FIGMA.md`, `docs/WORKFLOW.md`):
+Status vs **125 layar Figma** (`docs/FIGMA.md`, `docs/WORKFLOW.md`):
 
 | Domain UI | Layar (§) | Schema DB | API | Catatan |
 |-----------|-----------|-----------|-----|---------|
 | Auth + username | §2 (3–4) | ✅ `users` | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` | — |
-| Beranda tabs + undangan | §3 (5–6, 33–34) | ✅ | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id` | Tab Undangan = endpoint terpisah |
-| Notifikasi | §3 (27) | ✅ `notifications` | ✅ CRUD read + unread-count | Tipe `follow` ditunda post-MVP |
-| Pencarian + profil publik | §4 (35, 7, 10) | ✅ | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` | Riwayat search = lokal |
-| Profil + edit | §5 (8–9) | ✅ | ✅ `GET/PUT /users/me` | 🔜 social URL, avatar upload, `DELETE /users/me` |
-| Create trip + undang | §6 (12–14, 57–82, 20, 43–45) | ⚠️ partial | ⚠️ partial | 🔜 `is_all_day`, `start_time`, `end_time`; batalkan undangan |
-| Itinerary / aktivitas | §7 (15, 72, 18–93) | ⚠️ thin | ⚠️ thin | 🔜 times, kind, cover, multi-ref, `PUT` edit |
-| Voting multi-tipe | §8 (16, 42–66) | ❌ no `trip_polls` | ⚠️ date only | Tanggal via `candidates`; Aktivitas/Lainnya → M5.2/M9 |
-| Chat text | §9 (17, 23–24) | ✅ text + soft delete | ✅ GET/POST/DELETE messages | — |
-| Chat media + reply | §9 (97–106) | ❌ | ❌ | 🔜 `media_type`, upload, `reply_to_id` |
-| Media tab + cover | §10 (41, 98) | ❌ no `trip_documents` | ❌ | 🔜 upload, list, set cover |
-| Kelola trip | §11 (50–52) | ✅ partial | ⚠️ partial | 🔜 list members, remove member, cancel invite |
-| Wishlist | §12 (108–120) | ⚠️ thin | ✅ CRUD basic | 🔜 times, location, notes, convert atomic |
-| Google Calendar | §11 (22) | — | ❌ | M11 |
+| Beranda tabs + undangan | §3 (5–8) | ✅ | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id` | Tab Undangan = endpoint terpisah |
+| Notifikasi | §3 (9) | ✅ `notifications` | ✅ CRUD read + unread-count | Tipe `follow` ditunda post-MVP |
+| Pencarian + profil publik | §4 (10–13) | ✅ | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` | Riwayat search = lokal |
+| Profil + edit | §5 (15–18) | ✅ | ✅ `GET/PUT /users/me` | 🔜 social URL, avatar upload, `DELETE /users/me` |
+| Create trip + undang | §6 (21–41) | ⚠️ partial | ⚠️ partial | 🔜 `is_all_day`, `start_time`, `end_time`; batalkan undangan |
+| Itinerary / aktivitas | §7 (42–55) | ⚠️ thin | ⚠️ thin | 🔜 times, kind, cover, multi-ref, `PUT` edit |
+| Voting multi-tipe | §8 (56–75) | ❌ no `trip_polls` | ⚠️ date only | Tanggal via `candidates`; Aktivitas/Lainnya → M5.2/M9 |
+| Chat text | §9 (76, 86–88) | ✅ text + soft delete | ✅ GET/POST/DELETE messages | Hapus hanya pesan sendiri (`Screen88`); `Screen87` tanpa Hapus |
+| Chat media + reply | §9 (77–85, 89–92) | ❌ | ❌ | 🔜 `media_type`, upload, `reply_to_id`; reply quote UI di preview |
+| Media tab + cover | §10 (93–94) | ❌ no `trip_documents` | ❌ | 🔜 upload, list, set cover |
+| Kelola trip | §11 (95–103) | ✅ partial | ⚠️ partial | 🔜 list members, remove member, cancel invite |
+| Wishlist | §12 (104–117) | ⚠️ thin | ✅ CRUD basic | 🔜 times, location, notes, convert atomic |
+| Google Calendar | §11 (96) | — | ❌ | M11 |
 
 Legenda: ✅ selaras desain · ⚠️ ada tapi field/kontrak kurang · ❌ belum ada · 🔜 target M5.2 kecuali disebut lain.
 
@@ -372,7 +372,7 @@ CREATE TABLE users (
 );
 ```
 
-> 🔜 **M5.2 (desain `Screen9EditProfil`)**: kolom opsional `website_url TEXT`, `location_label TEXT` untuk link sosial & pin lokasi di kartu profil.
+> 🔜 **M5.2 (desain `Screen18EditProfil`)**: kolom opsional `website_url TEXT`, `location_label TEXT` untuk link sosial & pin lokasi di kartu profil.
 
 ---
 
@@ -399,9 +399,9 @@ CREATE TABLE trips (
 );
 ```
 
-> 🔜 **M5.2 (desain §6 `Screen12`–`Screen13`)**: `is_all_day BOOLEAN DEFAULT TRUE`, `start_time TIME`, `end_time TIME` — waktu perjalanan non-sepanjang-hari.
+> 🔜 **M5.2 (desain §6 `Screen22`–`Screen31`)**: `is_all_day BOOLEAN DEFAULT TRUE`, `start_time TIME`, `end_time TIME` — waktu perjalanan non-sepanjang-hari.
 >
-> 🔜 **M5.2b (desain §10 `Screen41`)**: `cover_document_id UUID REFERENCES trip_documents(id)` — cover dari media trip (menggantikan URL manual).
+> 🔜 **M5.2b (desain §10 `Screen93`)**: `cover_document_id UUID REFERENCES trip_documents(id)` — cover dari media trip (menggantikan URL manual).
 
 > **Relationship**: 1:N dengan `users` (creator). M:N via `trip_participants`. 1:N dengan kandidat tanggal, aktivitas, pesan, undangan. 🔜 `trip_documents`, `trip_polls` (§3.5).
 
@@ -551,7 +551,7 @@ CREATE INDEX idx_trip_messages_trip_active
     WHERE deleted_at IS NULL;
 ```
 
-> **Note**: Index partial `(trip_id, created_at DESC) WHERE deleted_at IS NULL` melayani query chat utama: N pesan terbaru per trip. Long-press delete (Figma `Screen24`) → set `deleted_at`, bukan hard delete.
+> **Note**: Index partial `(trip_id, created_at DESC) WHERE deleted_at IS NULL` melayani query chat utama: N pesan terbaru per trip. Long-press delete (Figma `Screen88` pesan sendiri) → set `deleted_at`, bukan hard delete. `Screen87` (pesan orang lain) tidak menampilkan opsi Hapus.
 
 ---
 
@@ -577,7 +577,7 @@ CREATE INDEX idx_notifications_user_unread
     WHERE is_read = FALSE;
 ```
 
-> **UI**: Tab Beranda bell → `Screen27Notifikasi`. Badge unread via `GET /v1/notifications/unread-count`.
+> **UI**: Tab Beranda bell → `Screen9Notifikasi`. Badge unread via `GET /v1/notifications/unread-count`.
 
 ---
 
@@ -663,7 +663,7 @@ CREATE TABLE trip_documents (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
-> Cover trip: `trips.cover_document_id` → salah satu row. UI: tab Media → "Jadikan Cover" (`Screen41`).
+> Cover trip: `trips.cover_document_id` → salah satu row. UI: tab Media → "Jadikan Cover" (`Screen93`).
 
 #### `trip_polls` + options + votes 🔜 M5.2c *(desain §8)*
 ```sql
@@ -696,7 +696,7 @@ CREATE TABLE trip_poll_votes (
     PRIMARY KEY (poll_id, user_id)
 );
 ```
-> Auto-create poll `tanggal` saat trip create dengan >1 kandidat. UI: max 1 Tanggal + 1 Aktivitas (`destinasi`) aktif (`VotingParts.tsx`).
+> Auto-create poll `tanggal` saat trip create dengan >1 kandidat. UI: max 1 Tanggal + 1 Aktivitas (`destinasi`) aktif (`VotingParts.tsx`). **Voting tanggal** di form sheet tidak punya field judul — judul tetap di card pipeline (`Tanggal Perjalanan`); aktivitas/lainnya punya `title` di `trip_polls`.
 
 #### `trip_message_reads` 🔜 M5.2d *(badge unread chat — §9)*
 ```sql
@@ -708,7 +708,7 @@ CREATE TABLE trip_message_reads (
 );
 ```
 
-#### Chat media columns 🔜 M5.2e *(§9 Screen97–106)*
+#### Chat media columns 🔜 M5.2e *(§9 Screen77–85, reply quote Screen89–92)*
 ```sql
 ALTER TABLE trip_messages
     ADD COLUMN message_kind   VARCHAR(10) NOT NULL DEFAULT 'text'
@@ -784,7 +784,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**.
 | GET | `/v1/users/:username/trips` | Optional JWT | `GetUserTrips` | §4, §5 |
 | POST | `/v1/users/:username/follow` | JWT | `PostFollow` | post-MVP |
 | DELETE | `/v1/users/:username/follow` | JWT | `DeleteFollow` | post-MVP |
-| GET | `/v1/notifications/?cursor=` | JWT | `ListNotifications` | §3 Screen27 |
+| GET | `/v1/notifications/?cursor=` | JWT | `ListNotifications` | §3 Screen9 |
 | GET | `/v1/notifications/unread-count` | JWT | `GetUnreadCount` | §3 badge |
 | PUT | `/v1/notifications/:id/read` | JWT | `MarkRead` | §3 |
 | PUT | `/v1/notifications/read-all` | JWT | `MarkAllRead` | §3 |
@@ -792,24 +792,24 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**.
 | POST | `/v1/trips/` | JWT | `PostTrip` | §6 |
 | GET | `/v1/trips/invitations` | JWT | `GetMyInvitations` enriched | §3 tab Undangan |
 | GET | `/v1/trips/:tripId` | JWT | `GetTrip` enriched | §7–§11 |
-| PUT | `/v1/trips/:tripId` | JWT | `PutTrip` | §11 Screen51 |
-| DELETE | `/v1/trips/:tripId` | JWT | `DeleteTrip` soft | §11 Screen52 |
+| PUT | `/v1/trips/:tripId` | JWT | `PutTrip` | §11 Screen103 |
+| DELETE | `/v1/trips/:tripId` | JWT | `DeleteTrip` soft | §11 Screen95 |
 | POST | `/v1/trips/:tripId/invitations` | JWT | `PostTripInvitation` `{username\|email}` | §6, §11 |
 | PUT | `/v1/trips/:tripId/invitations/:id` | JWT | `PutTripInvitation` `{accept: bool}` | §3, §6 |
 | GET | `/v1/trips/:tripId/candidates` | JWT | `GetTripDateCandidates` enriched | §8 tanggal |
 | POST | `/v1/trips/:tripId/candidates/:candidateId/vote` | JWT | `PostTripCandidateVote` | §8 |
 | DELETE | `/v1/trips/:tripId/candidates/:candidateId/vote` | JWT | `DeleteTripCandidateVote` | §8 |
-| POST | `/v1/trips/:tripId/candidates/:candidateId/lock` | JWT | `PostTripCandidateLock` creator | §8 Screen21 |
+| POST | `/v1/trips/:tripId/candidates/:candidateId/lock` | JWT | `PostTripCandidateLock` creator | §8 Screen73 |
 | GET | `/v1/trips/:tripId/destinations` | JWT | `GetTripDestinations` | §7 |
 | POST | `/v1/trips/:tripId/destinations` | JWT | `PostTripDestination` | §7 |
-| DELETE | `/v1/trips/:tripId/destinations/:destinationId` | JWT | `DeleteTripDestination` | §7 Screen93 |
+| DELETE | `/v1/trips/:tripId/destinations/:destinationId` | JWT | `DeleteTripDestination` | §7 Screen55 |
 | GET | `/v1/trips/:tripId/messages?cursor=` | JWT | `GetTripMessages` enriched | §9 |
-| POST | `/v1/trips/:tripId/messages` | JWT | `PostTripMessage` `{message}` | §9 |
-| DELETE | `/v1/trips/:tripId/messages/:messageId` | JWT | `DeleteTripMessage` soft | §9 Screen24 |
+| POST | `/v1/trips/:tripId/messages` | JWT | `PostTripMessage` `{message}` — 🔜 `{reply_to_id?}` M5.2e | §9 |
+| DELETE | `/v1/trips/:tripId/messages/:messageId` | JWT | `DeleteTripMessage` soft (sender only) | §9 Screen88 |
 | GET | `/v1/wishlists/?priority=&tag[]=&cursor=` | JWT | `GetWishlists` | §12 |
 | POST | `/v1/wishlists/` | JWT | `PostWishlist` | §12 |
-| PUT | `/v1/wishlists/:id` | JWT | `PutWishlist` | §12 Screen114 |
-| DELETE | `/v1/wishlists/:id` | JWT | `DeleteWishlist` soft | §12 Screen116 |
+| PUT | `/v1/wishlists/:id` | JWT | `PutWishlist` | §12 Screen111 |
+| DELETE | `/v1/wishlists/:id` | JWT | `DeleteWishlist` soft | §12 Screen113 |
 
 #### 4.3.1 Request/Response Contracts (Implemented)
 
@@ -855,23 +855,24 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**.
 
 #### 4.3.2 Design-Gap Endpoints (Target M5.2 🔜)
 
-Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 112 layar Figma:
+Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 125 layar Figma:
 
 | Priority | Method | Path | Desain | § |
 |----------|--------|------|--------|---|
-| P0 | PUT | `/v1/trips/:tripId/destinations/:id` | Edit aktivitas (`Screen88`) | §7 |
-| P0 | GET | `/v1/trips/:tripId/members` | Daftar anggota + pending (`Screen50`) | §11 |
-| P0 | DELETE | `/v1/trips/:tripId/invitations/:id` | Batalkan undangan pending (`Screen45`) | §6, §11 |
-| P0 | POST | `/v1/wishlists/:id/convert-to-trip` | Jadikan Perjalanan atomic (`Screen117`–`120`) | §12 |
-| P1 | DELETE | `/v1/users/me` | Hapus akun (`Screen38`) | §5 |
+| P0 | PUT | `/v1/trips/:tripId/destinations/:id` | Edit aktivitas (`Screen54`) | §7 |
+| P0 | GET | `/v1/trips/:tripId/members` | Daftar anggota + pending (`Screen97`) | §11 |
+| P0 | DELETE | `/v1/trips/:tripId/invitations/:id` | Batalkan undangan pending (`Screen41`) | §6, §11 |
+| P0 | POST | `/v1/wishlists/:id/convert-to-trip` | Jadikan Perjalanan atomic (`Screen114`–`117`) | §12 |
+| P1 | DELETE | `/v1/users/me` | Hapus akun (`Screen20`) | §5 |
 | P1 | POST/GET/DELETE | `/v1/trips/:tripId/documents` | Media tab upload/list/delete | §10 |
 | P1 | PUT | `/v1/trips/:tripId/cover` | `{document_id}` set cover dari media | §10 |
 | P1 | POST | `/v1/trips/:tripId/messages` (multipart) | Kirim foto/video + caption | §9 |
 | P1 | PUT | `/v1/trips/:tripId/messages/read` | Mark chat read (unread badge) | §9 |
+| P1 | POST | `/v1/trips/:tripId/messages` | Extend `{message}` + optional `{reply_to_id}` | §9 Screen89–92 |
 | P2 | CRUD | `/v1/trips/:tripId/polls` + `…/vote` + `…/lock` | Multi-voting Aktivitas/Lainnya | §8 |
 | P2 | DELETE | `/v1/trips/:tripId/members/:userId` | Keluarkan anggota (creator) | §11 |
 | P3 | POST | `/v1/auth/logout` | Revoke refresh (opsional; local OK) | §5 |
-| M11 | POST | `/v1/integrations/google-calendar/events` | Tambah ke kalender (`Screen22`) | §11 |
+| M11 | POST | `/v1/integrations/google-calendar/events` | Tambah ke kalender (`Screen96`) | §11 |
 
 #### 4.3.3 Workflow → API Quick Map
 
@@ -885,7 +886,7 @@ Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 112 
 | §6 Create + undang | ✅ `POST /trips`, `POST …/invitations`; 🔜 trip times, 🔜 cancel invite |
 | §7 Itinerary | ✅ list/add/delete destinations; 🔜 `PUT` edit, enriched fields |
 | §8 Voting | ✅ date candidates/vote/lock; 🔜 polls CRUD (Aktivitas/Lainnya) |
-| §9 Chat | ✅ text messages + delete; 🔜 media, 🔜 read cursor |
+| §9 Chat | ✅ text messages + delete (own only); 🔜 media, 🔜 reply payload, 🔜 read cursor |
 | §10 Media | 🔜 documents + cover |
 | §11 Kelola | ✅ `PUT/DELETE /trips/:id`; 🔜 members, 🔜 calendar M11 |
 | §12 Wishlist | ✅ CRUD wishlists; 🔜 convert atomic |

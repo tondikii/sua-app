@@ -21,7 +21,7 @@ Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-te
 
 ## 🎨 Desain UI (Figma)
 
-Desain high-fidelity (**112 layar** — termasuk state variants per pipeline) diekspor ke folder [`figma/`](figma/). Jalankan preview lokal:
+Desain high-fidelity (**125 layar** — termasuk state variants per pipeline) diekspor ke folder [`figma/`](figma/). Jalankan preview lokal:
 
 ```bash
 cd figma && npm i && npm run dev
@@ -34,11 +34,11 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
 2. [Product Requirements Document (PRD)](docs/PRD.md) - Spesifikasi lengkap MVP.
-3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi selaras dengan 112 layar Figma (§1–§13).
+3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi selaras dengan 125 layar Figma (§1–§13).
 4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur (Checklist UAT).
 5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Skema DB (§3), **35 endpoint implemented** + gap M5.2 (§4.3), pola Go/KMP.
 6. [Milestones & Roadmap](docs/MILESTONES.md) - M0–M5.1 ✅ · **M5.2 design parity BE** 🔜 · M6+ mobile.
-7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory (112 layar), gap API, panduan AI agent, dan mapping ke workflow.
+7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory (125 layar), gap API, panduan AI agent, dan mapping ke workflow.
 
 ## 🚀 Memulai Pengerjaan
 

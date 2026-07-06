@@ -1,8 +1,8 @@
 # WorkFlow - Atur Perjalanan
 
-> **Tujuan dokumen ini**: Mendokumentasikan alur kerja pengguna (*user workflows*) dari awal membuka aplikasi hingga menggunakan seluruh fitur. Alur selaras dengan **112 layar high-fidelity** Figma (lihat `docs/FIGMA.md`), **5 tab Bottom Navigation Bar**, **PRD**, dan **kontrak API backend** (`docs/ARCHITECTURE.md §4.3`).
+> **Tujuan dokumen ini**: Mendokumentasikan alur kerja pengguna (*user workflows*) dari awal membuka aplikasi hingga menggunakan seluruh fitur. Alur selaras dengan **125 layar high-fidelity** Figma (lihat `docs/FIGMA.md`), **5 tab Bottom Navigation Bar**, **PRD**, dan **kontrak API backend** (`docs/ARCHITECTURE.md §4.3`).
 
-**Preview lokal**: `figma/src/app/App.tsx` — **112 layar**, **§1–§13**. Nomor layar = indeks `Screen{N}` (non-sequential OK). Setiap layar **sekali** di registry.
+**Preview lokal**: `figma/src/app/App.tsx` — **125 layar**, **§1–§13**. Nomor layar = indeks `Screen{N}` (sequential 1–125). Setiap layar **sekali** di registry.
 
 **Legenda API** (di kolom Interaksi Data):
 
@@ -49,17 +49,17 @@ flowchart TD
 |---|-----------------|-------------|----------------|
 | 1 | Onboarding | Cold start | 1–2 |
 | 2 | Autentikasi | Post-onboarding | 3–4 |
-| 3 | Beranda | Tab 1 + lonceng | 5–6, 33–34, 27 |
-| 4 | Pencarian | Tab 2 | 35, 7, 40, 10, 37 |
-| 5 | Profil | Tab 5 + Pengaturan | 8–9, 36, 11, 38–39 |
-| 6 | Pembuatan Perjalanan | FAB [+] | 78, 12–14, 57–59, 67–71, 80–82, 20, 43–45, 84 |
-| 7 | Detail — Itinerary | Tab trip | 77, 15, 72, 18–19, 85–93 |
-| 8 | Detail — Voting | Tab trip | 16, 107, 42, 53–56, 60–66, 21, 48–49, 73–75 |
-| 9 | Detail — Chat | Tab trip | 17, 23–24, 97–106 |
-| 10 | Detail — Media | Tab trip | 41, 98 |
-| 11 | Detail — Kelola Trip | Menu ⋮ | 50–52, 22 |
-| 12 | Wishlist | Tab 4 | 108, 25–26, 110–120 |
-| 13 | System States | Global patterns | 28–32, 94–96 |
+| 3 | Beranda | Tab 1 + lonceng | 5–9 |
+| 4 | Pencarian | Tab 2 | 10–14 |
+| 5 | Profil | Tab 5 + Pengaturan | 15–20 |
+| 6 | Pembuatan Perjalanan | FAB [+] | 21–41 |
+| 7 | Detail — Itinerary | Tab trip | 42–55 |
+| 8 | Detail — Voting | Tab trip | 56–75 |
+| 9 | Detail — Chat | Tab trip | 76–92 |
+| 10 | Detail — Media | Tab trip | 93–94 |
+| 11 | Detail — Kelola Trip | Menu ⋮ | 95–103 |
+| 12 | Wishlist | Tab 4 | 104–117 |
+| 13 | System States | Global patterns | 118–125 |
 
 ---
 
@@ -75,7 +75,7 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 | 4 | **Wishlist** | Wishlist aktivitas impian | §12 |
 | 5 | **Profil** | Halaman akun pengguna + pengaturan | §5 |
 
-**Entry point global**: ikon lonceng di header Beranda → `Screen27Notifikasi` (digroup di §3 preview).
+**Entry point global**: ikon lonceng di header Beranda → `Screen9Notifikasi` (digroup di §3 preview).
 
 ---
 
@@ -109,12 +109,12 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## §3. Beranda (Home) — Tab 1
 
-* **Layar Figma**: `Screen5Home`, `Screen6EmptyBeranda`, `Screen33HomeSelesai`, `Screen34HomeUndangan`, `Screen27Notifikasi`
+* **Layar Figma**: `Screen5Home`, `Screen6EmptyBeranda`, `Screen7HomeSelesai`, `Screen8HomeUndangan`, `Screen9Notifikasi`
 * **Header**: Judul "Perjalananku" + lonceng notifikasi (badge unread).
 * **Tab View**: "Mendatang", "Selesai", "Undangan" — masing-masing dengan **counter**.
 * **Trip Card** (`Screen5Home`): `cover_image_url`, judul, tags, rentang tanggal, stacked avatars (`participants_preview`).
-* **Tab Undangan** (`Screen34HomeUndangan`): card enriched (trip + inviter) + Terima/Tolak.
-* **Notifikasi** (`Screen27Notifikasi`): tipe `invite`, `voting_deadline`, `destination_update`.
+* **Tab Undangan** (`Screen8HomeUndangan`): card enriched (trip + inviter) + Terima/Tolak.
+* **Notifikasi** (`Screen9Notifikasi`): tipe `invite`, `voting_deadline`, `destination_update`.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -130,21 +130,21 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## §4. Pencarian (Cari) — Tab 2
 
-* **Layar Figma**: `Screen35SearchIdle`, `Screen7SearchUser`, `Screen40SearchNoResults`, `Screen10PublicProfile`, `Screen37PublicProfileEmptyTrip`
+* **Layar Figma**: `Screen10SearchIdle`, `Screen11SearchUser`, `Screen12SearchNoResults`, `Screen13PublicProfile`, `Screen14PublicProfileEmptyTrip`
 * **Urutan preview**: Cari idle → Cari hasil → Cari kosong → Profil publik (dari hasil) → Profil publik empty trip.
 
 ### Flow Pencarian
-* **Idle** (`Screen35SearchIdle`): search bar + riwayat terakhir (**client-only**).
-* **Hasil** (`Screen7SearchUser`): Avatar, Username, Nama → tap → profil.
-* **Kosong** (`Screen40SearchNoResults`): tidak ada hasil.
+* **Idle** (`Screen10SearchIdle`): search bar + riwayat terakhir (**client-only**).
+* **Hasil** (`Screen11SearchUser`): Avatar, Username, Nama → tap → profil.
+* **Kosong** (`Screen12SearchNoResults`): tidak ada hasil.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
 | Cari user | GET | `/v1/users/search?q=&limit=&cursor=` | ✅ |
 
 ### Profil User Lain (dari hasil cari)
-* **`Screen10PublicProfile`**: profil + grid trip publik (`trips.is_public=true`).
-* **`Screen37PublicProfileEmptyTrip`**: profil tanpa trip di grid.
+* **`Screen13PublicProfile`**: profil horizontal + bar stat + grid trip publik (`trips.is_public=true`).
+* **`Screen14PublicProfileEmptyTrip`**: profil tanpa trip di grid.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -153,19 +153,22 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## §5. Profil — Tab 5
 
-* **Layar Figma**: `Screen8Profile`, `Screen36ProfileEmptyTrip`, `Screen9EditProfil`, `Screen11Settings`, `Screen39SettingsHelpFaq`, `Screen38SettingsDeleteAccount`
+* **Layar Figma**: `Screen15Profile`, `Screen16ProfileEmptyTrip`, `Screen17Settings`, `Screen18EditProfil`, `Screen19SettingsHelpFaq`, `Screen20SettingsDeleteAccount`
 
 ### Profil Pribadi
-* Username di **header** (bukan di kartu profil).
-* Kartu profil horizontal, stat trip, grid **semua** trip creator (termasuk `is_public=false`).
-* **Empty trip** (`Screen36ProfileEmptyTrip`).
+* Username di **header** (bukan di kartu profil); ikon **Pengaturan** di kanan header (simetris).
+* Kartu profil **horizontal** — avatar kiri, nama + bio + link website kanan; bar stat perjalanan compact di bawah (referensi desain awal, lebih hemat ruang).
+* Jumlah perjalanan di **bar stat** dalam kartu (angka 18px bold + label), bukan section terpisah.
+* Grid **semua** trip creator (termasuk `is_public=false`).
+* **Empty trip** (`Screen16ProfileEmptyTrip`).
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
 | Profil saya | GET | `/v1/users/me` | ✅ |
 | Grid trip saya | GET | `/v1/users/{my_username}/trips` | ✅ |
 
-### Edit Profil (`Screen9EditProfil`)
+### Edit Profil (`Screen18EditProfil`)
+* Akses dari **Pengaturan** → tap kartu profil teratas (`Screen17Settings`, ringkasan nama + @username + bio).
 * Edit bio; UI juga menampilkan website/sosial & ubah foto — **partial BE support**.
 
 | Aksi | Method | Endpoint | Status |
@@ -174,10 +177,10 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 | Website / lokasi pin | PUT | `/v1/users/me` `{website_url?, location_label?}` | 🔜 M5.2 |
 | Upload avatar | POST | `/v1/users/me/avatar` (multipart) | 🔜 M5.2 |
 
-### Pengaturan (akses dari Profil)
-* **`Screen11Settings`**: akun, bantuan, keluar (logout = clear token lokal).
-* **`Screen39SettingsHelpFaq`**: FAQ + kontak.
-* **`Screen38SettingsDeleteAccount`**: konfirmasi hapus akun.
+### Pengaturan (akses dari ikon ⚙ di header Profil)
+* **`Screen17Settings`**: kartu profil teratas (→ Edit Profil), section **Bantuan** (FAQ, privasi, S&K), **Akun** (keluar, hapus akun).
+* **`Screen19SettingsHelpFaq`**: FAQ + kontak.
+* **`Screen20SettingsDeleteAccount`**: konfirmasi hapus akun.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -186,7 +189,7 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## §6. Pembuatan Perjalanan — Tab [+]
 
-* **Layar Figma**: `Screen78CreateTripEmpty`, `Screen12Create`, `Screen67CreateTripFixedDate`, `Screen68CreateTripFixedValidation`, `Screen70`–`Screen71`, `Screen57`–`Screen59`, `Screen80`–`Screen81`, `Screen13MultiDatePicker`, `Screen14FormValidation`, `Screen82CreateTripSubmitting`, `Screen20BottomSheetUndang`, `Screen43`–`Screen45`, `Screen84InvitePartialInvited`
+* **Layar Figma**: `Screen21CreateTripEmpty`, `Screen22Create`, `Screen23CreateTripFixedDate`, `Screen24CreateTripFixedValidation`, `Screen25`–`Screen26`, `Screen27`–`Screen32`, `Screen33FormValidation`, `Screen34CreateTripSubmitting`, `Screen35BottomSheetUndang`, `Screen36`–`Screen41`
 * **UI/UX**: Modal full-screen — form **ringkas**:
   * Input "Nama Perjalanan" (wajib)
   * Tags dinamis (opsional)
@@ -196,12 +199,14 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 * **Mode A (tanggal pasti)**: 1 rentang → `status=fixed`.
 * **Mode B (kandidat)**: >1 kandidat → `status=voting_pending` + auto voting tanggal + tenggat.
 * **Undang setelah buat** — **hanya via pencarian** (tidak ada daftar saran teman):
-  * `Screen20` — search kosong + CTA "Masuk ke Perjalanan"
-  * `Screen43` — hasil pencarian ditemukan
-  * `Screen84` — hasil cari, sebagian sudah terundang
-  * `Screen44` — tidak ditemukan
-  * `Screen45` — daftar yang sudah diundang (bisa batalkan)
-* **Validasi** (`Screen14FormValidation`): semua error wajib **sekaligus**.
+  * `Screen35` — search kosong + CTA "Masuk ke Perjalanan"
+  * `Screen36` — hasil pencarian ditemukan
+  * `Screen37` — hasil cari, sebagian sudah terundang
+  * `Screen38` — tidak ditemukan
+  * `Screen39` — email belum terdaftar
+  * `Screen40` — email terkirim (langsung, tanpa layar konfirmasi terpisah)
+  * `Screen41` — daftar yang sudah diundang (bisa batalkan)
+* **Validasi** (`Screen33FormValidation`): semua error wajib **sekaligus**.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -222,7 +227,7 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 * **Header global** (`TripDetailHeader`): judul trip, tanggal/waktu/status, back, menu **⋮** (§11).
 * **4 Tab** (`TripDetailTabs`): Itinerary · Voting · Chat · Media — dengan counter (Voting tab hidden jika 0 aktif; Chat badge = unread; Media counter always visible).
 
-* **Layar Figma**: `Screen77ItineraryEmpty`, `Screen15Destinations`, `Screen72DestinationsFixedDate`, `Screen18BottomSheetDestinasi`, `Screen85`–`Screen93`
+* **Layar Figma**: `Screen42ItineraryEmpty`, `Screen43Destinations`, `Screen44DestinationsFixedDate`, `Screen45BottomSheetDestinasi`, `Screen85`–`Screen93`
 * Timeline multi-hari dengan aktivitas berjadwal (waktu mulai/selesai, window harian).
 * State waktu: past / present (Sekarang) / future — `resolveItineraryTimeState`.
 * Bottom sheet tambah aktivitas — form selaras `ActivityFormSheet`.
@@ -243,12 +248,29 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §8. Detail Perjalanan — Tab Voting
 
-* **Layar Figma**: `Screen16Voting`, `Screen107VotingEmpty`, `Screen42`/`Screen53`–`Screen56`, `Screen60`–`Screen66`, `Screen21`/`Screen48`/`Screen49`, `Screen73`–`Screen75`
+* **Layar Figma**: `Screen56Voting`, `Screen57VotingEmpty`, `Screen58`–`Screen75`
 * **Multi-voting** concurrent — Tanggal / **Aktivitas** (internal type `destinasi`) / Lainnya — collapse section.
-* **Empty** (`Screen107VotingEmpty`): trip tanggal pasti, badge voting **0**, CTA buat voting baru.
+* **Empty** (`Screen57VotingEmpty`): trip tanggal pasti, badge voting **0**, CTA buat voting baru.
 * Pipeline: aktif → selesai (manual/auto berakhir) → menu hanya Hapus.
 * Buat voting baru: max 1 Tanggal & 1 Aktivitas aktif per trip.
 * Reminder voting: cron H-7d / H-1d / H-1h (`voting_deadline`).
+
+### Sheet buat / edit voting (`CreateVotingSheetParts.tsx`)
+
+| Sheet | Layar | Title | Catatan |
+|-------|-------|-------|---------|
+| Pilih jenis | `Screen64`, `Screen58` | Buat Voting | Tinggi **fit content**; badge **Sedang berlangsung** hanya di `Screen64` (tanggal disabled saat voting tanggal aktif) — **tidak** di `Screen58` (buat ulang setelah selesai) |
+| Detail Voting | `Screen65` (aktivitas), `Screen59`/`Screen61`/`Screen63` (tanggal) | **Detail Voting** | Jenis via badge inline — bukan di judul sheet |
+| Tambah Kandidat Tanggal | `Screen60`, `Screen62` | **Tambah Kandidat Tanggal** | Subtitle statis; picker kalender |
+| Edit Voting | `Screen66` (aktivitas), `Screen67` (tanggal) | **Edit Voting** | Tanggal: **tanpa** tombol kembali; footer **Simpan** |
+
+**Copy subtitle (statis)**:
+* Aktivitas/Lainnya — Detail: *"Isi judul dan kandidat yang akan divoting anggota."* · Edit: *"Ubah judul, kandidat, atau tenggat voting ini."*
+* Tanggal — Detail: *"Tambahkan kandidat tanggal perjalanan yang akan divoting anggota."* · Edit: *"Ubah kandidat tanggal atau tenggat voting ini."* · Tambah kandidat: *"Pilih rentang tanggal di kalender, lalu simpan sebagai kandidat."*
+
+**Form tanggal** (`CreateVotingTanggalDetailsForm`): **tanpa** field Judul voting — hanya kandidat tanggal + tenggat (opsional, muncul jika ≥1 kandidat). Judul voting tanggal di card pipeline tetap label tetap **Tanggal Perjalanan**.
+
+**Form aktivitas/lainnya** (`CreateVotingDetailsForm`): Judul voting + kandidat + tenggat.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -262,10 +284,11 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §9. Detail Perjalanan — Tab Chat
 
-* **Layar Figma**: `Screen17Chat`, `Screen23EmptyChat`, `Screen24ChatLongPress`, `Screen97`–`Screen106`
+* **Layar Figma**: `Screen76Chat`, `Screen86EmptyChat`, `Screen87ChatLongPress`, `Screen88ChatLongPressOwn`, `Screen89`–`Screen92` (balas pesan), `Screen77`–`Screen85`
 * Chat bubbles (coral = pesan sendiri), input + kirim + lampiran foto/video.
-* **Empty State** (`Screen23EmptyChat`): ilustrasi + prompt mulai obrolan.
-* **Long Press** (`Screen24ChatLongPress`): Balas, Salin Teks, Hapus (pesan sendiri).
+* **Empty State** (`Screen86EmptyChat`): ilustrasi + prompt mulai obrolan.
+* **Long Press** (`Screen87` pesan orang lain · `Screen88` pesan sendiri): Balas, Salin Teks; **Hapus** hanya pada pesan sendiri.
+* **Balas pesan** (`Screen89`–`Screen92`): quote pesan asal di dalam bubble (`ChatReplyQuote`) — saya→orang lain, saya→saya, orang lain→orang lain, orang lain→saya (label quote **Kamu** untuk pesan sendiri).
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -281,7 +304,7 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §10. Detail Perjalanan — Tab Media
 
-* **Layar Figma**: `Screen41TripDocuments`, `Screen98MediaFromChat`
+* **Layar Figma**: `Screen93TripDocuments`, `Screen94MediaFromChat`
 * Grid foto/video perjalanan; unggah dari perangkat.
 * **Cover trip** dipilih via "Jadikan Cover" — card Beranda resolve dari media ini.
 * Media dari chat otomatis masuk tab Media (`Screen98`).
@@ -297,11 +320,12 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §11. Detail Perjalanan — Kelola Trip (menu ⋮)
 
-* **Layar Figma**: `Screen50TripMembers`, `Screen22CalendarSyncModal`, `Screen51TripEdit`, `Screen52TripDelete`
-* **Daftar Anggota** — daftar anggota + undang via pencarian (sama seperti §6, tanpa saran).
-* **Tambah ke Google Calendar** — modal (`Screen22CalendarSyncModal`, M11).
-* **Edit Info Perjalanan** — modal (`Screen51TripEdit`).
-* **Hapus Perjalanan** — konfirmasi (`Screen52TripDelete`).
+* **Layar Figma**: `Screen97TripMembers`, `Screen98`–`Screen102`, `Screen96CalendarSyncModal`, `Screen103TripEdit`, `Screen95TripDelete`
+* **Daftar Anggota** — semua anggota bisa undang / batalkan / undang kembali **calon anggota** (pending); hanya **pembuat** yang bisa keluarkan anggota yang sudah bergabung (`Screen102` = POV anggota).
+* **Section Pending** — undangan belum selesai: (1) belum daftar app (`email_sent`), (2) sudah punya akun belum terima (`pending_accept`). Semua anggota bisa **Batalkan**. Undangan **ditolak** (`rejected`) dengan opsi **Undang kembali**.
+* **Tambah ke Google Calendar** — modal (`Screen96CalendarSyncModal`, M11).
+* **Edit Info Perjalanan** — modal (`Screen103TripEdit`).
+* **Hapus Perjalanan** — konfirmasi (`Screen95TripDelete`).
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -315,7 +339,7 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §12. Wishlist Aktivitas — Tab 4
 
-* **Layar Figma**: `Screen108WishlistEmpty`, `Screen25Wishlist`, `Screen110WishlistFilterEmpty`, `Screen111AddWishlistEmpty`, `Screen26BottomSheetWishlist`, `Screen112AddWishlistValidation`, `Screen113WishlistDetail`, `Screen114EditWishlist`, `Screen115WishlistCardMenu`, `Screen116WishlistDelete`, `Screen117WishlistToTripEmpty`, `Screen118WishlistToTripReady`, `Screen119WishlistToTripInvite`, `Screen120ItineraryFromWishlist`
+* **Layar Figma**: `Screen104WishlistEmpty`, `Screen105Wishlist`, `Screen110WishlistFilterEmpty`, `Screen111AddWishlistEmpty`, `Screen108BottomSheetWishlist`, `Screen112AddWishlistValidation`, `Screen113WishlistDetail`, `Screen114EditWishlist`, `Screen115WishlistCardMenu`, `Screen116WishlistDelete`, `Screen117WishlistToTripEmpty`, `Screen118WishlistToTripReady`, `Screen119WishlistToTripInvite`, `Screen120ItineraryFromWishlist`
 * **Shared components**: `figma/src/app/components/trip/WishlistParts.tsx`
 
 ### Daftar & Filter
@@ -325,8 +349,8 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ### Tambah / Edit / Detail / Konversi
 * Form field order: Mulai/Selesai → Nama → Prioritas → Maps → Link · CTA **Simpan Aktivitas**.
-* Tap card → detail + CTA **Jadikan Perjalanan** (`Screen113`).
-* **Jadikan Perjalanan**: `Screen117` prefill → `Screen118` submit → `Screen119` undang + banner hapus wishlist → `Screen120` 1 aktivitas itinerary hari 1.
+* Tap card → detail + CTA **Jadikan Perjalanan** (`Screen110`).
+* **Jadikan Perjalanan**: `Screen114` prefill → `Screen115` submit → `Screen116` undang + banner hapus wishlist → `Screen120` 1 aktivitas itinerary hari 1.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -340,19 +364,19 @@ Entry detail trip: tap card Beranda (§3), setelah buat (§6), konversi wishlist
 
 ## §13. System States & Micro-interactions
 
-* **Layar Figma (unik di registry)**: `Screen28SkeletonLoading`, `Screen29ToastComponents`, `Screen30Error`, `Screen31DarkBeranda`, `Screen32DesignTokens`, `Screen94MediaViewerPhoto`, `Screen95MediaViewerVideo`, `Screen96MediaViewerVideoPlaying`
+* **Layar Figma (unik di registry)**: `Screen118SkeletonLoading`, `Screen119ToastComponents`, `Screen120Error`, `Screen124DarkBeranda`, `Screen125DesignTokens`, `Screen121MediaViewerPhoto`, `Screen122MediaViewerVideo`, `Screen123MediaViewerVideoPlaying`
 * Pola UX lain (empty, validasi, modal konfirmasi, loading submit) **hanya** muncul di section fitur masing-masing — tidak diduplikasi di §13 preview.
-* Design tokens: `figma/src/app/components/colors.ts`, `Screen32DesignTokens.tsx`.
+* Design tokens: `figma/src/app/components/colors.ts`, `Screen125DesignTokens.tsx`.
 
 | State | Layar | Deskripsi |
 |-------|-------|-----------|
 | Splash | 1 | Logo coral + loading (§1) |
-| Skeleton | 28 | Shimmer placeholder |
-| Toast | 29 | Success (teal) / error (coral) / offline |
-| Error | 30 | Offline / 404 + retry |
-| Dark Mode | 31 | Variant Beranda gelap (M12) |
-| Media Viewer | 94–96 | Foto / video pause / playing |
-| Form Validation | 14 | Inline errors (§6) |
+| Skeleton | 118 | Shimmer placeholder |
+| Toast | 119 | Success (teal) / error (coral) / offline |
+| Error | 120 | Offline / 404 + retry |
+| Dark Mode | 124 | Variant Beranda gelap (M12) |
+| Media Viewer | 121–123 | Foto / video pause / playing |
+| Form Validation | 33 | Inline errors (§6) |
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Tujuan dokumen ini**: 
 > - Untuk AI agents: Menjadi sumber kebenaran utama screen inventory, design tokens, dan mapping ke workflow/API sebelum mengimplementasikan atau mengaudit layar UI (M7–M12).
-> - Untuk product team: Dokumentasi lengkap palet warna, spacing, tipografi, dan **112 layar** high-fidelity — referensi saat design review atau perubahan brand.
+> - Untuk product team: Dokumentasi lengkap palet warna, spacing, tipografi, dan **125 layar** high-fidelity — referensi saat design review atau perubahan brand.
 
 ---
 
@@ -12,10 +12,10 @@ Desain diekspor dari Figma Make dan disimpan di folder **`figma/`** di root mono
 
 | Sumber | Path / URL | Keterangan |
 |--------|------------|------------|
-| **Code bundle (lokal)** | `figma/` | **112 layar** high-fidelity sebagai React preview (state variants per pipeline). **Sumber kebenaran utama** untuk screen inventory & design tokens. |
+| **Code bundle (lokal)** | `figma/` | **125 layar** high-fidelity sebagai React preview (state variants per pipeline). **Sumber kebenaran utama** untuk screen inventory & design tokens. |
 | **Design tokens (kode)** | `figma/src/app/components/colors.ts` | Palet warna, font, avatar colors (`C`, `AVATAR_COLORS`, `FONT`). |
-| **Screen registry** | `figma/src/app/App.tsx` | **112 layar** dikelompokkan **§1–§13** selaras `docs/WORKFLOW.md`. Counter header otomatis dari registry. |
-| **Shared trip UI** | `figma/src/app/components/trip/` | `TripDetailParts`, `ItineraryParts`, `ActivityParts`, `VotingParts`, `ChatParts`, `InviteParts`, `WishlistParts`, dll. |
+| **Screen registry** | `figma/src/app/App.tsx` | **125 layar** dikelompokkan **§1–§13** selaras `docs/WORKFLOW.md`. Counter header otomatis dari registry. |
+| **Shared trip UI** | `figma/src/app/components/trip/` | `TripDetailParts`, `ItineraryParts`, `ActivityParts`, `VotingParts`, `CreateVotingSheetParts`, `ChatParts`, `InviteParts`, `TripMemberParts`, `WishlistParts`, dll. |
 | **Figma Editor** | https://www.figma.com/design/tFarpj9aEUL64GrDd1jGU5/Atur-Perjalanan | File desain asli (memerlukan akses Figma). |
 | **Figma Preview (live)** | https://capri-spring-88160657.figma.site | Preview browser — alternatif jika bundle lokal belum dijalankan. |
 
@@ -27,7 +27,7 @@ npm i
 npm run dev
 ```
 
-Buka URL Vite (biasanya `http://localhost:5173`) untuk melihat seluruh **112 layar** dalam phone frame, dikelompokkan per §1–§13.
+Buka URL Vite (biasanya `http://localhost:5173`) untuk melihat seluruh **125 layar** dalam phone frame, dikelompokkan per §1–§13.
 
 > **Untuk AI Agent**: Prioritaskan inspeksi `figma/src/app/App.tsx`, `figma/src/app/components/screens/`, dan `colors.ts`.
 
@@ -35,7 +35,7 @@ Buka URL Vite (biasanya `http://localhost:5173`) untuk melihat seluruh **112 lay
 
 ## 🎨 Design Tokens
 
-Nilai di bawah ini diambil dari `figma/src/app/components/colors.ts` dan `Screen32DesignTokens.tsx`. Implementasikan di `mobile/androidApp/.../ui/theme/`.
+Nilai di bawah ini diambil dari `figma/src/app/components/colors.ts` dan `Screen125DesignTokens.tsx`. Implementasikan di `mobile/androidApp/.../ui/theme/`.
 
 ### Color Palette
 
@@ -87,93 +87,205 @@ Tab aktif: coral. Tab inactive: muted.
 
 ---
 
-## 📱 Inventori Layar (112 Screen Inventory)
+## 📱 Inventori Layar (125 Screen Inventory)
 
-**Nomor layar** = indeks `Screen{N}` di registry (bisa non-sequential). **Sumber kebenaran**: `figma/src/app/App.tsx` → `workflowSections`. Jika ada selisih dengan dokumen ini, prioritaskan `App.tsx`.
+**Nomor layar** = indeks preview **1–125** berurutan di `App.tsx` (selaras nama komponen `Screen{N}`). **Sumber kebenaran**: `figma/src/app/App.tsx` → `workflowSections`.
 
-### §1 Onboarding · §2 Autentikasi
+> Beberapa file mengekspor beberapa komponen (mis. `Screen78ChatSendPhoto.tsx` → layar 78–81; `Screen89ChatReplyMeToOther.tsx` → layar 89–92). Indeks registry tetap 1 per layar.
+
+### §1 Onboarding Layar Awal
 
 | # | Label | File |
 |---|-------|------|
 | 1 | Splash Screen | `Screen1Splash.tsx` |
-| 2 | Edu Onboarding (4 slide) | `Screen2EduOnboarding.tsx` |
+| 2 | Edu Onboarding | `Screen2EduOnboarding.tsx` |
+
+### §2 Autentikasi (Google Sign-In)
+
+| # | Label | File |
+|---|-------|------|
 | 3 | Auth & Onboarding | `Screen3Auth.tsx` |
 | 4 | Buat Username | `Screen4Username.tsx` |
 
-### §3 Beranda
+### §3 Beranda (Home) — Tab 1
 
 | # | Label | File |
 |---|-------|------|
 | 5 | Beranda — Mendatang | `Screen5Home.tsx` |
 | 6 | Empty — Beranda | `Screen6EmptyBeranda.tsx` |
-| 33 | Beranda — Selesai | `Screen33HomeSelesai.tsx` |
-| 34 | Beranda — Undangan | `Screen34HomeUndangan.tsx` |
-| 27 | Notifikasi | `Screen27Notifikasi.tsx` |
+| 7 | Beranda — Selesai | `Screen7HomeSelesai.tsx` |
+| 8 | Beranda — Undangan | `Screen8HomeUndangan.tsx` |
+| 9 | Notifikasi | `Screen9Notifikasi.tsx` |
 
-### §4 Pencarian (Tab Cari)
-
-| # | Label | File |
-|---|-------|------|
-| 35 | Cari — Idle | `Screen35SearchIdle.tsx` |
-| 7 | Cari — Hasil | `Screen7SearchUser.tsx` |
-| 40 | Cari — Tidak Ada Hasil | `Screen40SearchNoResults.tsx` |
-| 10 | Profil Publik | `Screen10PublicProfile.tsx` |
-| 37 | Profil Publik — Empty Trip | `Screen37PublicProfileEmptyTrip.tsx` |
-
-### §5 Profil (Tab Profil + Pengaturan)
+### §4 Pencarian (Cari) — Tab 2
 
 | # | Label | File |
 |---|-------|------|
-| 8 | Profil & Eksplorasi | `Screen8Profile.tsx` |
-| 36 | Profil — Empty Trip | `Screen36ProfileEmptyTrip.tsx` |
-| 9 | Edit Profil | `Screen9EditProfil.tsx` |
-| 11 | Pengaturan | `Screen11Settings.tsx` |
-| 39 | Bantuan & FAQ | `Screen39SettingsHelpFaq.tsx` |
-| 38 | Hapus Akun | `Screen38SettingsDeleteAccount.tsx` |
+| 10 | Cari — Idle | `Screen10SearchIdle.tsx` |
+| 11 | Cari — Hasil | `Screen11SearchUser.tsx` |
+| 12 | Cari — Tidak Ada Hasil | `Screen12SearchNoResults.tsx` |
+| 13 | Profil Publik | `Screen13PublicProfile.tsx` |
+| 14 | Profil Publik — Empty Trip | `Screen14PublicProfileEmptyTrip.tsx` |
 
-### §6 Pembuatan Perjalanan
+### §5 Profil — Tab 5
 
-| # | Label | File |
-|---|-------|------|
-| 78 | Form kosong | `Screen78CreateTripEmpty.tsx` |
-| 12 | Default terisi | `Screen12Create.tsx` |
-| 67–68 | Tanggal pasti / validasi | `Screen67`–`Screen68` |
-| 70–71 | Mode kandidat / tooltip | `Screen70`–`Screen71` |
-| 57–59, 80–81, 13 | Kandidat tanggal 1–3 | `Screen57`–`Screen59`, `Screen80`–`Screen81`, `Screen13` |
-| 14 | Validasi error | `Screen14FormValidation.tsx` |
-| 82 | Submit loading | `Screen82CreateTripSubmitting.tsx` |
-| 20, 43–45, 84 | Undang (search only) | `Screen20`, `Screen43`–`Screen45`, `Screen84` |
-
-> **Removed**: `Screen83InviteSuggestions` — tidak ada fitur saran teman; undang hanya via pencarian.
-
-### §7 Itinerary · §8 Voting · §9 Chat · §10 Media · §11 Kelola Trip
-
-| Pipeline | # (contoh) | Catatan |
-|----------|------------|---------|
-| **Itinerary** | 77, 15, 72, 18, 85–93 | Timeline, add/edit/cover/detail/menu ⋮ |
-| **Voting** | 16, 107, 42, 53–56, 60–66, 21, 48–49, 73–75 | Multi-voting; empty badge 0 |
-| **Chat** | 17, 97–106, 23–24 | Lampiran, kirim media, empty, long press |
-| **Media** | 41, 98 | Grid + cover + dari chat |
-| **Kelola ⋮** | 50–52, 22 | Anggota, edit, hapus, kalender |
-
-### §12 Wishlist
+Kartu profil **horizontal** (avatar kiri, nama+bio+website kanan) + bar stat perjalanan di bawah. Username di header; Pengaturan via ikon ⚙. Edit profil diakses dari kartu profil di `Screen17Settings`.
 
 | # | Label | File |
 |---|-------|------|
-| 108 | Empty | `Screen108WishlistEmpty.tsx` |
-| 25 | Grid terisi | `Screen25Wishlist.tsx` |
-| 110–120 | Filter, form, detail, konversi | `Screen110`–`Screen120` |
+| 15 | Profil & Eksplorasi | `Screen15Profile.tsx` |
+| 16 | Profil — Empty Trip | `Screen16ProfileEmptyTrip.tsx` |
+| 17 | Pengaturan | `Screen17Settings.tsx` |
+| 18 | Edit Profil | `Screen18EditProfil.tsx` |
+| 19 | Bantuan & FAQ | `Screen19SettingsHelpFaq.tsx` |
+| 20 | Hapus Akun | `Screen20SettingsDeleteAccount.tsx` |
 
-### §13 System States (unik — tidak diduplikasi)
+### §6 Pembuatan Perjalanan — Tab [+]
 
 | # | Label | File |
 |---|-------|------|
-| 28 | Skeleton Loading | `Screen28SkeletonLoading.tsx` |
-| 29 | Toast & Snackbar | `Screen29ToastComponents.tsx` |
-| 30 | Error — Offline | `Screen30Error.tsx` |
-| 94–96 | Media Viewer | `Screen94`–`Screen96` |
-| 31 | Dark Mode — Beranda | `Screen31DarkBeranda.tsx` |
-| 32 | Design Tokens | `Screen32DesignTokens.tsx` |
+| 21 | A — Form kosong (awal) | `Screen21CreateTripEmpty.tsx` |
+| 22 | A — Default terisi · waktu custom | `Screen22Create.tsx` |
+| 23 | A — Siap submit · sepanjang hari | `Screen23CreateTripFixedDate.tsx` |
+| 24 | A — Validasi error | `Screen24CreateTripFixedValidation.tsx` |
+| 25 | B — Mode kandidat · belum ada tersimpan | `Screen25CreateTripUncertainDate.tsx` |
+| 26 | B — Tooltip info tombol kandidat | `Screen26CreateTripUncertainInfo.tsx` |
+| 27 | B — Kandidat 1 aktif · belum simpan | `Screen27PickDateCandidate1.tsx` |
+| 28 | B — Kandidat 1 tersimpan · tenggat muncul | `Screen28CreateTripCandidate1Saved.tsx` |
+| 29 | B — 1 tersimpan + kandidat 2 aktif | `Screen29PickDateCandidate2.tsx` |
+| 30 | B — 2 kandidat tersimpan | `Screen30CreateTripTwoCandidatesSaved.tsx` |
+| 31 | B — 2 tersimpan + kandidat 3 aktif | `Screen31MultiDatePicker.tsx` |
+| 32 | B — 3 kandidat + tenggat · siap submit | `Screen32DateCandidatesComplete.tsx` |
+| 33 | B — Validasi error | `Screen33FormValidation.tsx` |
+| 34 | Submit — Loading | `Screen34CreateTripSubmitting.tsx` |
+| 35 | Undang — Sukses buat · search kosong | `Screen35BottomSheetUndang.tsx` |
+| 36 | Undang — Hasil cari | `Screen36InviteSearchResults.tsx` |
+| 37 | Undang — Hasil cari · sebagian terundang | `Screen37InvitePartialInvited.tsx` |
+| 38 | Undang — Tidak ditemukan | `Screen38InviteSearchEmpty.tsx` |
+| 39 | Undang — Email belum terdaftar | `Screen39InviteEmailNotRegistered.tsx` |
+| 40 | Undang — Email terkirim | `Screen40InviteEmailSent.tsx` |
+| 41 | Undang — Daftar terundang | `Screen41InviteSent.tsx` |
+
+> **Removed**: daftar saran teman (`Screen83` lama); konfirmasi email terpisah — alur langsung `Screen39` → `Screen40`.
+
+### §7 Detail Perjalanan — Tab Itinerary
+
+| # | Label | File |
+|---|-------|------|
+| 42 | Itinerary — Empty | `Screen42ItineraryEmpty.tsx` |
+| 43 | Itinerary — Tanggal divoting · Hari 1 + gap | `Screen43Destinations.tsx` |
+| 44 | Itinerary — Multi-hari (state waktu) | `Screen44DestinationsFixedDate.tsx` |
+| 45 | Sheet — Tambah aktivitas (form awal) | `Screen45BottomSheetDestinasi.tsx` |
+| 46 | Sheet — Tambah (Maps + cover otomatis) | `Screen46ActivityAddLinked.tsx` |
+| 47 | Sheet — Tambah (Maps tanpa thumbnail) | `Screen47ActivityMapsNoThumb.tsx` |
+| 48 | Sheet — Tambah (cover media perjalanan) | `Screen48ActivityTripMediaCover.tsx` |
+| 49 | Sheet — Pilih cover · Media | `Screen49ActivityCoverPicker.tsx` |
+| 50 | Sheet — Pilih cover · Icon | `Screen50ActivityCoverIconPicker.tsx` |
+| 51 | Detail aktivitas (cover Maps) | `Screen51DestinationDetail.tsx` |
+| 52 | Detail aktivitas (cover icon) | `Screen52ActivityDetailNoCover.tsx` |
+| 53 | Detail aktivitas (tanpa cover) | `Screen53ActivityDetailBare.tsx` |
+| 54 | Sheet — Edit aktivitas | `Screen54ActivityEdit.tsx` |
+| 55 | Menu ⋮ aktivitas (Edit · Hapus) | `Screen55ActivityItemMenu.tsx` |
+
+### §8 Detail Perjalanan — Tab Voting
+
+| # | Label | File |
+|---|-------|------|
+| 56 | Voting Aktif (tanggal + aktivitas) | `Screen56Voting.tsx` |
+| 57 | Voting — Empty | `Screen57VotingEmpty.tsx` |
+| 58 | Sheet — Buat voting baru (tanggal) | `Screen58CreateVotingTanggal.tsx` |
+| 59 | Sheet — Detail Voting (tanggal · awal) | `Screen59CreateVotingTanggalDetails.tsx` |
+| 60 | Sheet — Tambah Kandidat Tanggal (kandidat 2) | `Screen60CreateVotingTanggalPickCandidate.tsx` |
+| 61 | Sheet — Detail Voting (2 kandidat) | `Screen61VotingTanggalDetailsTwoCandidates.tsx` |
+| 62 | Sheet — Tambah Kandidat Tanggal (kandidat 3) | `Screen62VotingTanggalPickCandidate3.tsx` |
+| 63 | Sheet — Detail Voting (lengkap) | `Screen63VotingTanggalDetailsComplete.tsx` |
+| 64 | Sheet — Buat Voting (pilih jenis) | `Screen64CreateVoting.tsx` |
+| 65 | Sheet — Detail Voting (aktivitas) | `Screen65CreateVotingDetails.tsx` |
+| 66 | Sheet — Edit Voting (aktivitas) | `Screen66EditVoting.tsx` |
+| 67 | Sheet — Edit Voting (tanggal) | `Screen67EditVotingTanggal.tsx` |
+| 68 | Modal — Hapus Voting | `Screen68DeleteVotingModal.tsx` |
+| 69 | Menu ⋮ — Aktif (Edit/Akhiri/Hapus) | `Screen69VotingCardMenu.tsx` |
+| 70 | Voting — Pipeline + Selesai | `Screen70VotingEndedPipeline.tsx` |
+| 71 | Menu ⋮ — Selesai (Hapus saja) | `Screen71VotingEndedMenu.tsx` |
+| 72 | Voting — Auto Berakhir | `Screen72VotingExpired.tsx` |
+| 73 | Modal — Akhiri Voting Tanggal | `Screen73StatusLocked.tsx` |
+| 74 | Modal — Aktivitas Itinerary Selesai | `Screen74VotingLockedDestinasi.tsx` |
+| 75 | Modal — Voting Lainnya Selesai | `Screen75VotingLockedLainnya.tsx` |
+
+### §9 Detail Perjalanan — Tab Chat
+
+| # | Label | File |
+|---|-------|------|
+| 76 | Chat — Grup aktif | `Screen76Chat.tsx` |
+| 77 | Chat — Lampiran foto/video | `Screen77ChatAttachMenu.tsx` |
+| 78 | Chat — Kirim foto + caption | `Screen78ChatSendPhoto.tsx` |
+| 79 | Chat — Kirim foto (caption terisi) | `Screen78ChatSendPhoto.tsx` |
+| 80 | Chat — Kirim video + caption | `Screen78ChatSendPhoto.tsx` |
+| 81 | Chat — Kirim video (caption terisi) | `Screen78ChatSendPhoto.tsx` |
+| 82 | Chat — Foto terkirim (saya) | `Screen82ChatPhotoSent.tsx` |
+| 83 | Chat — Video terkirim (saya) | `Screen83ChatVideoSent.tsx` |
+| 84 | Chat — Foto dari anggota lain | `Screen84ChatPhotoReceived.tsx` |
+| 85 | Chat — Video dari anggota lain | `Screen85ChatVideoReceived.tsx` |
+| 86 | Chat — Empty | `Screen86EmptyChat.tsx` |
+| 87 | Chat — Long press (pesan orang lain) | `Screen87ChatLongPress.tsx` |
+| 88 | Chat — Long press (pesan sendiri) | `Screen87ChatLongPress.tsx` |
+| 89 | Chat — Balas (saya → orang lain) | `Screen89ChatReplyMeToOther.tsx` |
+| 90 | Chat — Balas (saya → saya) | `Screen89ChatReplyMeToOther.tsx` |
+| 91 | Chat — Balas (orang lain → orang lain) | `Screen89ChatReplyMeToOther.tsx` |
+| 92 | Chat — Balas (orang lain → saya) | `Screen89ChatReplyMeToOther.tsx` |
+
+### §10 Detail Perjalanan — Tab Media
+
+| # | Label | File |
+|---|-------|------|
+| 93 | Tab — Media & Cover | `Screen93TripDocuments.tsx` |
+| 94 | Tab — Media (+ dari chat) | `Screen94MediaFromChat.tsx` |
+
+### §11 Detail Perjalanan — Kelola Trip
+
+| # | Label | File |
+|---|-------|------|
+| 95 | Modal — Hapus Perjalanan | `Screen95TripDelete.tsx` |
+| 96 | Modal — Google Calendar | `Screen96CalendarSyncModal.tsx` |
+| 97 | Anggota — Pembuat | `Screen97TripMembers.tsx` |
+| 98 | Anggota — Cari email belum terdaftar | `Screen98TripMembersInviteEmail.tsx` |
+| 99 | Anggota — Pending · belum daftar app | `Screen99TripMembersEmailInvited.tsx` |
+| 100 | Anggota — Pending · 2 state | `Screen100TripMembersPendingInvite.tsx` |
+| 101 | Anggota — Ditolak · undang kembali | `Screen101TripMembersRejected.tsx` |
+| 102 | Anggota — POV anggota | `Screen102TripMembersAsMember.tsx` |
+| 103 | Edit Info Perjalanan | `Screen103TripEdit.tsx` |
+
+### §12 Wishlist — Tab 4
+
+| # | Label | File |
+|---|-------|------|
+| 104 | Empty — Belum ada item | `Screen104WishlistEmpty.tsx` |
+| 105 | Grid — Daftar terisi | `Screen105Wishlist.tsx` |
+| 106 | Filter — Tidak ada hasil | `Screen106WishlistFilterEmpty.tsx` |
+| 107 | Sheet — Tambah (form kosong) | `Screen107AddWishlistEmpty.tsx` |
+| 108 | Sheet — Tambah (form terisi) | `Screen108BottomSheetWishlist.tsx` |
+| 109 | Sheet — Tambah (validasi error) | `Screen109AddWishlistValidation.tsx` |
+| 110 | Detail item | `Screen110WishlistDetail.tsx` |
+| 111 | Sheet — Edit item | `Screen111EditWishlist.tsx` |
+| 112 | Menu ⋮ (Edit · Hapus · Jadikan Perjalanan) | `Screen112WishlistCardMenu.tsx` |
+| 113 | Modal — Hapus item | `Screen113WishlistDelete.tsx` |
+| 114 | Jadikan Perjalanan — Prefill wishlist | `Screen114WishlistToTripEmpty.tsx` |
+| 115 | Jadikan Perjalanan — Siap submit | `Screen115WishlistToTripReady.tsx` |
+| 116 | Undang — Sukses buat (+ wishlist dihapus) | `Screen116WishlistToTripInvite.tsx` |
+| 117 | Itinerary — 1 aktivitas dari wishlist | `Screen117ItineraryFromWishlist.tsx` |
+
+### §13 System States & Micro-interactions
+
+| # | Label | File |
+|---|-------|------|
+| 118 | Skeleton Loading | `Screen118SkeletonLoading.tsx` |
+| 119 | Toast & Snackbar | `Screen119ToastComponents.tsx` |
+| 120 | Error — Offline | `Screen120Error.tsx` |
+| 121 | Media Viewer — Foto | `Screen121MediaViewerPhoto.tsx` |
+| 122 | Media Viewer — Video (pause) | `Screen122MediaViewerVideo.tsx` |
+| 123 | Media Viewer — Video (playing) | `Screen123MediaViewerVideoPlaying.tsx` |
+| 124 | Dark Mode — Beranda | `Screen124DarkBeranda.tsx` |
+| 125 | Design Tokens | `Screen125DesignTokens.tsx` |
 
 ---
 
@@ -200,24 +312,25 @@ Tab aktif: coral. Tab inactive: muted.
 
 | Fitur UI | Layar | Endpoint / Schema | Status |
 |----------|-------|-------------------|--------|
-| Notifikasi in-app | 27 | `GET /v1/notifications`, unread-count, mark read | ✅ M5.1 |
-| Hapus pesan chat | 24 | `DELETE /v1/trips/:id/messages/:messageId` | ✅ M5.1 |
+| Notifikasi in-app | 9 | `GET /v1/notifications`, unread-count, mark read | ✅ M5.1 |
+| Hapus pesan chat | 87, 88 | `DELETE /v1/trips/:id/messages/:messageId` — menu Hapus hanya long-press pesan sendiri | ✅ M5.1 |
 | Username check real-time | 4 | `GET /v1/users/check-username` | ✅ M5.1 |
-| Tab Beranda Mendatang/Selesai | 5, 33 | `GET /v1/trips?tab=upcoming\|completed` | ✅ M5.1 |
-| Grid trip profil publik | 10, 8 | `GET /v1/users/:username/trips` | ✅ M5.1 |
-| Voting deadline & reminder | 16 | cron H-7d/H-1d/H-1h + `voting_deadline` | ✅ M5.1 |
-| Cover image trip card | 5, 41 | `cover_image_url` default resolver | ✅ M5.1 (URL); 🔜 `cover_document_id` M5.2 |
-| Edit aktivitas itinerary | 88 | `PUT /v1/trips/:id/destinations/:id` | 🔜 M5.2 |
-| Aktivitas times/kind/cover | 15, 18–93 | enrich `trip_destinations` columns | 🔜 M5.2 |
-| Trip waktu (non-all-day) | 12, 13 | `is_all_day`, `start_time`, `end_time` on trips | 🔜 M5.2 |
-| Daftar anggota + batalkan undang | 45, 50 | `GET …/members`, `DELETE …/invitations/:id` | 🔜 M5.2 |
-| Wishlist enriched + convert | 111–120 | wishlist columns + `POST …/convert-to-trip` | 🔜 M5.2 |
-| Chat foto/video + unread badge | 97–106 | multipart messages + `trip_message_reads` | 🔜 M5.2 |
-| Tab Media + set cover | 41, 98 | `trip_documents` CRUD + `PUT …/cover` | 🔜 M5.2 |
-| Multi-voting Aktivitas/Lainnya | 16, 42–56 | `trip_polls` schema + CRUD | 🔜 M5.2c |
-| Hapus akun | 38 | `DELETE /v1/users/me` | 🔜 M5.2 |
-| Event kalender Google | 22 | Calendar API integration | M11 |
-| Logout revoke session | 11 | `POST /v1/auth/logout` | Opsional (local OK) |
+| Tab Beranda Mendatang/Selesai | 5, 7 | `GET /v1/trips?tab=upcoming\|completed` | ✅ M5.1 |
+| Grid trip profil publik | 13, 15 | `GET /v1/users/:username/trips` | ✅ M5.1 |
+| Voting deadline & reminder | 56 | cron H-7d/H-1d/H-1h + `voting_deadline` | ✅ M5.1 |
+| Cover image trip card | 5, 93 | `cover_image_url` default resolver | ✅ M5.1 (URL); 🔜 `cover_document_id` M5.2 |
+| Edit aktivitas itinerary | 54 | `PUT /v1/trips/:id/destinations/:id` | 🔜 M5.2 |
+| Aktivitas times/kind/cover | 43, 45–54 | enrich `trip_destinations` columns | 🔜 M5.2 |
+| Trip waktu (non-all-day) | 22, 31 | `is_all_day`, `start_time`, `end_time` on trips | 🔜 M5.2 |
+| Daftar anggota + batalkan undang | 41, 97–102 | `GET …/members`, `DELETE …/invitations/:id` | 🔜 M5.2 |
+| Wishlist enriched + convert | 110–117 | wishlist columns + `POST …/convert-to-trip` | 🔜 M5.2 |
+| Chat foto/video + unread badge | 77–85 | multipart messages + `trip_message_reads` | 🔜 M5.2 |
+| Balas pesan (reply quote) | 89–92 | `reply_to_id` + enriched message payload | 🔜 M5.2e |
+| Tab Media + set cover | 93, 94 | `trip_documents` CRUD + `PUT …/cover` | 🔜 M5.2 |
+| Multi-voting Aktivitas/Lainnya | 56–75 | `trip_polls` schema + CRUD; tanggal tetap `candidates` | 🔜 M5.2c |
+| Hapus akun | 20 | `DELETE /v1/users/me` | 🔜 M5.2 |
+| Event kalender Google | 96 | Calendar API integration | M11 |
+| Logout revoke session | 17 | `POST /v1/auth/logout` | Opsional (local OK) |
 | Follow/follower | — | `POST/DELETE …/follow` | Post-MVP (kode ada) |
 
 ---
@@ -261,7 +374,32 @@ Layout: scroll konten penuh; dots sticky di atas CTA.
 
 ### Undangan — Tanpa Saran Teman
 
-Flow: `Screen20` (search kosong) → `Screen43`/`Screen84`/`Screen44` → `Screen45`. Tidak ada `Screen83`.
+Flow: `Screen35` (search kosong) → `Screen36`/`Screen37`/`Screen38` → `Screen41`. Email: `Screen39` → `Screen40` (tanpa konfirmasi terpisah). Tidak ada daftar saran teman.
+
+### Voting — Sheet Copy & Form Rules
+
+| Konteks | Title sheet | Form fields |
+|---------|-------------|-------------|
+| Detail (aktivitas) | Detail Voting | Judul + kandidat + tenggat |
+| Detail (tanggal) | Detail Voting | Kandidat tanggal + tenggat saja |
+| Edit (aktivitas) | Edit Voting | Sama + tombol kembali |
+| Edit (tanggal) | Edit Voting | Sama tanpa kembali (`Screen67`) |
+| Tambah kandidat tanggal | Tambah Kandidat Tanggal | Kalender + daftar kandidat |
+
+Jenis voting selalu lewat **badge inline** (`VotingTypeBadgeInline`), bukan di judul sheet.
+
+### Chat — Long Press & Reply
+
+| Layar | Skenario |
+|-------|----------|
+| `Screen87` | Long press pesan orang lain — Balas, Salin (tanpa Hapus) |
+| `Screen88` | Long press pesan sendiri — Balas, Salin, **Hapus** |
+| `Screen89` | Balas: saya → orang lain |
+| `Screen90` | Balas: saya → saya |
+| `Screen91` | Balas: orang lain → orang lain |
+| `Screen92` | Balas: orang lain → saya |
+
+Quote balasan: `ChatReplyQuote` di dalam bubble; label **Kamu** jika membalas pesan sendiri.
 
 ### Naming: UI vs Backend
 
@@ -277,7 +415,7 @@ Flow: `Screen20` (search kosong) → `Screen43`/`Screen84`/`Screen44` → `Scree
 ### Cara Mengaudit Alignment (M12)
 
 1. Jalankan `figma/` preview lokal
-2. Verifikasi **112 layar** di `App.tsx` vs Composable Android
+2. Verifikasi **125 layar** di `App.tsx` vs Composable Android
 3. **Color Check**: `Color.kt` ↔ `colors.ts`
 4. **Layout Check**: padding 20dp, bottom nav 88dp
 5. **State Check**: empty, skeleton, error, validation, wishlist→trip

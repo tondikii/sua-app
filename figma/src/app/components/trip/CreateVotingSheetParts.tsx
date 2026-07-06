@@ -16,10 +16,29 @@ import { TripDetailHeader } from './TripDetailParts';
 import { VOTING_TYPE_META, type VotingType } from './VotingParts';
 
 export const VOTING_TYPE_DESCRIPTIONS: Record<VotingType, string> = {
-  tanggal: 'Untuk menentukan tanggal jika belum pasti. Hanya satu voting tanggal aktif dalam satu waktu.',
+  tanggal: 'Untuk menentukan tanggal perjalanan jika ada konflik ketersediaan tanggal anggota.',
   destinasi: 'Untuk memilih aktivitas atau destinasi di slot itinerary.',
   lainnya: 'Keputusan custom — transportasi, akomodasi, dll.',
 };
+
+export const CREATE_VOTING_TITLE = 'Buat Voting';
+export const CREATE_VOTING_TYPE_SUBTITLE =
+  'Pilih jenis voting yang akan diputuskan bersama anggota.';
+
+export const CREATE_VOTING_DETAILS_TITLE = 'Detail Voting';
+export const CREATE_VOTING_DETAILS_SUBTITLE =
+  'Isi judul dan kandidat yang akan divoting anggota.';
+export const CREATE_VOTING_TANGGAL_DETAILS_SUBTITLE =
+  'Tambahkan kandidat tanggal perjalanan yang akan divoting anggota.';
+
+export const CREATE_VOTING_TANGGAL_ADD_TITLE = 'Tambah Kandidat Tanggal';
+export const CREATE_VOTING_TANGGAL_ADD_SUBTITLE =
+  'Pilih rentang tanggal di kalender, lalu simpan sebagai kandidat.';
+
+export const EDIT_VOTING_TITLE = 'Edit Voting';
+export const EDIT_VOTING_SUBTITLE = 'Ubah judul, kandidat, atau tenggat voting ini.';
+export const EDIT_VOTING_TANGGAL_SUBTITLE =
+  'Ubah kandidat tanggal atau tenggat voting ini.';
 
 export function CreateVotingBackdrop({ subtitle = TRIP_DATE_PENDING }: { subtitle?: string }) {
   return (
@@ -61,9 +80,15 @@ export { SHEET_SAFE_TOP };
 type VotingTypeOptionListProps = {
   selected?: VotingType;
   disabledTypes?: VotingType[];
+  /** Hanya tipe di sini yang menampilkan badge "Sedang berlangsung" saat disabled */
+  ongoingTypes?: VotingType[];
 };
 
-export function VotingTypeOptionList({ selected = 'destinasi', disabledTypes = ['tanggal'] }: VotingTypeOptionListProps) {
+export function VotingTypeOptionList({
+  selected = 'destinasi',
+  disabledTypes = ['tanggal'],
+  ongoingTypes = [],
+}: VotingTypeOptionListProps) {
   const types: VotingType[] = ['tanggal', 'destinasi', 'lainnya'];
 
   return (
@@ -110,7 +135,7 @@ export function VotingTypeOptionList({ selected = 'destinasi', disabledTypes = [
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0 }}>{meta.label}</p>
-                {disabled && (
+                {disabled && ongoingTypes.includes(type) && (
                   <span
                     style={{
                       fontSize: 10,
@@ -357,13 +382,11 @@ export function CreateVotingDetailsForm({
 
 /** Form buat voting tanggal — selaras §5, tenggat muncul jika ≥1 kandidat */
 export function CreateVotingTanggalDetailsForm({
-  title = 'Tanggal Perjalanan',
   deadline,
   candidates = [TRIP_DATE_CANDIDATES[0]],
   showAddButton = true,
   highlightAddButton = false,
 }: {
-  title?: string;
   deadline?: string;
   candidates?: TripDateCandidate[];
   showAddButton?: boolean;
@@ -376,8 +399,6 @@ export function CreateVotingTanggalDetailsForm({
       <VotingTypeBadgeInline type="tanggal" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <VotingFormField label="Judul voting" value={title} placeholder="Contoh: Tanggal Perjalanan" required />
-
         <div>
           <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
             Kandidat Tanggal <span style={{ color: C.coral }}>*</span>
@@ -400,5 +421,61 @@ export function CreateVotingTanggalDetailsForm({
         )}
       </div>
     </>
+  );
+}
+
+/** Layar sheet buat/edit voting — backdrop + bottom sheet */
+export function CreateVotingScreen({
+  title,
+  subtitle,
+  onBack,
+  footer,
+  height = 'auto',
+  backdropSubtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  onBack?: boolean;
+  footer: ReactNode;
+  height?: 'auto' | 'fixed';
+  backdropSubtitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+      <CreateVotingBackdrop subtitle={backdropSubtitle} />
+      <CreateVotingSheet title={title} subtitle={subtitle} onBack={onBack} footer={footer} height={height}>
+        {children}
+      </CreateVotingSheet>
+    </div>
+  );
+}
+
+/** Sheet tambah kandidat tanggal voting */
+export function VotingTanggalPickCandidateScreen({
+  savedCandidates,
+  activeCandidate,
+  allDay = false,
+}: {
+  savedCandidates: TripDateCandidate[];
+  activeCandidate: TripDateCandidate;
+  allDay?: boolean;
+}) {
+  return (
+    <CreateVotingScreen
+      height="fixed"
+      title={CREATE_VOTING_TANGGAL_ADD_TITLE}
+      subtitle={CREATE_VOTING_TANGGAL_ADD_SUBTITLE}
+      onBack
+      footer={<CreateVotingPrimaryButton label="Simpan Kandidat" />}
+    >
+      <VotingTanggalCalendarPicker
+        savedCandidates={savedCandidates}
+        activeCandidate={activeCandidate}
+        highlightAddButton
+        allDay={allDay}
+      />
+    </CreateVotingScreen>
   );
 }

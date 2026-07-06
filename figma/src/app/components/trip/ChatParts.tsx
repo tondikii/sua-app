@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import { Send, Paperclip, Image, Video, X, Play } from 'lucide-react';
-import { C, FONT } from '../colors';
+import type { CSSProperties, ReactNode } from 'react';
+import { Send, Paperclip, Image, Video, X, Play, Reply, Copy, Trash2 } from 'lucide-react';
+import { C, AVATAR_COLORS, FONT } from '../colors';
 import { TRIP_IMAGES } from '../tripImages';
-import { TripDetailHeader, TripDetailTabs, DEFAULT_TRIP_TAB_COUNTS, type TripTabCounts } from './TripDetailParts';
+import { TripDetailHeader, TripDetailTabs, DEFAULT_TRIP_TAB_COUNTS, TRIP_COUNTS_DATE_PENDING, type TripTabCounts } from './TripDetailParts';
 import { TRIP_DATE_PENDING } from './CreateTripParts';
 
 type TripDetailChatLayoutProps = {
@@ -78,7 +78,79 @@ export function ChatDateSeparator({ label = 'Hari ini' }: { label?: string }) {
   );
 }
 
+type ChatLongPressMenuProps = {
+  /** Hapus hanya tersedia untuk pesan sendiri */
+  isOwnMessage?: boolean;
+};
+
+export function ChatLongPressMenu({ isOwnMessage = false }: ChatLongPressMenuProps) {
+  const items = [
+    { icon: Reply, label: 'Balas', color: C.charcoal },
+    { icon: Copy, label: 'Salin Teks', color: C.charcoal },
+    ...(isOwnMessage ? [{ icon: Trash2, label: 'Hapus', color: C.danger }] : []),
+  ];
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        backgroundColor: C.white,
+        borderRadius: 18,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.28), 0 4px 16px rgba(0,0,0,0.12)',
+        overflow: 'hidden',
+        width: 196,
+        zIndex: 30,
+      }}
+    >
+      {items.map((item, idx) => (
+        <button
+          key={item.label}
+          type="button"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '13px 18px',
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderBottom: idx < items.length - 1 ? `1px solid ${C.border}` : 'none',
+            cursor: 'pointer',
+            textAlign: 'left',
+            fontFamily: FONT,
+          }}
+        >
+          <item.icon size={17} color={item.color} strokeWidth={2} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: item.color }}>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function ChatLongPressBackdrop() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: 'rgba(15,15,20,0.38)',
+        zIndex: 10,
+        pointerEvents: 'none',
+      }}
+    />
+  );
+}
+
 export type ChatMessageKind = 'text' | 'photo' | 'video';
+
+export type ChatReplyPreview = {
+  from: string;
+  isMe: boolean;
+  text: string;
+};
 
 type ChatMessage = {
   id: number;
@@ -91,7 +163,67 @@ type ChatMessage = {
   mediaDuration?: string;
   time: string;
   isMe: boolean;
+  replyTo?: ChatReplyPreview;
 };
+
+export function withDemoChatColors(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((m, i) => ({
+    ...m,
+    color: m.isMe ? AVATAR_COLORS[4] : AVATAR_COLORS[i % 4],
+  }));
+}
+
+function ChatReplyQuote({
+  reply,
+  accentColor = C.coral,
+  inOwnBubble,
+}: {
+  reply: ChatReplyPreview;
+  accentColor?: string;
+  inOwnBubble: boolean;
+}) {
+  const label = reply.isMe ? 'Kamu' : reply.from;
+  const truncate: CSSProperties = {
+    overflow: 'hidden',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+  };
+
+  if (inOwnBubble) {
+    return (
+      <div
+        style={{
+          borderLeft: '3px solid rgba(255,255,255,0.65)',
+          backgroundColor: 'rgba(0,0,0,0.14)',
+          borderRadius: 8,
+          padding: '6px 10px',
+          marginBottom: 6,
+        }}
+      >
+        <p style={{ fontSize: 11, fontWeight: 700, color: 'white', margin: 0 }}>{label}</p>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', margin: '2px 0 0', lineHeight: 1.4, ...truncate }}>
+          {reply.text}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        borderLeft: `3px solid ${accentColor}`,
+        backgroundColor: C.light,
+        borderRadius: 8,
+        padding: '6px 10px',
+        marginBottom: 6,
+      }}
+    >
+      <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, margin: 0 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', lineHeight: 1.4, ...truncate }}>{reply.text}</p>
+    </div>
+  );
+}
 
 
 function ChatMediaBubble({
@@ -274,6 +406,7 @@ export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: 
             transform: highlighted ? 'scale(1.02)' : 'scale(1)',
           }}
         >
+          {msg.replyTo && <ChatReplyQuote reply={msg.replyTo} inOwnBubble />}
           {msg.text}
         </div>
       </div>
@@ -313,6 +446,7 @@ export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: 
             boxShadow: `0 3px 12px ${C.shadow}`,
           }}
         >
+          {msg.replyTo && <ChatReplyQuote reply={msg.replyTo} accentColor={msg.color} inOwnBubble={false} />}
           {msg.text}
         </div>
       </div>
@@ -654,6 +788,50 @@ export const DEMO_CHAT_MESSAGES: ChatMessage[] = [
   { id: 6, from: 'Sari', initial: 'S', color: '#A78BFA', text: 'Aku vote 15 Juni ya! Siap kapanpun 🙋‍♀️', time: '10:38', isMe: false },
 ];
 
+const CHAT_LONG_PRESS_MESSAGES = withDemoChatColors(DEMO_CHAT_MESSAGES.slice(0, 5));
+
+/** Layar chat dengan long-press menu pada satu pesan */
+export function ChatLongPressView({ highlightedId }: { highlightedId: number }) {
+  const highlightedMessage = CHAT_LONG_PRESS_MESSAGES.find((m) => m.id === highlightedId)!;
+  const counts = { ...TRIP_COUNTS_DATE_PENDING, chat: 0 };
+
+  return (
+    <TripDetailChatLayout
+      subtitle={TRIP_DATE_PENDING}
+      counts={counts}
+      overlay={
+        <>
+          <ChatLongPressBackdrop />
+          <ChatLongPressMenu isOwnMessage={highlightedMessage.isMe} />
+        </>
+      }
+    >
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          padding: '16px 16px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          position: 'relative',
+        }}
+      >
+        <ChatDateSeparator />
+        {CHAT_LONG_PRESS_MESSAGES.map((msg) => (
+          <ChatMessageBubble
+            key={msg.id}
+            msg={msg}
+            dimmed={msg.id !== highlightedId}
+            highlighted={msg.id === highlightedId}
+          />
+        ))}
+      </div>
+    </TripDetailChatLayout>
+  );
+}
+
 export const DEMO_CHAT_PHOTO_SENT: ChatMessage = {
   id: 7,
   kind: 'photo',
@@ -703,5 +881,222 @@ export const DEMO_CHAT_VIDEO_RECEIVED: ChatMessage = {
   time: '11:05',
   isMe: false,
 };
+
+type ChatThreadViewProps = {
+  messages: ChatMessage[];
+  subtitle?: string;
+  counts?: TripTabCounts;
+  attachMenuOpen?: boolean;
+  inputDisabled?: boolean;
+};
+
+/** Daftar pesan dalam thread chat */
+export function ChatThreadView({
+  messages,
+  subtitle = TRIP_DATE_PENDING,
+  counts = TRIP_COUNTS_DATE_PENDING,
+  attachMenuOpen = false,
+  inputDisabled = false,
+}: ChatThreadViewProps) {
+  const colored = withDemoChatColors(messages);
+
+  return (
+    <TripDetailChatLayout
+      subtitle={subtitle}
+      counts={counts}
+      attachMenuOpen={attachMenuOpen}
+      inputDisabled={inputDisabled}
+    >
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          padding: '16px 16px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+        }}
+      >
+        <ChatDateSeparator />
+        {colored.map((msg) => (
+          <ChatMessageBubble key={msg.id} msg={msg} />
+        ))}
+      </div>
+    </TripDetailChatLayout>
+  );
+}
+
+function EmptyChatIllustration() {
+  return (
+    <svg width="168" height="148" viewBox="0 0 168 148" fill="none">
+      <circle cx="84" cy="74" r="64" fill={C.coralLight} />
+      <rect x="18" y="32" width="74" height="46" rx="16" fill={C.white} stroke={C.border} strokeWidth="2" />
+      <path d="M30 78 L22 94 L46 78" fill={C.white} stroke={C.border} strokeWidth="1.5" strokeLinejoin="round" />
+      <rect x="28" y="46" width="44" height="7" rx="3.5" fill={C.light} />
+      <rect x="28" y="59" width="30" height="7" rx="3.5" fill={C.light} />
+      <rect x="76" y="58" width="74" height="46" rx="16" fill={C.coral} opacity="0.18" />
+      <rect x="76" y="58" width="74" height="46" rx="16" fill="none" stroke={C.coral} strokeWidth="1.5" opacity="0.5" />
+      <path d="M138 104 L146 120 L122 104" fill={C.coral} opacity="0.4" stroke={C.coral} strokeWidth="1.5" strokeLinejoin="round" />
+      <rect x="86" y="72" width="44" height="7" rx="3.5" fill={C.coral} opacity="0.25" />
+      <rect x="86" y="85" width="32" height="7" rx="3.5" fill={C.coral} opacity="0.2" />
+    </svg>
+  );
+}
+
+const EMPTY_CHAT_COUNTS = { ...TRIP_COUNTS_DATE_PENDING, chat: 0 };
+
+export function ChatEmptyState() {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 36px 20px',
+        textAlign: 'center',
+        fontFamily: FONT,
+      }}
+    >
+      <EmptyChatIllustration />
+      <h3 style={{ fontSize: 19, fontWeight: 800, color: C.charcoal, margin: '18px 0 9px', letterSpacing: -0.4 }}>
+        Belum ada obrolan
+      </h3>
+      <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.65, fontWeight: 500 }}>
+        Sapa teman perjalananmu dan mulai diskusi.
+      </p>
+    </div>
+  );
+}
+
+const CHAT_COMPOSER_BACKDROP_MESSAGES = withDemoChatColors(DEMO_CHAT_MESSAGES.slice(0, 4));
+
+/** Shell composer kirim media — chat redup di belakang */
+export function ChatComposerScreen({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.4, pointerEvents: 'none' }}>
+        <TripDetailChatLayout subtitle={TRIP_DATE_PENDING} counts={TRIP_COUNTS_DATE_PENDING} hideInputBar>
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              padding: '16px 16px 8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <ChatDateSeparator />
+            {CHAT_COMPOSER_BACKDROP_MESSAGES.map((msg) => (
+              <ChatMessageBubble key={msg.id} msg={msg} />
+            ))}
+          </div>
+        </TripDetailChatLayout>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const REPLY_ORIGINAL_RINA_VOTING = 'Oh iya, kita voting aja yuk biar fair 🗳️';
+const REPLY_ORIGINAL_ME_TICKET = 'Bagus banget! Aku udah cek tiketnya, masih ada yang murah 🎉';
+const REPLY_ORIGINAL_BUDI_JUNE = 'Aku prefer 22 Juni sih, jadwal kantor masih ada nih minggu itu 😅';
+const REPLY_ORIGINAL_ME_VOTING = 'Setuju banget! Langsung ke tab Voting yuk';
+
+/** Saya balas pesan anggota lain */
+export const DEMO_REPLY_ME_TO_OTHER: ChatMessage[] = [
+  {
+    id: 1,
+    from: 'Rina',
+    initial: 'R',
+    color: AVATAR_COLORS[0],
+    text: REPLY_ORIGINAL_RINA_VOTING,
+    time: '10:36',
+    isMe: false,
+  },
+  {
+    id: 2,
+    from: 'Me',
+    initial: 'B',
+    color: AVATAR_COLORS[4],
+    text: 'Setuju! Langsung ke tab Voting aja',
+    time: '10:37',
+    isMe: true,
+    replyTo: { from: 'Rina', isMe: false, text: REPLY_ORIGINAL_RINA_VOTING },
+  },
+];
+
+/** Saya balas pesan sendiri */
+export const DEMO_REPLY_ME_TO_SELF: ChatMessage[] = [
+  {
+    id: 1,
+    from: 'Me',
+    initial: 'B',
+    color: AVATAR_COLORS[4],
+    text: REPLY_ORIGINAL_ME_TICKET,
+    time: '10:33',
+    isMe: true,
+  },
+  {
+    id: 2,
+    from: 'Me',
+    initial: 'B',
+    color: AVATAR_COLORS[4],
+    text: 'Eh tunggu, cek lagi besok—harga bisa turun lagi',
+    time: '10:34',
+    isMe: true,
+    replyTo: { from: 'Me', isMe: true, text: REPLY_ORIGINAL_ME_TICKET },
+  },
+];
+
+/** Anggota lain balas pesan anggota lain */
+export const DEMO_REPLY_OTHER_TO_OTHER: ChatMessage[] = [
+  {
+    id: 1,
+    from: 'Budi',
+    initial: 'B',
+    color: AVATAR_COLORS[2],
+    text: REPLY_ORIGINAL_BUDI_JUNE,
+    time: '10:35',
+    isMe: false,
+  },
+  {
+    id: 2,
+    from: 'Rina',
+    initial: 'R',
+    color: AVATAR_COLORS[0],
+    text: '22 Juni juga oke sih buat aku 👍',
+    time: '10:36',
+    isMe: false,
+    replyTo: { from: 'Budi', isMe: false, text: REPLY_ORIGINAL_BUDI_JUNE },
+  },
+];
+
+/** Anggota lain balas pesan saya */
+export const DEMO_REPLY_OTHER_TO_ME: ChatMessage[] = [
+  {
+    id: 1,
+    from: 'Me',
+    initial: 'B',
+    color: AVATAR_COLORS[4],
+    text: REPLY_ORIGINAL_ME_VOTING,
+    time: '10:36',
+    isMe: true,
+  },
+  {
+    id: 2,
+    from: 'Sari',
+    initial: 'S',
+    color: AVATAR_COLORS[3],
+    text: 'Aku udah buka tab Voting-nya! 🗳️',
+    time: '10:38',
+    isMe: false,
+    replyTo: { from: 'Me', isMe: true, text: REPLY_ORIGINAL_ME_VOTING },
+  },
+];
 
 export type { ChatMessage };
