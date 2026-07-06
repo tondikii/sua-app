@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
 import { ChevronRight, Search, X } from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
-import { HeaderTextButton } from '../ui/ScreenChrome';
 
 export type SearchUser = {
   id: number;
@@ -53,59 +51,68 @@ export const SEARCH_RESULTS: SearchUser[] = [
   },
 ];
 
+type SearchInputProps = {
+  value?: string;
+  placeholder?: string;
+  focused?: boolean;
+};
+
+/** Field pencarian — ikon search, teks/placeholder, tombol clear (X) saat ada nilai */
+export function SearchInput({
+  value,
+  placeholder = 'Cari...',
+  focused,
+}: SearchInputProps) {
+  const isActive = focused ?? Boolean(value);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: C.light,
+        borderRadius: 14,
+        padding: '12px 16px',
+        border: `1.5px solid ${isActive ? C.coral : C.border}`,
+        boxShadow: isActive ? `0 0 0 3px ${C.coralLight}` : 'none',
+      }}
+    >
+      <Search size={16} color={isActive ? C.coral : C.muted} strokeWidth={2.5} />
+      {value ? (
+        <span style={{ fontSize: 14, color: C.charcoal, fontWeight: 500, flex: 1 }}>{value}</span>
+      ) : (
+        <span style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500, flex: 1 }}>{placeholder}</span>
+      )}
+      {value && (
+        <div
+          style={{
+            width: 20,
+            height: 20,
+            backgroundColor: C.muted,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <X size={11} color="white" strokeWidth={3} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 type SearchBarProps = {
   query?: string;
   focused?: boolean;
-  rightAction?: ReactNode;
+  placeholder?: string;
 };
 
-export function SearchBar({ query, focused = false, rightAction }: SearchBarProps) {
-  const isActive = focused || Boolean(query);
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          backgroundColor: C.light,
-          borderRadius: 14,
-          padding: '12px 16px',
-          border: `1.5px solid ${isActive ? C.coral : C.border}`,
-          boxShadow: isActive ? `0 0 0 3px ${C.coralLight}` : 'none',
-        }}
-      >
-        <Search size={16} color={isActive ? C.coral : C.muted} strokeWidth={2.5} />
-        {query ? (
-          <span style={{ fontSize: 14, color: C.charcoal, fontWeight: 500, flex: 1 }}>{query}</span>
-        ) : (
-          <span style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500, flex: 1 }}>
-            Cari nama atau username...
-          </span>
-        )}
-        {query && (
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              backgroundColor: C.muted,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <X size={11} color="white" strokeWidth={3} />
-          </div>
-        )}
-      </div>
-      {rightAction}
-    </div>
-  );
+export function SearchBar({ query, focused, placeholder = 'Cari nama atau username...' }: SearchBarProps) {
+  return <SearchInput value={query} focused={focused} placeholder={placeholder} />;
 }
 
 type SearchUserRowProps = {
@@ -163,8 +170,4 @@ export function SearchUserRow({ user, variant, showBorder = true, highlight = fa
       )}
     </div>
   );
-}
-
-export function SearchCancelButton() {
-  return <HeaderTextButton>Batal</HeaderTextButton>;
 }

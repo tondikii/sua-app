@@ -1,5 +1,6 @@
-import { Search, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { C, FONT } from '../colors';
+import { SearchInput } from '../search/SearchParts';
 import { TRIP_DRAFT } from '../trip/CreateTripParts';
 import { InvitePrimaryButton } from '../trip/InviteParts';
 
@@ -48,20 +49,8 @@ export function Screen20BottomSheetUndang() {
       </div>
 
       <div style={{ padding: '0 22px', flexShrink: 0 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            backgroundColor: C.light,
-            borderRadius: 14,
-            padding: '12px 16px',
-            border: `1.5px solid ${C.border}`,
-            marginBottom: 10,
-          }}
-        >
-          <Search size={16} color={C.muted} />
-          <span style={{ fontSize: 14, color: C.mutedLight }}>Cari username / email...</span>
+        <div style={{ marginBottom: 10 }}>
+          <SearchInput placeholder="Cari username / email..." />
         </div>
       </div>
 

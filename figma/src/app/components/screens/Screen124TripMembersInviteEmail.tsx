@@ -1,9 +1,10 @@
-import { C, FONT, AVATAR_COLORS } from '../colors';
+import { C, FONT } from '../colors';
 import { NavHeader, SafeAreaTop } from '../ui/ScreenChrome';
+import { EXAMPLE_INVITE_EMAIL, EmailInviteSearchResult } from '../trip/InviteParts';
 import { TripMembersPanel } from '../trip/TripMemberParts';
 
-/** Daftar anggota trip — dari menu ⋮, bisa undang dari sini, CRUD anggota perjalanan */
-export function Screen50TripMembers() {
+/** Daftar anggota — cari email belum terdaftar (dari menu anggota) */
+export function Screen124TripMembersInviteEmail() {
   return (
     <div
       style={{
@@ -22,10 +23,12 @@ export function Screen50TripMembers() {
       <div style={{ flex: 1, minHeight: 0, padding: '8px 22px 28px', overflowY: 'auto' }}>
         <TripMembersPanel
           showInviteSearch
-          searchValue="rina"
-          inviteResults={[
-            { id: 10, name: 'Rina Santoso', username: '@rina_travel', initial: 'R', color: AVATAR_COLORS[2] },
+          searchValue={EXAMPLE_INVITE_EMAIL}
+          members={[
+            { id: 0, name: 'Kamu (Budi)', username: '@budi_santoso', initial: 'B', color: '#FF6B6B', role: 'creator' },
+            { id: 2, name: 'Rudi Hermawan', username: '@rudi_travel', initial: 'R', color: '#4ECDC4', role: 'member' },
           ]}
+          inviteExtra={<EmailInviteSearchResult email={EXAMPLE_INVITE_EMAIL} />}
         />
       </div>
     </div>

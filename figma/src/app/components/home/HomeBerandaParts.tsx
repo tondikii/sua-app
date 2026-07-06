@@ -197,6 +197,7 @@ export function TripCard({ trip, dimmed = false }: { trip: TripItem; dimmed?: bo
         backgroundColor: C.white,
         boxShadow: `0 4px 24px ${C.shadow}, 0 0 0 1px rgba(0,0,0,0.04)`,
         opacity: dimmed ? 0.92 : 1,
+        flexShrink: 0,
       }}
     >
       <div style={{ position: 'relative', height: 150, backgroundColor: '#D8D4CC' }}>
@@ -263,6 +264,7 @@ export function InvitationCard({ item }: { item: InvitationItem }) {
         overflow: 'hidden',
         backgroundColor: C.white,
         boxShadow: `0 4px 24px ${C.shadow}, 0 0 0 1px rgba(0,0,0,0.04)`,
+        flexShrink: 0,
       }}
     >
       <div style={{ position: 'relative', height: 120, backgroundColor: '#D8D4CC' }}>

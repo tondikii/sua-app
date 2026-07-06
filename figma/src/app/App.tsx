@@ -53,6 +53,9 @@ import { Screen20BottomSheetUndang } from './components/screens/Screen20BottomSh
 import { Screen43InviteSearchResults } from './components/screens/Screen43InviteSearchResults';
 import { Screen44InviteSearchEmpty } from './components/screens/Screen44InviteSearchEmpty';
 import { Screen45InviteSent } from './components/screens/Screen45InviteSent';
+import { Screen121InviteEmailNotRegistered } from './components/screens/Screen121InviteEmailNotRegistered';
+import { Screen122InviteEmailConfirm } from './components/screens/Screen122InviteEmailConfirm';
+import { Screen123InviteEmailSent } from './components/screens/Screen123InviteEmailSent';
 
 // §7 Detail Perjalanan — Itinerary
 import { Screen15Destinations } from './components/screens/Screen15Destinations';
@@ -113,6 +116,10 @@ import { Screen98MediaFromChat } from './components/screens/Screen98MediaFromCha
 
 // §11 Detail Perjalanan — Kelola Trip
 import { Screen50TripMembers } from './components/screens/Screen50TripMembers';
+import { Screen124TripMembersInviteEmail } from './components/screens/Screen124TripMembersInviteEmail';
+import { Screen125TripMembersEmailInvited } from './components/screens/Screen125TripMembersEmailInvited';
+import { Screen126TripMembersPendingInvite } from './components/screens/Screen126TripMembersPendingInvite';
+import { Screen127TripMembersEmailConfirm } from './components/screens/Screen127TripMembersEmailConfirm';
 import { Screen22CalendarSyncModal } from './components/screens/Screen22CalendarSyncModal';
 import { Screen51TripEdit } from './components/screens/Screen51TripEdit';
 import { Screen52TripDelete } from './components/screens/Screen52TripDelete';
@@ -237,6 +244,9 @@ const workflowSections: WorkflowSection[] = [
       { index: 43, label: 'Undang — Hasil cari', component: <Screen43InviteSearchResults /> },
       { index: 84, label: 'Undang — Hasil cari · sebagian terundang', component: <Screen84InvitePartialInvited /> },
       { index: 44, label: 'Undang — Tidak ditemukan', component: <Screen44InviteSearchEmpty /> },
+      { index: 121, label: 'Undang — Email belum terdaftar', component: <Screen121InviteEmailNotRegistered /> },
+      { index: 122, label: 'Undang — Konfirmasi kirim email', component: <Screen122InviteEmailConfirm /> },
+      { index: 123, label: 'Undang — Email terkirim', component: <Screen123InviteEmailSent /> },
       { index: 45, label: 'Undang — Daftar terundang', component: <Screen45InviteSent /> },
     ],
   },
@@ -328,6 +338,10 @@ const workflowSections: WorkflowSection[] = [
       { index: 52, label: 'Modal — Hapus Perjalanan', component: <Screen52TripDelete /> },
       { index: 22, label: 'Modal — Google Calendar', component: <Screen22CalendarSyncModal /> },
       { index: 50, label: 'Daftar Anggota', component: <Screen50TripMembers /> },
+      { index: 124, label: 'Anggota — Cari email belum terdaftar', component: <Screen124TripMembersInviteEmail /> },
+      { index: 127, label: 'Anggota — Konfirmasi kirim email', component: <Screen127TripMembersEmailConfirm /> },
+      { index: 125, label: 'Anggota — Email terkirim', component: <Screen125TripMembersEmailInvited /> },
+      { index: 126, label: 'Anggota — Undangan pending', component: <Screen126TripMembersPendingInvite /> },
       { index: 51, label: 'Edit Info Perjalanan', component: <Screen51TripEdit /> },
     ],
   },

@@ -1,6 +1,7 @@
-import { Crown, Search } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { SearchInput } from '../search/SearchParts';
 import { C, AVATAR_COLORS, FONT } from '../colors';
-import { InviteUserRow, type InviteUser } from './InviteParts';
+import { EmailInvitedRow, InviteUserRow, type EmailInvite, type InviteUser } from './InviteParts';
 
 export type TripMember = {
   id: number;
@@ -63,10 +64,7 @@ export function TripMemberRow({ member, canRemove = false }: TripMemberRowProps)
         {member.initial}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: 0 }}>{member.name}</p>
-          {isCreator && <Crown size={12} color="#F59E0B" strokeWidth={2.5} />}
-        </div>
+        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: 0 }}>{member.name}</p>
         <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>{member.username}</p>
       </div>
       {showRemove ? (
@@ -107,71 +105,101 @@ export function TripMemberRow({ member, canRemove = false }: TripMemberRowProps)
   );
 }
 
+function PanelSectionLabel({ children }: { children: string }) {
+  return (
+    <p
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        color: C.muted,
+        margin: '0 0 10px',
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function PanelSectionDivider() {
+  return <div style={{ height: 1, backgroundColor: C.border, margin: '8px 0' }} />;
+}
+
 type TripMembersPanelProps = {
   members?: TripMember[];
   inviteResults?: InviteUser[];
+  emailInvites?: EmailInvite[];
   searchValue?: string;
   showInviteSearch?: boolean;
+  /** Konten undang tambahan (hasil email, konfirmasi, dll.) — di atas daftar anggota */
+  inviteExtra?: ReactNode;
   /** true = viewer adalah pembuat trip */
   isCreator?: boolean;
 };
 
-/** Panel undang + anggota — siapa saja bisa undang, hanya pembuat yang bisa keluarkan */
+/** Panel undang + anggota — undangan di atas, daftar anggota di bawah konten */
 export function TripMembersPanel({
   members = SAMPLE_TRIP_MEMBERS,
   inviteResults,
+  emailInvites,
   searchValue,
   showInviteSearch = false,
+  inviteExtra,
   isCreator = true,
 }: TripMembersPanelProps) {
-  return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', fontFamily: FONT }}>
-      {showInviteSearch && (
-        <>
-          <div style={{ padding: '0 0 12px', flexShrink: 0 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                backgroundColor: C.light,
-                borderRadius: 14,
-                padding: '12px 16px',
-                border: `1.5px solid ${searchValue ? C.coral : C.border}`,
-                boxShadow: searchValue ? `0 0 0 3px ${C.coralLight}` : 'none',
-              }}
-            >
-              <Search size={16} color={searchValue ? C.coral : C.muted} />
-              <span
-                style={{
-                  fontSize: 14,
-                  color: searchValue ? C.charcoal : C.mutedLight,
-                  fontWeight: searchValue ? 600 : 400,
-                  flex: 1,
-                }}
-              >
-                {searchValue ?? 'Undang teman — cari username / email...'}
-              </span>
-            </div>
-          </div>
+  const hasInviteResults = Boolean(inviteResults && inviteResults.length > 0);
+  const hasEmailInvites = Boolean(emailInvites && emailInvites.length > 0);
+  const hasInviteBlock = showInviteSearch || hasInviteResults || hasEmailInvites || Boolean(inviteExtra);
 
-          {inviteResults && inviteResults.length > 0 && (
-            <div style={{ flexShrink: 0, marginBottom: 16 }}>
-              <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
-                {inviteResults.length} hasil
-              </p>
-              {inviteResults.map((user) => (
-                <InviteUserRow key={user.id} user={user} cancelable={user.invited} />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', fontFamily: FONT }}>
+      {hasInviteBlock && (
+        <div style={{ flexShrink: 0 }}>
+          {showInviteSearch && (
+            <div style={{ marginBottom: hasInviteResults || hasEmailInvites || inviteExtra ? 16 : 0 }}>
+              <SearchInput value={searchValue} placeholder="Cari username atau email..." />
+            </div>
+          )}
+
+          {hasInviteResults && (
+            <div style={{ marginBottom: hasEmailInvites || inviteExtra ? 16 : 0 }}>
+              <PanelSectionLabel>Hasil · {inviteResults!.length}</PanelSectionLabel>
+              {inviteResults!.map((user, idx) => (
+                <InviteUserRow
+                  key={user.id}
+                  user={user}
+                  cancelable={user.invited}
+                  isLast={idx === inviteResults!.length - 1 && !hasEmailInvites && !inviteExtra}
+                />
               ))}
             </div>
           )}
-        </>
+
+          {hasEmailInvites && (
+            <div style={{ marginBottom: inviteExtra ? 16 : 0 }}>
+              <PanelSectionLabel>Undangan email · {emailInvites!.length}</PanelSectionLabel>
+              {emailInvites!.map((invite, idx) => (
+                <EmailInvitedRow
+                  key={invite.email}
+                  invite={invite}
+                  cancelable={isCreator}
+                  isLast={idx === emailInvites!.length - 1 && !inviteExtra}
+                />
+              ))}
+            </div>
+          )}
+
+          {inviteExtra}
+        </div>
       )}
 
-      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
-        {members.length} anggota
-      </p>
+      {hasInviteBlock && <PanelSectionDivider />}
+
       <div style={{ flexShrink: 0 }}>
+        <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
+          {members.length} anggota
+        </p>
         {members.map((member) => (
           <TripMemberRow key={member.id} member={member} canRemove={isCreator} />
         ))}

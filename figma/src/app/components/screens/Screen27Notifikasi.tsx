@@ -1,5 +1,5 @@
 import { C, AVATAR_COLORS, FONT } from '../colors';
-import { BottomNav } from '../BottomNav';
+import { HeaderTextButton, PageHeader, SafeAreaTop } from '../ui/ScreenChrome';
 
 type NotifAction = 'terima' | 'tolak' | 'vote';
 
@@ -90,36 +90,19 @@ export function Screen27Notifikasi() {
         position: 'relative',
       }}
     >
-      <div style={{ height: 60, flexShrink: 0 }} />
+      <SafeAreaTop />
 
-      <div style={{ padding: '6px 22px 16px', backgroundColor: C.light, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.5 }}>
-            Notifikasi
-          </h1>
-          <button
-            type="button"
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              fontSize: 13,
-              fontWeight: 700,
-              color: C.coral,
-              cursor: 'pointer',
-              fontFamily: FONT,
-              padding: 0,
-            }}
-          >
-            Tandai semua dibaca
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        title="Notifikasi"
+        background={C.light}
+        right={<HeaderTextButton>Tandai semua dibaca</HeaderTextButton>}
+      />
 
       <div
         style={{
           flex: 1,
           minHeight: 0,
-          padding: '0 16px 88px',
+          padding: '0 16px 24px',
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
@@ -272,8 +255,6 @@ export function Screen27Notifikasi() {
           </div>
         ))}
       </div>
-
-      <BottomNav active="home" />
     </div>
   );
 }

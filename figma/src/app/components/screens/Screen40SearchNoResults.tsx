@@ -1,7 +1,7 @@
 import { C, FONT } from '../colors';
 import { BottomNav } from '../BottomNav';
 import { SafeAreaTop } from '../ui/ScreenChrome';
-import { SearchBar, SearchCancelButton } from '../search/SearchParts';
+import { SearchBar } from '../search/SearchParts';
 import { SearchEmptyState } from '../ui/SearchEmptyState';
 
 /** Cari — query tidak menghasilkan hasil */
@@ -21,7 +21,7 @@ export function Screen40SearchNoResults() {
       <SafeAreaTop />
 
       <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
-        <SearchBar query="xyztravel99" focused rightAction={<SearchCancelButton />} />
+        <SearchBar query="xyztravel99" focused />
         <p style={{ fontSize: 12, color: C.muted, margin: '12px 0 0', fontWeight: 600 }}>0 hasil ditemukan</p>
       </div>
 

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import {
-  Search,
   Plus,
   Navigation,
   Heart,
@@ -17,6 +16,7 @@ import { BottomNav } from '../BottomNav';
 import { BottomSheet, SheetPrimaryButton } from '../ui/BottomSheet';
 import { ConfirmDialogModal, DESTRUCTIVE } from '../ui/ConfirmDialogModal';
 import { SearchEmptyState } from '../ui/SearchEmptyState';
+import { SearchInput } from '../search/SearchParts';
 import { TripTags } from '../ui/TripTags';
 import { FormField, FormInputBox } from '../ui/FormField';
 import { ERROR_RED, TRIP_DRAFT, TRIP_DATE_CANDIDATES } from './CreateTripParts';
@@ -285,26 +285,9 @@ function WishlistAddButton() {
 }
 
 function WishlistSearchBar({ value }: { value?: string }) {
-  const focused = Boolean(value);
   return (
     <div style={{ padding: '14px 22px 0', flexShrink: 0 }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          backgroundColor: C.light,
-          borderRadius: 14,
-          padding: '12px 16px',
-          border: focused ? `1.5px solid ${C.coral}` : `1px solid ${C.border}`,
-          boxShadow: focused ? `0 0 0 3px ${C.coralLight}` : 'none',
-        }}
-      >
-        <Search size={16} color={focused ? C.coral : C.muted} strokeWidth={2} />
-        <span style={{ fontSize: 14, color: focused ? C.charcoal : C.mutedLight, fontWeight: focused ? 600 : 400 }}>
-          {value ?? 'Cari aktivitas wishlist...'}
-        </span>
-      </div>
+      <SearchInput value={value} placeholder="Cari aktivitas wishlist..." />
     </div>
   );
 }
