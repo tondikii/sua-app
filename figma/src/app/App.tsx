@@ -183,7 +183,7 @@ const workflowSections: WorkflowSection[] = [
     subtitle: 'Lanjutkan dengan Google · Buat username unik (pengguna baru)',
     accent: C.teal,
     screens: [
-      { index: 3, label: 'Auth & Onboarding', component: <Screen3Auth /> },
+      { index: 3, label: 'Login', component: <Screen3Auth /> },
       { index: 4, label: 'Buat Username', component: <Screen4Username /> },
     ],
   },

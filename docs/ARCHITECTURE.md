@@ -82,11 +82,11 @@ sequenceDiagram
     GID-->>BE: Verified claims { sub, email, name, picture }
     BE->>BE: Upsert user record in `users` table
     alt New User (no username)
-        BE-->>App: 200 { app_token, is_new_user: true }
+        BE-->>App: 200 { access_token, is_new_user: true }
         App->>BE: POST /v1/auth/complete-registration  { username }
-        BE-->>App: 200 { app_token, user }
+        BE-->>App: 200 { user }
     else Returning User
-        BE-->>App: 200 { app_token, user }
+        BE-->>App: 200 { access_token, is_new_user: false, user }
     end
 ```
 
@@ -229,19 +229,20 @@ Status vs **125 layar Figma** (`docs/FIGMA.md`, `docs/WORKFLOW.md`):
 
 | Domain UI | Layar (§) | Schema DB | API | Catatan |
 |-----------|-----------|-----------|-----|---------|
-| Auth + username | §2 (3–4) | ✅ `users` | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` | — |
-| Beranda tabs + undangan | §3 (5–8) | ✅ | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id` | Tab Undangan = endpoint terpisah |
-| Notifikasi | §3 (9) | ✅ `notifications` | ✅ CRUD read + unread-count | Tipe `follow` ditunda post-MVP |
-| Pencarian + profil publik | §4 (10–13) | ✅ | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` | Riwayat search = lokal |
-| Profil + edit | §5 (15–18) | ✅ | ✅ `GET/PUT /users/me` | 🔜 social URL, avatar upload, `DELETE /users/me` |
+| Onboarding (splash + carousel) | §1 (1–2) | — | — | Flag lokal `has_completed_onboarding`; copy `Screen2EduOnboarding.tsx` `SLIDES[]` |
+| Auth + username | §2 (3–4) | ✅ `users` | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` | Label App.tsx: *Login*, *Buat Username*; 🔜 validasi `_` (BE saat ini `alphanum`); email login post-MVP |
+| Beranda tabs + undangan | §3 (5–8) `App.tsx` labels 5–8 | ✅ | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id` | `HomeBerandaParts.tsx`; empty hanya Screen6; 🔜 trip dates di invitation summary |
+| Notifikasi | §3 (9) label *Notifikasi* | ✅ `notifications` | ✅ CRUD read + unread-count | `Screen9Notifikasi` full-page no BottomNav; 🔜 enriched DTO; `invite` payload kosong |
+| Pencarian + profil publik | §4 (10–14) labels App.tsx | ✅ | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` | `SearchParts.tsx`; riwayat lokal; Screen13–14 no BottomNav |
+| Profil + pengaturan | §5 (15–20) | ✅ | ✅ `GET/PUT /users/me` | `ProfileParts.tsx`; Keluar terpisah dari section Akun; 🔜 website, avatar, `DELETE /users/me` |
 | Create trip + undang | §6 (21–41) | ⚠️ partial | ⚠️ partial | 🔜 `is_all_day`, `start_time`, `end_time`; batalkan undangan |
-| Itinerary / aktivitas | §7 (42–55) | ⚠️ thin | ⚠️ thin | 🔜 times, kind, cover, multi-ref, `PUT` edit |
-| Voting multi-tipe | §8 (56–75) | ❌ no `trip_polls` | ⚠️ date only | Tanggal via `candidates`; Aktivitas/Lainnya → M5.2/M9 |
-| Chat text | §9 (76, 86–88) | ✅ text + soft delete | ✅ GET/POST/DELETE messages | Hapus hanya pesan sendiri (`Screen88`); `Screen87` tanpa Hapus |
-| Chat media + reply | §9 (77–85, 89–92) | ❌ | ❌ | 🔜 `media_type`, upload, `reply_to_id`; reply quote UI di preview |
-| Media tab + cover | §10 (93–94) | ❌ no `trip_documents` | ❌ | 🔜 upload, list, set cover |
-| Kelola trip | §11 (95–103) | ✅ partial | ⚠️ partial | 🔜 list members, remove member, cancel invite |
-| Wishlist | §12 (104–117) | ⚠️ thin | ✅ CRUD basic | 🔜 times, location, notes, convert atomic |
+| Itinerary / aktivitas | §7 (42–55) | ⚠️ thin | ⚠️ thin | 🔜 times, kind, cover, multi-ref, `PUT` edit; UI: gap timeline, 4 time states, 32 cover icons |
+| Voting multi-tipe | §8 (56–75) | ❌ no `trip_polls` | ⚠️ date only | Tanggal via `candidates`; Aktivitas/Lainnya → M5.2c; UI: collapse hub, 3 status, max 1/jenis |
+| Chat text | §9 (76, 86–88) | ✅ text + soft delete | ✅ GET/POST/DELETE messages | Hapus hanya pesan sendiri (`Screen88ChatLongPressOwn`); `Screen87` tanpa Hapus |
+| Chat media + reply | §9 (77–85, 89–92) | ❌ | ❌ | 🔜 `message_kind`, `media_url`, `reply_to_id`; UI: composer 78–81, quote 89–92 |
+| Media tab + cover | §10 (93–94) | ❌ no `trip_documents` | ❌ | 🔜 upload, list, set cover, `from_chat` badge |
+| Kelola trip | §11 (95–103) | ✅ partial | ⚠️ partial | 🔜 `GET …/members`, remove member, cancel/reinvite invite |
+| Wishlist | §12 (104–117) | ⚠️ thin CRUD | ✅ CRUD basic | 🔜 times, location, notes, thumbnail, convert atomic |
 | Google Calendar | §11 (96) | — | ❌ | M11 |
 
 Legenda: ✅ selaras desain · ⚠️ ada tapi field/kontrak kurang · ❌ belum ada · 🔜 target M5.2 kecuali disebut lain.
@@ -389,7 +390,7 @@ CREATE TABLE trips (
     end_date        DATE,
     is_public       BOOLEAN NOT NULL DEFAULT FALSE,
     cover_image_url TEXT,              -- M5.1; default resolver di service layer
-    voting_deadline TIMESTAMPTZ,       -- M5.1; set saat create dengan >1 kandidat; clear on lock
+    voting_deadline TIMESTAMPTZ,       -- M5.1; set saat create mode kandidat; clear on lock; override form 🔜 M5.2
     deleted_at      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -577,7 +578,27 @@ CREATE INDEX idx_notifications_user_unread
     WHERE is_read = FALSE;
 ```
 
-> **UI**: Tab Beranda bell → `Screen9Notifikasi`. Badge unread via `GET /v1/notifications/unread-count`.
+> **UI**: Tab Beranda bell → `Screen9Notifikasi`. Badge unread via `GET /v1/notifications/unread-count` → `{unread_count}`. Header lonceng cap tampilan **9+**.
+
+**Mapping tipe → UI Figma (`Screen9Notifikasi`)**:
+
+| `notification_type` | Copy UI (template) | Aksi inline |
+|---------------------|----------------------|-------------|
+| `invite` | `{actor} mengundangmu ke {trip}` | Terima · Tolak |
+| `voting_deadline` | `Voting Tanggal {trip} segera berakhir.` | Vote Sekarang → |
+| `destination_update` | `{actor} menambahkan aktivitas {dest_name} di {trip}.` | Tap → itinerary |
+
+> `follow` enum ada di migrasi tetapi **post-MVP**. Label *"Voting Destinasi"* di Figma = voting aktivitas — butuh `trip_polls` + payload `poll_type` (M5.2c); sementara `voting_deadline` hanya untuk voting tanggal trip.
+
+**Payload contoh**:
+
+```json
+// destination_update
+{ "dest_name": "Sunrise di Puncak Jayagiri" }
+
+// voting_deadline — saat ini kosong {}; target M5.2c: { "poll_type": "tanggal"|"destinasi"|"lainnya" }
+{}
+```
 
 ---
 
@@ -696,7 +717,7 @@ CREATE TABLE trip_poll_votes (
     PRIMARY KEY (poll_id, user_id)
 );
 ```
-> Auto-create poll `tanggal` saat trip create dengan >1 kandidat. UI: max 1 Tanggal + 1 Aktivitas (`destinasi`) aktif (`VotingParts.tsx`). **Voting tanggal** di form sheet tidak punya field judul — judul tetap di card pipeline (`Tanggal Perjalanan`); aktivitas/lainnya punya `title` di `trip_polls`.
+> Auto-create poll `tanggal` saat trip create mode kandidat (§6). UI: max **1 poll aktif per jenis** (`VotingTypeOptionList` disabled + *Sedang berlangsung*). **Voting tanggal** di form sheet tidak punya field judul — judul card pipeline tetap **Tanggal Perjalanan**; aktivitas/lainnya punya `title` di `trip_polls`.
 
 #### `trip_message_reads` 🔜 M5.2d *(badge unread chat — §9)*
 ```sql
@@ -813,6 +834,105 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**.
 
 #### 4.3.1 Request/Response Contracts (Implemented)
 
+**`POST /v1/auth/google`** — §2 login (`Screen3Auth`):
+
+```json
+// Request
+{ "id_token": "<Google ID token>" }
+
+// Response (new user)
+{ "access_token": "...", "is_new_user": true }
+
+// Response (returning user)
+{ "access_token": "...", "is_new_user": false, "user": { ... } }
+```
+
+> Upsert `users` dari klaim Google (`sub`, `email`, `name`, `picture`). Pengguna baru: `username` = placeholder UUID, `is_public=false` sampai `complete-registration`.
+
+**`POST /v1/auth/complete-registration`** — §2 username (`Screen4Username`):
+
+```json
+// Request (JWT required)
+{ "username": "budi_santoso" }
+
+// Response
+{ "user": { "id", "username", "name", "email", ... } }
+```
+
+| Aturan username (desain Figma) | Status BE |
+|----------------------------------|-----------|
+| Huruf, angka, underscore (`_`) | 🔜 M5.2 — saat ini `alphanum` (tanpa `_`) |
+| Min 3, max 30 karakter | ✅ |
+| Unik (cek via `GET /check-username`) | ✅ |
+
+**`GET /v1/users/check-username?username=`** — validasi real-time:
+
+```json
+{ "available": true }
+```
+
+**`GET /v1/notifications/?cursor=`** — §3 notifikasi (`Screen9Notifikasi`):
+
+```json
+[
+  {
+    "id": "uuid",
+    "type": "invite",
+    "actor_id": "uuid",
+    "trip_id": "uuid",
+    "payload": {},
+    "is_read": false,
+    "created_at": "2026-07-07T10:00:00Z"
+  }
+]
+```
+
+> Mobile hydrate `actor_id` → nama/avatar; `trip_id` → nama trip. 🔜 M5.2: embed `actor` + `trip` summary di respons (selaras kartu Figma tanpa N+1 fetch).
+
+**Pagination**: `?cursor=<RFC3339>` — `created_at` item terakhir. Default limit 20, max 100.
+
+**Terima/Tolak dari notif `invite`**: payload saat ini `{}` — FE harus lookup `invitation.id` via `GET /v1/trips/invitations` where `trip.id == notification.trip_id`. 🔜 M5.2: `payload.invitation_id`.
+
+**Mark read**: `PUT /v1/notifications/:id/read` → **204** No Content. `PUT /read-all` → **204**.
+
+**`GET /v1/trips/invitations`** — §3 tab Undangan (`Screen8HomeUndangan`):
+
+```json
+[
+  {
+    "id": "uuid",
+    "trip": { "id": "uuid", "name": "Raja Ampat Diving Trip", "cover_image_url": "https://..." },
+    "inviter": { "id": "uuid", "name": "Rina", "username": "rina_travel", "avatar_url": null },
+    "method": "username",
+    "status": "pending",
+    "created_at": "..."
+  }
+]
+```
+
+> 🔜 M5.2: tambah `start_date`, `end_date`, `status` pada objek `trip` untuk format `dateRange` di `InvitationCard`.
+
+**`GET /v1/trips/?tab=upcoming|completed`** — §3 tab Mendatang/Selesai (`Screen5Home`, `Screen7HomeSelesai`):
+
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Lombok Weekend Escape",
+    "tags": ["#Pantai", "#Alam"],
+    "status": "voting_pending",
+    "start_date": null,
+    "end_date": null,
+    "cover_image_url": "https://...",
+    "voting_deadline": "2026-06-18T00:00:00Z",
+    "participant_count": 4,
+    "participants_preview": [{ "id", "name", "username", "avatar_url" }]
+  }
+]
+```
+
+> **Pagination**: `?tab=upcoming|completed` · `?cursor=<UUID>` (id trip terakhir) · default limit 20. `status=voting_pending` → FE tampilkan `"Tanggal sedang divoting"`.
+
 **`POST /v1/trips/`** — selaras §6 create trip:
 
 ```json
@@ -829,7 +949,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` kecuali disebut **Public**.
 | Mode | Body | DB effect |
 |------|------|-----------|
 | Tanggal pasti | `start_date` + `end_date`, `candidates` kosong | `status=fixed` |
-| Multi-kandidat | `candidates[{start_date,end_date}]` (2–3), dates null | `status=voting_pending`, rows di `trip_date_candidates`, `voting_deadline` auto-set |
+| Kandidat tanggal | `candidates[{start_date,end_date}]` (**1–3**), dates null | `status=voting_pending`, rows di `trip_date_candidates`, `voting_deadline` default +7 hari (BE); override via form 🔜 M5.2 |
 
 > 🔜 M5.2: tambah `is_all_day`, `start_time`, `end_time`, `voting_deadline` optional override.
 
@@ -859,6 +979,10 @@ Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 125 
 
 | Priority | Method | Path | Desain | § |
 |----------|--------|------|--------|---|
+| P0 | — | `GET /v1/notifications` | Enriched: embed `actor`, `trip` summary (`Screen9`) | §3 |
+| P0 | — | `invite` notification payload | Tambah `invitation_id` untuk Terima/Tolak dari `Screen9` | §3 |
+| P0 | — | `GET /v1/trips/invitations` | Extend `trip` summary: `start_date`, `end_date`, `status` (`Screen8`) | §3 |
+| P0 | — | `complete-registration` + `check-username` | Username regex `^[a-zA-Z0-9_]{3,30}$` (`Screen4Username`) | §2 |
 | P0 | PUT | `/v1/trips/:tripId/destinations/:id` | Edit aktivitas (`Screen54`) | §7 |
 | P0 | GET | `/v1/trips/:tripId/members` | Daftar anggota + pending (`Screen97`) | §11 |
 | P0 | DELETE | `/v1/trips/:tripId/invitations/:id` | Batalkan undangan pending (`Screen41`) | §6, §11 |
@@ -879,8 +1003,8 @@ Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 125 
 | WORKFLOW § | Primary endpoints (✅ = implemented) |
 |------------|--------------------------------------|
 | §1 Onboarding | — (local flag) |
-| §2 Auth | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username` |
-| §3 Beranda | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id`, ✅ notifications |
+| §2 Auth | ✅ `POST /auth/google`, `complete-registration`, `GET /check-username`; 🔜 username `_` |
+| §3 Beranda | ✅ `GET /trips?tab=`, `GET /trips/invitations`, `PUT …/invitations/:id`, ✅ notifications; 🔜 invitation dates, notification enrich, trip times di card |
 | §4 Pencarian | ✅ `GET /users/search`, `GET /:username`, `GET /:username/trips` |
 | §5 Profil | ✅ `GET/PUT /users/me`, `GET /:username/trips` (own username); 🔜 `DELETE /users/me` |
 | §6 Create + undang | ✅ `POST /trips`, `POST …/invitations`; 🔜 trip times, 🔜 cancel invite |
@@ -890,7 +1014,7 @@ Endpoint berikut **belum ada** di `router.go` tetapi **wajib** untuk parity 125 
 | §10 Media | 🔜 documents + cover |
 | §11 Kelola | ✅ `PUT/DELETE /trips/:id`; 🔜 members, 🔜 calendar M11 |
 | §12 Wishlist | ✅ CRUD wishlists; 🔜 convert atomic |
-| §13 System | — (client patterns) |
+| §13 System | — (client patterns) | Skeleton, toast, offline, media viewer, tokens; dark mode M12 |
 
 #### 4.3.4 Route Tree (Reference)
 
@@ -970,15 +1094,16 @@ MVP fokus pada *trip planner* — tidak ada sistem follow/follower. Pencarian us
 | `completed` | `end_date IS NOT NULL AND end_date < CURRENT_DATE` |
 | Invitations | Separate endpoint `GET /v1/trips/invitations` (unchanged) |
 
-**Voting deadline** (`trips.voting_deadline`, set when `candidates.length > 1`):
+**Voting deadline** (`trips.voting_deadline`, set saat create dengan `candidates.length >= 1`):
 
-- Default: `LEAST(created_at + 14 days, MIN(candidates.start_date) - 3 days)`, clamped ≥ `created_at + 7 days`
+- BE saat ini: default `created_at + 7 days` (service layer)
+- Target M5.2: override opsional dari form *Tenggat voting tanggal* (`Screen28`–`Screen32`); formula dokumentasi lama: `LEAST(created_at + 14 days, MIN(candidates.start_date) - 3 days)`, clamped ≥ `created_at + 7 days`
 - Cleared when trip locks (`status = fixed`)
 - Background job sends `voting` notifications at H-7d, H-1d, H-1h before deadline to participants who have not voted
 
 **Trip detail tab counters** (`TripDetailTabs`):
-- Itinerary → aktivitas count
-- Voting → active polls count (tab hidden when 0)
+- Itinerary → aktivitas count (badge hidden jika 0)
+- Voting → poll count (**badge selalu tampil**, termasuk 0)
 - Chat → **unread messages only** (`trip_messages` read cursor per user)
 - Media → `trip_documents.length` (**badge always shown, including 0**)
 

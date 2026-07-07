@@ -52,12 +52,26 @@ Panduan untuk AI agents & developer saat mengedit bundle React di `figma/`.
 
 4 slide carousel — copy selaras `docs/BRIEF.md` / `docs/WORKFLOW.md §1`:
 
-1. Realisasikan Wacana Liburanmu  
+1. *Selamat datang* — Realisasikan Wacana Liburanmu  
 2. Sepakat Jadwal Susah Banget → Vote Bareng, Hasil Jelas  
-3. Rencana Berserakan → Timeline Harian yang Jelas (+ preview itinerary multi-hari)  
-4. Chat campur aduk → Ruang Diskusi Khusus Trip  
+3. Rencana Berserakan, Urutan Nggak Jelas → Timeline Harian yang Jelas (+ preview itinerary multi-hari)  
+4. Chat Trip Kecampur → Ruang Diskusi Khusus Trip  
 
-Sticky pagination dots + fixed CTA; konten scrollable full-screen.
+Sticky pagination dots (klikable) + fixed CTA; konten scrollable full-screen; tanpa skip.
+
+## Autentikasi (`Screen3Auth`, `Screen4Username`)
+
+- MVP: **Lanjutkan dengan Google** saja — tombol email post-MVP (sembunyikan/nonaktifkan di mobile).
+- Username: `a-z`, `0-9`, `_`, min 3 max 30 — gap BE: validator `alphanum` belum izinkan `_` (M5.2).
+- **Agent**: lihat `docs/WORKFLOW.md` → Panduan Implementasi §1–§3.
+
+## Beranda (`Screen5Home`–`Screen9Notifikasi`)
+
+- Shared: `home/HomeBerandaParts.tsx` — jangan duplikasi layout di layar individual.
+- Tab counter selalu tampil; `TripCard dimmed` hanya tab Selesai; `InvitationCard` ≠ `TripCard`.
+- Lonceng badge cap **9+**; notifikasi full-page dengan aksi inline per tipe.
+- `TRIP_DATE_PENDING` = `"Tanggal sedang divoting"`.
+- Hydrate `actor_id`/`trip_id`; Terima/Tolak notif invite via lookup `GET /invitations` (gap `invitation_id` M5.2).
 
 ## Sebelum commit perubahan layar
 

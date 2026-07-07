@@ -5,12 +5,11 @@
 Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun *itinerary*, dan berkolaborasi dalam satu platform terpusat.
 
 ## ✨ Fitur Utama (MVP)
-* **Manajemen Perjalanan:** Susun itinerary (aktivitas berjadwal + waktu), voting multi-tipe, media/cover perjalanan, dan kolaborasi grup.
-* **Kolaborasi & Chat:** Undang teman (username/email — perlakuan sama) dan diskusi di grup chat internal perjalanan.
-* **Profil & Pencarian:** Profil pengguna dengan grid perjalanan publik; cari user untuk undangan trip.
-* **Wishlist Aktivitas:** Simpan aktivitas impian (waktu, Maps, prioritas) — filter/sort, lalu **Jadikan Perjalanan** untuk konversi ke trip + itinerary.
 
-*(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md)).*
+* **Manajemen Perjalanan:** Hub terpusat perjalanan grup · beranda · buat trip · voting jadwal · itinerary · chat & media · undang teman.
+* **Wishlist Aktivitas:** Tabung ide aktivitas impian · filter & prioritas · **Jadikan Perjalanan** jadi trip siap dijalankan.
+
+*(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md) dan [BRIEF](docs/BRIEF.md).)*
 
 ## ⚙️ Tech Stack
 * **Arsitektur**: Monorepo
@@ -33,12 +32,12 @@ Registry layar dikelompokkan **§1–§13** di `figma/src/app/App.tsx` (selaras 
 Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
-2. [Product Requirements Document (PRD)](docs/PRD.md) - Spesifikasi lengkap MVP.
-3. [Workflow](docs/WORKFLOW.md) - Alur kerja aplikasi selaras dengan 125 layar Figma (§1–§13).
-4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur (Checklist UAT).
-5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Skema DB (§3), **35 endpoint implemented** + gap M5.2 (§4.3), pola Go/KMP.
-6. [Milestones & Roadmap](docs/MILESTONES.md) - M0–M5.1 ✅ · **M5.2 design parity BE** 🔜 · M6+ mobile.
-7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory (125 layar), gap API, panduan AI agent, dan mapping ke workflow.
+2. [Product Requirements Document (PRD)](docs/PRD.md).
+3. [Workflow](docs/WORKFLOW.md).
+4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur.
+5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Arsitektur DB, Backend, dan Mobile.
+6. [Milestones & Roadmap](docs/MILESTONES.md).
+7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory, penghubung ke workflow.
 
 ## 🚀 Memulai Pengerjaan
 

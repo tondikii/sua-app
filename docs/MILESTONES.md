@@ -156,7 +156,7 @@
 
 **Tujuan**: Menutup gap audit Figma sebelum mobile M6–M10.
 
-**Referensi**: `docs/FIGMA.md`, `docs/PRD.md §3`, `docs/ACCEPTANCE_CRITERIA.md §3`
+**Referensi**: `docs/FIGMA.md`, `docs/PRD.md §2`, `docs/ACCEPTANCE_CRITERIA.md §2`
 
 ### Checklist
 
@@ -194,7 +194,7 @@
 
 ## M5.2 — Backend: Design Parity (Schema & API) 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M5.2. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.0.1`, `§3.5`, `§4.3.2`, `docs/WORKFLOW.md`, `docs/FIGMA.md § Kebutuhan API`. Close all design gaps before mobile M6."*
+**AI Prompt**: *"Implement M5.2 for §1–§3 gaps first. Read `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3**, `docs/ARCHITECTURE.md §4.3.2`, `docs/MILESTONES.md`. Then `docs/FIGMA.md § Kebutuhan API` for remaining gaps."*
 
 **Tujuan**: Menyelaraskan **database + endpoint** dengan **125 layar Figma** (`docs/WORKFLOW.md`). M5.1 menutup gap dasar; M5.2 menutup gap fitur penuh (itinerary enriched, media, polls, wishlist convert, kelola trip).
 
@@ -204,6 +204,7 @@
 
 ### Checklist Schema (migrasi 000016+)
 
+- [ ] Username validator: izinkan underscore `^[a-zA-Z0-9_]{3,30}$` selaras `Screen4Username` (§2)
 - [ ] `trips`: +`is_all_day`, `start_time`, `end_time` (§6)
 - [ ] `trip_destinations`: enrich aktivitas — times, kind, description, ref_links JSONB, cover_*, thumbnail (§7)
 - [ ] `wishlists`: +`start_time`, `end_time`, `location_label`, `notes`, `thumbnail_url` (§12)
@@ -216,6 +217,10 @@
 ### Checklist Endpoints
 
 **P0 — blocking mobile M8–M10**
+- [ ] Extend `GET /v1/trips/invitations` — `trip` summary +`start_date`, `end_date`, `status` (§3 `Screen8`)
+- [ ] Enriched `GET /v1/notifications` — embed `actor` + `trip` summary (§3 `Screen9`)
+- [ ] Notif `invite`: tambah `invitation_id` ke `payload` (Terima/Tolak dari `Screen9`)
+- [ ] Username validator: `^[a-zA-Z0-9_]{3,30}$` (§2 `Screen4`)
 - [ ] `PUT /v1/trips/:tripId/destinations/:id` — edit aktivitas
 - [ ] `GET /v1/trips/:tripId/members` — anggota + pending invites
 - [ ] `DELETE /v1/trips/:tripId/invitations/:id` — batalkan undangan
@@ -243,7 +248,7 @@
 
 ## M6 — Mobile: KMP Shared Module 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M6. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §5`. Implement the complete KMP shared module."*
+**AI Prompt**: *"Implement M6 shared module. Read `docs/ARCHITECTURE.md §5`, `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3** (auth DTO, trip list, notifications). Mirror `§4.3.1` contracts exactly."*
 
 **Referensi**: `docs/ARCHITECTURE.md §5`
 
@@ -295,16 +300,16 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 ## M7 — Android: Auth & Onboarding 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M7. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §1, §2, §13`, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md`. Build the Android Auth & Onboarding screens."*
+**AI Prompt**: *"Implement M7. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3** + §1–§2, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md` §1–§2. Build Android Auth & Onboarding screens matching `App.tsx` registry id 1–2."*
 
-**Referensi Figma**: `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username` (`figma/src/app/components/screens/`)
+**Referensi Figma**: `App.tsx` workflowSections id 1–2 · `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username` (`figma/src/app/components/screens/`)
 
 ### Checklist
-- [ ] `ui/theme/` — Color.kt, Typography.kt, Theme.kt (tokens dari `figma/src/app/components/colors.ts`)
-- [ ] `SplashScreen` — logo coral + loading (`Screen1Splash`)
-- [ ] `OnboardingScreen` — carousel **4 slide** (intro + 3 masalah/solusi); hanya saat first install (`Screen2EduOnboarding`)
-- [ ] `SignInScreen` — logo + tombol "Lanjutkan dengan Google" (`Screen3Auth`)
-- [ ] `UsernameSetupScreen` — validasi real-time, error duplikat (`Screen4Username`)
+- [ ] `ui/theme/` — Color.kt, Typography.kt, Theme.kt (tokens dari `figma/src/app/components/colors.ts`; accent §1 coral, §2 teal)
+- [ ] `SplashScreen` — kompas + gradient coral + tagline (`Screen1Splash`)
+- [ ] `OnboardingScreen` — carousel **4 slide** dengan copy persis `SLIDES[]`; hanya first install (`Screen2EduOnboarding`)
+- [ ] `SignInScreen` — hero + *Mulai Perjalananmu* + **Lanjutkan dengan Google**; **sembunyikan** Masuk dengan Email (`Screen3Auth`)
+- [ ] `UsernameSetupScreen` — hint underscore, validasi real-time, error duplikat (`Screen4Username`)
 - [ ] Navigasi: Splash → (pertama) Onboarding → SignIn → (baru) UsernameSetup → Home; lama → SignIn → Home
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
@@ -312,19 +317,94 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 ## M8 — Android: Home & Trip UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M8. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §3, §6–§11, §13`, `docs/ACCEPTANCE_CRITERIA.md §2, §5`, `docs/FIGMA.md`. Build the Android Home and Trip screens."*
+**AI Prompt**: *"Implement M8. Start with WORKFLOW §3 (`App.tsx` id: 3, screens 5–9). Read `docs/WORKFLOW.md` → Panduan Implementasi §1–§3 + §3 Beranda, `docs/ACCEPTANCE_CRITERIA.md §2`, `figma/src/app/components/home/HomeBerandaParts.tsx`, `Screen9Notifikasi.tsx`. API: `docs/ARCHITECTURE.md §4.3.1`."*
 
-**Referensi Figma**: `Screen5Home`, `Screen22Create`, `Screen43Destinations`, `Screen45BottomSheetDestinasi`, `Screen6EmptyBeranda`, `Screen33FormValidation`, `Screen51DestinationDetail`, `Screen31MultiDatePicker`, `Screen9Notifikasi`, `Screen118SkeletonLoading`, `Screen119ToastComponents`, `Screen120Error`
+**Referensi Figma §3**: `App.tsx` id: 3 · `HomeBerandaParts.tsx`, `Screen5Home`, `Screen6EmptyBeranda`, `Screen7HomeSelesai`, `Screen8HomeUndangan`, `Screen9Notifikasi`, `EmptyTripsState.tsx`, `TripTags.tsx`
 
-### Checklist
-- [ ] Bottom Navigation Bar — Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`)
-- [ ] `HomeScreen` — lonceng notifikasi (badge) + tabs Mendatang/Selesai/Undangan
-- [ ] `TripCard` — cover image, judul, tags, tanggal, stacked avatars
-- [ ] `CreateTripSheet` — modal full-screen: nama, tags, kalender, tambah kandidat tanggal
-- [ ] `TripDetailScreen` — tab **Itinerary · Voting · Chat · Media**
-- [ ] `MediaScreen` — unggah foto/video, set cover dari media (`Screen93TripDocuments`)
-- [ ] `ItineraryTab` + `ActivityCard` + `AddActivitySheet` + `ActivityDetailSheet`
-- [ ] `NotificationScreen` — tipe invite / voting (multi-tipe) / aktivitas
+**Referensi Figma (lanjutan trip)**: `Screen22Create`, `Screen43Destinations`, `Screen45BottomSheetDestinasi`, `Screen33FormValidation`, `Screen51DestinationDetail`, `Screen31MultiDatePicker`, `Screen118SkeletonLoading`, `Screen119ToastComponents`, `Screen120Error`
+
+### Checklist — Beranda §3 (prioritas pertama)
+- [ ] `BottomNav` — Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`)
+- [ ] `HomeScreen` shell: `HomePageShell` + safe area 60 + `BottomNav` active=home
+- [ ] `HomeHeader` *Perjalananku* + `NotificationBell` (9+ cap) → push `NotificationScreen` (no bottom nav)
+- [ ] `HomeTabs` Mendatang/Selesai/Undangan + counter badge always visible
+- [ ] `TripCard` — cover 150, `TripTags` max 3 + overflow, calendar row, avatars -9px overlap; prop `dimmed` for Selesai
+- [ ] `EmptyTripsState` — copy exact + CTA **Buat Perjalanan Baru** (Mendatang empty only)
+- [ ] `InvitationCard` — overlay @inviter, Terima 40px coral / Tolak light
+- [ ] `NotificationScreen` — 4 notification types, inline actions, mark all read, hydrate actor/trip UUIDs
+- [ ] Parallel fetch on mount: unread-count + 3 tab endpoints (see WORKFLOW Panduan §3)
+- [ ] `dateRange` formatter: `TRIP_DATE_PENDING` + fixed date/time patterns
+
+### Checklist — Create Trip §6 (setelah Beranda)
+
+**Referensi Figma §6**: `App.tsx` id: 6 · `CreateTripParts.tsx`, `InviteParts.tsx`, `Screen21`–`Screen41`
+
+- [ ] `CreateTripSheet` — modal full-screen (`CreateTripShell`): nama, tags, kalender, waktu, tombol kandidat
+- [ ] Mode A fixed: state 21–24; `POST /trips` dengan `start_date`/`end_date`
+- [ ] Mode B kandidat: switch via *+ Tambah Kandidat*; simpan 1–3 rentang; state 25–34
+- [ ] Validasi sekaligus — copy persis `Screen24` / `Screen33`
+- [ ] `InviteAfterCreateScreen` — flow 35–41; search username/email; tanpa saran teman
+- [ ] CTA **Masuk ke Perjalanan** navigasi ke detail trip
+
+### Checklist — Trip Detail §7 Itinerary (setelah §6)
+
+**Referensi Figma §7**: `App.tsx` id: 7 · `ItineraryParts.tsx`, `ActivityParts.tsx`, `Screen42`–`Screen55`
+
+- [ ] `TripDetailScreen` shell — `TripDetailPageShell` + 4 tab + counter rules
+- [ ] `ItineraryTab` — `ItineraryTabBody`: multi-hari tabs, gap rows, time states (`resolveItineraryTimeState`)
+- [ ] `ItineraryEmptyState` + CTA **Buat Aktivitas Pertama** (`Screen42`)
+- [ ] `ActivityFormSheet` — field order + CTA Simpan Aktivitas / Simpan Perubahan
+- [ ] Maps link resolve + auto cover (`Screen46`/`47`)
+- [ ] `ActivityCoverPickerSheet` — media trip / galeri / 32 icon (`Screen49`/`50`)
+- [ ] `ActivityDetailSheet` — 3 cover variants (`Screen51`–`53`)
+- [ ] `ActivityItemMenuSheet` — dropdown Edit/Hapus (`Screen55`)
+- [ ] API: `GET/POST/DELETE /destinations`; `PUT` edit 🔜 M5.2
+
+### Checklist — Voting §8 (M9)
+
+**Referensi Figma §8**: `App.tsx` id: 8 · `VotingParts.tsx`, `CreateVotingSheetParts.tsx`, `Screen56`–`Screen75`
+
+- [ ] `VotingTab` — `VotingCollapseSection` per jenis + `VotingCandidateList`
+- [ ] Status pipeline: active / ended / expired; menu ⋮ variant active vs ended
+- [ ] `CreateVotingFlow` — Screen64→65 (aktivitas); Screen58→59–63 (tanggal)
+- [ ] `VotingLockedModal` — 3 variant (tanggal/aktivitas/lainnya)
+- [ ] `VotingDeleteModal` — konfirmasi hapus
+- [ ] Date vote/lock via existing candidates API; polls CRUD 🔜 M5.2c
+
+### Checklist — Chat §9 (M9)
+
+**Referensi Figma §9**: `App.tsx` id: 9 · `ChatParts.tsx`, `Screen76`–`Screen92`
+
+- [ ] `ChatScreen` — `TripDetailChatLayout` + `ChatThreadView` (`Screen76`)
+- [ ] `ChatMessageBubble` — `text` / `photo` / `video` + optional `ChatReplyQuote`
+- [ ] `ChatAttachMenu` + `ChatMediaComposer` (`Screen77`–`81`)
+- [ ] Media bubbles sent/received (`Screen82`–`85`)
+- [ ] `ChatEmptyState` — input disabled (`Screen86`)
+- [ ] `ChatLongPressView` — menu own vs other (`Screen87`–`88`)
+- [ ] Reply 4 skenario (`Screen89`–`Screen92`)
+- [ ] API text: GET/POST/DELETE messages; media + `reply_to_id` 🔜 M5.2e; read cursor 🔜 M5.2d
+
+### Checklist — Media §10 (M9)
+
+**Referensi Figma §10**: `App.tsx` id: 10 · `DocumentParts.tsx`, `Screen93`–`Screen94`
+
+- [ ] `MediaScreen` — `DocumentGrid` 3 kolom + tile Unggah
+- [ ] Badge Cover + **Jadikan Cover** (`Screen93`)
+- [ ] Badge Chat `fromChat` (`Screen94`)
+- [ ] Tab counter Media selalu tampil
+- [ ] API: `trip_documents` CRUD + `PUT …/cover` 🔜 M5.2b
+
+### Checklist — Kelola Trip §11 (M9)
+
+**Referensi Figma §11**: `App.tsx` id: 11 · `TripDetailMenuSheet`, `TripMemberParts`, `Screen95`–`Screen103`
+
+- [ ] `TripDetailMenuSheet` — 4 item menu ⋮
+- [ ] `TripMembersScreen` + pending states (`Screen97`–`102`)
+- [ ] `TripDeleteModal` · `CalendarEventModal` · edit trip (`Screen95`–`96`, `103`)
+- [ ] Creator vs member permissions (Keluarkan / undang)
+- [ ] API members + invitations 🔜 M5.2; calendar M11
+
+### Checklist — Trip Detail (polish)
 - [ ] Empty, skeleton, toast, error states
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
@@ -332,40 +412,59 @@ mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
 
 ## M9 — Android: Kolaborasi & Chat UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §8–§9, §11`, `docs/ACCEPTANCE_CRITERIA.md §6`, `docs/FIGMA.md`. Build the Android Collaboration and Chat screens."*
+**AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §8–§11`, `docs/ACCEPTANCE_CRITERIA.md §6`, `docs/FIGMA.md`. Build the Android Collaboration, Chat, Media, and Trip Management screens."*
 
-**Referensi Figma**: `Screen56Voting`, `Screen64CreateVoting`, `Screen76Chat`, `Screen35BottomSheetUndang`, `Screen86EmptyChat`, `Screen73StatusLocked`, `Screen87ChatLongPress`, `Screen88ChatLongPressOwn`, `Screen89`–`Screen92`, `Screen96CalendarSyncModal`
+**Referensi Figma**: `Screen56Voting`, `Screen64CreateVoting`, `Screen76Chat`, `Screen35BottomSheetUndang`, `Screen86EmptyChat`, `Screen73StatusLocked`, `Screen87ChatLongPress`, `Screen88ChatLongPressOwn`, `Screen89`–`Screen92`, `Screen93`–`Screen103`, `Screen96CalendarSyncModal`
 
 ### Checklist
 - [ ] `InviteSheet` — cari username atau input email (perlakuan sama)
 - [ ] Tab Voting — **multi-poll hub** + sheet buat voting (`Screen64CreateVoting`)
 - [ ] `VotingLockedModal` — konfirmasi voting selesai setelah lock (`Screen73StatusLocked`)
-- [ ] `CalendarEventModal` — tambah ke Google Calendar via menu ⋮, kalender sendiri saja (`Screen96CalendarSyncModal`)
-- [ ] `ChatScreen` — bubbles + input + empty state
-- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri (`Screen87`, `Screen88`)
+- [ ] `CalendarEventModal` — tambah ke Google Calendar via menu ⋮ (`Screen96CalendarSyncModal`)
+- [ ] `TripDetailMenuSheet` + `TripMembersScreen` (`Screen97`–`Screen102`)
+- [ ] `TripDeleteModal` + edit trip (`Screen95`, `Screen103`)
+- [ ] `MediaScreen` — `DocumentGrid` + set cover (`Screen93`–`Screen94`)
+- [ ] `ChatScreen` — `TripDetailChatLayout` + bubbles text/media (`Screen76`, `Screen82`–`85`)
+- [ ] `ChatAttachMenu` + `ChatMediaComposer` (`Screen77`–`81`)
+- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri (`Screen87`, `Screen88ChatLongPressOwn`)
 - [ ] Reply quote di bubble — 4 skenario (`Screen89`–`Screen92`)
+- [ ] Empty chat + input disabled (`Screen86EmptyChat`)
 - [ ] Tombol "Kunci Tanggal Ini" hanya untuk creator
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
 ---
 
-## M10 — Android: Profil & Wishlist UI 🔲 BELUM DIMULAI
+## M10 — Android: Profil, Pencarian & Wishlist UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M10. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §4, §5, §12`, `docs/ACCEPTANCE_CRITERIA.md §3–§4, §7`, `docs/FIGMA.md`. Build the Android Profile and Wishlist screens."*
+**AI Prompt**: *"Implement M10. Start WORKFLOW §4–§5 (`App.tsx` id 4–5). Read `docs/WORKFLOW.md` §4–§5, `docs/ACCEPTANCE_CRITERIA.md §3–§4`, `search/SearchParts.tsx`, `profile/ProfileParts.tsx`. Then §12 wishlist screens."*
 
-**Referensi Figma**: `Screen15Profile`, `Screen105Wishlist`, `Screen104`–`Screen117`, `Screen11SearchUser`, `Screen108BottomSheetWishlist`, `Screen18EditProfil`, `Screen13PublicProfile`, `Screen17Settings`
+**Referensi Figma §4–§5**: `App.tsx` id 4–5 · `SearchParts.tsx`, `Screen10`–`Screen14`, `ProfileParts.tsx`, `Screen15`–`Screen20`, `SearchEmptyState.tsx`
 
-### Checklist
-- [ ] `ExploreScreen` — search bar + list (Avatar, Username, tap → profil)
-- [ ] `ProfileScreen` — foto, username, bio, jumlah perjalanan, grid trip
-- [ ] `PublicProfileScreen` — profil user lain (view-only)
-- [ ] `EditProfileScreen` — bio + link sosial media
-- [ ] `SettingsScreen` — akun, dukungan, logout
-- [ ] `WishlistScreen` — grid-only + filter/sort prioritas & tag + search
-- [ ] `AddWishlistSheet` — FAB "+" + form aktivitas (Mulai/Selesai, Nama, Prioritas, Maps, Link)
-- [ ] Wishlist detail, edit, menu ⋮, hapus
-- [ ] **Jadikan Perjalanan** flow — prefill trip → buat → undang → konversi ke itinerary
-- [ ] Empty states: wishlist kosong (`Screen104`), filter kosong (`Screen106`)
+**Referensi Figma §12**: `Screen104`–`Screen117`, `Screen108BottomSheetWishlist`
+
+### Checklist — Pencarian §4
+- [ ] `SearchScreen` idle: `SearchBar` + recent history (local DataStore)
+- [ ] Search results: debounce + `GET /users/search`; row with trip count + chevron
+- [ ] `SearchEmptyState` for zero results
+- [ ] `PublicProfileScreen`: `PageHeader` username, `ProfileCard`, public trip grid 2-col
+
+### Checklist — Profil §5
+- [ ] `ProfileScreen`: `ProfileHeader` + `ProfileCard` + trip grid; empty CTA compact
+- [ ] `SettingsScreen`: profile card → edit; Bantuan & Legal; Hapus Akun; Keluar card separate
+- [ ] `EditProfileScreen`: bio 150 char counter; username read-only; save `PUT /users/me`
+- [ ] `HelpFaqScreen`: 5 FAQ accordion + support email
+- [ ] `DeleteAccountScreen`: type username confirm + destructive action
+
+### Checklist — Wishlist §12
+
+**Referensi Figma §12**: `App.tsx` id: 12 · `WishlistParts.tsx`, `Screen104`–`Screen117`
+
+- [ ] `WishlistScreen` — `WishlistPageShell` grid 2 kolom + sort tabs + tag chips + search
+- [ ] `WishlistFormSheet` — Mulai/Selesai → Nama → Prioritas → Maps → Link (`Screen107`–`109`, `111`)
+- [ ] `WishlistDetailSheet` + `WishlistCardMenuSheet` + `WishlistDeleteModal` (`Screen110`–`113`)
+- [ ] Empty states (`Screen104`, `Screen106`)
+- [ ] **Jadikan Perjalanan** — `CreateTripShell` prefill → invite → `WISHLIST_IMPORTED_DAY` (`Screen114`–`117`)
+- [ ] API enriched fields + `convert-to-trip` atomic 🔜 M5.2
 - [ ] `./gradlew :androidApp:assembleDebug` sukses
 
 ---
@@ -400,6 +499,17 @@ backend/internal/service/
 **AI Prompt**: *"Let's implement M12. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 125 screens against Android Compose, create gap report, fix misalignments."*
 
 **Referensi**: `docs/FIGMA.md`, `figma/src/app/`, `mobile/androidApp/src/main/com/aturperjalanan/android/ui/`
+
+### Checklist — System States §13
+
+**Referensi Figma §13**: `MediaViewerParts.tsx`, `colors.ts`, `Screen118`–`Screen125`
+
+- [ ] `SkeletonScreen` — shimmer Beranda (`Screen118`)
+- [ ] `ToastHost` — Sukses/Error/Info + 3s auto-dismiss (`Screen119`)
+- [ ] `OfflineErrorScreen` — *Tidak ada koneksi* + retry (`Screen120`)
+- [ ] `MediaViewer` — foto + video pause/playing (`Screen121`–`Screen123`)
+- [ ] Dark Beranda optional (`Screen124`)
+- [ ] Theme tokens match `colors.ts` + `Screen125`
 
 ### Checklist
 - [ ] Semua **125 layar** diaudit (`figma/src/app/App.tsx` workflow sections §1–§13)

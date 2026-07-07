@@ -1,68 +1,254 @@
 # Acceptance Criteria (Kriteria Penerimaan)
 
-> **Tujuan dokumen ini**: Checklist UAT lengkap untuk memverifikasi bahwa aplikasi mobile sesuai desain Figma (**125 layar**) dan spesifikasi MVP. Referensi: [docs/FIGMA.md](docs/FIGMA.md), [docs/WORKFLOW.md](docs/WORKFLOW.md).
+> **Tujuan dokumen ini**: Checklist UAT lengkap untuk memverifikasi bahwa aplikasi mobile sesuai desain Figma (**125 layar**) dan spesifikasi MVP. Referensi: [docs/FIGMA.md](docs/FIGMA.md), [docs/WORKFLOW.md](docs/WORKFLOW.md) (termasuk **Panduan Implementasi §1–§3**).
 
 ---
 
 ## 1. Autentikasi & Onboarding
-- [ ] Splash screen tampil saat cold start, lalu lanjut ke onboarding atau auth (`Screen1Splash`).
-- [ ] Onboarding carousel hanya muncul saat pengguna pertama kali membuka aplikasi (`Screen2EduOnboarding`).
-- [ ] Onboarding 4 slide: intro, voting, itinerary timeline, chat trip — dengan preview UI mini di slide 2–4.
-- [ ] Login sukses via tombol "Lanjutkan dengan Google" (`Screen3Auth`).
-- [ ] Data dasar Google (Nama, Email, Avatar) tersimpan di tabel `users`.
-- [ ] Pengguna baru diarahkan ke form username; sistem menolak username duplikat (`Screen4Username`; `GET /v1/users/check-username`).
-- [ ] Pengguna lama langsung ke Beranda tanpa form username.
+
+### Splash & Onboarding (WORKFLOW §1 / `App.tsx` id: 1)
+- [ ] Registry label: *Splash Screen* (1), *Edu Onboarding* (2); accent coral.
+- [ ] Splash (`Screen1Splash`): gradient coral, ikon kompas, *"Atur Perjalanan"*, tagline *"Rencanakan. Jelajahi. Kenang."*, progress bar — tampil saat cold start.
+- [ ] Jika JWT valid: skip §1–§2, langsung Beranda (WORKFLOW §3).
+- [ ] Onboarding carousel hanya first-launch (`Screen2EduOnboarding`); flag `has_completed_onboarding` di DataStore.
+- [ ] Slide 1 intro: eyebrow *Selamat datang*; judul *Realisasikan Wacana Liburanmu*; subtitle value prop selaras `Screen2EduOnboarding.tsx`.
+- [ ] Slide 2–4: copy masalah/solusi selaras `BRIEF.md` + preview UI mini (voting / itinerary multi-hari / chat).
+- [ ] Pagination dots klikable; CTA *Selanjutnya →* / *Mulai Sekarang*; tidak ada tombol skip.
+
+### Login & Username (WORKFLOW §2 / `App.tsx` id: 2)
+- [ ] Registry label: *Login* (3), *Buat Username* (4); accent teal.
+- [ ] Layar login (`Screen3Auth`): hero + logo, headline *Mulai Perjalananmu*, subtext *Bergabung dan rencanakan perjalanan seru bersama orang-orang tersayang.*, tombol **Lanjutkan dengan Google** (coral `#FF6B6B`).
+- [ ] Tombol **Masuk dengan Email** tidak fungsional di MVP (sembunyikan atau disabled).
+- [ ] Footer *Dengan melanjutkan, kamu menyetujui Syarat & Ketentuan serta Kebijakan Privasi kami.* tampil di layar login.
+- [ ] Login Google sukses: data Nama, Email, Avatar tersimpan di `users` (`POST /v1/auth/google`).
+- [ ] Pengguna baru → form username (`Screen4Username`); lama → langsung Beranda.
+- [ ] Username screen: judul *Buat username*; subtitle undangan; hint *Huruf, angka, dan underscore (_) · min. 3 karakter*.
+- [ ] Username: huruf, angka, underscore (`_`), min. 3, max. 30; cek real-time (`GET /v1/users/check-username`).
+- [ ] Username tersedia: border teal + *"Username tersedia"*; duplikat/format salah: border coral + pesan error.
+- [ ] Saran username (chips) opsional client-only; CTA *Lanjutkan* → `POST /v1/auth/complete-registration`.
+- [ ] User dengan placeholder username (pernah login, belum set username) diarahkan ke `Screen4Username` (`is_new_user: true`).
+- [ ] Token disimpan secure storage; header `Authorization: Bearer` pada request berikutnya.
 
 ## 2. Beranda & Notifikasi
-- [ ] Beranda menampilkan ikon lonceng dengan badge unread (`Screen5Home`).
-- [ ] Tab "Mendatang", "Selesai", "Undangan" memfilter daftar trip (`GET /v1/trips?tab=...`).
-- [ ] Trip card menampilkan cover, judul, tags, rentang tanggal/waktu, stacked avatars.
-- [ ] Empty state tampil saat tidak ada trip (`Screen6EmptyBeranda`).
-- [ ] Layar Notifikasi menampilkan tipe: undangan, voting, aktivitas itinerary (`Screen9Notifikasi`).
-- [ ] Aksi inline notifikasi berfungsi: terima/tolak undangan, navigasi ke voting/trip.
+
+> Registry: WORKFLOW §3 / `App.tsx` id: 3 (layar 5–9). PRD §2 = WORKFLOW §3.
+
+### Shell & Header
+- [ ] Registry label: *Beranda — Mendatang* (5) … *Notifikasi* (9); accent coral.
+- [ ] Tab Beranda aktif di bottom nav (`Screen5Home`–`Screen8`); `Screen9` full-page **tanpa** bottom nav.
+- [ ] Header judul **"Perjalananku"** + lonceng 40×40; badge `unread_count` (cap **9+**; hidden jika 0).
+- [ ] Tap lonceng → push `Screen9Notifikasi`.
+
+### Tab Mendatang / Selesai / Undangan
+- [ ] Tiga tab **Mendatang · Selesai · Undangan** dengan counter badge selalu tampil.
+- [ ] Trip card Mendatang: cover 150, tags max 3 + `+N`, `Calendar` + dateRange, avatars overlap -9px max 4 (`Screen5Home`).
+- [ ] `voting_pending` → *"Tanggal sedang divoting"*; fixed → format tanggal + waktu (contoh *Sepanjang hari* / *08:00 – 17:00*).
+- [ ] Empty Mendatang only: *Belum ada perjalanan* + *Mulai rencanakan liburan pertamamu bersama teman-teman.* + CTA **Buat Perjalanan Baru** (`Screen6EmptyBeranda`).
+- [ ] Tab Selesai: `TripCard` **dimmed** opacity 0.92 + grayscale 20% (`Screen7HomeSelesai`).
+- [ ] Tab Undangan: overlay *Diundang oleh @username*; Terima coral / Tolak light (`Screen8HomeUndangan`).
+
+### Notifikasi
+- [ ] Header *Notifikasi* + **Tandai semua dibaca**; kartu unread border coral + dot 8px.
+- [ ] Template teks selaras preview: invite, Voting Tanggal, Voting Destinasi, aktivitas baru (`Screen9Notifikasi.tsx`).
+- [ ] Aksi: Terima/Tolak (invite); **Vote Sekarang →** amber (voting); tap kartu (aktivitas).
+- [ ] `PUT /v1/notifications/:id/read` dan `PUT /v1/notifications/read-all` berfungsi.
+- [ ] Terima/Tolak dari notif `invite`: resolve `invitation_id` via `GET /v1/trips/invitations` + `trip_id`.
+- [ ] Pagination trip: cursor UUID; notifikasi: cursor RFC3339.
 
 ## 3. Pencarian (Tab Cari)
-- [ ] Cari idle dengan riwayat (`Screen10SearchIdle`); bottom nav active = search.
-- [ ] Hasil pencarian username/nama — tap baris → profil user (`Screen11SearchUser`).
-- [ ] Empty hasil cari (`Screen12SearchNoResults`).
-- [ ] Profil publik dari hasil cari (`Screen13PublicProfile`, `Screen14PublicProfileEmptyTrip`).
+
+> Registry: WORKFLOW §4 / `App.tsx` id: 4 (layar 10–14).
+
+- [ ] Registry label: *Cari — Idle* (10) … *Profil Publik — Empty Trip* (14); accent teal.
+- [ ] Tab Cari aktif bottom nav (`Screen10`–`12`).
+- [ ] `SearchBar` placeholder *Cari nama atau username...*; border coral saat aktif.
+- [ ] Riwayat pencarian terakhir client-only (`Screen10SearchIdle`).
+- [ ] Hasil: *N hasil ditemukan*; baris nama + `@username` + *N perjalanan* + chevron (`Screen11SearchUser`).
+- [ ] Empty: *Tidak ada hasil* + deskripsi ejaan (`Screen12SearchNoResults`).
+- [ ] Profil publik: `PageHeader` username; grid trip publik; empty *Pengguna ini belum memiliki perjalanan.* (`Screen13`, `Screen14`).
+- [ ] `GET /v1/users/search` dengan debounce; tap hasil → profil publik.
 
 ## 4. Profil & Pengaturan (Tab Profil)
-- [ ] Profil pribadi: kartu horizontal (avatar kiri, nama+bio+website kanan), bar stat perjalanan, grid trip (`Screen15Profile`, `Screen16ProfileEmptyTrip`).
-- [ ] Username di header; akses Pengaturan via ikon ⚙ (bukan tombol Edit di kartu).
-- [ ] Edit profil: bio + website/sosial (`Screen18EditProfil`) — akses dari kartu profil di Pengaturan.
-- [ ] Pengaturan: kartu profil teratas → Edit; section Bantuan lalu Akun (`Screen17Settings`, `Screen19SettingsHelpFaq`, `Screen20SettingsDeleteAccount`).
+
+> Registry: WORKFLOW §5 / `App.tsx` id: 5 (layar 15–20).
+
+- [ ] Registry label: *Profil & Eksplorasi* (15) … *Hapus Akun* (20); accent coral.
+- [ ] `ProfileHeader` username center + ⚙ Pengaturan (`Screen15`, `Screen16`).
+- [ ] `ProfileCard` horizontal: avatar 64, nama, bio, website `Globe`, `ProfileStats` Perjalanan.
+- [ ] Grid 2 kolom trip; empty owner → CTA **Buat Perjalanan Baru** compact.
+- [ ] Settings: kartu profil → Edit; Bantuan & Legal; Akun (Hapus Akun); kartu **Keluar** terpisah (`Screen17`).
+- [ ] Edit: bio max 150 + counter; username read-only; Simpan (`Screen18`).
+- [ ] FAQ 5 item + `bantuan@aturperjalanan.id` (`Screen19`).
+- [ ] Hapus akun: ketik username + destructive button (`Screen20`).
+- [ ] `GET /v1/users/me`, `PUT /v1/users/me` `{bio}`, grid via `GET /v1/users/{username}/trips`.
 
 ## 5. Manajemen Perjalanan & Itinerary
-- [ ] Form buat perjalanan via FAB "+" — state variants §6 (`Screen21`–`Screen34`, dll.).
-- [ ] Input nama (wajib), tags, kalender, toggle sepanjang hari + jam.
-- [ ] Multi kandidat tanggal + validasi sekaligus (`Screen31`, `Screen33FormValidation`).
-- [ ] Undang: search kosong → hasil / kosong / terundang / email (`Screen35`–`Screen41`) — **tanpa** daftar saran teman atau konfirmasi email terpisah.
-- [ ] Detail trip **4 tab**: Itinerary · Voting · Chat · Media.
-- [ ] Itinerary: timeline multi-hari, state waktu, empty (`Screen42ItineraryEmpty`, `Screen43Destinations`, `Screen44DestinationsFixedDate`).
-- [ ] Bottom sheet tambah/edit aktivitas + cover (`Screen45`–`Screen54`).
-- [ ] Tab Media: unggah, cover, dari chat (`Screen93TripDocuments`, `Screen94MediaFromChat`).
+
+> Registry: WORKFLOW §6 / `App.tsx` id: 6 (layar 21–41). Shared: `CreateTripParts.tsx`, `InviteParts.tsx`.
+
+### Entry & shell (§6)
+- [ ] Registry label: *6. Pembuatan Perjalanan — Tab [+]*; accent teal; layar 21–41.
+- [ ] Entry FAB **[+]** dan CTA **Buat Perjalanan Baru** (Beranda empty §3, Profil empty §5) → modal `CreateTripShell`.
+- [ ] Header: tombol X tutup + judul *Buat Perjalanan*; footer sticky CTA *Buat Perjalanan* 54px coral.
+
+### Mode A — Tanggal pasti (21–24, 34)
+- [ ] `Screen21`: form kosong — nama/tags kosong, kalender muted tanpa seleksi; CTA aktif (validasi pasca-tap).
+- [ ] `Screen22`: draft terisi; toggle waktu off; jam 08:00–17:00.
+- [ ] `Screen23`: siap submit; toggle *Sepanjang hari* on (`allDay`).
+- [ ] `Screen24`: error nama + tanggal **sekaligus** — field inline + footer disabled + summary bullet.
+- [ ] `Screen34`: loading — label *Membuat...*; form non-interaktif.
+
+### Mode B — Kandidat tanggal (25–33)
+- [ ] Tap *+ Tambah Kandidat Tanggal* dari Mode A → switch `dateMode=candidates` (`Screen25`).
+- [ ] `Screen26`: tooltip info tombol kandidat (copy voting di detail trip).
+- [ ] Alur simpan: pilih rentang → kandidat **aktif** (coral) → tap tombol kandidat highlighted → **tersimpan** (putih).
+- [ ] `Screen27`–`31`: progresif 1→3 kandidat; max 3; `Screen32` sembunyikan tombol tambah.
+- [ ] Field *Tenggat voting tanggal* muncul setelah kandidat pertama tersimpan; opsional.
+- [ ] `Screen33`: validasi nama + minimal 1 kandidat tersimpan — error sekaligus.
+
+### Waktu & submit
+- [ ] Toggle *Sepanjang hari* default on; off → picker jam/menit; jam sebelum sekarang disabled.
+- [ ] `POST /v1/trips/` fixed: `start_date`+`end_date` → `status=fixed`.
+- [ ] `POST /v1/trips/` kandidat: `candidates[1-3]` → `status=voting_pending` + `trip_date_candidates`.
+
+### Undang setelah buat (35–41)
+- [ ] Setelah create sukses → layar undang (bukan langsung detail).
+- [ ] `Screen35`: header *Perjalanan berhasil dibuat!* + search kosong + **Masuk ke Perjalanan**.
+- [ ] `Screen36`–`37`: hasil cari username; badge **✓ Terundang** jika sudah diundang.
+- [ ] `Screen38`: tidak ditemukan (`SearchEmptyState`).
+- [ ] `Screen39` → `Screen40`: email belum terdaftar → **Undang lewat Email** → banner terkirim (**tanpa** layar konfirmasi terpisah).
+- [ ] `Screen41`: daftar terundang + **Batalkan** per baris.
+- [ ] **Tidak ada** daftar saran teman.
+- [ ] `POST /v1/trips/:id/invitations` username/email; `GET /v1/users/search?q=`.
+
+### Detail trip & itinerary (§7+)
+
+> Registry: WORKFLOW §7 / `App.tsx` id: 7 (layar 42–55). Shared: `ItineraryParts.tsx`, `ActivityParts.tsx`, `TripDetailParts.tsx`.
+
+#### Shell & tab
+- [ ] Detail trip **4 tab**: Itinerary · Voting · Chat · Media (`TripDetailTabs`).
+- [ ] Counter Itinerary = jumlah aktivitas; Voting counter selalu tampil (termasuk 0); Chat = unread only; Media selalu tampil.
+- [ ] Header: judul trip + subtitle tanggal/waktu + back + menu ⋮ (§11).
+
+#### Timeline (42–44, 55)
+- [ ] `Screen42`: empty — *Belum ada aktivitas* + CTA **Buat Aktivitas Pertama**; counter itinerary 0.
+- [ ] `Screen43`: `datePending` — 1 hari, gap *Tidak ada aktivitas*, state **Terjadwal**; subtitle *Tanggal sedang divoting*.
+- [ ] `Screen44`: multi-hari (2 hari); `referenceNow` 14:00 Hari 1; legend Selesai/Berlangsung/Akan datang; badge **Sekarang** pada item aktif.
+- [ ] Gap otomatis antar aktivitas dalam window harian (`buildItineraryTimeline`).
+- [ ] Jenis aktivitas: gather · transport · meal · activity · destination — ikon di thumb kosong.
+- [ ] `Screen55`: menu ⋮ dropdown **Edit** · **Hapus**; tombol Navigation hanya destination/activity.
+
+#### Sheet tambah/edit (45–50, 54)
+- [ ] Form urutan: Mulai/Selesai → Nama Aktivitas → Cover → Google Maps → Link Lainnya.
+- [ ] CTA tambah: **Simpan Aktivitas**; edit: **Simpan Perubahan**.
+- [ ] `Screen46`: paste Maps → cover otomatis + `mapsPlaceName`.
+- [ ] `Screen47`: Maps tanpa thumbnail — hint pilih cover manual.
+- [ ] `Screen48`: cover dari media perjalanan (`coverSource=trip_media`).
+- [ ] `Screen49`/`50`: picker cover — grid Media / 32 icon ilustrasi; CTA **Gunakan**.
+- [ ] Link Lainnya: URL + judul tampilan (setelah URL diisi); **+ Tambah link**.
+- [ ] `Screen54`: mode edit — `PUT /destinations/:id` 🔜 M5.2.
+
+#### Detail aktivitas (51–53)
+- [ ] Tap item → `ActivityDetailSheet`: jam, judul, lokasi, deskripsi, section **Tautan**.
+- [ ] Variant cover: foto Maps (51) · icon (52) · tanpa cover (53).
+
+#### API
+- [ ] `GET/POST/DELETE /v1/trips/:id/destinations` — field minimal (`place_name`, `maps_link`, `reference_link`, `sort_order`).
+- [ ] Enriched fields (times, kind, ref_links[], cover_*) 🔜 M5.2.
+
+#### Tab Media (§10)
+- [ ] Registry label: *10. Detail Perjalanan — Tab Media*; accent coral; layar 93–94.
+- [ ] `Screen93`: `DocumentGrid` — tile **Unggah** · 3 kolom · badge **Cover** · **Jadikan Cover**.
+- [ ] `Screen94`: item `fromChat` + badge **Chat** teal; counter media 5.
+- [ ] Tab counter Media **selalu tampil** (termasuk 0).
+- [ ] Foto media trip bisa jadi cover aktivitas (`Screen49` §7).
 
 ## 6. Kolaborasi, Voting & Chat
-- [ ] Tab counter: Itinerary (jumlah), Voting (hidden jika 0), Chat (unread), Media (always, incl. 0).
-- [ ] Voting empty: badge 0, CTA buat voting (`Screen57VotingEmpty`).
-- [ ] Multi-voting collapse Tanggal / Aktivitas / Lainnya (`Screen56Voting`).
-- [ ] Sheet buat/edit/hapus voting; pipeline selesai (`Screen56`–`Screen75`).
-- [ ] Sheet **Detail Voting** / **Edit Voting** — jenis via badge; voting tanggal **tanpa** field judul di form.
-- [ ] Chat: bubbles, lampiran, kirim media (`Screen77`–`Screen85`), empty (`Screen86`).
-- [ ] Long press: pesan orang lain tanpa Hapus (`Screen87`); pesan sendiri dengan Hapus (`Screen88`).
-- [ ] Balas pesan: quote di bubble — 4 skenario (`Screen89`–`Screen92`).
-- [ ] Kelola trip menu ⋮: anggota + pending (`Screen97`–`Screen102`), edit, hapus, kalender (`Screen103`, `Screen95`, `Screen96`).
 
-## 7. Wishlist Aktivitas
-- [ ] Header **Wishlist Aktivitas** — grid-only (`Screen105Wishlist`).
-- [ ] Filter prioritas + tag + search; empty states (`Screen104`, `Screen106`).
-- [ ] Form tambah/edit: urutan field + CTA **Simpan Aktivitas** (`Screen107`, `Screen108`, `Screen109`).
-- [ ] Detail + menu ⋮ + Jadikan Perjalanan (`Screen110`–`Screen117`).
+> Registry Voting: WORKFLOW §8 / `App.tsx` id: 8 (layar 56–75). Shared: `VotingParts.tsx`, `CreateVotingSheetParts.tsx`.
 
-## 8. System States & Design
-- [ ] Skeleton, toast, error (`Screen118`–`Screen120`).
-- [ ] Design tokens (`Screen125DesignTokens`, `colors.ts`).
-- [ ] Bottom nav: Beranda, Cari, [+], Wishlist, Profil.
-- [ ] Dark mode Beranda opsional (`Screen124DarkBeranda`).
-- [ ] Media viewer (`Screen121`–`Screen123`).
+### Tab Voting (56–75)
+- [ ] Registry label: *8. Detail Perjalanan — Tab Voting*; accent teal; layar 56–75.
+- [ ] Tab Voting **selalu tampil**; counter selalu tampil termasuk **0** (`TripDetailTabs`).
+- [ ] `Screen56`: 3 collapse — Tanggal · Aktivitas · Lainnya; tombol **Vote** / **✓ Voted**; FAB *Buat Voting Baru*.
+- [ ] `Screen57`: empty trip tanggal pasti; *Belum ada voting* + CTA *Buat Voting Baru*.
+- [ ] Pipeline status: aktif → **Selesai** (manual) / **Berakhir** (tenggat); card tetap di list.
+- [ ] Menu ⋮ aktif (`Screen69`): **Edit** · **Akhiri Voting** · **Hapus**; selesai (`Screen71`): **Hapus** saja.
+- [ ] `Screen70`: tanggal ended + pemenang read-only; aktivitas masih aktif.
+- [ ] `Screen72`: aktivitas `expired` + pemenang vote terbanyak.
+
+### Sheet buat/edit voting
+- [ ] `Screen64` → `Screen65`: pilih jenis → Detail (judul + kandidat + tenggat) → **Buat Voting**.
+- [ ] `Screen64`: Tanggal disabled + *Sedang berlangsung* jika poll tanggal aktif.
+- [ ] `Screen58`–`63`: buat ulang voting tanggal setelah selesai; form **tanpa** judul.
+- [ ] `Screen60`/`62`: picker kandidat tanggal + **Simpan Kandidat**.
+- [ ] `Screen66` edit aktivitas · `Screen67` edit tanggal (**tanpa** back) · CTA **Simpan**.
+
+### Modal voting
+- [ ] `Screen68`: konfirmasi hapus — *Hapus voting?*
+- [ ] `Screen73`: kunci tanggal (creator) → modal *Voting Tanggal Perjalanan Selesai*
+- [ ] `Screen74`: aktivitas selesai → pemenang masuk itinerary
+- [ ] `Screen75`: voting lainnya selesai
+
+### Chat & kelola (§9, §11)
+
+> Registry Chat: WORKFLOW §9 / `App.tsx` id: 9 (layar 76–92). Shared: `ChatParts.tsx`.
+
+#### Tab Chat (76–92)
+- [ ] Registry label: *9. Detail Perjalanan — Tab Chat*; accent charcoal; layar 76–92.
+- [ ] `Screen76`: thread grup — bubble coral (saya) / putih+avatar (lain); separator *Hari ini*.
+- [ ] `Screen77`: `ChatAttachMenu` — **Foto** · **Video** + catatan tab Media.
+- [ ] `Screen78`–`81`: `ChatMediaComposer` — foto/video + caption kosong/terisi; full-screen gelap.
+- [ ] `Screen82`–`85`: bubble media terkirim/diterima — foto & video + caption + durasi.
+- [ ] `Screen86`: empty *Belum ada obrolan*; input disabled; counter chat 0.
+- [ ] `Screen87`: long-press orang lain — **Balas** · **Salin Teks** (tanpa Hapus).
+- [ ] `Screen88`: long-press sendiri — tambah **Hapus**; soft delete API.
+- [ ] `Screen89`–`92`: reply quote 4 skenario; label **Kamu** untuk pesan sendiri.
+- [ ] Tab badge Chat = unread only (hidden jika 0 atau tab aktif).
+
+#### Kelola trip (§11)
+
+> Registry: WORKFLOW §11 / `App.tsx` id: 11 (layar 95–103). Shared: `TripDetailMenuSheet`, `TripMemberParts`, `InviteParts`.
+
+- [ ] Menu ⋮ (`TripDetailMenuSheet`): Daftar Anggota · Google Calendar · Edit Info · Hapus.
+- [ ] `Screen95`: modal *Hapus perjalanan?* — destructive · soft delete API.
+- [ ] `Screen96`: modal *Tambah ke Google Calendar?* — `{tanggal} · kalender kamu` (M11).
+- [ ] `Screen97`: pembuat — search + undang username; badge **Pembuat** / **Anggota**.
+- [ ] `Screen98`: `EmailInviteSearchResult` — **Undang lewat Email**.
+- [ ] `Screen99`: pending `email_sent` — **Batalkan**.
+- [ ] `Screen100`: pending `email_sent` + `pending_accept` — **Batalkan**.
+- [ ] `Screen101`: `rejected` — **Undang kembali**.
+- [ ] `Screen102`: POV anggota — tanpa **Keluarkan**; tetap kelola pending.
+- [ ] `Screen103`: edit trip — form §6 · CTA **Simpan**.
+
+## 7. Wishlist Aktivitas (§12)
+
+> Registry: WORKFLOW §12 / `App.tsx` id: 12 (layar 104–117). Shared: `WishlistParts.tsx`.
+
+- [ ] Registry label: *12. Wishlist — Tab 4*; accent coral; layar 104–117.
+- [ ] `Screen104`: empty *Wishlist masih kosong* + CTA **Tambah Aktivitas**.
+- [ ] `Screen105`: grid 2 kolom · 4 item · sort/filter tabs + search.
+- [ ] `Screen106`: filter/search tanpa hasil — *Tidak ada hasil*.
+- [ ] `Screen107`–`109`: form tambah kosong / terisi / validasi nama wajib.
+- [ ] `Screen110`: detail sheet — catatan, tautan, footer **Jadikan Perjalanan**.
+- [ ] `Screen111`: edit — CTA **Simpan Perubahan**.
+- [ ] `Screen112`: menu ⋮ — **Jadikan Perjalanan** · **Edit** · **Hapus**.
+- [ ] `Screen113`: modal *Hapus dari wishlist?* destructive.
+- [ ] `Screen114`–`115`: Jadikan Perjalanan — prefill → tanggal → **Buat Perjalanan**.
+- [ ] `Screen116`: undang + `WishlistRemovedBanner` · **Masuk ke Perjalanan**.
+- [ ] `Screen117`: itinerary 1 aktivitas hasil konversi (hari 1).
+
+## 8. System States & Design (§13)
+
+> Registry: WORKFLOW §13 / `App.tsx` id: 13 (layar 118–125).
+
+- [ ] Registry label: *13. System States & Micro-interactions*; accent coral; layar 118–125.
+- [ ] `Screen118`: skeleton shimmer Beranda — 2 card + spinner *Memuat perjalananmu...*
+- [ ] `Screen119`: toast **Sukses** (teal) · **Error** (coral + Coba Lagi) · **Info** (putih); tutup X; 3 detik.
+- [ ] `Screen120`: offline full-screen — *Tidak ada koneksi* · CTA **Coba Lagi**.
+- [ ] `Screen121`: `MediaPhotoViewer` — X · counter · Share · caption · **Jadikan Cover**.
+- [ ] `Screen122`: video pause — overlay play besar.
+- [ ] `Screen123`: video playing — kontrol play/pause + progress bar.
+- [ ] `Screen124`: dark mode Beranda — palette gelap opsional (M12).
+- [ ] `Screen125` + `colors.ts`: tokens brand/netral/danger · tipografi · radius.
+- [ ] Bottom nav: Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`).
