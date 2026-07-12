@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f8e7d6c5-b4a3-2918-7654-3210fedcba98",
     "name": "Atur Perjalanan API",
-    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` | Google OAuth ID token for `POST /auth/google` |\n| `access_token` | App JWT (auto-saved after sign-in) |\n| `realtime_token` | Supabase-compatible JWT for Realtime |\n| `username` | Username for profile/trips requests |\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
+    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` | Google OAuth ID token for `POST /auth/google` |\n| `access_token` | App JWT (auto-saved after sign-in) |\n| `realtime_token` | Supabase-compatible JWT for Realtime |\n| `username` | Username for profile/trips requests |\n| `trip_id` | Trip ID for detail/invitation/member endpoints |\n| `invitation_id` | Invitation ID for respond/cancel endpoints |\n| `member_id` | User ID of trip member to remove |\n| `document_id` | Document ID for setting cover |\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -47,10 +47,26 @@
       "key": "google_id_token",
       "value": ""
     },
-    {
-      "key": "search_query",
-      "value": "john"
-    }
+  {
+    "key": "search_query",
+    "value": "john"
+  },
+  {
+    "key": "trip_id",
+    "value": ""
+  },
+  {
+    "key": "invitation_id",
+    "value": ""
+  },
+  {
+    "key": "member_id",
+    "value": ""
+  },
+  {
+    "key": "document_id",
+    "value": ""
+  }
   ],
   "item": [
     {
@@ -357,6 +373,272 @@
               ]
             },
             "description": "List trips for a user (privacy-aware).\n\n**Auth:** Bearer JWT (required)\n\n**Path:**\n- `username` (string)\n\n**Query:**\n- `cursor` (optional, trip UUID)\n- `limit` (optional, default 20, max 100)\n\n**Response:**\n```json\n{\n  \"data\": [{ \"id\": \"...\", \"name\": \"...\", \"status\": \"fixed\", ... }],\n  \"next_cursor\": null\n}\n```\n\nOwner sees all trips; non-owner sees only `is_public: true` trips.\n\n**Errors:** `404 USER_NOT_FOUND`"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Trip CRUD and management (M4). Create trips in fixed or voting mode, invite users, manage members, set cover.",
+      "item": [
+        {
+          "name": "Create Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('trip_id', body.id);",
+                  "    pm.environment.set('trip_id', body.id);",
+                  "}",
+                  "",
+                  "pm.test('Status is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "pm.test('Response has trip ID and name', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('name');",
+                  "    pm.expect(body).to.have.property('status');",
+                  "});",
+                  ""
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lombok Beach Trip\",\n  \"tags\": [\"#pantai\", \"#alam\"],\n  \"start_date\": \"2026-06-19\",\n  \"end_date\": \"2026-06-22\",\n  \"is_all_day\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips",
+              "host": ["{{base_url}}"],
+              "path": ["trips"]
+            },
+            "description": "Create a new trip in fixed (certain dates) or voting (candidate dates) mode.\\n\\n**Auth:** Bearer JWT (required)\\n\\n**Body:**\\n- `name` (string, required, max 255)\\n- `tags` (string[], optional)\\n- `start_date` & `end_date` for fixed mode OR `candidates` array (1-3 items) for voting mode\\n\\n**Response:** Trip object with id, status (fixed|voting_pending), and voting_deadline if voting mode"
+          },
+          "response": []
+        },
+        {
+          "name": "List Trips (Upcoming)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips?tab=upcoming&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips"],
+              "query": [
+                {"key": "tab", "value": "upcoming", "description": "upcoming|completed"},
+                {"key": "cursor", "value": "", "description": "UUID for pagination", "disabled": true},
+                {"key": "limit", "value": "20", "description": "Default 20, max 100"}
+              ]
+            },
+            "description": "List trips for the authenticated user with enriched data (participant_count, participants_preview, cover_image_url)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Get details of a specific trip. Must be creator, participant, or invited user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Trip",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Trip Name\",\n  \"tags\": [\"#updated\"],\n  \"is_public\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Update trip details. Creator only."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Trip",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Soft-delete a trip. Creator only. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Set Trip Cover",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": \"{{document_id}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/cover",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "cover"]
+            },
+            "description": "Set or update trip cover image. Creator only. Document must exist in this trip."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "members"]
+            },
+            "description": "Members screen payload (WORKFLOW §11). Returns `{ is_creator, members[], invitations[] }`.\n\n- `members[]`: active participants — `{ id, name, username, avatar_url, joined_at, role: creator|member }`\n- `invitations[]`: outstanding invites (pending + declined) — `{ id, method, status, state, invited_user, invited_email, invited_by, created_at }` where `state` is `email_sent` | `pending_accept` | `rejected`. Use `state=rejected` rows for the \"Undang kembali\" action; use `invited_user`/`invited_email` to mark already-invited rows in search results.\n\nAny member may view. `is_creator` gates the \"Keluarkan\" button."
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Trip Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/members/{{member_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "members", "{{member_id}}"]
+            },
+            "description": "Remove a member from trip. Creator only. Returns 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Invitations",
+      "description": "Trip invitation management — invite users, respond to invitations, cancel pending invites (M4).",
+      "item": [
+        {
+          "name": "Get My Invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/invitations?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "invitations"],
+              "query": [
+                {"key": "cursor", "value": "", "description": "UUID for pagination", "disabled": true},
+                {"key": "limit", "value": "20", "description": "Default 20, max 100"}
+              ]
+            },
+            "description": "List pending invitations for the current user, enriched with trip and inviter summaries."
+          },
+          "response": []
+        },
+        {
+          "name": "Invite User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('invitation_id', body.id);",
+                  "    pm.environment.set('invitation_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user2_travel\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations"]
+            },
+            "description": "Invite a user to a trip via username or email. Only trip participants can invite. Provide exactly one of: `username` or `email`.\n\nAlso serves as **re-invite (\"Undang kembali\")**: if the target has a `declined`/`cancelled` invitation, it is reactivated to `pending` (no duplicate row). Returns `409 INVITATION_EXISTS` only if a `pending` invite already exists, `409 ALREADY_PARTICIPANT` if already a member."
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Invitation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+            },
+            "description": "Accept or decline a trip invitation. Set accept to true/false. Returns 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Invitation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+            },
+            "description": "Cancel a pending invitation. Inviter only. Returns 204 No Content."
           },
           "response": []
         }

@@ -613,12 +613,12 @@ Layar full-screen (bukan bottom sheet) — header sukses teal + `SearchInput`.
 |------|--------|----------|--------|
 | Buat trip (fixed) | POST | `/v1/trips/` `{name, tags, start_date, end_date, candidates:[]}` | ✅ |
 | Buat trip (voting) | POST | `/v1/trips/` `{name, tags, candidates[1-3]}` → `voting_pending` | ✅ |
-| Waktu non-all-day | POST | `/v1/trips/` + `is_all_day, start_time, end_time` (per trip/kandidat) | 🔜 M3–M10 |
-| Tenggat override | POST | `/v1/trips/` + `voting_deadline` opsional | 🔜 M3–M10 |
+| Waktu non-all-day | POST | `/v1/trips/` + `is_all_day, start_time, end_time` (`HH:MM`) | ✅ |
+| Tenggat override | POST | `/v1/trips/` + `voting_deadline` opsional | ✅ |
 | Undang username | POST | `/v1/trips/:id/invitations` `{username}` | ✅ |
 | Undang email | POST | `/v1/trips/:id/invitations` `{email}` | ✅ |
 | Cari untuk undang | GET | `/v1/users/search?q=` | ✅ |
-| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M3–M10 |
+| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | ✅ |
 
 > Setelah create: creator auto-masuk `trip_participants`. Trip kandidat → voting tanggal otomatis di tab Voting (§8).
 
@@ -1061,11 +1061,11 @@ Halaman penuh · `NavHeader` *Anggota Perjalanan* · `TripMembersPanel`:
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
-| List anggota + pending | GET | `/v1/trips/:id/members` | 🔜 M3–M10 |
+| List anggota + pending | GET | `/v1/trips/:id/members` → `{ is_creator, members[], invitations[] }` | ✅ |
 | Undang (search) | POST | `/v1/trips/:id/invitations` `{username\|email}` | ✅ |
-| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M3–M10 |
-| Undang kembali | POST | `/v1/trips/:id/invitations` (re-invite) | 🔜 M3–M10 |
-| Keluarkan anggota | DELETE | `/v1/trips/:id/members/:userId` | 🔜 M3–M10 (creator only) |
+| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | ✅ |
+| Undang kembali | POST | `/v1/trips/:id/invitations` (re-invite; reaktivasi row `declined`/`cancelled`) | ✅ |
+| Keluarkan anggota | DELETE | `/v1/trips/:id/members/:userId` | ✅ (creator only) |
 | Edit info trip | PUT | `/v1/trips/:id` `{name, tags, dates?}` | ✅ |
 | Hapus trip | DELETE | `/v1/trips/:id` soft (creator) | ✅ |
 | Google Calendar | POST | `/v1/integrations/google-calendar/events` | M16 |

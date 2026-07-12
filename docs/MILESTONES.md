@@ -28,7 +28,7 @@
 | M1 | Desain Produk (Figma Make) | ✅ Selesai |
 | M2 | Infrastruktur & Tooling Monorepo | ✅ Selesai |
 | M3 | Backend – Autentikasi & User | ✅ Selesai |
-| M4 | Backend – Manajemen Trip & Undangan | 🔲 Belum |
+| M4 | Backend – Manajemen Trip & Undangan | ✅ Selesai |
 | M5 | Backend – Voting (Multi-Poll) | 🔲 Belum |
 | M6 | Backend – Itinerary / Aktivitas | 🔲 Belum |
 | M7 | Backend – Chat (Supabase Realtime) & Media (R2) | 🔲 Belum |
@@ -151,26 +151,26 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 
 ---
 
-## M4 — Backend: Manajemen Trip & Undangan 🔲 BELUM DIMULAI
+## M4 — Backend: Manajemen Trip & Undangan ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M4. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trips, trip_participants, trip_invitations), §3.4, §4.3`, `docs/WORKFLOW.md §3, §6, §11`."*
 
 **Referensi**: `docs/ARCHITECTURE.md §3.3, §3.4, §4.3`, `docs/WORKFLOW.md §3, §6, §11`, `docs/ACCEPTANCE_CRITERIA.md §2, §5`
 
 ### Checklist
-- [ ] Prisma models: `Trip`, `TripParticipant`, `TripInvitation`, `TripDateCandidate`, `TripDateVote`
-- [ ] `POST /v1/trips` — mode tanggal pasti (`status=fixed`) vs kandidat (`status=voting_pending` + auto-create poll `tanggal`, `voting_deadline`) — **dalam satu transaksi Prisma**
-- [ ] `GET /v1/trips?tab=upcoming|completed` — enriched (`cover_image_url`, `participant_count`, `participants_preview[]`, `voting_deadline`), cursor pagination
-- [ ] `GET /v1/trips/:tripId`, `PUT /v1/trips/:tripId` (creator only), `DELETE /v1/trips/:tripId` (soft delete, creator only)
-- [ ] `PUT /v1/trips/:tripId/cover` — set dari `trip_documents` (bergantung M7 untuk data media, endpoint bisa distub lebih dulu)
-- [ ] `POST /v1/trips/:tripId/invitations` — via username atau email
-- [ ] `PUT /v1/trips/:tripId/invitations/:id` — terima/tolak (transaksi: update status + insert `trip_participants`)
-- [ ] `DELETE /v1/trips/:tripId/invitations/:id` — batalkan undangan pending (inviter)
-- [ ] `GET /v1/trips/invitations` — daftar undangan pending milik user, enriched `trip` + `inviter`
-- [ ] `GET /v1/trips/:tripId/members`, `DELETE /v1/trips/:tripId/members/:userId` (creator only)
-- [ ] Soft-delete Prisma extension aktif untuk model `Trip` (`deleted_at IS NULL` otomatis)
-- [ ] Unit + e2e tests: create fixed/voting, invite/accept/decline/cancel, member removal
-- [ ] Postman — tambah folder `Trips` & `Invitations` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M4)
+- [x] Prisma models: `Trip`, `TripParticipant`, `TripInvitation`, `TripDateCandidate`, `TripDateVote` (+ migrasi `20260712_add_m4_indices`: index & CHECK constraint sesuai ARCHITECTURE §3.3)
+- [x] `POST /v1/trips` — mode tanggal pasti (`status=fixed`) vs kandidat (`status=voting_pending` + auto-create poll `tanggal`, `voting_deadline`) — **dalam satu transaksi Prisma**
+- [x] `GET /v1/trips?tab=upcoming|completed` — enriched (`cover_image_url`, `participant_count`, `participants_preview[]`, `voting_deadline`), cursor pagination (`{ data, next_cursor }`)
+- [x] `GET /v1/trips/:tripId`, `PUT /v1/trips/:tripId` (creator only), `DELETE /v1/trips/:tripId` (soft delete, creator only)
+- [x] `PUT /v1/trips/:tripId/cover` — set dari `trip_documents` (validasi dokumen milik trip)
+- [x] `POST /v1/trips/:tripId/invitations` — via username atau email
+- [x] `PUT /v1/trips/:tripId/invitations/:id` — terima/tolak (transaksi: update status + insert `trip_participants`)
+- [x] `DELETE /v1/trips/:tripId/invitations/:id` — batalkan undangan pending (inviter)
+- [x] `GET /v1/trips/invitations` — daftar undangan pending milik user, enriched `trip` + `inviter`
+- [x] `GET /v1/trips/:tripId/members`, `DELETE /v1/trips/:tripId/members/:userId` (creator only)
+- [x] Soft-delete Prisma extension aktif untuk model `Trip` (`deleted_at IS NULL` otomatis)
+- [x] Unit + e2e tests: create fixed/voting, invite/accept/decline/cancel, member removal (54 unit + 33 e2e hijau)
+- [x] Postman — tambah folder `Trips` & `Invitations` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M4)
 
 ---
 
