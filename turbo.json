@@ -1,0 +1,29 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["NODE_ENV", "APP_ENV"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "GOOGLE_CLIENT_ID"]
+    },
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "GOOGLE_CLIENT_ID"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "start:dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

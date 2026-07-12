@@ -3,6 +3,47 @@
 # ============================================================
 
 # Environment files — NEVER commit these
+.env
+.env.local
+.env.*.local
 .env.old
 
-figma/node_modules
+# Dependencies
+node_modules/
+figma/node_modules/
+
+# Build outputs
+dist/
+build/
+.expo/
+
+# Turbo
+.turbo/
+
+# Prisma
+backend/prisma/generated/
+
+# Test artifacts
+coverage/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# EAS
+*.ipa
+*.apk
+*.aab

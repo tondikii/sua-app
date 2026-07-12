@@ -1,0 +1,426 @@
+// This is your Prisma schema file.
+// ARCHITECTURE.md §3 is the canonical source — this schema must remain in sync.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ────────────────────────────────────────────────────────────
+//  USERS
+// ────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(uuid()) @db.Uuid
+  googleId       String   @unique @map("google_id") @db.VarChar(255)
+  email          String   @unique @db.VarChar(320)
+  name           String   @db.VarChar(255)
+  username       String   @unique @db.VarChar(50)
+  avatarUrl      String?  @map("avatar_url") @db.Text
+  bio            String?  @db.Text
+  websiteUrl     String?  @map("website_url") @db.Text
+  locationLabel  String?  @map("location_label") @db.Text
+  isPublic       Boolean  @default(true) @map("is_public")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  tripsCreated     Trip[]             @relation("TripCreator")
+  tripParticipants TripParticipant[]
+  invitationsSent  TripInvitation[]   @relation("InvitedBy")
+  invitationsReceived TripInvitation[] @relation("InvitedUser")
+  messages         TripMessage[]      @relation("MessageSender")
+  documents        TripDocument[]     @relation("DocumentUploader")
+  notifications    Notification[]     @relation("NotificationUser")
+  notifActors      Notification[]     @relation("NotificationActor")
+  wishlists        Wishlist[]
+  pollsCreated     TripPoll[]         @relation("PollCreator")
+  dateVotes        TripDateVote[]
+  pollVotes        TripPollVote[]
+  messageReads     TripMessageRead[]
+  followers        Follow[]           @relation("Following")
+  following        Follow[]           @relation("Follower")
+
+  @@map("users")
+}
+
+// ────────────────────────────────────────────────────────────
+//  FOLLOWS  (schema exists, post-MVP feature)
+// ────────────────────────────────────────────────────────────
+
+model Follow {
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIPS
+// ────────────────────────────────────────────────────────────
+
+model Trip {
+  id               String    @id @default(uuid()) @db.Uuid
+  creatorId        String    @map("creator_id") @db.Uuid
+  name             String    @db.VarChar(255)
+  tags             Json      @default("[]")
+  status           TripStatus @default(voting_pending)
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  isAllDay         Boolean   @default(true) @map("is_all_day")
+  startTime        DateTime? @map("start_time") @db.Time
+  endTime          DateTime? @map("end_time") @db.Time
+  isPublic         Boolean   @default(false) @map("is_public")
+  coverDocumentId  String?   @map("cover_document_id") @db.Uuid
+  votingDeadline   DateTime? @map("voting_deadline") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  creator      User              @relation("TripCreator", fields: [creatorId], references: [id])
+  coverDocument TripDocument?    @relation("TripCover", fields: [coverDocumentId], references: [id])
+  participants TripParticipant[]
+  invitations  TripInvitation[]
+  dateCandidates TripDateCandidate[]
+  polls        TripPoll[]
+  activities   TripActivity[]
+  messages     TripMessage[]
+  messageReads TripMessageRead[]
+  documents    TripDocument[]    @relation("TripDocuments")
+  notifications Notification[]
+
+  @@map("trips")
+}
+
+enum TripStatus {
+  voting_pending
+  fixed
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP PARTICIPANTS
+// ────────────────────────────────────────────────────────────
+
+model TripParticipant {
+  tripId   String   @map("trip_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([tripId, userId])
+  @@map("trip_participants")
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP INVITATIONS
+// ────────────────────────────────────────────────────────────
+
+model TripInvitation {
+  id            String           @id @default(uuid()) @db.Uuid
+  tripId        String           @map("trip_id") @db.Uuid
+  invitedBy     String           @map("invited_by") @db.Uuid
+  invitedUserId String?          @map("invited_user_id") @db.Uuid
+  invitedEmail  String?          @map("invited_email") @db.VarChar(320)
+  method        InvitationMethod
+  status        InvitationStatus @default(pending)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  trip        Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  inviter     User  @relation("InvitedBy", fields: [invitedBy], references: [id])
+  invitedUser User? @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: Cascade)
+
+  @@map("trip_invitations")
+}
+
+enum InvitationMethod {
+  username
+  email
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  declined
+  cancelled
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP DATE CANDIDATES & VOTES
+// ────────────────────────────────────────────────────────────
+
+model TripDateCandidate {
+  id        String   @id @default(uuid()) @db.Uuid
+  tripId    String   @map("trip_id") @db.Uuid
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  votes       TripDateVote[]
+  pollOptions TripPollOption[]
+
+  @@map("trip_date_candidates")
+}
+
+model TripDateVote {
+  candidateId String   @map("candidate_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  candidate TripDateCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([candidateId, userId])
+  @@map("trip_date_votes")
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP POLLS
+// ────────────────────────────────────────────────────────────
+
+model TripPoll {
+  id         String     @id @default(uuid()) @db.Uuid
+  tripId     String     @map("trip_id") @db.Uuid
+  pollType   PollType   @map("poll_type")
+  title      String     @db.VarChar(255)
+  status     PollStatus @default(active)
+  deadline   DateTime?  @db.Timestamptz
+  lockedAt   DateTime?  @map("locked_at") @db.Timestamptz
+  createdBy  String     @map("created_by") @db.Uuid
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  trip    Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator User            @relation("PollCreator", fields: [createdBy], references: [id])
+  options TripPollOption[]
+  votes   TripPollVote[]
+
+  @@map("trip_polls")
+}
+
+enum PollType {
+  tanggal
+  aktivitas
+  lainnya
+}
+
+enum PollStatus {
+  active
+  locked
+  cancelled
+  expired
+}
+
+model TripPollOption {
+  id          String  @id @default(uuid()) @db.Uuid
+  pollId      String  @map("poll_id") @db.Uuid
+  label       String  @db.Text
+  sortOrder   Int     @default(0) @map("sort_order")
+  candidateId String? @map("candidate_id") @db.Uuid
+
+  poll      TripPoll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  candidate TripDateCandidate? @relation(fields: [candidateId], references: [id])
+  votes     TripPollVote[]
+
+  @@map("trip_poll_options")
+}
+
+model TripPollVote {
+  pollId    String   @map("poll_id") @db.Uuid
+  optionId  String   @map("option_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  poll   TripPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option TripPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+  @@map("trip_poll_votes")
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP ACTIVITIES
+// ────────────────────────────────────────────────────────────
+
+model TripActivity {
+  id              String       @id @default(uuid()) @db.Uuid
+  tripId          String       @map("trip_id") @db.Uuid
+  placeName       String       @map("place_name") @db.VarChar(255)
+  activityDate    DateTime?    @map("activity_date") @db.Date
+  startTime       DateTime     @default(dbgenerated("'09:00'::time")) @map("start_time") @db.Time
+  endTime         DateTime     @default(dbgenerated("'10:00'::time")) @map("end_time") @db.Time
+  kind            ActivityKind @default(activity)
+  description     String?      @db.Text
+  locationLabel   String?      @map("location_label") @db.Text
+  mapsLink        String?      @map("maps_link") @db.Text
+  refLinks        Json         @default("[]") @map("ref_links")
+  coverSource     CoverSource  @default(none) @map("cover_source")
+  coverIcon       String?      @map("cover_icon") @db.VarChar(50)
+  coverDocumentId String?      @map("cover_document_id") @db.Uuid
+  thumbnailUrl    String?      @map("thumbnail_url") @db.Text
+  sortOrder       Int          @default(0) @map("sort_order")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  trip          Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  coverDocument TripDocument? @relation("ActivityCover", fields: [coverDocumentId], references: [id])
+
+  @@map("trip_activities")
+}
+
+enum ActivityKind {
+  gather
+  transport
+  meal
+  activity
+  destination
+}
+
+enum CoverSource {
+  none
+  maps
+  trip_media
+  device
+  icon
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP MESSAGES  (Chat)
+// ────────────────────────────────────────────────────────────
+
+model TripMessage {
+  id            String      @id @default(uuid()) @db.Uuid
+  tripId        String      @map("trip_id") @db.Uuid
+  senderId      String      @map("sender_id") @db.Uuid
+  messageKind   MessageKind @default(text) @map("message_kind")
+  messageText   String?     @map("message_text") @db.Text
+  mediaUrl      String?     @map("media_url") @db.Text
+  mediaDuration String?     @map("media_duration") @db.Text // stored as interval string
+  replyToId     String?     @map("reply_to_id") @db.Uuid
+  deletedAt     DateTime?   @map("deleted_at") @db.Timestamptz
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  trip    Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sender  User          @relation("MessageSender", fields: [senderId], references: [id])
+  replyTo TripMessage?  @relation("MessageReply", fields: [replyToId], references: [id])
+  replies TripMessage[] @relation("MessageReply")
+
+  @@map("trip_messages")
+}
+
+enum MessageKind {
+  text
+  photo
+  video
+}
+
+model TripMessageRead {
+  tripId     String   @map("trip_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  lastReadAt DateTime @default(now()) @map("last_read_at") @db.Timestamptz
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([tripId, userId])
+  @@map("trip_message_reads")
+}
+
+// ────────────────────────────────────────────────────────────
+//  TRIP DOCUMENTS  (Media tab)
+// ────────────────────────────────────────────────────────────
+
+model TripDocument {
+  id          String    @id @default(uuid()) @db.Uuid
+  tripId      String    @map("trip_id") @db.Uuid
+  uploadedBy  String    @map("uploaded_by") @db.Uuid
+  mediaType   MediaType @map("media_type")
+  storageKey  String    @map("storage_key") @db.Text
+  storageUrl  String    @map("storage_url") @db.Text
+  fromChat    Boolean   @default(false) @map("from_chat")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  trip           Trip           @relation("TripDocuments", fields: [tripId], references: [id], onDelete: Cascade)
+  uploader       User           @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+  tripsAsCover   Trip[]         @relation("TripCover")
+  activitiesAsCover TripActivity[] @relation("ActivityCover")
+
+  @@map("trip_documents")
+}
+
+enum MediaType {
+  photo
+  video
+}
+
+// ────────────────────────────────────────────────────────────
+//  NOTIFICATIONS
+// ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  actorId   String?          @map("actor_id") @db.Uuid
+  tripId    String?          @map("trip_id") @db.Uuid
+  payload   Json             @default("{}")
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User  @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  trip  Trip? @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  invite
+  follow
+  voting_deadline
+  activity_update
+}
+
+// ────────────────────────────────────────────────────────────
+//  WISHLISTS
+// ────────────────────────────────────────────────────────────
+
+model Wishlist {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  placeName     String        @map("place_name") @db.VarChar(255)
+  startTime     DateTime?     @map("start_time") @db.Time
+  endTime       DateTime?     @map("end_time") @db.Time
+  locationLabel String?       @map("location_label") @db.Text
+  link          String?       @db.Text
+  notes         String?       @db.Text
+  tags          Json          @default("[]")
+  priorityLevel PriorityLevel @default(medium) @map("priority_level")
+  thumbnailUrl  String?       @map("thumbnail_url") @db.Text
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamptz
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wishlists")
+}
+
+enum PriorityLevel {
+  high
+  medium
+  low
+}

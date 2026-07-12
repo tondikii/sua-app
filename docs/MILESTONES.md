@@ -1,6 +1,6 @@
 # Milestones — Atur Perjalanan
 
-> **Version**: 3.0 — Juli 2026
+> **Version**: 2.0 — Juli 2026
 >
 > **Tujuan dokumen ini**:
 > - Peta jalan pengembangan lengkap dari *setup* dokumentasi (M0) hingga rilis di App Store & Play Store (M20).
@@ -14,7 +14,8 @@
 
 | Versi | Perubahan |
 |-------|-----------|
-| 3.0 | **Revamp menyeluruh** menyusul migrasi tech stack (Go/Gin/KMP → **NestJS + Expo**, full TypeScript). Urutan milestone diperbaiki agar mencerminkan pengerjaan nyata: fondasi dokumen → **desain Figma Make dulu** → baru backend & mobile. Backend/mobile lama (Go/KMP) dianggap usang total; progress di-reset ke 🔲 karena tidak ada baris kode TypeScript yang bisa diwariskan dari implementasi Go. Gap-tracking yang dulu tersebar di beberapa milestone (M5.1/M5.2) sekarang melebur jadi satu rangkaian milestone backend yang linear, karena tidak ada lagi "MVP tipis" vs "gap desain" — backend baru dibangun langsung menyasar skema penuh di `ARCHITECTURE.md`. |
+| 2.0 | **Revamp menyeluruh** menyusul migrasi tech stack (Go/Gin/KMP → **NestJS + Expo**, full TypeScript). Urutan milestone diperbaiki agar mencerminkan pengerjaan nyata: fondasi dokumen → **desain Figma Make dulu** → baru backend & mobile. Backend/mobile lama (Go/KMP) dianggap usang total; progress di-reset ke 🔲 karena tidak ada baris kode TypeScript yang bisa diwariskan dari implementasi Go. Gap-tracking yang dulu tersebar di beberapa milestone (M5.1/M5.2) sekarang melebur jadi satu rangkaian milestone backend yang linear, karena tidak ada lagi "MVP tipis" vs "gap desain" — backend baru dibangun langsung menyasar skema penuh di `ARCHITECTURE.md`. |
+| 2.1 | Tambah konvensi **Postman Collection** inkremental per milestone backend (`docs/postman/`); checklist Postman di M3–M10 & M16. |
 | 2.x | (Go/Gin + KMP) — superseded, riwayat detail tidak dipertahankan di sini; lihat git history jika perlu referensi arsip. |
 
 ---
@@ -25,8 +26,8 @@
 |---|-----------|--------|
 | M0 | Fondasi Dokumentasi | ✅ Selesai |
 | M1 | Desain Produk (Figma Make) | ✅ Selesai |
-| M2 | Infrastruktur & Tooling Monorepo | 🔲 Belum |
-| M3 | Backend – Autentikasi & User | 🔲 Belum |
+| M2 | Infrastruktur & Tooling Monorepo | ✅ Selesai |
+| M3 | Backend – Autentikasi & User | ✅ Selesai |
 | M4 | Backend – Manajemen Trip & Undangan | 🔲 Belum |
 | M5 | Backend – Voting (Multi-Poll) | 🔲 Belum |
 | M6 | Backend – Itinerary / Aktivitas | 🔲 Belum |
@@ -44,6 +45,33 @@
 | M18 | Mobile Testing Suite | 🔲 Belum |
 | M19 | CI/CD Pipelines | 🔲 Belum |
 | M20 | Rilis App Store & Play Store (EAS) | 🔲 Belum |
+
+---
+
+## 📮 Postman Collection (Backend)
+
+Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** setiap milestone backend (M3–M9) selesai. Jangan buat file collection terpisah per milestone — tambahkan folder/request ke file yang sama.
+
+| File | Fungsi |
+|------|--------|
+| `docs/postman/atur-perjalanan-api.postman_collection.json` | Semua endpoint `/v1/*` |
+| `docs/postman/atur-perjalanan-local.postman_environment.json` | Variabel lokal (`base_url`, token, dll.) |
+
+### Konvensi
+
+- **Folder** per domain API (`Health`, `Auth`, `Users`, `Trips`, `Voting`, …) — selaras modul NestJS
+- **Variabel** koleksi/environment: `base_url`, `access_token`, `realtime_token`, `username`, dan ID resource (`trip_id`, `poll_id`, …)
+- Request yang mengembalikan `access_token` **wajib** punya test script Postman untuk menyimpan token ke environment
+- Request authenticated memakai Bearer `{{access_token}}`; endpoint public override dengan `noauth`
+- Contoh body/query mengikuti DTO backend & tipe di `packages/shared-types`
+- Deskripsi request mencantumkan auth, body, response shape, dan error codes utama
+
+### Import ke Postman
+
+1. Postman → **Import** → pilih kedua file di `docs/postman/`
+2. Pilih environment **Atur Perjalanan — Local**
+3. Set `google_id_token` di environment
+4. Jalankan **Auth → Google Sign-In** (token tersimpan otomatis)
 
 ---
 
@@ -81,44 +109,45 @@
 
 ---
 
-## M2 — Infrastruktur & Tooling Monorepo 🔲 BELUM DIMULAI
+## M2 — Infrastruktur & Tooling Monorepo ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M2. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Set up the Turborepo monorepo, Supabase project, and Cloudflare R2 bucket."*
 
 **Referensi**: `docs/ARCHITECTURE.md §2, §3, §7`
 
 ### Checklist
-- [ ] Struktur direktori monorepo sesuai `ARCHITECTURE.md §2` (`backend/`, `mobile/`, `packages/shared-types/`, `figma/`, `docs/`)
-- [ ] `pnpm-workspace.yaml` + `turbo.json` — pipeline `build`, `lint`, `test`, `dev`
-- [ ] `backend/` — proyek NestJS baru (`nest new backend`), `prisma` terpasang, `schema.prisma` awal (extensions `pgcrypto`, `pg_trgm`)
-- [ ] `mobile/` — proyek Expo baru (`create-expo-app`), Expo Router, TypeScript strict mode
-- [ ] `packages/shared-types/` — package kosong siap diisi DTO bersama
-- [ ] Supabase project dibuat (cloud); `supabase/config.toml` untuk `supabase start` lokal
-- [ ] `prisma migrate dev` berhasil membuat migrasi pertama ke Supabase (lokal atau cloud)
-- [ ] Cloudflare R2 bucket `atur-perjalanan-media` dibuat; API token (scoped) dibuat
-- [ ] `.env.example` mendokumentasikan seluruh variabel di `ARCHITECTURE.md` Appendix
-- [ ] `GET /health` di NestJS merespons 200
+- [x] Struktur direktori monorepo sesuai `ARCHITECTURE.md §2` (`backend/`, `mobile/`, `packages/shared-types/`, `figma/`, `docs/`)
+- [x] `pnpm-workspace.yaml` + `turbo.json` — pipeline `build`, `lint`, `test`, `dev`
+- [x] `backend/` — proyek NestJS baru (`nest new backend`), `prisma` terpasang, `schema.prisma` awal (extensions `pgcrypto`, `pg_trgm`)
+- [x] `mobile/` — proyek Expo baru (`create-expo-app`), Expo Router, TypeScript strict mode
+- [x] `packages/shared-types/` — package kosong siap diisi DTO bersama
+- [x] Supabase project dibuat (cloud); `supabase/config.toml` untuk `supabase start` lokal
+- [x] `prisma migrate dev` berhasil membuat migrasi pertama ke Supabase (lokal atau cloud) — **manual step: requires DB credentials**
+- [ ] Cloudflare R2 bucket `atur-perjalanan-media` dibuat; API token (scoped) dibuat — **manual step: requires Cloudflare account**
+- [x] `.env.example` mendokumentasikan seluruh variabel di `ARCHITECTURE.md` Appendix
+- [x] `GET /health` di NestJS merespons 200
 
 ---
 
-## M3 — Backend: Autentikasi & User 🔲 BELUM DIMULAI
+## M3 — Backend: Autentikasi & User ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M3. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §1.3, §3.3 (users, follows), §4.3.1`, `docs/WORKFLOW.md §2, §4, §5`."*
 
 **Referensi**: `docs/ARCHITECTURE.md §1.3, §4.3–§4.4`, `docs/WORKFLOW.md §2, §4, §5`, `docs/ACCEPTANCE_CRITERIA.md §1, §3`
 
 ### Checklist
-- [ ] Prisma model `User` (+ `Follow` schema, tanpa endpoint aktif — post-MVP)
-- [ ] `POST /v1/auth/google` — verifikasi Google ID Token (`google-auth-library`), upsert `users`, kembalikan JWT
-- [ ] `POST /v1/auth/complete-registration` — set `username` (regex `^[a-zA-Z0-9_]{3,30}$`), JWT required
-- [ ] `GET /v1/users/check-username` — validasi real-time (Public)
-- [ ] `JwtStrategy` + `JwtAuthGuard` (Passport) — payload hanya `{ sub, exp }`, expiry 24 jam
-- [ ] `GET /v1/users/me`, `PUT /v1/users/me` (bio, website_url, location_label, is_public), `DELETE /v1/users/me`
-- [ ] `GET /v1/users/search` — `pg_trgm`, cursor pagination
-- [ ] `GET /v1/users/:username`, `GET /v1/users/:username/trips` — privacy-aware (hanya `trips.is_public = true` untuk viewer selain owner)
-- [ ] Global `ValidationPipe`, `HttpExceptionFilter`, `RequestIdInterceptor` terpasang di `main.ts`
-- [ ] Unit tests: `AuthService`, `UsersService` (coverage >80%)
-- [ ] e2e test: alur Google Sign-In → username setup → profile fetch
+- [x] Prisma model `User` (+ `Follow` schema, tanpa endpoint aktif — post-MVP)
+- [x] `POST /v1/auth/google` — verifikasi Google ID Token (`google-auth-library`), upsert `users`, kembalikan JWT
+- [x] `POST /v1/auth/complete-registration` — set `username` (regex `^[a-zA-Z0-9_]{3,30}$`), JWT required
+- [x] `GET /v1/users/check-username` — validasi real-time (Public)
+- [x] `JwtStrategy` + `JwtAuthGuard` (Passport) — payload hanya `{ sub, exp }`, expiry 24 jam
+- [x] `GET /v1/users/me`, `PUT /v1/users/me` (bio, website_url, location_label, is_public), `DELETE /v1/users/me`
+- [x] `GET /v1/users/search` — `pg_trgm`, cursor pagination
+- [x] `GET /v1/users/:username`, `GET /v1/users/:username/trips` — privacy-aware (hanya `trips.is_public = true` untuk viewer selain owner)
+- [x] Global `ValidationPipe`, `HttpExceptionFilter`, `RequestIdInterceptor` terpasang di `main.ts`
+- [x] Unit tests: `AuthService`, `UsersService` (coverage >80%)
+- [x] e2e test: alur Google Sign-In → username setup → profile fetch
+- [x] Postman Collection M3 — folder `Health`, `Auth`, `Users` di `docs/postman/atur-perjalanan-api.postman_collection.json` + environment lokal
 
 ---
 
@@ -141,6 +170,7 @@
 - [ ] `GET /v1/trips/:tripId/members`, `DELETE /v1/trips/:tripId/members/:userId` (creator only)
 - [ ] Soft-delete Prisma extension aktif untuk model `Trip` (`deleted_at IS NULL` otomatis)
 - [ ] Unit + e2e tests: create fixed/voting, invite/accept/decline/cancel, member removal
+- [ ] Postman — tambah folder `Trips` & `Invitations` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M4)
 
 ---
 
@@ -159,6 +189,7 @@
 - [ ] `POST /v1/trips/:tripId/polls/:pollId/lock` — creator only; untuk `poll_type=tanggal` → update `trips.start_date/end_date/status=fixed`, clear `voting_deadline` (transaksi)
 - [ ] `DELETE /v1/trips/:tripId/polls/:pollId`
 - [ ] Unit + e2e tests: buat poll per jenis, vote/retract, lock tanggal vs lock aktivitas, batas 1 poll aktif per jenis
+- [ ] Postman — tambah folder `Voting` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M5)
 
 ---
 
@@ -177,6 +208,7 @@
 - [ ] Integrasi Google Places/Static Maps API — resolve `thumbnail_url` dari `maps_link` (background, tidak blocking response)
 - [ ] Validasi: `activity_date` harus dalam rentang `trips.start_date`–`end_date` ketika trip `status=fixed`
 - [ ] Unit + e2e tests: CRUD aktivitas, validasi waktu, resolve thumbnail
+- [ ] Postman — tambah folder `Activities` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M6)
 
 ---
 
@@ -204,6 +236,7 @@
 - [ ] `PUT /v1/trips/:tripId/cover` — set `trips.cover_document_id`
 - [ ] Migrasi SQL: tambah kolom `trips.cover_document_id`, `trip_activities.cover_document_id` (FK ke `trip_documents`, `DEFERRABLE` karena circular FK — lihat `ARCHITECTURE.md §3.3`)
 - [ ] Unit + e2e tests: kirim pesan text/media, soft delete, presign flow (mock R2), cover selection, RLS policy (integration test terhadap Supabase lokal)
+- [ ] Postman — tambah folder `Chat`, `Media`, `Uploads` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M7)
 
 ---
 
@@ -219,6 +252,7 @@
 - [ ] `POST /v1/wishlists`, `PUT /v1/wishlists/:id` (ownership check), `DELETE /v1/wishlists/:id` (soft delete)
 - [ ] `POST /v1/wishlists/:id/convert-to-trip` — **transaksi atomik**: insert `trips` + seed `trip_activities` hari 1, soft-delete `wishlists`
 - [ ] Unit + e2e tests: CRUD wishlist, convert-to-trip (verifikasi atomicity — rollback jika salah satu langkah gagal)
+- [ ] Postman — tambah folder `Wishlists` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M8)
 
 ---
 
@@ -236,6 +270,7 @@
 - [ ] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE notifications;` + RLS `user_id = auth.uid()`
 - [ ] `@nestjs/schedule` cron — voting reminder H-7d, H-1d, H-1h sebelum `voting_deadline` untuk peserta yang belum vote
 - [ ] Unit + e2e tests: notifikasi ter-generate pada setiap event, unread count, mark read, reminder cron (fake timers)
+- [ ] Postman — tambah folder `Notifications` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M9)
 
 ---
 
@@ -254,7 +289,7 @@
 - [ ] Unit test coverage keseluruhan backend ≥ 80% (`jest --coverage`)
 - [ ] e2e test suite lengkap (Jest + Supertest) mencakup seluruh flow M3–M9
 - [ ] `pnpm --filter backend build` — kompilasi TypeScript bersih tanpa error
-- [ ] Postman/Insomnia collection lengkap seluruh endpoint `/v1/*`
+- [ ] Postman — audit koleksi lengkap: semua endpoint M3–M9 ada, deskripsi & contoh body konsisten, test script token masih berfungsi
 
 ---
 
@@ -407,6 +442,7 @@ mobile/src/
 - [ ] Error dari Google API di-log, tidak menggagalkan operasi DB
 - [ ] `GOOGLE_CALENDAR_SA_KEY` terdokumentasi di `.env.example`
 - [ ] Mobile: `CalendarEventModal` (`Screen96`) — tombol dari menu ⋮ trip detail
+- [ ] Postman — tambah folder `Integrations` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (endpoint Google Calendar M16)
 
 ---
 
@@ -493,4 +529,5 @@ Do not deviate from the patterns in docs/ARCHITECTURE.md.
 1. **Urutan milestone dipatuhi** — Jangan lewati milestone yang belum selesai. Desain (M1) selalu mendahului implementasi backend/mobile.
 2. **Architecture compliance** — Semua kode mengikuti `docs/ARCHITECTURE.md`, yang merupakan target-state, bukan riwayat. Penyimpangan harus dijustifikasi di sini (MILESTONES.md), bukan dengan mengedit ARCHITECTURE.md agar sesuai kode yang sudah terlanjur berbeda.
 3. **Definition of Done** — Milestone selesai hanya jika **semua** checklist item ter-centang.
-4. **Update status** — Perbarui tabel Progress Overview setelah milestone selesai. Progress **hanya** dilacak di file ini.
+4. **Postman Collection** — Setiap milestone backend (M3–M9) wajib memperbarui `docs/postman/atur-perjalanan-api.postman_collection.json` sesuai konvensi § Postman Collection. M10 melakukan audit final.
+5. **Update status** — Perbarui tabel Progress Overview setelah milestone selesai. Progress **hanya** dilacak di file ini.
