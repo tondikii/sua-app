@@ -1,5 +1,7 @@
 # Atur Perjalanan ✈️
 
+> **Version**: 2.0 (Juli 2026) — Migrasi tech stack ke Full TypeScript. Lihat [Changelog](#-changelog-dokumen).
+
 > Mengubah wacana perjalanan menjadi kenyataan.
 
 Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun *itinerary*, dan berkolaborasi dalam satu platform terpusat.
@@ -12,15 +14,20 @@ Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-te
 *(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md) dan [BRIEF](docs/BRIEF.md).)*
 
 ## ⚙️ Tech Stack
-* **Arsitektur**: Monorepo
-* **Backend**: Go (Gin Framework)
-* **Mobile**: Kotlin Multiplatform (KMP)
-* **Database**: PostgreSQL
+
+* **Arsitektur**: Monorepo (Turborepo) — Full TypeScript end-to-end
+* **Backend**: NestJS (Node.js) + Prisma ORM
+* **Mobile**: Expo (React Native) — satu codebase iOS & Android
+* **Database**: PostgreSQL terkelola oleh **Supabase**
+* **Realtime**: Supabase Realtime (chat trip live tanpa WebSocket gateway custom)
+* **File Storage**: Cloudflare R2 (S3-compatible, free tier 10 GB + zero egress) untuk foto/video chat, media trip, cover
 * **Integrasi**: Google Sign-In, Google Calendar API (tambah event ke kalender sendiri via menu ⋮ — opsional)
+
+> Riwayat keputusan stack ada di [docs/MILESTONES.md](docs/MILESTONES.md) dan detail arsitektur lengkap di [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## 🎨 Desain UI (Figma)
 
-Desain high-fidelity (**125 layar** — termasuk state variants per pipeline) diekspor ke folder [`figma/`](figma/). Jalankan preview lokal:
+Desain high-fidelity (**125 layar** — termasuk state variants per pipeline) dibuat dengan **Figma Make** dan diekspor ke folder [`figma/`](figma/) di root repo. Jalankan preview lokal:
 
 ```bash
 cd figma && npm i && npm run dev
@@ -35,8 +42,8 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 2. [Product Requirements Document (PRD)](docs/PRD.md).
 3. [Workflow](docs/WORKFLOW.md).
 4. [Acceptance Criteria](docs/ACCEPTANCE_CRITERIA.md) - Skenario pengujian fitur.
-5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Arsitektur DB, Backend, dan Mobile.
-6. [Milestones & Roadmap](docs/MILESTONES.md).
+5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Arsitektur DB, Backend, dan Mobile (target state — tidak melacak progress).
+6. [Milestones & Roadmap](docs/MILESTONES.md) - Progress development ada di sini.
 7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory, penghubung ke workflow.
 
 ## 🚀 Memulai Pengerjaan
@@ -45,11 +52,13 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 | Tools | Versi Minimum |
 |-------|---------------|
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | 4.x |
-| [Go](https://go.dev/dl/) | 1.23+ |
-| [golang-migrate CLI](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate) | latest |
-| [Android Studio](https://developer.android.com/studio) | Hedgehog (2023.1.1)+ |
-| JDK | 17+ |
+| [Node.js](https://nodejs.org/) | 20 LTS+ |
+| [pnpm](https://pnpm.io/installation) | 9+ |
+| [Supabase CLI](https://supabase.com/docs/guides/cli) | latest |
+| [Expo CLI](https://docs.expo.dev/more/expo-cli/) | latest (`npx expo`) |
+| [EAS CLI](https://docs.expo.dev/eas/) | latest (build/submit — M20) |
+| Xcode (untuk build iOS) | 15+ (opsional, jika tidak pakai EAS Build cloud) |
+| Android Studio (untuk emulator Android) | Hedgehog (2023.1.1)+ |
 
 ### 1. Setup Environment
 
@@ -58,52 +67,60 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 git clone <repo-url>
 cd atur-perjalanan
 
-# Buat dua file .env (wajib dua file terpisah)
-cp .env.example .env            # Digunakan Docker Compose
-cp .env.example backend/.env    # Digunakan Go server
+# Install semua dependency (root + backend + mobile) via workspace
+pnpm install
 
-# Edit kedua file: isi JWT_SECRET, GOOGLE_CLIENT_ID, dll.
+# Buat dua file .env (wajib dua file terpisah)
+cp .env.example .env               # Digunakan tooling root (Supabase CLI, dsb.)
+cp .env.example backend/.env       # Digunakan NestJS server
+
+# Edit kedua file: isi JWT_SECRET, GOOGLE_CLIENT_ID, SUPABASE_URL,
+# SUPABASE_SERVICE_ROLE_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+# R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, dll.
 # Generate JWT secret: openssl rand -hex 32
 #
-# Catatan: Docker Postgres memakai port host 5433 (bukan 5432) agar tidak
-# bentrok dengan PostgreSQL lokal di Mac. DBeaver: localhost:5433.
+# Catatan: Database berjalan di Supabase (cloud), bukan Docker lokal.
+# Untuk pengembangan offline, gunakan `supabase start` (Supabase CLI)
+# yang menjalankan Postgres lokal di port 54322 — lihat docs/ARCHITECTURE.md §3.
 ```
 
 ### 2. Jalankan Backend
 
 ```bash
-# Start PostgreSQL (Docker)
-make up
+# Terapkan migrasi Prisma ke database Supabase (cloud atau lokal via `supabase start`)
+cd backend
+pnpm prisma migrate deploy
 
-# Tunggu ~5 detik, lalu jalankan migrasi
-make migrate-up
-
-# Jalankan Go server (port 8080)
-make run
+# Jalankan NestJS server (port 8080) dalam mode watch
+pnpm start:dev
 ```
 
 Server berjalan di `http://localhost:8080`. Health check: `GET /health`.
 
-### 3. Jalankan Mobile (Android)
+### 3. Jalankan Mobile (Expo)
 
 ```bash
-# Buka project mobile di Android Studio
-# File > Open > pilih folder mobile/
+cd mobile
+pnpm install
+pnpm start          # membuka Expo Dev Tools (Metro bundler)
 ```
 
-Di Android Studio: sync Gradle → pilih device/emulator → Run.
+Scan QR code dengan aplikasi **Expo Go** di HP, atau tekan `i` (iOS Simulator) / `a` (Android Emulator) di terminal.
 
-### Perintah Berguna (Makefile)
+### Perintah Berguna
 
 ```bash
-make help           # Lihat semua perintah
-make up             # Start Docker (PostgreSQL)
-make down           # Stop Docker
-make migrate-up     # Terapkan semua migrasi
-make migrate-down   # Rollback 1 migrasi terakhir
-make run             # Jalankan backend
-make test            # Jalankan unit tests (race + coverage)
-make test-integration # Jalankan integration tests (butuh TEST_DATABASE_URL)
-make lint            # Jalankan go vet
-make build           # Compile binary ke backend/bin/api
+pnpm -w lint           # Lint seluruh workspace (backend + mobile)
+pnpm -w test           # Unit tests seluruh workspace
+pnpm --filter backend prisma:studio    # Buka Prisma Studio (GUI DB)
+pnpm --filter backend test:e2e         # Integration tests backend
+pnpm --filter mobile build:android     # EAS Build Android (M20)
+pnpm --filter mobile build:ios         # EAS Build iOS (M20)
 ```
+
+## 📝 Changelog Dokumen
+
+| Versi | Tanggal | Perubahan |
+|-------|---------|-----------|
+| 2.0 | Juli 2026 | Migrasi tech stack: Go/Gin/KMP → **NestJS + Expo (React Native)** full TypeScript; DB tetap PostgreSQL namun dikelola **Supabase**; chat pakai **Supabase Realtime**; file upload pakai **Cloudflare R2**. |
+| 1.0 | — | Rilis awal dokumentasi (Go/Gin backend, Kotlin Multiplatform mobile). |

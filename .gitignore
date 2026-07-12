@@ -3,33 +3,6 @@
 # ============================================================
 
 # Environment files — NEVER commit these
-.env
-backend/.env
-credentials/
-
-# Go build output
-backend/bin/
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Go test & coverage artifacts
-*.test
-*.out
-
-# Go workspace (if added later)
-go.work.sum
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
+.env.old
 
 figma/node_modules

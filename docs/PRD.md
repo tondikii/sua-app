@@ -1,5 +1,7 @@
 # Product Requirements Document (PRD)
 
+> **Version**: 2.0 — Juli 2026 · Referensi milestone & endpoint disesuaikan dengan backend NestJS baru (`docs/ARCHITECTURE.md` v2.0); `trip_destinations` → `trip_activities`.
+
 > **Tujuan dokumen ini**: Spesifikasi MVP lengkap selaras dengan **125 layar** high-fidelity Figma di folder `figma/`. Inventori layar, design tokens, dan workflow lengkap: [docs/FIGMA.md](docs/FIGMA.md).
 
 ---
@@ -64,7 +66,7 @@
 
 ### 2.4 Trip Card — Tab Mendatang (`Screen5Home`)
 * Cover 150px (`cover_image_url`), judul 16/800, **tags** (`TripTags` card — max 3 + `+N`, format `#Tag`), rentang tanggal + ikon `Calendar`, **stacked avatars** (26px, overlap -9px, max 4 di FE).
-* `status=voting_pending` → **`"Tanggal sedang divoting"`**; fixed → `3–7 Jul 2026 · Sepanjang hari` atau `20–24 Agu 2026 · 08:00 – 17:00` (🔜 M5.2).
+* `status=voting_pending` → **`"Tanggal sedang divoting"`**; fixed → `3–7 Jul 2026 · Sepanjang hari` atau `20–24 Agu 2026 · 08:00 – 17:00` (🔜 M4).
 * Tap card → detail trip.
 
 ### 2.5 Empty State — Tab Mendatang (`Screen6EmptyBeranda`)
@@ -78,7 +80,7 @@
 ### 2.7 Tab Undangan (`Screen8HomeUndangan`)
 * **`InvitationCard`**: cover 120px + gradient overlay; *"Diundang oleh **@username**"*; judul; tanggal; **Terima** (coral 40px) / **Tolak** (bg light, border).
 * `PUT /v1/trips/:tripId/invitations/:id` `{accept: true|false}` → 204.
-* 🔜 M5.2: `start_date`/`end_date`/`status` di `trip` summary invitation.
+* 🔜 M4: `start_date`/`end_date`/`status` di `trip` summary invitation.
 
 ### 2.8 Notifikasi (`Screen9Notifikasi`)
 * Full-page bg `C.light`; header *"Notifikasi"* + **"Tandai semua dibaca"** → `PUT /v1/notifications/read-all`.
@@ -91,7 +93,7 @@
 | *Voting Destinasi **Raja Ampat** deadline besok.* | `voting_deadline` 🔜 `poll_type` | Vote Sekarang → |
 | *Rina menambahkan aktivitas **Sunrise di Puncak Jayagiri** di Bali Trip.* | `destination_update` | Tap → trip |
 
-> Hydrate `actor_id`/`trip_id` di FE. Payload `invite` saat ini `{}` — lookup `invitation_id` via `GET /v1/trips/invitations`. 🔜 M5.2 enriched DTO.
+> Hydrate `actor_id`/`trip_id` di FE. Payload `invite` saat ini `{}` — lookup `invitation_id` via `GET /v1/trips/invitations`. 🔜 M9 enriched DTO.
 
 ## 3. Pencarian (Tab Cari)
 
@@ -127,11 +129,11 @@
 * Kartu profil atas → Edit; section Bantuan & Legal (FAQ, Privasi, S&K); section Akun (Hapus Akun); kartu terpisah **Keluar**.
 
 ### 4.3 Edit Profil (`Screen18EditProfil`)
-* Bio max 150 + counter; username read-only; website & ubah foto 🔜 M5.2; `PUT /v1/users/me` `{bio}`.
+* Bio max 150 + counter; username read-only; website & ubah foto 🔜 M3; `PUT /v1/users/me` `{bio}`.
 
 ### 4.4 Bantuan & Hapus Akun (`Screen19`, `Screen20`)
 * FAQ accordion 5 item; kontak `bantuan@aturperjalanan.id`.
-* Hapus akun: ketik username konfirmasi + destructive CTA; `DELETE /v1/users/me` 🔜 M5.2.
+* Hapus akun: ketik username konfirmasi + destructive CTA; `DELETE /v1/users/me` 🔜 M3.
 
 ## 5. Manajemen Perjalanan (Core)
 
@@ -169,7 +171,7 @@
 * Flow: search kosong → hasil / kosong / sebagian terundang / daftar terundang.
 * Email belum terdaftar → **Undang lewat Email** → banner terkirim (`Screen39` → `Screen40`, tanpa konfirmasi terpisah).
 * CTA **Masuk ke Perjalanan** untuk lewati undangan.
-* **Tidak ada** daftar saran teman; batalkan undangan pending per baris (`Screen41`, 🔜 `DELETE …/invitations/:id` M5.2).
+* **Tidak ada** daftar saran teman; batalkan undangan pending per baris (`Screen41`, 🔜 `DELETE …/invitations/:id` M4).
 
 ### 5.5 Detail Trip — Tab Itinerary (§7)
 
@@ -232,11 +234,11 @@
 * **Anggota** (`Screen97`–`102`): search username/email · pending 3 status · creator bisa **Keluarkan**.
 * **Edit** (`Screen103`): form selaras buat trip §6 · CTA **Simpan**.
 * **Hapus** (`Screen95`): konfirmasi destructive · creator only.
-* **Kalender** (`Screen96`): event ke kalender sendiri · M11.
+* **Kalender** (`Screen96`): event ke kalender sendiri · M16.
 
 ## 6. Kolaborasi & Kalender
 * **Undangan** (§6 pasca-create + §11 Kelola Trip): username atau email — flow search → undang / pending / ditolak.
-* **Google Calendar** (`Screen96CalendarSyncModal`): menu ⋮ → tambah event ke **kalender sendiri** via OAuth Google (opsional, M11).
+* **Google Calendar** (`Screen96CalendarSyncModal`): menu ⋮ → tambah event ke **kalender sendiri** via OAuth Google (opsional, M16).
 
 ## 7. Wishlist Aktivitas (§12)
 
@@ -271,7 +273,7 @@
 * **Toast** (`Screen119`): Sukses (teal) · Error (coral) · Info (putih) — auto 3 detik atau tutup manual
 * **Offline** (`Screen120`): full-screen *Tidak ada koneksi* + **Coba Lagi** (bukan halaman 404)
 * **Media viewer** (`Screen121`–`123`): fullscreen dari tab Media — foto, video pause/playing, swipe, share, Jadikan Cover
-* **Dark mode** (`Screen124`): variant gelap Beranda saja — opsional M12
+* **Dark mode** (`Screen124`): variant gelap Beranda saja — opsional M17
 * **Design tokens** (`Screen125`, `colors.ts`): palette, tipografi, radius, button states — referensi `ui/theme/`
 
 > Empty, validasi, modal konfirmasi tetap di section fitur (§3–§12); tidak diduplikasi di registry §13.

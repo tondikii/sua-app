@@ -1,9 +1,21 @@
 # Milestones — Atur Perjalanan
 
-> **Tujuan dokumen ini**: 
-> - Peta jalan pengembangan lengkap dari *setup* infrastruktur (M0) hingga rilis di Play Store (M15).
-> - Setiap milestone dirancang agar dapat dikerjakan oleh AI agent secara mandiri cukup dengan prompt seperti **"Let's implement M7"** dan referensi dokumen ini.
-> - Untuk product team: Tracking progress development, dependency map antar milestone, dan estimasi effort per tahap.
+> **Version**: 3.0 — Juli 2026
+>
+> **Tujuan dokumen ini**:
+> - Peta jalan pengembangan lengkap dari *setup* dokumentasi (M0) hingga rilis di App Store & Play Store (M20).
+> - **Satu-satunya tempat progress development dilacak.** `docs/ARCHITECTURE.md` adalah target-state blueprint dan sengaja tidak menyimpan status pengerjaan — semua ✅/🔲 ada di sini.
+> - Setiap milestone dirancang agar dapat dikerjakan oleh AI agent secara mandiri cukup dengan prompt seperti **"Let's implement M5"** dan referensi dokumen ini.
+> - Untuk product team: tracking progress development, dependency map antar milestone, dan estimasi effort per tahap.
+
+---
+
+## 📝 Changelog Dokumen
+
+| Versi | Perubahan |
+|-------|-----------|
+| 3.0 | **Revamp menyeluruh** menyusul migrasi tech stack (Go/Gin/KMP → **NestJS + Expo**, full TypeScript). Urutan milestone diperbaiki agar mencerminkan pengerjaan nyata: fondasi dokumen → **desain Figma Make dulu** → baru backend & mobile. Backend/mobile lama (Go/KMP) dianggap usang total; progress di-reset ke 🔲 karena tidak ada baris kode TypeScript yang bisa diwariskan dari implementasi Go. Gap-tracking yang dulu tersebar di beberapa milestone (M5.1/M5.2) sekarang melebur jadi satu rangkaian milestone backend yang linear, karena tidak ada lagi "MVP tipis" vs "gap desain" — backend baru dibangun langsung menyasar skema penuh di `ARCHITECTURE.md`. |
+| 2.x | (Go/Gin + KMP) — superseded, riwayat detail tidak dipertahankan di sini; lihat git history jika perlu referensi arsip. |
 
 ---
 
@@ -11,555 +23,453 @@
 
 | # | Milestone | Status |
 |---|-----------|--------|
-| M0 | Foundation & Infrastructure | ✅ Selesai |
-| M1 | Backend – Autentikasi | ✅ Selesai |
-| M2 | Backend – Manajemen Trip | ✅ Selesai |
-| M3 | Backend – Kolaborasi & Chat | ✅ Selesai |
-| M4 | Backend – Profil & Wishlist | ✅ Selesai |
-| M5 | Backend – Testing & Hardening | ✅ Selesai |
-| M5.1 | Backend – API Gaps & Privacy (Figma) | ✅ Selesai |
-| M6 | Mobile – KMP Shared Module | 🔲 Belum |
-| M7 | Android – Auth & Onboarding | 🔲 Belum |
-| M8 | Android – Home & Trip UI | 🔲 Belum |
-| M9 | Android – Kolaborasi & Chat UI | 🔲 Belum |
-| M10 | Android – Profil & Wishlist UI | 🔲 Belum |
-| M11 | Google Calendar Integration | 🔲 Belum |
-| M12 | Figma Design Alignment | 🔲 Belum |
-| M13 | Mobile Testing Suite | 🔲 Belum |
-| M14 | CI/CD Pipelines | 🔲 Belum |
-| M15 | Play Store Release | 🔲 Belum |
+| M0 | Fondasi Dokumentasi | ✅ Selesai |
+| M1 | Desain Produk (Figma Make) | ✅ Selesai |
+| M2 | Infrastruktur & Tooling Monorepo | 🔲 Belum |
+| M3 | Backend – Autentikasi & User | 🔲 Belum |
+| M4 | Backend – Manajemen Trip & Undangan | 🔲 Belum |
+| M5 | Backend – Voting (Multi-Poll) | 🔲 Belum |
+| M6 | Backend – Itinerary / Aktivitas | 🔲 Belum |
+| M7 | Backend – Chat (Supabase Realtime) & Media (R2) | 🔲 Belum |
+| M8 | Backend – Wishlist & Konversi Trip | 🔲 Belum |
+| M9 | Backend – Notifikasi & Background Jobs | 🔲 Belum |
+| M10 | Backend – Testing & Hardening | 🔲 Belum |
+| M11 | Mobile – Fondasi Expo (Shell, Auth Client, Theme) | 🔲 Belum |
+| M12 | Mobile – Auth & Onboarding UI | 🔲 Belum |
+| M13 | Mobile – Beranda & Trip Detail Shell UI | 🔲 Belum |
+| M14 | Mobile – Voting, Chat, Media, Kelola Trip UI | 🔲 Belum |
+| M15 | Mobile – Pencarian, Profil & Wishlist UI | 🔲 Belum |
+| M16 | Google Calendar Integration | 🔲 Belum |
+| M17 | Figma Design QA (Audit 125 Layar) | 🔲 Belum |
+| M18 | Mobile Testing Suite | 🔲 Belum |
+| M19 | CI/CD Pipelines | 🔲 Belum |
+| M20 | Rilis App Store & Play Store (EAS) | 🔲 Belum |
 
 ---
 
-## M0 — Foundation & Infrastructure ✅ SELESAI
+## M0 — Fondasi Dokumentasi ✅ SELESAI
 
-**Tujuan**: Menyiapkan infrastruktur dasar monorepo.
-
-**Referensi**: `docs/ARCHITECTURE.md §2`, `docker-compose.yml`, `Makefile`, `.env.example`
+**Tujuan**: Menulis rangkaian dokumen produk & teknis yang menjadi sumber kebenaran sebelum satu baris kode pun ditulis.
 
 ### Checklist
-- [x] Struktur direktori monorepo sesuai `ARCHITECTURE.md §2`
-- [x] `docker-compose.yml` menjalankan PostgreSQL 16-alpine dengan health check
-- [x] `Makefile` menyediakan perintah: `up`, `down`, `migrate-up`, `migrate-down`, `build`, `run`, `test`, `test-integration`, `lint`
-- [x] `.env.example` mendokumentasikan semua variabel yang dibutuhkan
-- [x] 15 file migrasi SQL tersedia di `backend/migrations/` (000001–000015)
-- [x] `backend/go.mod` dan `backend/go.sum` valid
+- [x] `docs/BRIEF.md` — masalah, solusi, target audiens, brand
+- [x] `docs/PRD.md` — spesifikasi fitur MVP
+- [x] `docs/WORKFLOW.md` — alur produk §1–§13, selaras registry layar Figma
+- [x] `docs/ACCEPTANCE_CRITERIA.md` — skenario UAT
+- [x] `docs/ARCHITECTURE.md` — blueprint teknis (v2.0: NestJS + Expo + Supabase + R2)
+- [x] `docs/MILESTONES.md` — dokumen ini
+- [x] `docs/FIGMA.md` — kerangka referensi desain (diisi lengkap setelah M1)
+- [x] `README.md` — overview & petunjuk setup
 
 ---
 
-## M1 — Backend: Autentikasi ✅ SELESAI
+## M1 — Desain Produk (Figma Make) ✅ SELESAI
 
-**Tujuan**: Alur autentikasi Google Sign-In → JWT app token.
+**Tujuan**: Merancang seluruh 125 layar high-fidelity **sebelum** backend/mobile dibangun, agar implementasi punya target visual & interaksi yang presisi — bukan sebaliknya.
 
-**Referensi**: `docs/ARCHITECTURE.md §1.3, §4.4`, `docs/WORKFLOW.md §2`
+**Urutan kerja nyata**: fondasi dokumen (M0) → desain di Figma Make (M1, milestone ini) → baru backend (M2+) dan mobile (M11+). Ini sengaja dibalik dari kebiasaan "backend dulu, desain menyusul" karena desain 125 layar sudah selesai lebih dulu dan menjadi acuan kontrak API/schema di `ARCHITECTURE.md`.
 
 ### Checklist
-- [x] `POST /v1/auth/google` — verifikasi Google ID Token, upsert `users`, kembalikan JWT
-- [x] `POST /v1/auth/complete-registration` — simpan `username` pengguna baru (JWT required)
-- [x] Auth middleware `internal/middleware/auth.go` memvalidasi JWT (HS256, secret dari env)
-- [x] JWT payload hanya berisi `sub` (UUID) dan `exp`; token expiry 24 jam
-- [x] `internal/platform/googleapi/auth.go` memverifikasi ID Token via Google
-- [x] Pengguna baru → response `is_new_user: true`; pengguna lama → langsung ke app
+- [x] Desain 125 layar di Figma Make, mengikuti brand (`docs/BRIEF.md`) dan fitur MVP (`docs/PRD.md`)
+- [x] Export kode React dari Figma Make ke folder [`figma/`](../figma/) di root repo
+- [x] Registry layar dikelompokkan §1–§13 di `figma/src/app/App.tsx`, selaras `docs/WORKFLOW.md`
+- [x] Design tokens (warna, tipografi, spacing) didefinisikan di `figma/src/app/components/colors.ts`
+- [x] `docs/FIGMA.md` — inventori 125 layar + tokens + pemetaan ke `WORKFLOW.md`
+- [x] Preview lokal (`cd figma && npm i && npm run dev`) berjalan tanpa error
+
+> **Catatan implementasi selanjutnya**: `docs/ARCHITECTURE.md` §3 (skema DB) dan §4.3 (route tree) sudah dirancang untuk mencakup **seluruh** kebutuhan 125 layar ini secara langsung — tidak ada lagi tahap "MVP tipis dulu, susulan gap-fill" seperti pada rencana Go/KMP sebelumnya. Backend dan mobile dibangun langsung menyasar parity penuh.
 
 ---
 
-## M2 — Backend: Manajemen Trip ✅ SELESAI
+## M2 — Infrastruktur & Tooling Monorepo 🔲 BELUM DIMULAI
 
-**Tujuan**: CRUD trip, manajemen aktivitas itinerary (`trip_destinations` di DB), pengundangan partisipan.
+**AI Prompt**: *"Let's implement M2. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Set up the Turborepo monorepo, Supabase project, and Cloudflare R2 bucket."*
 
-**Referensi**: `docs/ARCHITECTURE.md §4.3`, `docs/WORKFLOW.md §6–§7`, `docs/ACCEPTANCE_CRITERIA.md §5`
+**Referensi**: `docs/ARCHITECTURE.md §2, §3, §7`
 
 ### Checklist
-- [x] `GET /v1/trips` — list trip user (cursor-paginated)
-- [x] `POST /v1/trips` — buat trip; 1 tanggal → `status=fixed`; >1 → `status=voting_pending` + `trip_date_candidates`
-- [x] `GET /v1/trips/:tripId` — detail trip (creator & participant visibility)
-- [x] `PUT /v1/trips/:tripId` — update info trip (creator only)
-- [x] `DELETE /v1/trips/:tripId` — soft delete (`deleted_at`, creator only)
-- [x] `POST /v1/trips/:tripId/invitations` — undang via username atau email
-- [x] `PUT /v1/trips/:tripId/invitations/:id` — terima / tolak undangan
-- [x] `GET /v1/trips/invitations` — list undangan pending milik user yang sedang login (tab "Undangan")
-- [x] `GET /v1/trips/:tripId/destinations` — list aktivitas itinerary (UI: tab Itinerary)
-- [x] `POST /v1/trips/:tripId/destinations` — tambah aktivitas
-- [x] `DELETE /v1/trips/:tripId/destinations/:id` — hapus aktivitas
-- [x] Semua query trips menyertakan `WHERE deleted_at IS NULL`
-- [x] Pembuatan trip + kandidat tanggal dibungkus dalam satu transaksi pgx
+- [ ] Struktur direktori monorepo sesuai `ARCHITECTURE.md §2` (`backend/`, `mobile/`, `packages/shared-types/`, `figma/`, `docs/`)
+- [ ] `pnpm-workspace.yaml` + `turbo.json` — pipeline `build`, `lint`, `test`, `dev`
+- [ ] `backend/` — proyek NestJS baru (`nest new backend`), `prisma` terpasang, `schema.prisma` awal (extensions `pgcrypto`, `pg_trgm`)
+- [ ] `mobile/` — proyek Expo baru (`create-expo-app`), Expo Router, TypeScript strict mode
+- [ ] `packages/shared-types/` — package kosong siap diisi DTO bersama
+- [ ] Supabase project dibuat (cloud); `supabase/config.toml` untuk `supabase start` lokal
+- [ ] `prisma migrate dev` berhasil membuat migrasi pertama ke Supabase (lokal atau cloud)
+- [ ] Cloudflare R2 bucket `atur-perjalanan-media` dibuat; API token (scoped) dibuat
+- [ ] `.env.example` mendokumentasikan seluruh variabel di `ARCHITECTURE.md` Appendix
+- [ ] `GET /health` di NestJS merespons 200
 
 ---
 
-## M3 — Backend: Kolaborasi & Chat ✅ SELESAI
+## M3 — Backend: Autentikasi & User 🔲 BELUM DIMULAI
 
-**Tujuan**: Voting tanggal, penguncian tanggal, chat internal trip.
+**AI Prompt**: *"Let's implement M3. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §1.3, §3.3 (users, follows), §4.3.1`, `docs/WORKFLOW.md §2, §4, §5`."*
 
-**Referensi**: `docs/ARCHITECTURE.md §4.3`, `docs/WORKFLOW.md §8, §9`, `docs/ACCEPTANCE_CRITERIA.md §4`
+**Referensi**: `docs/ARCHITECTURE.md §1.3, §4.3–§4.4`, `docs/WORKFLOW.md §2, §4, §5`, `docs/ACCEPTANCE_CRITERIA.md §1, §3`
 
 ### Checklist
-- [x] `GET /v1/trips/:tripId/candidates` — list kandidat tanggal + jumlah vote
-- [x] `POST /v1/trips/:tripId/candidates/:id/vote` — berikan vote (participants only)
-- [x] `DELETE /v1/trips/:tripId/candidates/:id/vote` — tarik vote
-- [x] `POST /v1/trips/:tripId/candidates/:id/lock` — kunci tanggal (creator only): update `trips.start_date`, `trips.end_date`, set `status=fixed`
-- [x] `GET /v1/trips/:tripId/messages` — list pesan (cursor-paginated, chronological)
-- [x] `POST /v1/trips/:tripId/messages` — kirim pesan (participants only)
-- [x] Penguncian tanggal dan update `trips` dibungkus dalam transaksi DB
-- [x] Google Calendar sync hanya via menu ⋮ detail trip (M11 mengimplementasikan OAuth + create event)
+- [ ] Prisma model `User` (+ `Follow` schema, tanpa endpoint aktif — post-MVP)
+- [ ] `POST /v1/auth/google` — verifikasi Google ID Token (`google-auth-library`), upsert `users`, kembalikan JWT
+- [ ] `POST /v1/auth/complete-registration` — set `username` (regex `^[a-zA-Z0-9_]{3,30}$`), JWT required
+- [ ] `GET /v1/users/check-username` — validasi real-time (Public)
+- [ ] `JwtStrategy` + `JwtAuthGuard` (Passport) — payload hanya `{ sub, exp }`, expiry 24 jam
+- [ ] `GET /v1/users/me`, `PUT /v1/users/me` (bio, website_url, location_label, is_public), `DELETE /v1/users/me`
+- [ ] `GET /v1/users/search` — `pg_trgm`, cursor pagination
+- [ ] `GET /v1/users/:username`, `GET /v1/users/:username/trips` — privacy-aware (hanya `trips.is_public = true` untuk viewer selain owner)
+- [ ] Global `ValidationPipe`, `HttpExceptionFilter`, `RequestIdInterceptor` terpasang di `main.ts`
+- [ ] Unit tests: `AuthService`, `UsersService` (coverage >80%)
+- [ ] e2e test: alur Google Sign-In → username setup → profile fetch
 
 ---
 
-## M4 — Backend: Profil & Wishlist ✅ SELESAI
+## M4 — Backend: Manajemen Trip & Undangan 🔲 BELUM DIMULAI
 
-**Tujuan**: Profil pengguna, pencarian user, manajemen wishlist.
+**AI Prompt**: *"Let's implement M4. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trips, trip_participants, trip_invitations), §3.4, §4.3`, `docs/WORKFLOW.md §3, §6, §11`."*
 
-**Referensi**: `docs/ARCHITECTURE.md §4.3`, `docs/WORKFLOW.md §4, §5, §12`, `docs/ACCEPTANCE_CRITERIA.md §3–§4`
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §3.4, §4.3`, `docs/WORKFLOW.md §3, §6, §11`, `docs/ACCEPTANCE_CRITERIA.md §2, §5`
 
 ### Checklist
-- [x] `GET /v1/users/me` — profil user yang sedang login
-- [x] `PUT /v1/users/me` — update bio
-- [x] `GET /v1/users/search` — pencarian username/nama (pg_trgm, cursor-paginated)
-- [x] `GET /v1/users/:username` — profil user lain
-- [x] `GET /v1/wishlists` — list wishlist (filter by tag/priority, cursor-paginated)
-- [x] `POST /v1/wishlists` — buat item wishlist baru
-- [x] `PUT /v1/wishlists/:id` — update wishlist (ownership check)
-- [x] `DELETE /v1/wishlists/:id` — soft delete wishlist
-- [x] Route ordering: `/search` dan `/me` terdaftar sebelum `/:username`
+- [ ] Prisma models: `Trip`, `TripParticipant`, `TripInvitation`, `TripDateCandidate`, `TripDateVote`
+- [ ] `POST /v1/trips` — mode tanggal pasti (`status=fixed`) vs kandidat (`status=voting_pending` + auto-create poll `tanggal`, `voting_deadline`) — **dalam satu transaksi Prisma**
+- [ ] `GET /v1/trips?tab=upcoming|completed` — enriched (`cover_image_url`, `participant_count`, `participants_preview[]`, `voting_deadline`), cursor pagination
+- [ ] `GET /v1/trips/:tripId`, `PUT /v1/trips/:tripId` (creator only), `DELETE /v1/trips/:tripId` (soft delete, creator only)
+- [ ] `PUT /v1/trips/:tripId/cover` — set dari `trip_documents` (bergantung M7 untuk data media, endpoint bisa distub lebih dulu)
+- [ ] `POST /v1/trips/:tripId/invitations` — via username atau email
+- [ ] `PUT /v1/trips/:tripId/invitations/:id` — terima/tolak (transaksi: update status + insert `trip_participants`)
+- [ ] `DELETE /v1/trips/:tripId/invitations/:id` — batalkan undangan pending (inviter)
+- [ ] `GET /v1/trips/invitations` — daftar undangan pending milik user, enriched `trip` + `inviter`
+- [ ] `GET /v1/trips/:tripId/members`, `DELETE /v1/trips/:tripId/members/:userId` (creator only)
+- [ ] Soft-delete Prisma extension aktif untuk model `Trip` (`deleted_at IS NULL` otomatis)
+- [ ] Unit + e2e tests: create fixed/voting, invite/accept/decline/cancel, member removal
 
 ---
 
-## M5 — Backend: Testing & Hardening ✅ SELESAI
+## M5 — Backend: Voting (Multi-Poll) 🔲 BELUM DIMULAI
 
-**Tujuan**: Middleware keamanan + test suite yang memvalidasi semua business logic.
+**AI Prompt**: *"Let's implement M5. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_polls, trip_poll_options, trip_poll_votes), §4.3`, `docs/WORKFLOW.md §8`."*
 
-**Referensi**: `docs/ARCHITECTURE.md §4.2, §4.6`, `docs/ACCEPTANCE_CRITERIA.md`
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3`, `docs/WORKFLOW.md §8`, `docs/ACCEPTANCE_CRITERIA.md §4`
 
 ### Checklist
-- [x] **Rate Limiter** — `internal/middleware/rate_limiter.go`: per-IP sliding-window, 120 req/min, **hanya dipasang di grup `/v1/`** (tidak termasuk `/health`)
-- [x] **Request ID** — `internal/middleware/request_id.go`: inject/propagate `X-Request-ID` di setiap request
-- [x] **Bug Fix** — `trip_repo.Update` sekarang menyertakan kolom `status` sehingga `LockDate` benar-benar menyimpan `status=fixed` ke DB
-- [x] **Bug Fix** — `wishlist_repo.FindByID` sekarang menyertakan `AND deleted_at IS NULL`
-- [x] **Cursor pagination** — `user_repo.SearchByQuery` mengimplementasikan keyset pagination via `id > cursor`
-- [x] **Interface cleanup** — `TripRepository` hanya memiliki `ListByParticipant` (duplikat `FindByParticipant` dihapus dari interface)
-- [x] **Constructor cleanup** — `NewTripService` tidak lagi menerima `TripParticipantRepository` atau `FollowRepository` yang tidak terpakai (SQL transaksi langsung menggunakan pool)
-- [x] **Unit Tests – jwtutil** — `platform/jwtutil/jwtutil_test.go`: round-trip, wrong secret, tampered token, expired, invalid subject (coverage: 85%)
-- [x] **Unit Tests – Middleware** — `middleware/auth_test.go`, `rate_limiter_test.go`, `request_id_test.go` (coverage: 88%)
-- [x] **Unit Tests – User Service** — UpsertFromGoogle, CompleteRegistration, GetProfile, UpdateProfile, GetByID (coverage: >80%)
-- [x] **Unit Tests – Trip Service** — GetTrip, UpdateTrip, DeleteTrip, CastVote/RetractVote, LockDate, InviteParticipant, AddDestination/RemoveDestination, SendMessage/GetMessages, ListPendingInvitations (coverage: ~55% unit-only; transactional methods covered by integration tests)
-- [x] **Unit Tests – Wishlist Service** — Create (default priority), List (filter), Update, Delete (ownership) (coverage: >80%)
-- [x] **Integration Tests scaffold** — `service/integration_test.go` (`//go:build integration`): CreateTrip fixed/voting, RespondToInvitation; dijalankan dengan `make test-integration`
-- [x] `go build ./...` — kompilasi bersih tanpa error
-- [x] `go test -race ./internal/...` — semua unit tests lulus dengan race detector
-
-> **Catatan Coverage**: Unit test coverage `internal/service` = ~55%. Fungsi `CreateTrip` dan `RespondToInvitation` menggunakan `pgxpool.Pool` langsung (untuk transaksi DB) sehingga tidak dapat di-unit test tanpa DB nyata. Target 70% dicapai dengan menjalankan integration tests (`make test-integration`) yang memerlukan `TEST_DATABASE_URL`.
+- [ ] Prisma models: `TripPoll`, `TripPollOption`, `TripPollVote`
+- [ ] `GET /v1/trips/:tripId/polls` — semua poll (tanggal/aktivitas/lainnya) dengan tally per opsi
+- [ ] `POST /v1/trips/:tripId/polls` — buat poll `aktivitas`/`lainnya` (validasi: max 1 poll aktif per `poll_type`)
+- [ ] `POST /v1/trips/:tripId/polls/:pollId/vote`, `DELETE .../vote` — participants only
+- [ ] `POST /v1/trips/:tripId/candidates/:id/vote`, `DELETE .../vote` — vote tanggal (tetap terhubung ke `trip_date_candidates`, bukan `trip_poll_votes`, agar tidak dobel hitung)
+- [ ] `POST /v1/trips/:tripId/polls/:pollId/lock` — creator only; untuk `poll_type=tanggal` → update `trips.start_date/end_date/status=fixed`, clear `voting_deadline` (transaksi)
+- [ ] `DELETE /v1/trips/:tripId/polls/:pollId`
+- [ ] Unit + e2e tests: buat poll per jenis, vote/retract, lock tanggal vs lock aktivitas, batas 1 poll aktif per jenis
 
 ---
 
-## M5.1 — Backend: API Gaps & Privacy (Figma Parity) ✅ SELESAI
+## M6 — Backend: Itinerary / Aktivitas 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M5.1. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §4.3.1`, `docs/FIGMA.md § Kebutuhan API`."*
+**AI Prompt**: *"Let's implement M6. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_activities), §4.3`, `docs/WORKFLOW.md §7`."*
 
-**Tujuan**: Menutup gap audit Figma sebelum mobile M6–M10.
-
-**Referensi**: `docs/FIGMA.md`, `docs/PRD.md §2`, `docs/ACCEPTANCE_CRITERIA.md §2`
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3`, `docs/WORKFLOW.md §7`, `docs/ACCEPTANCE_CRITERIA.md §5`
 
 ### Checklist
-
-**Schema & migrations**
-- [x] `trips.cover_image_url TEXT NULL` + default resolver di service layer
-- [x] `trips.voting_deadline TIMESTAMPTZ NULL` + set on create (voting trips) + clear on lock
-- [x] `trip_messages.deleted_at TIMESTAMPTZ NULL` (soft delete)
-- [x] Tabel `notifications` + event writers (invite, destination update, voting reminders)
-
-**Endpoints baru**
-- [x] `GET /v1/users/check-username?username=`
-- [x] `GET /v1/users/:username/trips?role=created` (privacy-aware)
-- [x] `GET /v1/notifications`, `GET /v1/notifications/unread-count`, `PUT .../read`, `PUT .../read-all`
-- [x] `DELETE /v1/trips/:tripId/messages/:messageId`
-- [x] `GET /v1/trips?tab=upcoming|completed`
-
-**Perubahan perilaku**
-- [x] `GET /v1/users/:username/trips` — trip dengan `trips.is_public=true`
-
-**Response enrichments**
-- [x] Profile: `public_trip_count`
-- [x] Trip list/detail: `cover_image_url`, `participants_preview[]`, `participant_count`
-- [x] Invitations list: `trip` + `inviter` summary objects
-- [x] Messages: embedded `sender`; candidates: `voters_preview[]`, `user_has_voted`
-
-**Background jobs**
-- [x] Voting reminder cron: H-7d, H-1d, H-1h sebelum `voting_deadline` (participant belum vote, trip masih `voting_pending`)
-
-**Tests & Postman**
-- [x] Postman folder `10 — Notifications & Gaps (M5.1)`
-
-> **Post-MVP (deferred)**: Sistem follow/follower, akun privat berbasis follower, notifikasi tipe `follow`, mutual follow saat terima undangan. Kode backend terkait follow masih ada di repo tetapi **bukan bagian MVP** — akan diaktifkan kembali saat fase sosial media.
+- [ ] Prisma model `TripActivity` (times, `kind`, `ref_links` JSONB, `cover_source`/`cover_icon`/`cover_document_id`/`thumbnail_url`)
+- [ ] `GET /v1/trips/:tripId/activities` — grouped/sortable by `activity_date`, `start_time`
+- [ ] `POST /v1/trips/:tripId/activities`
+- [ ] `PUT /v1/trips/:tripId/activities/:id` — full edit
+- [ ] `DELETE /v1/trips/:tripId/activities/:id`
+- [ ] Integrasi Google Places/Static Maps API — resolve `thumbnail_url` dari `maps_link` (background, tidak blocking response)
+- [ ] Validasi: `activity_date` harus dalam rentang `trips.start_date`–`end_date` ketika trip `status=fixed`
+- [ ] Unit + e2e tests: CRUD aktivitas, validasi waktu, resolve thumbnail
 
 ---
 
-## M5.2 — Backend: Design Parity (Schema & API) 🔲 BELUM DIMULAI
+## M7 — Backend: Chat (Supabase Realtime) & Media (R2) 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Implement M5.2 for §1–§3 gaps first. Read `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3**, `docs/ARCHITECTURE.md §4.3.2`, `docs/MILESTONES.md`. Then `docs/FIGMA.md § Kebutuhan API` for remaining gaps."*
+**AI Prompt**: *"Let's implement M7. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_messages, trip_message_reads, trip_documents), §4.3, §6, §7`, `docs/WORKFLOW.md §9, §10`."*
 
-**Tujuan**: Menyelaraskan **database + endpoint** dengan **125 layar Figma** (`docs/WORKFLOW.md`). M5.1 menutup gap dasar; M5.2 menutup gap fitur penuh (itinerary enriched, media, polls, wishlist convert, kelola trip).
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3, §6 (Realtime), §7 (R2)`, `docs/WORKFLOW.md §9, §10`, `docs/ACCEPTANCE_CRITERIA.md §6`
 
-**Prasyarat**: M5.1 ✅
+### Checklist — Chat
+- [ ] Prisma models: `TripMessage`, `TripMessageRead`
+- [ ] `GET /v1/trips/:tripId/messages` — cursor paginated, embed `sender`, `reply_to`
+- [ ] `POST /v1/trips/:tripId/messages` — `{ message_kind, message_text?, media_url?, reply_to_id? }`
+- [ ] `DELETE /v1/trips/:tripId/messages/:messageId` — soft delete, sender only
+- [ ] `PUT /v1/trips/:tripId/messages/read` — advance `trip_message_reads.last_read_at`
+- [ ] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE trip_messages;` + RLS policy peserta trip (`ARCHITECTURE.md §6`)
+- [ ] Endpoint mint token Realtime (Supabase-compatible JWT, `sub` = user id) — dikembalikan bersama `access_token` di `POST /v1/auth/google`
 
-**Referensi desain**: `figma/src/app/components/trip/ActivityParts.tsx`, `WishlistParts.tsx`, `VotingParts.tsx`, `ChatParts.tsx`, `DocumentParts.tsx`
-
-### Checklist Schema (migrasi 000016+)
-
-- [ ] Username validator: izinkan underscore `^[a-zA-Z0-9_]{3,30}$` selaras `Screen4Username` (§2)
-- [ ] `trips`: +`is_all_day`, `start_time`, `end_time` (§6)
-- [ ] `trip_destinations`: enrich aktivitas — times, kind, description, ref_links JSONB, cover_*, thumbnail (§7)
-- [ ] `wishlists`: +`start_time`, `end_time`, `location_label`, `notes`, `thumbnail_url` (§12)
-- [ ] `trip_documents` + `trips.cover_document_id` (§10)
-- [ ] `trip_polls` + `trip_poll_options` + `trip_poll_votes` (§8 Aktivitas/Lainnya)
-- [ ] `trip_messages`: +`message_kind`, `media_url`, `reply_to_id` (§9)
-- [ ] `trip_message_reads` — unread badge chat (§9)
-- [ ] `users`: +`website_url`, `location_label` (§5 edit profil)
-
-### Checklist Endpoints
-
-**P0 — blocking mobile M8–M10**
-- [ ] Extend `GET /v1/trips/invitations` — `trip` summary +`start_date`, `end_date`, `status` (§3 `Screen8`)
-- [ ] Enriched `GET /v1/notifications` — embed `actor` + `trip` summary (§3 `Screen9`)
-- [ ] Notif `invite`: tambah `invitation_id` ke `payload` (Terima/Tolak dari `Screen9`)
-- [ ] Username validator: `^[a-zA-Z0-9_]{3,30}$` (§2 `Screen4`)
-- [ ] `PUT /v1/trips/:tripId/destinations/:id` — edit aktivitas
-- [ ] `GET /v1/trips/:tripId/members` — anggota + pending invites
-- [ ] `DELETE /v1/trips/:tripId/invitations/:id` — batalkan undangan
-- [ ] `POST /v1/wishlists/:id/convert-to-trip` — atomic konversi
-
-**P1 — media & account**
-- [ ] `POST/GET/DELETE /v1/trips/:tripId/documents` + `PUT …/cover`
-- [ ] `POST /v1/trips/:tripId/messages` multipart (foto/video)
-- [ ] `PUT /v1/trips/:tripId/messages/read`
-- [ ] `DELETE /v1/users/me`
-
-**P2 — voting & kelola**
-- [ ] CRUD `/v1/trips/:tripId/polls` + vote + lock/end/delete
-- [ ] `DELETE /v1/trips/:tripId/members/:userId`
-
-**Integrasi**
-- [ ] Google Places/Static API — resolve `thumbnail_url` dari `maps_link` (aktivitas)
-- [ ] Object storage adapter untuk media upload (S3/GCS/local dev)
-
-### Tests & Postman
-- [ ] Integration tests per flow WORKFLOW §6–§12
-- [ ] Postman folder `11 — Design Parity (M5.2)`
+### Checklist — Media & R2
+- [ ] `R2Service` — presign PUT/GET (`@aws-sdk/client-s3` + `s3-request-presigner`)
+- [ ] `POST /v1/uploads/presign` — `{ trip_id, media_type, content_type }` → `{ upload_url, storage_key, expires_in }`
+- [ ] Prisma model `TripDocument`
+- [ ] `GET/POST/DELETE /v1/trips/:tripId/documents` — registrasi objek R2 yang sudah diunggah (verifikasi via `HeadObject`)
+- [ ] Chat media message (`message_kind=photo|video`) otomatis insert `trip_documents` dengan `from_chat=true`
+- [ ] `PUT /v1/trips/:tripId/cover` — set `trips.cover_document_id`
+- [ ] Migrasi SQL: tambah kolom `trips.cover_document_id`, `trip_activities.cover_document_id` (FK ke `trip_documents`, `DEFERRABLE` karena circular FK — lihat `ARCHITECTURE.md §3.3`)
+- [ ] Unit + e2e tests: kirim pesan text/media, soft delete, presign flow (mock R2), cover selection, RLS policy (integration test terhadap Supabase lokal)
 
 ---
 
-## M6 — Mobile: KMP Shared Module 🔲 BELUM DIMULAI
+## M8 — Backend: Wishlist & Konversi Trip 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Implement M6 shared module. Read `docs/ARCHITECTURE.md §5`, `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3** (auth DTO, trip list, notifications). Mirror `§4.3.1` contracts exactly."*
+**AI Prompt**: *"Let's implement M8. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (wishlists), §3.4, §4.3`, `docs/WORKFLOW.md §12`."*
+
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §3.4, §4.3`, `docs/WORKFLOW.md §12`, `docs/ACCEPTANCE_CRITERIA.md §7`
+
+### Checklist
+- [ ] Prisma model `Wishlist` (times, `location_label`, `notes`, `thumbnail_url`, `priority_level`)
+- [ ] `GET /v1/wishlists` — filter tag/priority, cursor pagination
+- [ ] `POST /v1/wishlists`, `PUT /v1/wishlists/:id` (ownership check), `DELETE /v1/wishlists/:id` (soft delete)
+- [ ] `POST /v1/wishlists/:id/convert-to-trip` — **transaksi atomik**: insert `trips` + seed `trip_activities` hari 1, soft-delete `wishlists`
+- [ ] Unit + e2e tests: CRUD wishlist, convert-to-trip (verifikasi atomicity — rollback jika salah satu langkah gagal)
+
+---
+
+## M9 — Backend: Notifikasi & Background Jobs 🔲 BELUM DIMULAI
+
+**AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (notifications), §4.3, §6`, `docs/WORKFLOW.md §3`."*
+
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3, §6`, `docs/WORKFLOW.md §3`, `docs/ACCEPTANCE_CRITERIA.md §2`
+
+### Checklist
+- [ ] Prisma model `Notification` + enum `notification_type`
+- [ ] Event writers: `invite`, `voting_deadline`, `activity_update` dipanggil dari service terkait (Trips, Voting, Activities)
+- [ ] `GET /v1/notifications` — enriched (`actor`, `trip` summary), cursor pagination
+- [ ] `GET /v1/notifications/unread-count`, `PUT /:id/read`, `PUT /read-all`
+- [ ] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE notifications;` + RLS `user_id = auth.uid()`
+- [ ] `@nestjs/schedule` cron — voting reminder H-7d, H-1d, H-1h sebelum `voting_deadline` untuk peserta yang belum vote
+- [ ] Unit + e2e tests: notifikasi ter-generate pada setiap event, unread count, mark read, reminder cron (fake timers)
+
+---
+
+## M10 — Backend: Testing & Hardening 🔲 BELUM DIMULAI
+
+**AI Prompt**: *"Let's implement M10. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §4.2, §4.6`, `docs/ACCEPTANCE_CRITERIA.md`."*
+
+**Referensi**: `docs/ARCHITECTURE.md §4.2, §4.6`, `docs/ACCEPTANCE_CRITERIA.md` (seluruh)
+
+### Checklist
+- [ ] `@nestjs/throttler` — 120 req/min per IP di seluruh `/v1/*` (kecuali `/health`)
+- [ ] `HttpExceptionFilter` global — tidak ada stack trace/Prisma error internal bocor ke client
+- [ ] Prisma Client Extension — soft-delete filter otomatis untuk `Trip`, `Wishlist`, `TripMessage`
+- [ ] Audit N+1 — semua list endpoint pakai `include`/`select` atau `findMany({ where: { id: { in } } })`
+- [ ] Audit pagination — semua list endpoint cursor-based, tidak ada `skip`/`OFFSET`
+- [ ] Unit test coverage keseluruhan backend ≥ 80% (`jest --coverage`)
+- [ ] e2e test suite lengkap (Jest + Supertest) mencakup seluruh flow M3–M9
+- [ ] `pnpm --filter backend build` — kompilasi TypeScript bersih tanpa error
+- [ ] Postman/Insomnia collection lengkap seluruh endpoint `/v1/*`
+
+---
+
+## M11 — Mobile: Fondasi Expo (Shell, Auth Client, Theme) 🔲 BELUM DIMULAI
+
+**AI Prompt**: *"Let's implement M11. Read `docs/ARCHITECTURE.md §5`, `docs/WORKFLOW.md` → Panduan Implementasi §1–§3. Set up the Expo app shell, typed API client, theme tokens, and auth storage."*
 
 **Referensi**: `docs/ARCHITECTURE.md §5`
 
-**Prasyarat**: M0–M5 selesai; **M5.2 wajib** sebelum M6 agar DTO mobile mencakup field desain penuh (itinerary, media, polls, wishlist convert).
+**Prasyarat**: M2–M10 selesai (backend siap dipakai)
 
 ### Scope Pekerjaan
 ```
-mobile/shared/src/commonMain/kotlin/com/aturperjalanan/
-├── Config.kt
-├── data/
-│   ├── remote/
-│   │   ├── ApiClient.kt           (Ktor HttpClient config)
-│   │   ├── AuthApiService.kt
-│   │   ├── TripApiService.kt
-│   │   ├── UserApiService.kt
-│   │   ├── WishlistApiService.kt
-│   │   └── dto/                   (Kotlinx.Serialization DTOs)
-│   ├── local/
-│   │   └── AppDatabase.sq         (SQLDelight schema)
-│   └── repository/
-│       ├── AuthRepositoryImpl.kt
-│       ├── TripRepositoryImpl.kt
-│       ├── UserRepositoryImpl.kt
-│       └── WishlistRepositoryImpl.kt
-├── domain/
-│   ├── model/                     (Trip.kt, User.kt, Wishlist.kt)
-│   ├── repository/                (interface definitions)
-│   └── usecase/                   (GetTripsUseCase, LockTripDateUseCase, dll.)
-└── presentation/viewmodel/
-    ├── BaseViewModel.kt
-    ├── AuthViewModel.kt
-    ├── TripListViewModel.kt
-    ├── TripDetailViewModel.kt
-    ├── UserProfileViewModel.kt
-    └── WishlistViewModel.kt
+mobile/src/
+├── api/            (typed REST client, auth header injection)
+├── realtime/       (Supabase JS client wrapper)
+├── store/          (Zustand — ephemeral UI state)
+├── theme/          (tokens dari figma/src/app/components/colors.ts)
+└── lib/secureStorage.ts   (expo-secure-store wrapper)
 ```
 
 ### Checklist
-- [ ] Semua API services (Ktor DSL) lengkap, returns `Result<T>`
-- [ ] DTOs sesuai format JSON response backend
-- [ ] SQLDelight schema untuk trips, users, wishlists (offline cache)
-- [ ] Repository impls: cache-then-network untuk list; network-first untuk messages
-- [ ] Token disimpan di platform-specific secure storage (**bukan** SQLDelight)
-- [ ] Koin DI module `di/SharedModule.kt` mendaftarkan semua dependencies
-- [ ] `build.gradle.kts` dikonfigurasi (Ktor, Serialization, SQLDelight, Koin)
-- [ ] `./gradlew :shared:compileKotlinMetadata` sukses tanpa error
+- [ ] `src/api/client.ts` — typed fetch wrapper, auto-attach `Authorization: Bearer`, refresh-on-401 hook point
+- [ ] `src/theme/` — color/typography/spacing tokens mirrored 1:1 dari `figma/src/app/components/colors.ts`
+- [ ] `QueryClientProvider` + `@tanstack/query-async-storage-persister` di `app/_layout.tsx`
+- [ ] `src/realtime/supabaseClient.ts` — Supabase JS client (anon key), token exchange hook untuk Realtime auth
+- [ ] `src/lib/secureStorage.ts` — wrapper `expo-secure-store` untuk access token (**bukan** AsyncStorage)
+- [ ] `AuthProvider` (Context) — expose current user + token ke seluruh app
+- [ ] Expo Router base layout: `(auth)/`, `(tabs)/`, `trip/[tripId]/` sesuai `ARCHITECTURE.md §5.3`
+- [ ] `packages/shared-types` diimpor dan dipakai di `src/api/`
+- [ ] `pnpm --filter mobile start` — Metro bundler jalan tanpa error di Expo Go
 
 ---
 
-## M7 — Android: Auth & Onboarding 🔲 BELUM DIMULAI
+## M12 — Mobile: Auth & Onboarding UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Implement M7. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md` → **Panduan Implementasi §1–§3** + §1–§2, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md` §1–§2. Build Android Auth & Onboarding screens matching `App.tsx` registry id 1–2."*
+**AI Prompt**: *"Implement M12. Read `docs/WORKFLOW.md` §1–§2, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md` §1–§2. Build Expo Auth & Onboarding screens matching `App.tsx` registry id 1–2."*
 
-**Referensi Figma**: `App.tsx` workflowSections id 1–2 · `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username` (`figma/src/app/components/screens/`)
+**Referensi Figma**: `App.tsx` workflowSections id 1–2 · `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username`
 
 ### Checklist
-- [ ] `ui/theme/` — Color.kt, Typography.kt, Theme.kt (tokens dari `figma/src/app/components/colors.ts`; accent §1 coral, §2 teal)
-- [ ] `SplashScreen` — kompas + gradient coral + tagline (`Screen1Splash`)
-- [ ] `OnboardingScreen` — carousel **4 slide** dengan copy persis `SLIDES[]`; hanya first install (`Screen2EduOnboarding`)
-- [ ] `SignInScreen` — hero + *Mulai Perjalananmu* + **Lanjutkan dengan Google**; **sembunyikan** Masuk dengan Email (`Screen3Auth`)
-- [ ] `UsernameSetupScreen` — hint underscore, validasi real-time, error duplikat (`Screen4Username`)
+- [ ] `app/(auth)/splash.tsx` — kompas + gradient coral + tagline (`Screen1Splash`)
+- [ ] `app/(auth)/onboarding.tsx` — carousel **4 slide**, copy persis `SLIDES[]`; hanya first install (persist flag via `expo-secure-store` atau `AsyncStorage`)
+- [ ] `app/(auth)/sign-in.tsx` — hero + *Mulai Perjalananmu* + **Lanjutkan dengan Google** (`expo-auth-session` Google provider); **sembunyikan** Masuk dengan Email
+- [ ] `app/(auth)/username-setup.tsx` — hint underscore, validasi real-time (`GET /users/check-username`), error duplikat
 - [ ] Navigasi: Splash → (pertama) Onboarding → SignIn → (baru) UsernameSetup → Home; lama → SignIn → Home
-- [ ] `./gradlew :androidApp:assembleDebug` sukses
+- [ ] Expo Go / dev build berjalan mulus di iOS & Android untuk flow ini
 
 ---
 
-## M8 — Android: Home & Trip UI 🔲 BELUM DIMULAI
+## M13 — Mobile: Beranda & Trip Detail Shell UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Implement M8. Start with WORKFLOW §3 (`App.tsx` id: 3, screens 5–9). Read `docs/WORKFLOW.md` → Panduan Implementasi §1–§3 + §3 Beranda, `docs/ACCEPTANCE_CRITERIA.md §2`, `figma/src/app/components/home/HomeBerandaParts.tsx`, `Screen9Notifikasi.tsx`. API: `docs/ARCHITECTURE.md §4.3.1`."*
+**AI Prompt**: *"Implement M13. Start with WORKFLOW §3 (`App.tsx` id: 3, screens 5–9). Read `docs/WORKFLOW.md` §3, §6, §7, `docs/ACCEPTANCE_CRITERIA.md §2, §5`. API: `docs/ARCHITECTURE.md §4.3`."*
 
-**Referensi Figma §3**: `App.tsx` id: 3 · `HomeBerandaParts.tsx`, `Screen5Home`, `Screen6EmptyBeranda`, `Screen7HomeSelesai`, `Screen8HomeUndangan`, `Screen9Notifikasi`, `EmptyTripsState.tsx`, `TripTags.tsx`
+**Referensi Figma §3**: `HomeBerandaParts.tsx`, `Screen5Home`, `Screen6EmptyBeranda`, `Screen7HomeSelesai`, `Screen8HomeUndangan`, `Screen9Notifikasi`
 
-**Referensi Figma (lanjutan trip)**: `Screen22Create`, `Screen43Destinations`, `Screen45BottomSheetDestinasi`, `Screen33FormValidation`, `Screen51DestinationDetail`, `Screen31MultiDatePicker`, `Screen118SkeletonLoading`, `Screen119ToastComponents`, `Screen120Error`
+**Referensi Figma §6–§7**: `Screen21`–`Screen55`, `ItineraryParts.tsx`, `ActivityParts.tsx`
 
-### Checklist — Beranda §3 (prioritas pertama)
-- [ ] `BottomNav` — Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`)
-- [ ] `HomeScreen` shell: `HomePageShell` + safe area 60 + `BottomNav` active=home
-- [ ] `HomeHeader` *Perjalananku* + `NotificationBell` (9+ cap) → push `NotificationScreen` (no bottom nav)
-- [ ] `HomeTabs` Mendatang/Selesai/Undangan + counter badge always visible
-- [ ] `TripCard` — cover 150, `TripTags` max 3 + overflow, calendar row, avatars -9px overlap; prop `dimmed` for Selesai
-- [ ] `EmptyTripsState` — copy exact + CTA **Buat Perjalanan Baru** (Mendatang empty only)
-- [ ] `InvitationCard` — overlay @inviter, Terima 40px coral / Tolak light
-- [ ] `NotificationScreen` — 4 notification types, inline actions, mark all read, hydrate actor/trip UUIDs
-- [ ] Parallel fetch on mount: unread-count + 3 tab endpoints (see WORKFLOW Panduan §3)
-- [ ] `dateRange` formatter: `TRIP_DATE_PENDING` + fixed date/time patterns
+### Checklist — Beranda §3
+- [ ] Bottom tab bar — Beranda, Cari, [+], Wishlist, Profil (Expo Router tab layout)
+- [ ] `HomeHeader` *Perjalananku* + notification bell (9+ cap) → push notification screen
+- [ ] Tabs Mendatang/Selesai/Undangan + counter badge always visible (TanStack Query — parallel fetch)
+- [ ] `TripCard` — cover, tags (max 3 + overflow), tanggal, avatar peserta overlap
+- [ ] Empty state Mendatang + CTA **Buat Perjalanan Baru**
+- [ ] `InvitationCard` — Terima/Tolak inline
+- [ ] Notification screen — 4 tipe notifikasi, inline actions, mark all read
 
-### Checklist — Create Trip §6 (setelah Beranda)
+### Checklist — Create Trip §6
+- [ ] `app/trip/create.tsx` — modal: nama, tags, kalender, waktu, toggle mode kandidat
+- [ ] Mode fixed vs kandidat (1–3 rentang) sesuai `ARCHITECTURE.md §4.3.2`
+- [ ] Invite-after-create flow — cari username/email
+- [ ] CTA **Masuk ke Perjalanan** → trip detail
 
-**Referensi Figma §6**: `App.tsx` id: 6 · `CreateTripParts.tsx`, `InviteParts.tsx`, `Screen21`–`Screen41`
-
-- [ ] `CreateTripSheet` — modal full-screen (`CreateTripShell`): nama, tags, kalender, waktu, tombol kandidat
-- [ ] Mode A fixed: state 21–24; `POST /trips` dengan `start_date`/`end_date`
-- [ ] Mode B kandidat: switch via *+ Tambah Kandidat*; simpan 1–3 rentang; state 25–34
-- [ ] Validasi sekaligus — copy persis `Screen24` / `Screen33`
-- [ ] `InviteAfterCreateScreen` — flow 35–41; search username/email; tanpa saran teman
-- [ ] CTA **Masuk ke Perjalanan** navigasi ke detail trip
-
-### Checklist — Trip Detail §7 Itinerary (setelah §6)
-
-**Referensi Figma §7**: `App.tsx` id: 7 · `ItineraryParts.tsx`, `ActivityParts.tsx`, `Screen42`–`Screen55`
-
-- [ ] `TripDetailScreen` shell — `TripDetailPageShell` + 4 tab + counter rules
-- [ ] `ItineraryTab` — `ItineraryTabBody`: multi-hari tabs, gap rows, time states (`resolveItineraryTimeState`)
-- [ ] `ItineraryEmptyState` + CTA **Buat Aktivitas Pertama** (`Screen42`)
-- [ ] `ActivityFormSheet` — field order + CTA Simpan Aktivitas / Simpan Perubahan
-- [ ] Maps link resolve + auto cover (`Screen46`/`47`)
-- [ ] `ActivityCoverPickerSheet` — media trip / galeri / 32 icon (`Screen49`/`50`)
-- [ ] `ActivityDetailSheet` — 3 cover variants (`Screen51`–`53`)
-- [ ] `ActivityItemMenuSheet` — dropdown Edit/Hapus (`Screen55`)
-- [ ] API: `GET/POST/DELETE /destinations`; `PUT` edit 🔜 M5.2
-
-### Checklist — Voting §8 (M9)
-
-**Referensi Figma §8**: `App.tsx` id: 8 · `VotingParts.tsx`, `CreateVotingSheetParts.tsx`, `Screen56`–`Screen75`
-
-- [ ] `VotingTab` — `VotingCollapseSection` per jenis + `VotingCandidateList`
-- [ ] Status pipeline: active / ended / expired; menu ⋮ variant active vs ended
-- [ ] `CreateVotingFlow` — Screen64→65 (aktivitas); Screen58→59–63 (tanggal)
-- [ ] `VotingLockedModal` — 3 variant (tanggal/aktivitas/lainnya)
-- [ ] `VotingDeleteModal` — konfirmasi hapus
-- [ ] Date vote/lock via existing candidates API; polls CRUD 🔜 M5.2c
-
-### Checklist — Chat §9 (M9)
-
-**Referensi Figma §9**: `App.tsx` id: 9 · `ChatParts.tsx`, `Screen76`–`Screen92`
-
-- [ ] `ChatScreen` — `TripDetailChatLayout` + `ChatThreadView` (`Screen76`)
-- [ ] `ChatMessageBubble` — `text` / `photo` / `video` + optional `ChatReplyQuote`
-- [ ] `ChatAttachMenu` + `ChatMediaComposer` (`Screen77`–`81`)
-- [ ] Media bubbles sent/received (`Screen82`–`85`)
-- [ ] `ChatEmptyState` — input disabled (`Screen86`)
-- [ ] `ChatLongPressView` — menu own vs other (`Screen87`–`88`)
-- [ ] Reply 4 skenario (`Screen89`–`Screen92`)
-- [ ] API text: GET/POST/DELETE messages; media + `reply_to_id` 🔜 M5.2e; read cursor 🔜 M5.2d
-
-### Checklist — Media §10 (M9)
-
-**Referensi Figma §10**: `App.tsx` id: 10 · `DocumentParts.tsx`, `Screen93`–`Screen94`
-
-- [ ] `MediaScreen` — `DocumentGrid` 3 kolom + tile Unggah
-- [ ] Badge Cover + **Jadikan Cover** (`Screen93`)
-- [ ] Badge Chat `fromChat` (`Screen94`)
-- [ ] Tab counter Media selalu tampil
-- [ ] API: `trip_documents` CRUD + `PUT …/cover` 🔜 M5.2b
-
-### Checklist — Kelola Trip §11 (M9)
-
-**Referensi Figma §11**: `App.tsx` id: 11 · `TripDetailMenuSheet`, `TripMemberParts`, `Screen95`–`Screen103`
-
-- [ ] `TripDetailMenuSheet` — 4 item menu ⋮
-- [ ] `TripMembersScreen` + pending states (`Screen97`–`102`)
-- [ ] `TripDeleteModal` · `CalendarEventModal` · edit trip (`Screen95`–`96`, `103`)
-- [ ] Creator vs member permissions (Keluarkan / undang)
-- [ ] API members + invitations 🔜 M5.2; calendar M11
-
-### Checklist — Trip Detail (polish)
-- [ ] Empty, skeleton, toast, error states
-- [ ] `./gradlew :androidApp:assembleDebug` sukses
+### Checklist — Trip Detail Shell + Itinerary §7
+- [ ] `app/trip/[tripId]/_layout.tsx` — 4 tab (Itinerary, Voting, Chat, Media) + counter rules (Itinerary: hidden jika 0; Voting: selalu tampil; Chat: unread only; Media: selalu tampil)
+- [ ] `app/trip/[tripId]/index.tsx` — Itinerary: multi-hari tabs, time states, empty state
+- [ ] Activity form sheet — field lengkap sesuai `trip_activities` schema
+- [ ] Maps link resolve + auto cover; cover picker (media trip / galeri / ikon)
+- [ ] Activity detail sheet + menu Edit/Hapus
 
 ---
 
-## M9 — Android: Kolaborasi & Chat UI 🔲 BELUM DIMULAI
+## M14 — Mobile: Voting, Chat, Media, Kelola Trip UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M9. Read `docs/MILESTONES.md`, `docs/WORKFLOW.md §8–§11`, `docs/ACCEPTANCE_CRITERIA.md §6`, `docs/FIGMA.md`. Build the Android Collaboration, Chat, Media, and Trip Management screens."*
+**AI Prompt**: *"Let's implement M14. Read `docs/WORKFLOW.md` §8–§11, `docs/ACCEPTANCE_CRITERIA.md §4, §6`, `docs/FIGMA.md`. Build the Expo Voting, Chat, Media, and Trip Management screens, wiring Supabase Realtime for chat."*
 
-**Referensi Figma**: `Screen56Voting`, `Screen64CreateVoting`, `Screen76Chat`, `Screen35BottomSheetUndang`, `Screen86EmptyChat`, `Screen73StatusLocked`, `Screen87ChatLongPress`, `Screen88ChatLongPressOwn`, `Screen89`–`Screen92`, `Screen93`–`Screen103`, `Screen96CalendarSyncModal`
+**Referensi Figma**: `Screen56`–`Screen103`
 
-### Checklist
-- [ ] `InviteSheet` — cari username atau input email (perlakuan sama)
-- [ ] Tab Voting — **multi-poll hub** + sheet buat voting (`Screen64CreateVoting`)
-- [ ] `VotingLockedModal` — konfirmasi voting selesai setelah lock (`Screen73StatusLocked`)
-- [ ] `CalendarEventModal` — tambah ke Google Calendar via menu ⋮ (`Screen96CalendarSyncModal`)
-- [ ] `TripDetailMenuSheet` + `TripMembersScreen` (`Screen97`–`Screen102`)
-- [ ] `TripDeleteModal` + edit trip (`Screen95`, `Screen103`)
-- [ ] `MediaScreen` — `DocumentGrid` + set cover (`Screen93`–`Screen94`)
-- [ ] `ChatScreen` — `TripDetailChatLayout` + bubbles text/media (`Screen76`, `Screen82`–`85`)
-- [ ] `ChatAttachMenu` + `ChatMediaComposer` (`Screen77`–`81`)
-- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri (`Screen87`, `Screen88ChatLongPressOwn`)
-- [ ] Reply quote di bubble — 4 skenario (`Screen89`–`Screen92`)
-- [ ] Empty chat + input disabled (`Screen86EmptyChat`)
-- [ ] Tombol "Kunci Tanggal Ini" hanya untuk creator
-- [ ] `./gradlew :androidApp:assembleDebug` sukses
+### Checklist — Voting §8
+- [ ] `app/trip/[tripId]/voting.tsx` — multi-poll hub, collapse per jenis
+- [ ] Status pipeline: active / locked / cancelled / expired; menu ⋮ per status
+- [ ] Create voting flow (tanggal / aktivitas / lainnya) — disabled state jika sudah ada poll aktif sejenis
+- [ ] Locked modal — 3 varian (tanggal/aktivitas/lainnya)
+
+### Checklist — Chat §9
+- [ ] `app/trip/[tripId]/chat.tsx` — list pesan (TanStack Query initial load) + **Supabase Realtime subscription** (`ARCHITECTURE.md §5.4, §6`) untuk live update
+- [ ] Bubble text/photo/video + reply quote
+- [ ] Attach menu + media composer (presign upload → R2 → register `trip_documents`/`message`)
+- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri
+- [ ] Empty chat state; read cursor update saat screen fokus
+
+### Checklist — Media §10
+- [ ] `app/trip/[tripId]/media.tsx` — grid 3 kolom + tile Unggah (presign flow)
+- [ ] Badge Cover + "Jadikan Cover"; badge "dari Chat"
+
+### Checklist — Kelola Trip §11
+- [ ] `app/trip/[tripId]/manage.tsx` — menu ⋮: anggota, edit, hapus trip, Google Calendar (stub sampai M16)
+- [ ] Members screen + pending invite states; permission creator vs member
 
 ---
 
-## M10 — Android: Profil, Pencarian & Wishlist UI 🔲 BELUM DIMULAI
+## M15 — Mobile: Pencarian, Profil & Wishlist UI 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Implement M10. Start WORKFLOW §4–§5 (`App.tsx` id 4–5). Read `docs/WORKFLOW.md` §4–§5, `docs/ACCEPTANCE_CRITERIA.md §3–§4`, `search/SearchParts.tsx`, `profile/ProfileParts.tsx`. Then §12 wishlist screens."*
+**AI Prompt**: *"Implement M15. Read `docs/WORKFLOW.md` §4–§5, §12, `docs/ACCEPTANCE_CRITERIA.md §3, §7`."*
 
-**Referensi Figma §4–§5**: `App.tsx` id 4–5 · `SearchParts.tsx`, `Screen10`–`Screen14`, `ProfileParts.tsx`, `Screen15`–`Screen20`, `SearchEmptyState.tsx`
+**Referensi Figma §4–§5**: `SearchParts.tsx`, `Screen10`–`Screen20`, `ProfileParts.tsx`
 
-**Referensi Figma §12**: `Screen104`–`Screen117`, `Screen108BottomSheetWishlist`
+**Referensi Figma §12**: `Screen104`–`Screen117`, `WishlistParts.tsx`
 
 ### Checklist — Pencarian §4
-- [ ] `SearchScreen` idle: `SearchBar` + recent history (local DataStore)
-- [ ] Search results: debounce + `GET /users/search`; row with trip count + chevron
-- [ ] `SearchEmptyState` for zero results
-- [ ] `PublicProfileScreen`: `PageHeader` username, `ProfileCard`, public trip grid 2-col
+- [ ] `app/(tabs)/search.tsx` — idle: search bar + riwayat lokal; hasil: debounce + `GET /users/search`
+- [ ] Empty state hasil kosong
+- [ ] Public profile screen — grid trip publik
 
 ### Checklist — Profil §5
-- [ ] `ProfileScreen`: `ProfileHeader` + `ProfileCard` + trip grid; empty CTA compact
-- [ ] `SettingsScreen`: profile card → edit; Bantuan & Legal; Hapus Akun; Keluar card separate
-- [ ] `EditProfileScreen`: bio 150 char counter; username read-only; save `PUT /users/me`
-- [ ] `HelpFaqScreen`: 5 FAQ accordion + support email
-- [ ] `DeleteAccountScreen`: type username confirm + destructive action
+- [ ] `app/(tabs)/profile.tsx` — header, kartu profil, grid trip
+- [ ] Settings screen — edit profil, bantuan/FAQ, hapus akun, keluar
+- [ ] Edit profile screen — bio (150 char counter), username read-only
 
 ### Checklist — Wishlist §12
-
-**Referensi Figma §12**: `App.tsx` id: 12 · `WishlistParts.tsx`, `Screen104`–`Screen117`
-
-- [ ] `WishlistScreen` — `WishlistPageShell` grid 2 kolom + sort tabs + tag chips + search
-- [ ] `WishlistFormSheet` — Mulai/Selesai → Nama → Prioritas → Maps → Link (`Screen107`–`109`, `111`)
-- [ ] `WishlistDetailSheet` + `WishlistCardMenuSheet` + `WishlistDeleteModal` (`Screen110`–`113`)
-- [ ] Empty states (`Screen104`, `Screen106`)
-- [ ] **Jadikan Perjalanan** — `CreateTripShell` prefill → invite → `WISHLIST_IMPORTED_DAY` (`Screen114`–`117`)
-- [ ] API enriched fields + `convert-to-trip` atomic 🔜 M5.2
-- [ ] `./gradlew :androidApp:assembleDebug` sukses
+- [ ] `app/(tabs)/wishlist.tsx` — grid 2 kolom + sort tabs + tag chips + search
+- [ ] Wishlist form sheet, detail sheet, menu sheet, delete modal
+- [ ] Empty states
+- [ ] **Jadikan Perjalanan** — prefill create-trip flow → invite → seed itinerary hari 1
 
 ---
 
-## M11 — Google Calendar Integration 🔲 BELUM DIMULAI
+## M16 — Google Calendar Integration 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M11. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §1.1, §3.4`, `docs/ACCEPTANCE_CRITERIA.md §5`. Implement calendar event creation after date lock (user-confirmed)."*
+**AI Prompt**: *"Let's implement M16. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §1.1, §3.4`, `docs/ACCEPTANCE_CRITERIA.md`. Implement calendar event creation after date lock (user-confirmed), NestJS side + Expo modal."*
 
-**Referensi**: `docs/ARCHITECTURE.md §1.1, §3.4`, `docs/ACCEPTANCE_CRITERIA.md §4`
-
-### Scope Pekerjaan
-```
-backend/internal/platform/googleapi/
-└── calendar.go    (BARU — Google Calendar API v3 client)
-
-backend/internal/service/
-└── trip_service.go  (UPDATE — panggil calendar sync setelah lock date commit)
-```
+**Referensi**: `docs/ARCHITECTURE.md §1.1, §3.4`
 
 ### Checklist
-- [ ] `calendar.go` — create calendar event for trip (all-day or timed per `trips.is_all_day`)
-- [ ] Event creation triggered **only after user confirms** post-lock modal — not on invite
-- [ ] Same event treatment for username invitees (Google account) and email-only invitees
-- [ ] Lock date poll enqueues calendar job **after DB commit** (goroutine / queue)
-- [ ] Error dari calendar provider di-log; tidak menggagalkan operasi DB
+- [ ] `backend/src/integrations/google/google-calendar.service.ts` — Calendar API v3 client (service account or OAuth delegated)
+- [ ] `POST /v1/integrations/google-calendar/events` — create event (all-day atau timed per `trips.is_all_day`)
+- [ ] Event creation dipicu **hanya setelah user konfirmasi** modal post-lock — bukan saat invite
+- [ ] Perlakuan sama untuk invitee dengan akun Google maupun email-only
+- [ ] Job async setelah DB commit (tidak blocking response)
+- [ ] Error dari Google API di-log, tidak menggagalkan operasi DB
 - [ ] `GOOGLE_CALENDAR_SA_KEY` terdokumentasi di `.env.example`
+- [ ] Mobile: `CalendarEventModal` (`Screen96`) — tombol dari menu ⋮ trip detail
 
 ---
 
-## M12 — Figma Design Alignment 🔲 BELUM DIMULAI
+## M17 — Figma Design QA (Audit 125 Layar) 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M12. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 125 screens against Android Compose, create gap report, fix misalignments."*
+**AI Prompt**: *"Let's implement M17. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 125 screens against the Expo app, create a gap report, fix misalignments."*
 
-**Referensi**: `docs/FIGMA.md`, `figma/src/app/`, `mobile/androidApp/src/main/com/aturperjalanan/android/ui/`
+**Referensi**: `docs/FIGMA.md`, `figma/src/app/`, `mobile/app/`
 
 ### Checklist — System States §13
-
-**Referensi Figma §13**: `MediaViewerParts.tsx`, `colors.ts`, `Screen118`–`Screen125`
-
-- [ ] `SkeletonScreen` — shimmer Beranda (`Screen118`)
-- [ ] `ToastHost` — Sukses/Error/Info + 3s auto-dismiss (`Screen119`)
-- [ ] `OfflineErrorScreen` — *Tidak ada koneksi* + retry (`Screen120`)
-- [ ] `MediaViewer` — foto + video pause/playing (`Screen121`–`Screen123`)
-- [ ] Dark Beranda optional (`Screen124`)
+- [ ] Skeleton/shimmer Beranda (`Screen118`)
+- [ ] Toast host — Sukses/Error/Info + 3s auto-dismiss (`Screen119`)
+- [ ] Offline/error screen + retry (`Screen120`)
+- [ ] Media viewer — foto + video pause/play (`Screen121`–`123`)
+- [ ] Dark mode optional (`Screen124`)
 - [ ] Theme tokens match `colors.ts` + `Screen125`
 
 ### Checklist
-- [ ] Semua **125 layar** diaudit (`figma/src/app/App.tsx` workflow sections §1–§13)
-- [ ] Color palette match `figma/src/app/components/colors.ts` → `Color.kt`
-- [ ] Typography: Plus Jakarta Sans, scale H1–Caption
-- [ ] Trip detail tabs = Itinerary · Voting · Chat · Media (counter; Chat unread only; Media always shows count)
-- [ ] Bottom nav labels & FAB match `BottomNav.tsx`
-- [ ] System states: empty, skeleton, toast, error, validation, dark mode
-- [ ] Tidak ada magic number spacing/color
+- [ ] Seluruh **125 layar** diaudit terhadap implementasi Expo
+- [ ] Palet warna & tipografi (Plus Jakarta Sans) match token
+- [ ] Trip detail tab counter rules sesuai `ARCHITECTURE.md`
+- [ ] Bottom nav & FAB match `BottomNav.tsx`
+- [ ] Tidak ada magic number spacing/warna (semua dari `theme/`)
 
 ---
 
-## M13 — Mobile Testing Suite 🔲 BELUM DIMULAI
+## M18 — Mobile Testing Suite 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M13. Read `docs/MILESTONES.md`, `docs/ACCEPTANCE_CRITERIA.md`, `mobile/shared/`. Implement unit tests for all shared ViewModels and UI tests for Android."*
-
-**Referensi**: `docs/ACCEPTANCE_CRITERIA.md`, `mobile/shared/`
+**AI Prompt**: *"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ACCEPTANCE_CRITERIA.md`, `mobile/src/`. Implement unit tests (Jest + React Native Testing Library) and E2E tests (Detox or Maestro)."*
 
 ### Checklist
-- [ ] Unit tests: AuthViewModel, TripListViewModel, TripDetailViewModel, WishlistViewModel
-- [ ] Repository tests: cache-then-network strategy, error fallback
-- [ ] Android Compose UI tests: Onboarding, Home, Create Trip, Wishlist
-- [ ] `./gradlew :shared:allTests` lulus
+- [ ] Unit tests: hooks TanStack Query per feature (mock API client)
+- [ ] Component tests: form validation, empty/error/skeleton states
+- [ ] E2E (Maestro atau Detox): Onboarding → Sign-in → Create Trip → Wishlist → Chat happy paths
+- [ ] `pnpm --filter mobile test` lulus di CI
 
 ---
 
-## M14 — CI/CD Pipelines 🔲 BELUM DIMULAI
+## M19 — CI/CD Pipelines 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M14. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Create GitHub Actions CI/CD pipelines."*
+**AI Prompt**: *"Let's implement M19. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Create GitHub Actions CI/CD pipelines for the TypeScript monorepo."*
 
 **Referensi**: `docs/ARCHITECTURE.md §2` (`.github/workflows/`)
 
 ### Checklist
-- [ ] `backend-ci.yml` — trigger pada push/PR ke `backend/**`: lint + test + build; PostgreSQL service container untuk integration tests
-- [ ] `mobile-ci.yml` — trigger pada push/PR ke `mobile/**`: compile shared + unit tests + assembleDebug
+- [ ] `backend-ci.yml` — trigger push/PR ke `backend/**`: lint + unit + e2e test (Supabase local via `supabase start` in CI) + build
+- [ ] `mobile-ci.yml` — trigger push/PR ke `mobile/**`: lint + unit test + `eas build --profile preview`
+- [ ] Turborepo remote caching dikonfigurasi (opsional, mempercepat CI)
 - [ ] Secrets dikonfigurasi di GitHub repo settings (tidak hardcoded)
 - [ ] CI badge ditambahkan di `README.md`
 
 ---
 
-## M15 — Play Store Release 🔲 BELUM DIMULAI
+## M20 — Rilis App Store & Play Store (EAS) 🔲 BELUM DIMULAI
 
-**AI Prompt**: *"Let's implement M15. Read `docs/MILESTONES.md`. Create release build configuration and Play Store deployment pipeline."*
+**AI Prompt**: *"Let's implement M20. Read `docs/MILESTONES.md`. Configure EAS Build/Submit profiles and ship to both stores."*
 
 ### Checklist
-- [ ] `buildTypes { release { minifyEnabled = true } }` di `build.gradle.kts`
-- [ ] Keystore dikonfigurasi via GitHub Secret (tidak di-commit)
-- [ ] `android-release.yml` — trigger pada Git tag `v*.*.*`: build AAB + sign + upload ke Play Store Internal Testing
-- [ ] App dibuat di Google Play Console (content rating, privacy policy, store listing)
-- [ ] AAB terunggah ke Internal Testing track tanpa error
+- [ ] `eas.json` — profile `production` (Android AAB + iOS build)
+- [ ] Kredensial signing dikelola via EAS (`eas credentials`), tidak di-commit
+- [ ] `android-release.yml` / EAS trigger pada Git tag `v*.*.*`
+- [ ] App dibuat di Google Play Console **dan** App Store Connect (content rating, privacy policy, store listing)
+- [ ] `eas submit` — build terunggah ke Internal Testing (Android) & TestFlight (iOS) tanpa error
 
 ---
 
@@ -580,7 +490,7 @@ Do not deviate from the patterns in docs/ARCHITECTURE.md.
 
 ### Aturan
 
-1. **Urutan milestone dipatuhi** — Jangan lewati milestone yang belum selesai.
-2. **Architecture compliance** — Semua kode mengikuti `docs/ARCHITECTURE.md`. Penyimpangan harus dijustifikasi.
+1. **Urutan milestone dipatuhi** — Jangan lewati milestone yang belum selesai. Desain (M1) selalu mendahului implementasi backend/mobile.
+2. **Architecture compliance** — Semua kode mengikuti `docs/ARCHITECTURE.md`, yang merupakan target-state, bukan riwayat. Penyimpangan harus dijustifikasi di sini (MILESTONES.md), bukan dengan mengedit ARCHITECTURE.md agar sesuai kode yang sudah terlanjur berbeda.
 3. **Definition of Done** — Milestone selesai hanya jika **semua** checklist item ter-centang.
-4. **Update status** — Perbarui tabel Progress Overview setelah milestone selesai.
+4. **Update status** — Perbarui tabel Progress Overview setelah milestone selesai. Progress **hanya** dilacak di file ini.

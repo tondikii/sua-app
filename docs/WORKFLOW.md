@@ -1,19 +1,23 @@
 # WorkFlow - Atur Perjalanan
 
+> **Version**: 2.0 — Juli 2026 · Referensi stack (KMP → Expo) dan nomor milestone disesuaikan dengan `docs/MILESTONES.md` v3.0; `trip_destinations` → `trip_activities`. Anotasi ✅/🔜 lama (Go/KMP) dijelaskan ulang sebagai cakupan MVP, bukan status build.
+
 > **Tujuan dokumen ini**: Mendokumentasikan alur kerja pengguna (*user workflows*) dari awal membuka aplikasi hingga menggunakan seluruh fitur. Alur selaras dengan **125 layar high-fidelity** Figma (lihat `docs/FIGMA.md`), **5 tab Bottom Navigation Bar**, **PRD**, dan **kontrak API backend** (`docs/ARCHITECTURE.md §4.3`).
 
 **Preview lokal**: `figma/src/app/App.tsx` — **125 layar**, **§1–§13**. Nomor layar = indeks `Screen{N}` (sequential 1–125). Setiap layar **sekali** di registry.
 
 **Legenda API** (di kolom Interaksi Data):
 
+> **Catatan versi**: Sejak migrasi stack ke NestJS + Expo, backend dibangun langsung menyasar skema/endpoint **penuh** di `docs/ARCHITECTURE.md` §3–§4 (tidak ada lagi tahap "MVP tipis dulu, gap menyusul"). Simbol ✅/🔜 di bawah ini — dan yang tersebar di seluruh dokumen ini — adalah anotasi lama dari rencana Go/KMP; baca ✅ sebagai **"bagian dari cakupan MVP"** dan 🔜 sebagai **"detail yang butuh field/endpoint tambahan dibanding contoh dasar"**, bukan sebagai status pengerjaan aktual. Status pengerjaan sesungguhnya (apa yang sudah/belum dibangun di stack baru) **hanya** ada di `docs/MILESTONES.md`.
+
 | Simbol | Arti |
 |--------|------|
-| ✅ | Endpoint + schema **sudah ada** di backend (M0–M5.1) |
-| 🔜 | **Target M5.2** — wajib sebelum mobile parity penuh |
+| ✅ | Termasuk cakupan MVP — schema & endpoint dasar dirancang di `ARCHITECTURE.md` §3–§4 |
+| 🔜 | Butuh field/endpoint tambahan di luar contoh dasar — tetap dalam cakupan MVP, lihat milestone terkait di `MILESTONES.md` |
 | — | Client-only (tanpa API) |
-| M11 | Google Calendar — milestone terpisah |
+| M16 | Google Calendar — milestone terpisah |
 
-Spesifikasi teknis lengkap: `docs/ARCHITECTURE.md §3.0.1` (matrix schema/API) · `§4.3.0` (35 endpoint implemented) · `§4.3.2` (gap M5.2).
+Spesifikasi teknis lengkap: `docs/ARCHITECTURE.md` §3 (schema penuh) · §4.3 (route tree lengkap). Status build: `docs/MILESTONES.md`.
 
 ---
 
@@ -88,14 +92,14 @@ Aplikasi menggunakan *Bottom Navigation Bar* dengan 5 menu (`figma/src/app/compo
 
 ## Panduan Implementasi §1–§3 (AI Agent BE & FE)
 
-> **Baca dokumen ini + section §1–§3 di bawah** sebelum mengimplementasikan backend (M5.2) atau mobile (M6–M8). Spesifikasi teknis kontrak API: `docs/ARCHITECTURE.md §4.3.1`. Checklist UAT: `docs/ACCEPTANCE_CRITERIA.md §1–§2`.
+> **Baca dokumen ini + section §1–§3 di bawah** sebelum mengimplementasikan backend (M3–M10) atau mobile (M16–M15). Spesifikasi teknis kontrak API: `docs/ARCHITECTURE.md §4.3.1`. Checklist UAT: `docs/ACCEPTANCE_CRITERIA.md §1–§2`.
 
 ### Peta dokumen (§1–§3)
 
 | Peran | Dokumen utama | Figma / kode |
 |-------|---------------|--------------|
 | **FE mobile** | `WORKFLOW.md` §1–§3, `FIGMA.md`, `ACCEPTANCE_CRITERIA.md` §1–§2 | `figma/src/app/components/screens/Screen1*`–`Screen9*` |
-| **BE Go** | `ARCHITECTURE.md` §3–§4, `MILESTONES.md` M5.2 | `backend/internal/handler/`, `backend/internal/service/` |
+| **BE Go** | `ARCHITECTURE.md` §3–§4, `MILESTONES.md` M3–M10 | `backend/internal/handler/`, `backend/internal/service/` |
 | **Produk** | `PRD.md` §1–§2, `BRIEF.md` | — |
 
 ### State machine navigasi (cold start)
@@ -135,7 +139,7 @@ Login §2 → Google Sign-In → is_new_user?
 | `POST /v1/auth/complete-registration` | `{username}` + JWT | `{user}` | `INVALID_USERNAME` 400, `USERNAME_TAKEN` 409 |
 | `GET /v1/users/check-username?username=` | — | `{available: bool}` | `EMPTY_USERNAME` 400 |
 
-**Username (target desain)**: `^[a-zA-Z0-9_]{3,30}$` · **BE saat ini**: `alphanum` tanpa `_` → **M5.2 wajib** sebelum rilis.
+**Username (target desain)**: `^[a-zA-Z0-9_]{3,30}$` · **BE saat ini**: `alphanum` tanpa `_` → **M3–M10 wajib** sebelum rilis.
 
 **Alur FE username**:
 1. Debounce 300–500ms pada input → `GET /check-username`
@@ -170,7 +174,7 @@ Refresh setelah: terima/tolak undangan, kembali dari create trip, pull-to-refres
 | Kondisi trip | Tampilan (`CreateTripParts.tsx`) |
 |--------------|----------------------------------|
 | `status == "voting_pending"` | **`"Tanggal sedang divoting"`** (`TRIP_DATE_PENDING`) |
-| `status == "fixed"` + dates | `3–7 Jul 2026 · Sepanjang hari` (🔜 jam jika `is_all_day=false` M5.2) |
+| `status == "fixed"` + dates | `3–7 Jul 2026 · Sepanjang hari` (🔜 jam jika `is_all_day=false` M3–M10) |
 | Default cover null | BE resolve `cover_image_url` ke URL default pantai |
 
 #### `participants_preview`
@@ -191,13 +195,13 @@ Response: 204 No Content
 
 1. FE cari di cache/list `GET /v1/trips/invitations` baris dengan `trip.id == notification.trip_id`
 2. Pakai `invitation.id` + `trip.id` untuk `PUT` di atas
-3. 🔜 M5.2 BE: tambah `invitation_id` ke payload notif `invite`
+3. 🔜 M3–M10 BE: tambah `invitation_id` ke payload notif `invite`
 
 **Notifikasi voting** — `actor_id` null; navigasi ke `trip_id` tab Voting.
 
 **Notifikasi aktivitas** — `payload.dest_name`; tap → mark read + navigasi trip Itinerary.
 
-#### Hydration notifikasi (FE — sampai M5.2 enriched)
+#### Hydration notifikasi (FE — sampai M3–M10 enriched)
 
 Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 
@@ -229,9 +233,9 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 | BE auth | `backend/internal/handler/auth_handler.go` |
 | BE trips + invitations | `backend/internal/handler/trip_handler.go` |
 | BE notifications | `backend/internal/handler/notification_handler.go` |
-| KMP auth storage | `docs/ARCHITECTURE.md §5.5` |
+| Auth token storage (Expo) | `docs/ARCHITECTURE.md §5.2` |
 
-### Gap M5.2 yang memblokir parity §1–§3
+### Gap M3–M10 yang memblokir parity §1–§3
 
 | Prioritas | Item | Dampak |
 |-----------|------|--------|
@@ -300,7 +304,7 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 | Login Google | POST | `/v1/auth/google` `{id_token}` → `access_token` + `is_new_user` (+ `user` jika returning) | ✅ |
 | Set username | POST | `/v1/auth/complete-registration` `{username}` → `{user}` | ✅ |
 | Cek username | GET | `/v1/users/check-username?username=` → `{available}` | ✅ |
-| Validasi username `_` | — | Regex `^[a-zA-Z0-9_]{3,30}$` selaras Figma | 🔜 M5.2 (saat ini BE `alphanum` tanpa `_`) |
+| Validasi username `_` | — | Regex `^[a-zA-Z0-9_]{3,30}$` selaras Figma | 🔜 M3–M10 (saat ini BE `alphanum` tanpa `_`) |
 | Login email | — | Post-MVP | — |
 
 ## §3. Beranda (Home) — Tab 1
@@ -336,7 +340,7 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 * Judul trip 16/800; `TripTags` variant=`card` — max **3** chip teal (`tealLight` bg) + **`+N`** overflow; chip format `#Tag`.
 * Baris bawah: ikon `Calendar` 13px + `dateRange` 12/muted; stacked avatars 26px, overlap **-9px**, border 2px white (slice max **4** di FE).
 * Field API: `cover_image_url`, `name`, `tags[]`, `start_date`/`end_date`/`status`/`voting_deadline`, `participants_preview[]`, `participant_count`.
-* Format `dateRange` client-side: `status=voting_pending` → **`"Tanggal sedang divoting"`** (`TRIP_DATE_PENDING`); fixed → `3–7 Jul 2026 · Sepanjang hari` atau `20–24 Agu 2026 · 08:00 – 17:00` (🔜 jam via M5.2 `is_all_day`).
+* Format `dateRange` client-side: `status=voting_pending` → **`"Tanggal sedang divoting"`** (`TRIP_DATE_PENDING`); fixed → `3–7 Jul 2026 · Sepanjang hari` atau `20–24 Agu 2026 · 08:00 – 17:00` (🔜 jam via M3–M10 `is_all_day`).
 
 ### `Screen6EmptyBeranda` — Empty Mendatang
 * Hanya untuk tab **Mendatang** kosong (tidak ada layar empty terpisah di registry untuk Selesai/Undangan).
@@ -354,7 +358,7 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
   * **Tolak**: bg `C.light`, border `1px solid border`, color muted, tinggi 40, radius 12, 13/600
 * API: `GET /v1/trips/invitations` → `{ id, trip: {id, name, cover_image_url}, inviter: {id, name, username, avatar_url}, method, status }`.
 * Terima/Tolak: `PUT /v1/trips/:tripId/invitations/:id` `{accept: bool}` → 204.
-* 🔜 M5.2: extend `trip` summary dengan `start_date`, `end_date`, `status`, `is_all_day`, `start_time`, `end_time`.
+* 🔜 M3–M10: extend `trip` summary dengan `start_date`, `end_date`, `status`, `is_all_day`, `start_time`, `end_time`.
 
 ### `Screen9Notifikasi` — Layar Notifikasi
 * Bg `C.light`; `PageHeader` judul *"Notifikasi"*; kanan `HeaderTextButton` **"Tandai semua dibaca"** → `PUT /v1/notifications/read-all`.
@@ -372,7 +376,7 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 
 * `destination_update` payload BE: `{ "dest_name": "..." }`.
 * Kartu `actions.length === 0` → `cursor: pointer`; tap = mark read + navigasi trip Itinerary.
-* **Hydration client**: BE kirim `actor_id`, `trip_id` (UUID) — FE resolve nama/avatar/trip dari cache atau fetch paralel. 🔜 M5.2: enriched DTO (`actor`, `trip` embed).
+* **Hydration client**: BE kirim `actor_id`, `trip_id` (UUID) — FE resolve nama/avatar/trip dari cache atau fetch paralel. 🔜 M3–M10: enriched DTO (`actor`, `trip` embed).
 * Terima/Tolak dari notif `invite`: lookup `invitation_id` via `GET /v1/trips/invitations` + `trip_id` (payload saat ini `{}`).
 
 | Aksi | Method | Endpoint | Status |
@@ -385,9 +389,9 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 | Badge unread (lonceng) | GET | `/v1/notifications/unread-count` → `{unread_count}` | ✅ |
 | Mark read | PUT | `/v1/notifications/:id/read` | ✅ |
 | Mark all read | PUT | `/v1/notifications/read-all` | ✅ |
-| Enriched notification (actor/trip embed) | — | — | 🔜 M5.2 |
-| Trip dates di invitation summary | — | extend `trip` object | 🔜 M5.2 |
-| Format waktu trip di card (`· HH:mm`) | — | `is_all_day`, `start_time`, `end_time` | 🔜 M5.2 |
+| Enriched notification (actor/trip embed) | — | — | 🔜 M3–M10 |
+| Trip dates di invitation summary | — | extend `trip` object | 🔜 M3–M10 |
+| Format waktu trip di card (`· HH:mm`) | — | `is_all_day`, `start_time`, `end_time` | 🔜 M3–M10 |
 
 > Response trip enriched: `participant_count`, `participants_preview[]`, `cover_image_url`, `voting_deadline`, `start_date`, `end_date`, `status`.
 
@@ -465,14 +469,14 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 
 ### `Screen18EditProfil` — Edit Profil
 * `NavHeader` *"Edit Profil"* + header kanan **"Simpan"**; footer sticky **"Simpan Perubahan"** (coral 52px).
-* Avatar 84×84 + link **"Ubah Foto Profil"** (coral) — 🔜 `POST /users/me/avatar` M5.2.
+* Avatar 84×84 + link **"Ubah Foto Profil"** (coral) — 🔜 `POST /users/me/avatar` M3–M10.
 * Field:
   | Label | Catatan |
   |-------|---------|
   | Nama Lengkap | Dari Google; preview read-only |
   | Username | Read-only setelah registrasi (`budi_santoso`) |
   | Bio | Max **150** karakter; counter *"72 / 150"* |
-  | Website / Sosial Media | Contoh `instagram.com/budi_santoso` — 🔜 `website_url` M5.2 |
+  | Website / Sosial Media | Contoh `instagram.com/budi_santoso` — 🔜 `website_url` M3–M10 |
 
 ### `Screen19SettingsHelpFaq` — Bantuan & FAQ
 * Accordion 5 item (default item 0 terbuka); kontak bawah:
@@ -495,8 +499,8 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 | Grid trip saya | GET | `/v1/users/{my_username}/trips` | ✅ |
 | Update bio | PUT | `/v1/users/me` `{bio}` | ✅ |
 | Update `is_public` per trip | — | field trip, bukan user | — |
-| Website / avatar | PUT/POST | `/v1/users/me` `{website_url}` · `POST …/avatar` | 🔜 M5.2 |
-| Hapus akun | DELETE | `/v1/users/me` | 🔜 M5.2 |
+| Website / avatar | PUT/POST | `/v1/users/me` `{website_url}` · `POST …/avatar` | 🔜 M3–M10 |
+| Hapus akun | DELETE | `/v1/users/me` | 🔜 M3–M10 |
 | Logout | — | Clear JWT + optional revoke | FE |
 
 ## §6. Pembuatan Perjalanan — Tab [+]
@@ -575,7 +579,7 @@ Tap "+ Tambah Kandidat" (dari Mode A) → Mode B (25)
 | 33 | B — Validasi error | Nama kosong + belum ada kandidat tersimpan — error sekaligus |
 | 34 | Submit — Loading | `CreateTripFooter loading`; form terkunci |
 
-**BE**: `POST /v1/trips/` dengan `candidates[{start_date,end_date}]` (min **1**, max **3**), `start_date`/`end_date` null → `status=voting_pending` + rows `trip_date_candidates` + `voting_deadline` (BE saat ini default +7 hari; FE form override 🔜 M5.2).
+**BE**: `POST /v1/trips/` dengan `candidates[{start_date,end_date}]` (min **1**, max **3**), `start_date`/`end_date` null → `status=voting_pending` + rows `trip_date_candidates` + `voting_deadline` (BE saat ini default +7 hari; FE form override 🔜 M3–M10).
 
 ### Validasi (kedua mode)
 
@@ -609,12 +613,12 @@ Layar full-screen (bukan bottom sheet) — header sukses teal + `SearchInput`.
 |------|--------|----------|--------|
 | Buat trip (fixed) | POST | `/v1/trips/` `{name, tags, start_date, end_date, candidates:[]}` | ✅ |
 | Buat trip (voting) | POST | `/v1/trips/` `{name, tags, candidates[1-3]}` → `voting_pending` | ✅ |
-| Waktu non-all-day | POST | `/v1/trips/` + `is_all_day, start_time, end_time` (per trip/kandidat) | 🔜 M5.2 |
-| Tenggat override | POST | `/v1/trips/` + `voting_deadline` opsional | 🔜 M5.2 |
+| Waktu non-all-day | POST | `/v1/trips/` + `is_all_day, start_time, end_time` (per trip/kandidat) | 🔜 M3–M10 |
+| Tenggat override | POST | `/v1/trips/` + `voting_deadline` opsional | 🔜 M3–M10 |
 | Undang username | POST | `/v1/trips/:id/invitations` `{username}` | ✅ |
 | Undang email | POST | `/v1/trips/:id/invitations` `{email}` | ✅ |
 | Cari untuk undang | GET | `/v1/users/search?q=` | ✅ |
-| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M5.2 |
+| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M3–M10 |
 
 > Setelah create: creator auto-masuk `trip_participants`. Trip kandidat → voting tanggal otomatis di tab Voting (§8).
 
@@ -714,9 +718,9 @@ Picker cover (`ActivityCoverPickerSheet`): 3 section — **Media perjalanan** ·
 
 Konten: jam · judul · lokasi (`MapPin`) · deskripsi · section **Tautan** (baris Maps + ref links dengan chevron).
 
-### `ActivityDraft` → API (target M5.2)
+### `ActivityDraft` → API (target M3–M10)
 
-| Figma (`ActivityDraft`) | Kolom BE saat ini | Target M5.2 |
+| Figma (`ActivityDraft`) | Kolom BE saat ini | Target M3–M10 |
 |-------------------------|-------------------|-------------|
 | `title` | `place_name` | ✅ |
 | `startTime`/`endTime` | — | `start_time`/`end_time` |
@@ -730,16 +734,16 @@ Konten: jam · judul · lokasi (`MapPin`) · deskripsi · section **Tautan** (ba
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
-| List aktivitas | GET | `/v1/trips/:id/destinations` | ✅ (field minimal) |
-| Tambah aktivitas | POST | `/v1/trips/:id/destinations` | ✅ (field minimal) |
-| Hapus aktivitas | DELETE | `/v1/trips/:id/destinations/:id` | ✅ (`Screen55` menu Hapus) |
-| Edit aktivitas | PUT | `/v1/trips/:id/destinations/:id` | 🔜 M5.2 (`Screen54`) |
-| Enriched fields | — | times, kind, ref_links[], cover_* | 🔜 M5.2 schema |
-| Resolve Maps thumb | — | Places/Static API di BE | 🔜 M5.2 |
+| List aktivitas | GET | `/v1/trips/:id/activities` | ✅ (field minimal) |
+| Tambah aktivitas | POST | `/v1/trips/:id/activities` | ✅ (field minimal) |
+| Hapus aktivitas | DELETE | `/v1/trips/:id/activities/:id` | ✅ (`Screen55` menu Hapus) |
+| Edit aktivitas | PUT | `/v1/trips/:id/activities/:id` | 🔜 M3–M10 (`Screen54`) |
+| Enriched fields | — | times, kind, ref_links[], cover_* | 🔜 M3–M10 schema |
+| Resolve Maps thumb | — | Places/Static API di BE | 🔜 M3–M10 |
 
 > Field minimal today: `place_name`, `maps_link`, `reference_link`, `sort_order`. Target penuh selaras `ActivityDraft` (`ActivityParts.tsx`).
 >
-> **Naming**: UI = **Itinerary/aktivitas**; BE = `trip_destinations` / `/destinations`.
+> **Naming**: UI = **Itinerary/aktivitas**; BE = `trip_activities` / `/activities`.
 
 ## §8. Detail Perjalanan — Tab Voting
 
@@ -850,9 +854,9 @@ Kunci tanggal (`Screen73`): creator-only · `POST …/candidates/:id/lock` → `
 | List kandidat tanggal | GET | `/v1/trips/:id/candidates` enriched | ✅ |
 | Vote / unvote tanggal | POST/DELETE | `…/candidates/:id/vote` | ✅ |
 | Kunci tanggal (creator) | POST | `…/candidates/:id/lock` → `status=fixed` | ✅ (`Screen73`) |
-| Poll Aktivitas/Lainnya | CRUD + vote + end | `/v1/trips/:id/polls` | 🔜 M5.2c |
-| Buat voting (sheet) | POST | `/v1/trips/:id/polls` `{poll_type, title, options[], deadline?}` | 🔜 M5.2c |
-| Hapus poll | DELETE | `/v1/trips/:id/polls/:id` | 🔜 M5.2c |
+| Poll Aktivitas/Lainnya | CRUD + vote + end | `/v1/trips/:id/polls` | 🔜 M5 |
+| Buat voting (sheet) | POST | `/v1/trips/:id/polls` `{poll_type, title, options[], deadline?}` | 🔜 M5 |
+| Hapus poll | DELETE | `/v1/trips/:id/polls/:id` | 🔜 M5 |
 
 > Voting tanggal legacy = `trip_date_candidates` (auto saat create trip mode kandidat §6). Multi-poll hub butuh `trip_polls` (§3.5 ARCHITECTURE). Reminder notifikasi: cron H-7d / H-1d / H-1h sebelum `voting_deadline`.
 
@@ -943,12 +947,12 @@ Foto & video dari chat otomatis masuk tab Media (`trip_documents.from_chat=true`
 | Load chat | GET | `/v1/trips/:id/messages?cursor=` (RFC3339) | ✅ |
 | Kirim teks | POST | `/v1/trips/:id/messages` `{message}` | ✅ |
 | Hapus pesan sendiri | DELETE | `/v1/trips/:id/messages/:messageId` soft | ✅ (`Screen88`) |
-| Kirim foto/video | POST | multipart `{kind, file, caption?}` | 🔜 M5.2e |
-| Balas pesan | POST | `{message}` + optional `{reply_to_id}` | 🔜 M5.2e |
-| Mark read (badge) | PUT | `/v1/trips/:id/messages/read` | 🔜 M5.2d |
+| Kirim foto/video | POST | multipart `{kind, file, caption?}` | 🔜 M7 |
+| Balas pesan | POST | `{message}` + optional `{reply_to_id}` | 🔜 M7 |
+| Mark read (badge) | PUT | `/v1/trips/:id/messages/read` | 🔜 M7 |
 | Salin teks | — | Clipboard client | — |
 
-> Payload target M5.2e selaras `ChatMessage`: `message_kind`, `media_url`, `media_duration`, `reply_to_id`.
+> Payload target M7 selaras `ChatMessage`: `message_kind`, `media_url`, `media_duration`, `reply_to_id`.
 
 ## §10. Detail Perjalanan — Tab Media
 
@@ -991,10 +995,10 @@ Cover card Beranda resolve dari `trips.cover_document_id` → row `trip_document
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
-| List media | GET | `/v1/trips/:id/documents` | 🔜 M5.2b |
-| Upload foto/video | POST | `/v1/trips/:id/documents` multipart | 🔜 M5.2b |
-| Hapus media | DELETE | `/v1/trips/:id/documents/:id` | 🔜 M5.2b |
-| Jadikan cover | PUT | `/v1/trips/:id/cover` `{document_id}` | 🔜 M5.2b |
+| List media | GET | `/v1/trips/:id/documents` | 🔜 M7 |
+| Upload foto/video | POST | `/v1/trips/:id/documents` multipart | 🔜 M7 |
+| Hapus media | DELETE | `/v1/trips/:id/documents/:id` | 🔜 M7 |
+| Jadikan cover | PUT | `/v1/trips/:id/cover` `{document_id}` | 🔜 M7 |
 
 > Counter tab Media **selalu tampil** (termasuk 0). Foto media trip juga bisa dipakai sebagai cover aktivitas itinerary (`Screen49` §7).
 
@@ -1020,7 +1024,7 @@ Preview modal/sheet: `TripDetailBackdrop` — detail trip redup + overlay gelap 
 | # | Layar | Komponen | Copy / perilaku |
 |---|-------|----------|-----------------|
 | 95 | Hapus Perjalanan | `TripDeleteModal` | *Hapus perjalanan?* · **{nama}** dan semua datanya dihapus permanen · CTA **Hapus** (destructive) |
-| 96 | Google Calendar | `CalendarEventModal` | *Tambah ke Google Calendar?* · `{tanggal} · kalender kamu` · CTA **Tambah** (coral) · M11 |
+| 96 | Google Calendar | `CalendarEventModal` | *Tambah ke Google Calendar?* · `{tanggal} · kalender kamu` · CTA **Tambah** (coral) · M16 |
 | 103 | Edit Info | `CreateTripShell` | Judul *Edit Perjalanan* · field sama §6 (`TripNameField`, `TripTagsField`, `TripDateSection` + waktu) · CTA **Simpan** · backdrop `menuHighlightId="edit"` |
 
 ### Daftar anggota (`TripMembersScreen`, 97–102)
@@ -1057,14 +1061,14 @@ Halaman penuh · `NavHeader` *Anggota Perjalanan* · `TripMembersPanel`:
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
-| List anggota + pending | GET | `/v1/trips/:id/members` | 🔜 M5.2 |
+| List anggota + pending | GET | `/v1/trips/:id/members` | 🔜 M3–M10 |
 | Undang (search) | POST | `/v1/trips/:id/invitations` `{username\|email}` | ✅ |
-| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M5.2 |
-| Undang kembali | POST | `/v1/trips/:id/invitations` (re-invite) | 🔜 M5.2 |
-| Keluarkan anggota | DELETE | `/v1/trips/:id/members/:userId` | 🔜 M5.2 (creator only) |
+| Batalkan undangan | DELETE | `/v1/trips/:id/invitations/:id` | 🔜 M3–M10 |
+| Undang kembali | POST | `/v1/trips/:id/invitations` (re-invite) | 🔜 M3–M10 |
+| Keluarkan anggota | DELETE | `/v1/trips/:id/members/:userId` | 🔜 M3–M10 (creator only) |
 | Edit info trip | PUT | `/v1/trips/:id` `{name, tags, dates?}` | ✅ |
 | Hapus trip | DELETE | `/v1/trips/:id` soft (creator) | ✅ |
-| Google Calendar | POST | `/v1/integrations/google-calendar/events` | M11 |
+| Google Calendar | POST | `/v1/integrations/google-calendar/events` | M16 |
 
 ## §12. Wishlist Aktivitas — Tab 4
 
@@ -1138,7 +1142,7 @@ Alur konversi atomic — prefill dari `WISHLIST_TO_TRIP`:
 | 116 | Undang sukses | `InviteShell` + `WishlistRemovedBanner` (*{item} dihapus dari wishlist…*) · CTA **Masuk ke Perjalanan** |
 | 117 | Itinerary hasil | `WISHLIST_IMPORTED_DAY` — **1 aktivitas** hari 1 (nama/lokasi/waktu dari wishlist) · `TRIP_COUNTS_FROM_WISHLIST` |
 
-> Setelah konversi: wishlist item **soft-deleted**; aktivitas masuk `trip_destinations` hari pertama dengan `start_time`/`end_time` dari form wishlist.
+> Setelah konversi: wishlist item **soft-deleted**; aktivitas masuk `trip_activities` hari pertama dengan `start_time`/`end_time` dari form wishlist.
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
@@ -1146,8 +1150,8 @@ Alur konversi atomic — prefill dari `WISHLIST_TO_TRIP`:
 | Tambah | POST | `/v1/wishlists/` `{place_name, link, tags, priority_level}` | ✅ (field minimal) |
 | Edit | PUT | `/v1/wishlists/:id` | ✅ (`Screen111`) |
 | Hapus | DELETE | `/v1/wishlists/:id` soft | ✅ (`Screen113`) |
-| Enriched fields | — | `start_time`, `end_time`, `location_label`, `notes`, `thumbnail_url` | 🔜 M5.2 |
-| Jadikan Perjalanan | POST | `/v1/wishlists/:id/convert-to-trip` `{trip_name?, tags?, dates?, invite?}` | 🔜 M5.2 |
+| Enriched fields | — | `start_time`, `end_time`, `location_label`, `notes`, `thumbnail_url` | 🔜 M3–M10 |
+| Jadikan Perjalanan | POST | `/v1/wishlists/:id/convert-to-trip` `{trip_name?, tags?, dates?, invite?}` | 🔜 M3–M10 |
 
 > Konversi **harus atomic** (transaction): INSERT trip + 1 aktivitas hari 1 + soft-delete wishlist (`§3.4 ARCHITECTURE`).
 
@@ -1210,7 +1214,7 @@ Dibuka dari tap thumbnail **tab Media** (§10). Backdrop: `MediaTabBackdrop` (gr
 | 122 | Video pause | `MediaVideoViewer` `playing=false` — overlay play besar |
 | 123 | Video playing | `playing=true` — bar kontrol play/pause + progress coral + durasi |
 
-### Dark mode Beranda (`Screen124`, M12 opsional)
+### Dark mode Beranda (`Screen124`, M17 opsional)
 
 Variant gelap **hanya Beranda** — palette lokal `D` (bukan `colors.ts`):
 
@@ -1246,7 +1250,7 @@ Font: **Plus Jakarta Sans** (`fonts.css`). Badge versi *v2.5.0* di preview.
 | Toast | 119 | Aksi sukses/gagal global |
 | Offline | 120 | Network error fallback |
 | Media viewer | 121–123 | Tab Media (§10) |
-| Dark mode | 124 | Beranda opsional (M12) |
+| Dark mode | 124 | Beranda opsional (M17) |
 | Tokens | 125 | Semua layar |
 
 | State fitur lain | Layar | Section |
@@ -1264,6 +1268,6 @@ Font: **Plus Jakarta Sans** (`fonts.css`). Badge versi *v2.5.0* di preview.
 | `docs/BRIEF.md` | Masalah, solusi, audiens, brand philosophy |
 | `docs/PRD.md` | Spesifikasi MVP per fitur — selaras §1–§13 |
 | `docs/FIGMA.md` | Inventori layar, design tokens, gap API vs backend |
-| `docs/ARCHITECTURE.md` | **Schema §3**, **endpoint §4.3**, pola Go/KMP — sumber kebenaran teknis BE |
-| `docs/MILESTONES.md` | M5.1 ✅ selesai · **M5.2 🔜 design parity BE** · M6+ mobile |
+| `docs/ARCHITECTURE.md` | **Schema §3**, **endpoint §4.3**, pola NestJS/Expo — sumber kebenaran teknis BE |
+| `docs/MILESTONES.md` | M0–M1 ✅ selesai (dokumentasi + desain) · **M2–M10 🔲 backend NestJS** · **M11–M20 🔲 mobile Expo & rilis** |
 | `docs/ACCEPTANCE_CRITERIA.md` | Checklist UAT |

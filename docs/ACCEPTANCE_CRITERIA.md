@@ -146,15 +146,15 @@
 - [ ] `Screen48`: cover dari media perjalanan (`coverSource=trip_media`).
 - [ ] `Screen49`/`50`: picker cover — grid Media / 32 icon ilustrasi; CTA **Gunakan**.
 - [ ] Link Lainnya: URL + judul tampilan (setelah URL diisi); **+ Tambah link**.
-- [ ] `Screen54`: mode edit — `PUT /destinations/:id` 🔜 M5.2.
+- [ ] `Screen54`: mode edit — `PUT /activities/:id` (M6).
 
 #### Detail aktivitas (51–53)
 - [ ] Tap item → `ActivityDetailSheet`: jam, judul, lokasi, deskripsi, section **Tautan**.
 - [ ] Variant cover: foto Maps (51) · icon (52) · tanpa cover (53).
 
 #### API
-- [ ] `GET/POST/DELETE /v1/trips/:id/destinations` — field minimal (`place_name`, `maps_link`, `reference_link`, `sort_order`).
-- [ ] Enriched fields (times, kind, ref_links[], cover_*) 🔜 M5.2.
+- [ ] `GET/POST/DELETE /v1/trips/:id/activities` — field minimal (`place_name`, `maps_link`, `reference_link`, `sort_order`).
+- [ ] Enriched fields (times, kind, ref_links[], cover_*) 🔜 M6.
 
 #### Tab Media (§10)
 - [ ] Registry label: *10. Detail Perjalanan — Tab Media*; accent coral; layar 93–94.
@@ -212,7 +212,7 @@
 
 - [ ] Menu ⋮ (`TripDetailMenuSheet`): Daftar Anggota · Google Calendar · Edit Info · Hapus.
 - [ ] `Screen95`: modal *Hapus perjalanan?* — destructive · soft delete API.
-- [ ] `Screen96`: modal *Tambah ke Google Calendar?* — `{tanggal} · kalender kamu` (M11).
+- [ ] `Screen96`: modal *Tambah ke Google Calendar?* — `{tanggal} · kalender kamu` (M16).
 - [ ] `Screen97`: pembuat — search + undang username; badge **Pembuat** / **Anggota**.
 - [ ] `Screen98`: `EmailInviteSearchResult` — **Undang lewat Email**.
 - [ ] `Screen99`: pending `email_sent` — **Batalkan**.
@@ -249,6 +249,6 @@
 - [ ] `Screen121`: `MediaPhotoViewer` — X · counter · Share · caption · **Jadikan Cover**.
 - [ ] `Screen122`: video pause — overlay play besar.
 - [ ] `Screen123`: video playing — kontrol play/pause + progress bar.
-- [ ] `Screen124`: dark mode Beranda — palette gelap opsional (M12).
+- [ ] `Screen124`: dark mode Beranda — palette gelap opsional (M17).
 - [ ] `Screen125` + `colors.ts`: tokens brand/netral/danger · tipografi · radius.
 - [ ] Bottom nav: Beranda, Cari, [+], Wishlist, Profil (`BottomNav.tsx`).

@@ -1,7 +1,9 @@
 # Figma Design Reference — Atur Perjalanan
 
+> **Version**: 2.0 — Juli 2026 · Referensi stack mobile (Android/Kotlin → Expo/React Native) dan milestone disesuaikan; tabel "Kebutuhan API" ditulis ulang agar tidak mengandung status implementasi (lihat `docs/MILESTONES.md`).
+
 > **Tujuan dokumen ini**: 
-> - Untuk AI agents: Menjadi sumber kebenaran utama screen inventory, design tokens, dan mapping ke workflow/API sebelum mengimplementasikan atau mengaudit layar UI (M7–M12).
+> - Untuk AI agents: Menjadi sumber kebenaran utama screen inventory, design tokens, dan mapping ke workflow/API sebelum mengimplementasikan atau mengaudit layar UI (M16–M17).
 > - Untuk product team: Dokumentasi lengkap palet warna, spacing, tipografi, dan **125 layar** high-fidelity — referensi saat design review atau perubahan brand.
 
 ---
@@ -450,7 +452,7 @@ Detail alur & API: [WORKFLOW.md §11](WORKFLOW.md#11-detail-perjalanan--kelola-t
 | `EmailInvitedRow` | 99–102 | Pending/rejected + Batalkan / Undang kembali |
 | `EmailInviteSearchResult` | 98 | Kartu email belum punya akun |
 | `TripDeleteModal` | 95 | Konfirmasi destructive |
-| `CalendarEventModal` | 96 | Konfirmasi sync kalender (M11) |
+| `CalendarEventModal` | 96 | Konfirmasi sync kalender (M16) |
 | `CreateTripShell` | 103 | Form edit = pola buat trip §6 |
 
 ### §12 Wishlist — Tab 4
@@ -518,18 +520,20 @@ Detail alur: [WORKFLOW.md §13](WORKFLOW.md#13-system-states--micro-interactions
 | `MediaTabBackdrop` | 121–123 | Tab Media redup di belakang viewer |
 | `MediaPhotoViewer` | 121 | Foto fullscreen + swipe |
 | `MediaVideoViewer` | 122–123 | Video + kontrol play/progress |
-| `Screen124DarkBeranda` | 124 | Palette gelap khusus Beranda (M12) |
+| `Screen124DarkBeranda` | 124 | Palette gelap khusus Beranda (M17) |
 | `Screen125DesignTokens` | 125 | Swatch + tipografi + radius referensi dev |
 
 ---
 
-## 🔌 Kebutuhan API dari Desain (Gap vs Backend)
+## 🔌 Kebutuhan API dari Desain
 
-**Sumber kebenaran teknis**: `docs/ARCHITECTURE.md §3.0.1` (matrix schema) · `§4.3.0` (35 endpoint ✅) · `§4.3.2` (gap M5.2) · `docs/WORKFLOW.md` (kontrak per §).
+> **Catatan versi**: Tabel di bawah aslinya melacak gap antara backend Go yang sudah dibangun dan desain 125 layar. Sejak migrasi ke NestJS, backend dibangun langsung menyasar skema/endpoint penuh (`docs/ARCHITECTURE.md` §3–§4) — tidak ada lagi "MVP tipis" vs "gap". Baca kolom "✅ MVP" sebagai kebutuhan dasar dan "🔜 MVP (detail)" sebagai field/endpoint tambahan di luar contoh dasar; keduanya **sama-sama** bagian dari cakupan MVP dan dikerjakan pada milestone backend M3–M9. Status pengerjaan aktual ada di `docs/MILESTONES.md`.
 
-### Ringkasan Status (Juli 2026)
+**Sumber kebenaran teknis**: `docs/ARCHITECTURE.md` §3 (schema penuh) · §4.3 (route tree lengkap) · `docs/WORKFLOW.md` (kontrak per §).
 
-| Kategori | ✅ M5.1 | 🔜 M5.2 | M11 / Post-MVP |
+### Ringkasan Kebutuhan (Juli 2026)
+
+| Kategori | ✅ Kebutuhan dasar | 🔜 Detail tambahan | M16 / Post-MVP |
 |----------|---------|---------|----------------|
 | Auth + username | 3 endpoint | validasi `_` | email login, logout opsional |
 | Beranda + notif | 8 endpoint | invitation dates, notification enrich, trip card times | — |
@@ -546,33 +550,33 @@ Detail alur: [WORKFLOW.md §13](WORKFLOW.md#13-system-states--micro-interactions
 
 | Fitur UI | Layar | Endpoint / Schema | Status |
 |----------|-------|-------------------|--------|
-| Notifikasi in-app | 9 | `GET /v1/notifications`, unread-count, mark read | ✅ M5.1 |
-| Hapus pesan chat | 87, 88 | `DELETE /v1/trips/:id/messages/:messageId` — menu Hapus hanya long-press pesan sendiri | ✅ M5.1 |
-| Username check real-time | 4 | `GET /v1/users/check-username` | ✅ M5.1 |
-| Username underscore `_` | 4 | `complete-registration` validator `^[a-zA-Z0-9_]{3,30}$` | 🔜 M5.2 (BE saat ini `alphanum`) |
+| Notifikasi in-app | 9 | `GET /v1/notifications`, unread-count, mark read | ✅ MVP |
+| Hapus pesan chat | 87, 88 | `DELETE /v1/trips/:id/messages/:messageId` — menu Hapus hanya long-press pesan sendiri | ✅ MVP |
+| Username check real-time | 4 | `GET /v1/users/check-username` | ✅ MVP |
+| Username underscore `_` | 4 | `complete-registration` validator `^[a-zA-Z0-9_]{3,30}$` | 🔜 MVP (detail) (BE saat ini `alphanum`) |
 | Login email | 3 | Post-MVP — tombol desain nonaktif di MVP | — |
-| Tab Beranda Mendatang/Selesai | 5, 7 | `GET /v1/trips?tab=upcoming\|completed` | ✅ M5.1 |
-| Tab Beranda Undangan | 8 | `GET /v1/trips/invitations` enriched | ✅ M5.1; 🔜 trip dates di summary |
-| Trip card waktu (`· Sepanjang hari`) | 5, 8 | `is_all_day`, `start_time`, `end_time` on trips | 🔜 M5.2 |
-| Notification enrich (actor/trip) | 9 | embed di `GET /v1/notifications` | 🔜 M5.2 |
-| `invitation_id` di notif invite | 9 | payload untuk Terima/Tolak tanpa lookup | 🔜 M5.2 |
-| Voting aktivitas notif label | 9 | `payload.poll_type` + `trip_polls` | 🔜 M5.2c |
-| Grid trip profil publik | 13, 15 | `GET /v1/users/:username/trips` | ✅ M5.1 |
-| Voting deadline & reminder | 56 | cron H-7d/H-1d/H-1h + `voting_deadline` | ✅ M5.1 |
-| Cover image trip card | 5, 93 | `cover_image_url` default resolver | ✅ M5.1 (URL); 🔜 `cover_document_id` M5.2 |
-| Edit aktivitas itinerary | 54 | `PUT /v1/trips/:id/destinations/:id` | 🔜 M5.2 |
-| Aktivitas times/kind/cover | 43, 45–54 | enrich `trip_destinations` columns | 🔜 M5.2 |
-| Trip waktu (non-all-day) | 22, 29, 31 | `is_all_day`, `start_time`, `end_time` on trips / kandidat | 🔜 M5.2 |
+| Tab Beranda Mendatang/Selesai | 5, 7 | `GET /v1/trips?tab=upcoming\|completed` | ✅ MVP |
+| Tab Beranda Undangan | 8 | `GET /v1/trips/invitations` enriched | ✅ MVP; 🔜 trip dates di summary |
+| Trip card waktu (`· Sepanjang hari`) | 5, 8 | `is_all_day`, `start_time`, `end_time` on trips | 🔜 MVP (detail) |
+| Notification enrich (actor/trip) | 9 | embed di `GET /v1/notifications` | 🔜 MVP (detail) |
+| `invitation_id` di notif invite | 9 | payload untuk Terima/Tolak tanpa lookup | 🔜 MVP (detail) |
+| Voting aktivitas notif label | 9 | `payload.poll_type` + `trip_polls` | 🔜 M5 |
+| Grid trip profil publik | 13, 15 | `GET /v1/users/:username/trips` | ✅ MVP |
+| Voting deadline & reminder | 56 | cron H-7d/H-1d/H-1h + `voting_deadline` | ✅ MVP |
+| Cover image trip card | 5, 93 | `cover_image_url` default resolver | ✅ MVP (URL); 🔜 `cover_document_id` MVP (detail) |
+| Edit aktivitas itinerary | 54 | `PUT /v1/trips/:id/activities/:id` | 🔜 MVP (detail) |
+| Aktivitas times/kind/cover | 43, 45–54 | enrich `trip_activities` columns | 🔜 MVP (detail) |
+| Trip waktu (non-all-day) | 22, 29, 31 | `is_all_day`, `start_time`, `end_time` on trips / kandidat | 🔜 MVP (detail) |
 | Kandidat tanggal (1–3) | 25–32 | `candidates[]` min 1 max 3; `voting_deadline` override | ✅ create; 🔜 override + per-candidate time |
-| Daftar anggota + batalkan undang | 41, 97–102 | `GET …/members`, `DELETE …/invitations/:id` | 🔜 M5.2 |
-| Wishlist enriched + convert | 110–117 | wishlist columns + `POST …/convert-to-trip` | 🔜 M5.2 |
-| Chat foto/video + unread badge | 77–85 | multipart messages + `trip_message_reads` | 🔜 M5.2 |
-| Balas pesan (reply quote) | 89–92 | `reply_to_id` + enriched message payload | 🔜 M5.2e |
-| Tab Media + set cover | 93, 94 | `trip_documents` CRUD + `PUT …/cover`; `from_chat` | 🔜 M5.2b |
-| Kelola trip — members | 97–102 | `GET …/members`, pending 3 status, remove/reinvite | 🔜 M5.2 |
-| Multi-voting Aktivitas/Lainnya | 56–75 | `trip_polls` schema + CRUD; tanggal tetap `candidates` | 🔜 M5.2c |
-| Hapus akun | 20 | `DELETE /v1/users/me` | 🔜 M5.2 |
-| Event kalender Google | 96 | Calendar API integration | M11 |
+| Daftar anggota + batalkan undang | 41, 97–102 | `GET …/members`, `DELETE …/invitations/:id` | 🔜 MVP (detail) |
+| Wishlist enriched + convert | 110–117 | wishlist columns + `POST …/convert-to-trip` | 🔜 MVP (detail) |
+| Chat foto/video + unread badge | 77–85 | multipart messages + `trip_message_reads` | 🔜 MVP (detail) |
+| Balas pesan (reply quote) | 89–92 | `reply_to_id` + enriched message payload | 🔜 M7 |
+| Tab Media + set cover | 93, 94 | `trip_documents` CRUD + `PUT …/cover`; `from_chat` | 🔜 M7 |
+| Kelola trip — members | 97–102 | `GET …/members`, pending 3 status, remove/reinvite | 🔜 MVP (detail) |
+| Multi-voting Aktivitas/Lainnya | 56–75 | `trip_polls` schema + CRUD; tanggal tetap `candidates` | 🔜 M5 |
+| Hapus akun | 20 | `DELETE /v1/users/me` | 🔜 MVP (detail) |
+| Event kalender Google | 96 | Calendar API integration | M16 |
 | Logout revoke session | 17 | `POST /v1/auth/logout` | Opsional (local OK) |
 | Follow/follower | — | `POST/DELETE …/follow` | Post-MVP (kode ada) |
 
@@ -626,7 +630,7 @@ Layout: scroll konten penuh; dots klikable sticky di atas CTA; CTA *Selanjutnya 
 | `Screen4Username` | Feedback tersedia (teal) / error (coral) | ✅ |
 | `Screen4Username` | Saran chips (client-only) | Opsional |
 
-> **Gap BE**: validator username saat ini `alphanum` (tanpa `_`) — target M5.2: `^[a-zA-Z0-9_]{3,30}$`.
+> **Gap BE**: validator username saat ini `alphanum` (tanpa `_`) — target MVP (detail): `^[a-zA-Z0-9_]{3,30}$`.
 
 ### Beranda (`Screen5Home`–`Screen9Notifikasi`)
 
@@ -733,7 +737,7 @@ Jenis voting selalu lewat **badge inline** (`VotingTypeBadgeInline`), bukan di j
 | Layar | Fokus |
 |-------|-------|
 | `Screen95` | `TripDeleteModal` — hapus permanen |
-| `Screen96` | `CalendarEventModal` — kalender sendiri (M11) |
+| `Screen96` | `CalendarEventModal` — kalender sendiri (M16) |
 | `Screen97`–`102` | `TripMembersScreen` — search, pending, anggota |
 | `Screen103` | `CreateTripShell` edit — **Simpan** |
 
@@ -754,25 +758,25 @@ Jenis voting selalu lewat **badge inline** (`VotingTypeBadgeInline`), bukan di j
 | `Screen119` | Toast Sukses (teal) · Error (coral) · Info (putih) |
 | `Screen120` | Offline full-screen · **Coba Lagi** |
 | `Screen121`–`123` | Media viewer foto / video pause / playing |
-| `Screen124` | Dark mode Beranda (opsional M12) |
+| `Screen124` | Dark mode Beranda (opsional M17) |
 | `Screen125` | Design tokens referensi dev |
 
 ### Naming: UI vs Backend
 
 | UI (Figma) | Backend (saat ini) |
 |------------|-------------------|
-| Itinerary / aktivitas | `trip_destinations`, `/destinations` endpoints |
+| Itinerary / aktivitas | `trip_activities`, `/activities` endpoints |
 | Voting type "Aktivitas" | Internal code `destinasi` di `VotingType` |
 
 ---
 
 ## 🤖 Panduan untuk AI Agent
 
-### Cara Mengaudit Alignment (M12)
+### Cara Mengaudit Alignment (M17)
 
 1. Jalankan `figma/` preview lokal
-2. Verifikasi **125 layar** di `App.tsx` vs Composable Android
-3. **Color Check**: `Color.kt` ↔ `colors.ts`
+2. Verifikasi **125 layar** di `App.tsx` vs komponen Expo (React Native)
+3. **Color Check**: `theme/colors.ts` (mobile) ↔ `colors.ts` (figma)
 4. **Layout Check**: padding 20dp, bottom nav 88dp
 5. **State Check**: empty, skeleton, error, validation, wishlist→trip
 6. **Tab Check**: Itinerary · Voting · Chat · Media
@@ -785,4 +789,4 @@ mobile/androidApp/src/main/res/
 └── font/              # Plus Jakarta Sans
 ```
 
-Ekspor dari Figma Editor: SVG → Vector Drawable (Android Studio).
+Ekspor dari Figma Editor: SVG → komponen `react-native-svg` (mobile).
