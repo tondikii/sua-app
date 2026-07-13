@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f8e7d6c5-b4a3-2918-7654-3210fedcba98",
     "name": "Atur Perjalanan API",
-    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` | Google OAuth ID token for `POST /auth/google` |\n| `access_token` | App JWT (auto-saved after sign-in) |\n| `realtime_token` | Supabase-compatible JWT for Realtime |\n| `username` | Username for profile/trips requests |\n| `trip_id` | Trip ID for detail/invitation/member endpoints |\n| `invitation_id` | Invitation ID for respond/cancel endpoints |\n| `member_id` | User ID of trip member to remove |\n| `document_id` | Document ID for setting cover |\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
+    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Two-user testing (invitations, voting)\nSome flows need two people at once (invite → accept, multi-voter tallies). This collection keeps **two independent sessions** so you never have to log out and back in:\n\n- **User 1** uses `access_token` (the default Bearer auth for every request).\n- **User 2** uses `access_token_2`. Requests suffixed **(User 2)** override their auth to use it.\n\nSteps:\n1. Set both `google_id_token` and `google_id_token_2` in the environment.\n2. Run **Auth → Google Sign-In** and **Auth → Google Sign-In (User 2)** — each saves its own token.\n3. (New users) run **Complete Registration** and **Complete Registration (User 2)**.\n4. Now use the normal requests as User 1 and the **(User 2)** variants as User 2, e.g.:\n   - Invite: **Invitations → Invite User** (User 1) → **Get My Invitations (User 2)** → **Accept Invitation (User 2)**.\n   - Voting: **Voting → Vote on Poll** (User 1) + **Vote on Poll (User 2)** to build a real tally.\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip ID for detail/invitation/member endpoints |\n| `invitation_id` | Invitation ID for respond/cancel endpoints |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy real UUIDs from List Polls) |\n| `activity_id` | Activity ID for get/update/delete |\n| `member_id` | User ID of trip member to remove |\n| `document_id` | Document ID for setting cover |\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -66,6 +66,38 @@
   {
     "key": "document_id",
     "value": ""
+  },
+  {
+    "key": "poll_id",
+    "value": ""
+  },
+  {
+    "key": "option_id",
+    "value": ""
+  },
+  {
+    "key": "candidate_id",
+    "value": ""
+  },
+  {
+    "key": "activity_id",
+    "value": ""
+  },
+  {
+    "key": "google_id_token_2",
+    "value": ""
+  },
+  {
+    "key": "access_token_2",
+    "value": ""
+  },
+  {
+    "key": "realtime_token_2",
+    "value": ""
+  },
+  {
+    "key": "username_2",
+    "value": "user2_travel"
   }
   ],
   "item": [
@@ -214,6 +246,131 @@
               "path": ["auth", "complete-registration"]
             },
             "description": "Set username for a newly registered user.\n\n**Auth:** Bearer JWT (required)\n\n**Body:**\n- `username` (string, required) — 3–30 chars, `[a-zA-Z0-9_]+`\n\n**Response:**\n```json\n{ \"user\": { \"id\": \"...\", \"username\": \"...\", ... } }\n```\n\n**Errors:** `409 USERNAME_TAKEN`, `400 USERNAME_INVALID`"
+          },
+          "response": []
+        },
+        {
+          "name": "Google Sign-In (User 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.access_token) {",
+                  "        pm.collectionVariables.set('access_token_2', body.access_token);",
+                  "        pm.environment.set('access_token_2', body.access_token);",
+                  "    }",
+                  "    if (body.realtime_token) {",
+                  "        pm.collectionVariables.set('realtime_token_2', body.realtime_token);",
+                  "        pm.environment.set('realtime_token_2', body.realtime_token);",
+                  "    }",
+                  "    if (body.user && body.user.username) {",
+                  "        pm.collectionVariables.set('username_2', body.user.username);",
+                  "        pm.environment.set('username_2', body.user.username);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Status is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "pm.test('Response has access_token', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('access_token');",
+                  "    pm.expect(body).to.have.property('is_new_user');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"{{google_id_token_2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Sign in the **second** test user. Saves the returned JWT to `access_token_2` (and `realtime_token_2`) so you can act as two users at once without re-logging in.\n\nSet `google_id_token_2` in the environment to User 2's Google ID token before running.\n\nUse `{{access_token_2}}` as the Bearer token in any request you want to send *as User 2* (several ready-made variants are included in the Invitations and Voting folders)."
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Registration (User 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.user && body.user.username) {",
+                  "        pm.collectionVariables.set('username_2', body.user.username);",
+                  "        pm.environment.set('username_2', body.user.username);",
+                  "    }",
+                  "}",
+                  "",
+                  "pm.test('Status is 200 or 201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token_2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username_2}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/complete-registration",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "complete-registration"]
+            },
+            "description": "Set the username for the **second** newly-registered user. Authenticated as User 2 (`{{access_token_2}}`)."
           },
           "response": []
         }
@@ -641,8 +798,342 @@
             "description": "Cancel a pending invitation. Inviter only. Returns 204 No Content."
           },
           "response": []
+        },
+        {
+          "name": "Get My Invitations (User 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {"key": "token", "value": "{{access_token_2}}", "type": "string"}
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/invitations?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "invitations"],
+              "query": [
+                {"key": "cursor", "value": "", "description": "UUID for pagination", "disabled": true},
+                {"key": "limit", "value": "20", "description": "Default 20, max 100"}
+              ]
+            },
+            "description": "List pending invitations **for User 2** (`{{access_token_2}}`). Run this after User 1 invites User 2 to grab the `invitation_id` to accept.\n\nTip: add a test script to auto-save `invitation_id` from `data[0].id` if you like."
+          },
+          "response": []
+        },
+        {
+          "name": "Accept Invitation (User 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {"key": "token", "value": "{{access_token_2}}", "type": "string"}
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+            },
+            "description": "Accept (or decline) the invitation **as User 2** (`{{access_token_2}}`) — no login switch needed. Set `accept` to true/false. Returns 204 No Content.\n\nTypical flow: **Invite User** (as User 1) → **Get My Invitations (User 2)** → **Accept Invitation (User 2)**."
+          },
+          "response": []
         }
       ]
-    }
-  ]
+    },
+    {
+      "name": "Voting",
+      "description": "Multi-poll voting for trip dates, activities, and other options (M5).",
+      "item": [
+        {
+          "name": "List Polls",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls"]
+            },
+            "description": "List all polls for a trip with vote tallies and current user vote.\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"poll-1\",\n      \"poll_type\": \"aktivitas\",\n      \"title\": \"Best Activity\",\n      \"status\": \"active\",\n      \"deadline\": null,\n      \"locked_at\": null,\n      \"creator\": { \"id\": \"user-1\", \"name\": \"Alice\", \"username\": \"alice\", \"avatar_url\": null },\n      \"options\": [\n        { \"id\": \"opt-1\", \"label\": \"Hiking\", \"sort_order\": 0, \"candidate_id\": null, \"vote_count\": 2 },\n        { \"id\": \"opt-2\", \"label\": \"Swimming\", \"sort_order\": 1, \"candidate_id\": null, \"vote_count\": 1 }\n      ],\n      \"voted_option_id\": \"opt-1\",\n      \"created_at\": \"2026-07-12T12:00:00.000Z\"\n    }\n  ],\n  \"next_cursor\": null\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Best Activity\",\n  \"poll_type\": \"aktivitas\",\n  \"options\": [\"Hiking\", \"Swimming\"],\n  \"deadline\": null\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls"]
+            },
+            "description": "Create a new poll (aktivitas or lainnya). Tanggal polls are auto-created when trip enters voting_pending. Creator only.\n\n**Request body:**\n- `title` (string): Poll title\n- `poll_type` ('aktivitas' | 'lainnya'): Poll type\n- `options` (string[]): 2–10 option labels\n- `deadline` (ISO 8601 string, optional): Vote deadline\n\n**Response 201:** Poll object with empty vote counts.\n\n**Errors:**\n- 400: Fewer than 2 options, tanggal poll creation attempt, > 10 options\n- 409: Active poll already exists for this poll_type"
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{option_id}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Vote on a poll option. Replaces previous vote if voter already voted. No-op if voting for same option. Set `poll_id` and `option_id` (real UUIDs from **List Polls**) in the environment first.\n\n**Response 204:** No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Retract Poll Vote",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Retract the current user's vote on a poll.\n\n**Response 204:** No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Date Candidate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"candidate_id\": \"{{candidate_id}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+            },
+            "description": "Vote on a date candidate. Separate from generic polls (tanggal poll voting). Set `candidate_id` (real UUID) in the environment first.\n\n**Response 204:** No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Retract Date Candidate Vote",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+            },
+            "description": "Retract the current user's vote on a date candidate.\n\n**Response 204:** No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Poll",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "lock"]
+            },
+            "description": "Lock a poll (creator only). If tanggal poll, updates trip dates to winning candidate and sets trip status to 'fixed'.\n\n**Response 204:** No Content.\n\n**Errors:**\n- 403: Not the trip creator"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Poll",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}"]
+            },
+            "description": "Delete an active poll (creator only). Response 204: No Content. Errors: 400 Poll not active, 403 Not the trip creator"
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Poll (User 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {"key": "token", "value": "{{access_token_2}}", "type": "string"}
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{option_id}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Cast a vote **as User 2** (`{{access_token_2}}`) — lets you build up a real tally with two voters without switching login. User 2 must be a participant of the trip (accept the invitation first). Set `poll_id` and `option_id` from **List Polls**.\n\n**Response 204:** No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Retract Vote (User 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {"key": "token", "value": "{{access_token_2}}", "type": "string"}
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Retract User 2's vote on a poll (`{{access_token_2}}`).\n\n**Response 204:** No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+    "description": "CRUD endpoints for trip itinerary activities (M6).",
+    "item": [
+      {
+        "name": "List Activities",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "{{base_url}}/trips/{{trip_id}}/activities",
+            "host": ["{{base_url}}"],
+            "path": ["trips", "{{trip_id}}", "activities"]
+          },
+          "description": "List all activities for a trip, grouped by date and sorted by start_time. Response 200: Array of activity objects with place_name, times, kind, cover info."
+        },
+        "response": []
+      },
+      {
+        "name": "Get Activity",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+            "host": ["{{base_url}}"],
+            "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+          },
+          "description": "Get a single activity by ID. Set `activity_id` (real UUID) in the environment first. Response 200: Activity detail object."
+        },
+        "response": []
+      },
+      {
+        "name": "Create Activity",
+        "request": {
+          "method": "POST",
+          "header": [
+            {"key": "Content-Type", "value": "application/json"}
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"place_name\": \"Breakfast at Warung\",\n  \"activity_date\": \"2027-06-20\",\n  \"start_time\": \"07:00\",\n  \"end_time\": \"09:00\",\n  \"kind\": \"meal\",\n  \"location_label\": \"Ubud\",\n  \"description\": \"Local breakfast\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [],\n  \"cover_source\": \"none\"\n}",
+            "options": {"raw": {"language": "json"}}
+          },
+          "url": {
+            "raw": "{{base_url}}/trips/{{trip_id}}/activities",
+            "host": ["{{base_url}}"],
+            "path": ["trips", "{{trip_id}}", "activities"]
+          },
+          "description": "Create a new activity. Participants can create. Validation: times must be HH:MM, start_time <= end_time, activity_date within trip range if fixed. Response 201: Activity detail."
+        },
+        "response": []
+      },
+      {
+        "name": "Update Activity",
+        "request": {
+          "method": "PUT",
+          "header": [
+            {"key": "Content-Type", "value": "application/json"}
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"place_name\": \"Updated Activity Name\",\n  \"description\": \"New description\"\n}",
+            "options": {"raw": {"language": "json"}}
+          },
+          "url": {
+            "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+            "host": ["{{base_url}}"],
+            "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+          },
+          "description": "Update an activity (partial update supported). Response 200: Updated activity object."
+        },
+        "response": []
+      },
+      {
+        "name": "Delete Activity",
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": {
+            "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+            "host": ["{{base_url}}"],
+            "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+          },
+          "description": "Delete an activity. Response 204: No Content."
+        },
+        "response": []
+      }
+    ]
+  }
+]
 }

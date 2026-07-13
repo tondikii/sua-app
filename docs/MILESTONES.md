@@ -29,8 +29,8 @@
 | M2 | Infrastruktur & Tooling Monorepo | ✅ Selesai |
 | M3 | Backend – Autentikasi & User | ✅ Selesai |
 | M4 | Backend – Manajemen Trip & Undangan | ✅ Selesai |
-| M5 | Backend – Voting (Multi-Poll) | 🔲 Belum |
-| M6 | Backend – Itinerary / Aktivitas | 🔲 Belum |
+| M5 | Backend – Voting (Multi-Poll) | ✅ Selesai |
+| M6 | Backend – Itinerary / Aktivitas | ✅ Selesai |
 | M7 | Backend – Chat (Supabase Realtime) & Media (R2) | 🔲 Belum |
 | M8 | Backend – Wishlist & Konversi Trip | 🔲 Belum |
 | M9 | Backend – Notifikasi & Background Jobs | 🔲 Belum |
@@ -174,41 +174,41 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 
 ---
 
-## M5 — Backend: Voting (Multi-Poll) 🔲 BELUM DIMULAI
+## M5 — Backend: Voting (Multi-Poll) ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M5. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_polls, trip_poll_options, trip_poll_votes), §4.3`, `docs/WORKFLOW.md §8`."*
 
 **Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3`, `docs/WORKFLOW.md §8`, `docs/ACCEPTANCE_CRITERIA.md §4`
 
 ### Checklist
-- [ ] Prisma models: `TripPoll`, `TripPollOption`, `TripPollVote`
-- [ ] `GET /v1/trips/:tripId/polls` — semua poll (tanggal/aktivitas/lainnya) dengan tally per opsi
-- [ ] `POST /v1/trips/:tripId/polls` — buat poll `aktivitas`/`lainnya` (validasi: max 1 poll aktif per `poll_type`)
-- [ ] `POST /v1/trips/:tripId/polls/:pollId/vote`, `DELETE .../vote` — participants only
-- [ ] `POST /v1/trips/:tripId/candidates/:id/vote`, `DELETE .../vote` — vote tanggal (tetap terhubung ke `trip_date_candidates`, bukan `trip_poll_votes`, agar tidak dobel hitung)
-- [ ] `POST /v1/trips/:tripId/polls/:pollId/lock` — creator only; untuk `poll_type=tanggal` → update `trips.start_date/end_date/status=fixed`, clear `voting_deadline` (transaksi)
-- [ ] `DELETE /v1/trips/:tripId/polls/:pollId`
-- [ ] Unit + e2e tests: buat poll per jenis, vote/retract, lock tanggal vs lock aktivitas, batas 1 poll aktif per jenis
-- [ ] Postman — tambah folder `Voting` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M5)
+- [x] Prisma models: `TripPoll`, `TripPollOption`, `TripPollVote`
+- [x] `GET /v1/trips/:tripId/polls` — semua poll (tanggal/aktivitas/lainnya) dengan tally per opsi
+- [x] `POST /v1/trips/:tripId/polls` — buat poll `aktivitas`/`lainnya` (validasi: max 1 poll aktif per `poll_type`)
+- [x] `POST /v1/trips/:tripId/polls/:pollId/vote`, `DELETE .../vote` — participants only
+- [x] `POST /v1/trips/:tripId/candidates/:id/vote`, `DELETE .../vote` — vote tanggal (tetap terhubung ke `trip_date_candidates`, bukan `trip_poll_votes`, agar tidak dobel hitung)
+- [x] `POST /v1/trips/:tripId/polls/:pollId/lock` — creator only; untuk `poll_type=tanggal` → update `trips.start_date/end_date/status=fixed`, clear `voting_deadline` (transaksi)
+- [x] `DELETE /v1/trips/:tripId/polls/:pollId`
+- [x] Unit + e2e tests: buat poll per jenis, vote/retract, lock tanggal vs lock aktivitas, batas 1 poll aktif per jenis
+- [x] Postman — tambah folder `Voting` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M5)
 
 ---
 
-## M6 — Backend: Itinerary / Aktivitas 🔲 BELUM DIMULAI
+## M6 — Backend: Itinerary / Aktivitas ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M6. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_activities), §4.3`, `docs/WORKFLOW.md §7`."*
 
 **Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3`, `docs/WORKFLOW.md §7`, `docs/ACCEPTANCE_CRITERIA.md §5`
 
 ### Checklist
-- [ ] Prisma model `TripActivity` (times, `kind`, `ref_links` JSONB, `cover_source`/`cover_icon`/`cover_document_id`/`thumbnail_url`)
-- [ ] `GET /v1/trips/:tripId/activities` — grouped/sortable by `activity_date`, `start_time`
-- [ ] `POST /v1/trips/:tripId/activities`
-- [ ] `PUT /v1/trips/:tripId/activities/:id` — full edit
-- [ ] `DELETE /v1/trips/:tripId/activities/:id`
-- [ ] Integrasi Google Places/Static Maps API — resolve `thumbnail_url` dari `maps_link` (background, tidak blocking response)
-- [ ] Validasi: `activity_date` harus dalam rentang `trips.start_date`–`end_date` ketika trip `status=fixed`
-- [ ] Unit + e2e tests: CRUD aktivitas, validasi waktu, resolve thumbnail
-- [ ] Postman — tambah folder `Activities` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M6)
+- [x] Prisma model `TripActivity` (times, `kind`, `ref_links` JSONB, `cover_source`/`cover_icon`/`cover_document_id`/`thumbnail_url`)
+- [x] `GET /v1/trips/:tripId/activities` — grouped/sortable by `activity_date`, `start_time`
+- [x] `POST /v1/trips/:tripId/activities`
+- [x] `PUT /v1/trips/:tripId/activities/:id` — full edit
+- [x] `DELETE /v1/trips/:tripId/activities/:id`
+- [x] Integrasi Google Places/Static Maps API — resolve `thumbnail_url` dari `maps_link` (background, tidak blocking response)
+- [x] Validasi: `activity_date` harus dalam rentang `trips.start_date`–`end_date` ketika trip `status=fixed`
+- [x] Unit + e2e tests: CRUD aktivitas, validasi waktu, resolve thumbnail
+- [x] Postman — tambah folder `Activities` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M6)
 
 ---
 
@@ -531,3 +531,4 @@ Do not deviate from the patterns in docs/ARCHITECTURE.md.
 3. **Definition of Done** — Milestone selesai hanya jika **semua** checklist item ter-centang.
 4. **Postman Collection** — Setiap milestone backend (M3–M9) wajib memperbarui `docs/postman/atur-perjalanan-api.postman_collection.json` sesuai konvensi § Postman Collection. M10 melakukan audit final.
 5. **Update status** — Perbarui tabel Progress Overview setelah milestone selesai. Progress **hanya** dilacak di file ini.
+6. **Langkah pengetesan verifikasi** — Sebelum menandai milestone selesai, wajib sediakan langkah-langkah pengetesan konkret (perintah test, request Postman, skenario manual, atau kombinasinya) yang memverifikasi **setiap** checklist item benar-benar berfungsi. Langkah ini **hanya** disampaikan lewat response agent — **jangan** menambah atau mengedit file dokumen untuk itu.

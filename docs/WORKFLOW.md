@@ -734,12 +734,12 @@ Konten: jam · judul · lokasi (`MapPin`) · deskripsi · section **Tautan** (ba
 
 | Aksi | Method | Endpoint | Status |
 |------|--------|----------|--------|
-| List aktivitas | GET | `/v1/trips/:id/activities` | ✅ (field minimal) |
-| Tambah aktivitas | POST | `/v1/trips/:id/activities` | ✅ (field minimal) |
-| Hapus aktivitas | DELETE | `/v1/trips/:id/activities/:id` | ✅ (`Screen55` menu Hapus) |
-| Edit aktivitas | PUT | `/v1/trips/:id/activities/:id` | 🔜 M3–M10 (`Screen54`) |
-| Enriched fields | — | times, kind, ref_links[], cover_* | 🔜 M3–M10 schema |
-| Resolve Maps thumb | — | Places/Static API di BE | 🔜 M3–M10 |
+| List aktivitas | GET | `/v1/trips/:id/activities` | ✅ |
+| Tambah aktivitas | POST | `/v1/trips/:id/activities` | ✅ |
+| Hapus aktivitas | DELETE | `/v1/trips/:id/activities/:id` | ✅ |
+| Edit aktivitas | PUT | `/v1/trips/:id/activities/:id` | ✅ |
+| Enriched fields | — | times, kind, ref_links[], cover_* | ✅ |
+| Resolve Maps thumb | — | Places/Static API di BE | ✅ |
 
 > Field minimal today: `place_name`, `maps_link`, `reference_link`, `sort_order`. Target penuh selaras `ActivityDraft` (`ActivityParts.tsx`).
 >

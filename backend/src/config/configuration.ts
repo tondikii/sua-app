@@ -21,6 +21,7 @@ export default () => ({
 
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
+    mapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   },
 
   r2: {
