@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f8e7d6c5-b4a3-2918-7654-3210fedcba98",
     "name": "Atur Perjalanan API",
-    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities | M7 — Chat & Media\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Two-user testing (invitations, voting, chat)\nSome flows need two people at once (invite → accept, multi-voter tallies, multi-user chat). This collection keeps **two independent sessions** so you never have to log out and back in:\n\n- **User 1** uses `access_token` (the default Bearer auth for every request).\n- **User 2** uses `access_token_2`. Requests suffixed **(User 2)** override their auth to use it.\n\nSteps:\n1. Set both `google_id_token` and `google_id_token_2` in the environment.\n2. Run **Auth → Google Sign-In** and **Auth → Google Sign-In (User 2)** — each saves its own token.\n3. (New users) run **Complete Registration** and **Complete Registration (User 2)**.\n4. Typical flows:\n   - **Invitations:** Invite User (User 1) → Get My Invitations (User 2) → Accept Invitation (User 2).\n   - **Voting:** Vote on Poll (User 1) + Vote on Poll (User 2).\n   - **Chat:** Send Text Message (User 1) → List Messages (User 2) → Send Text Message (User 2) → Mark Chat Read (User 2).\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID — set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` / `message_id_2` | Chat message UUID (auto-saved; User 1 / User 2) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `storage_key` | R2 object key from Presign Upload (auto-saved) |\n| `cursor` | Pagination cursor — RFC3339 timestamp from `next_cursor` in list responses |\n\n## Pagination (`cursor`)\nList endpoints (messages, trips, users, …) return `next_cursor` when more pages exist. To fetch the **next page**, copy `next_cursor` into the `cursor` query param and re-run the list request. Leave `cursor` empty for the first page. Chat messages use **RFC3339 timestamps** (e.g. `2026-07-13T04:28:14.108Z`), not UUIDs.\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
+    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities | M7 — Chat & Media\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Two-user testing (invitations, voting, chat)\nSome flows need two people at once (invite → accept, multi-voter tallies, multi-user chat). This collection keeps **two independent sessions** so you never have to log out and back in:\n\n- **User 1** uses `access_token` (the default Bearer auth for every request).\n- **User 2** uses `access_token_2`. Requests suffixed **(User 2)** override their auth to use it.\n\nSteps:\n1. Set both `google_id_token` and `google_id_token_2` in the environment.\n2. Run **Auth → Google Sign-In** and **Auth → Google Sign-In (User 2)** — each saves its own token.\n3. (New users) run **Complete Registration** and **Complete Registration (User 2)**.\n4. Typical flows:\n   - **Invitations:** Invite User (User 1) → Get My Invitations (User 2) → Accept Invitation (User 2).\n   - **Voting:** Vote on Poll (User 1) + Vote on Poll (User 2).\n   - **Chat:** Send Text Message (User 1) → List Messages (User 2) → Send Text Message (User 2) → Mark Chat Read (User 2).\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID — set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` / `message_id_2` | Chat message UUID (auto-saved; User 1 / User 2) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `storage_key` | R2 object key from Presign Upload (auto-saved) |\n| `upload_url` | Presigned R2 PUT URL from Presign Upload (5 min expiry) |\n| `media_presigned_url` | Presigned R2 GET URL from Register/List Documents `url` field (1 hour expiry) |\n| `content_type` | MIME type for presign + R2 PUT (must match on both) |\n| `cursor` | Pagination cursor — RFC3339 timestamp from `next_cursor` in list responses |\n\n## R2 media upload flow\n1. **Uploads → Presign Upload** → `upload_url` + `storage_key`\n2. **Uploads → Upload File to R2 (PUT)** → 200 OK (empty body)\n3. **Media → Register Document** → response `url` saved as `media_presigned_url`\n4. **Uploads → Verify Presigned Download URL** → GET `media_presigned_url` → image\n\nPublic `.r2.dev` URL is **not** required. See `docs/ARCHITECTURE.md` §7.\nList endpoints (messages, trips, users, …) return `next_cursor` when more pages exist. To fetch the **next page**, copy `next_cursor` into the `cursor` query param and re-run the list request. Leave `cursor` empty for the first page. Chat messages use **RFC3339 timestamps** (e.g. `2026-07-13T04:28:14.108Z`), not UUIDs.\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -116,12 +116,8 @@
       "value": ""
     },
     {
-      "key": "media_public_url",
+      "key": "media_presigned_url",
       "value": ""
-    },
-    {
-      "key": "r2_public_url",
-      "value": "https://pub-074e498bb54347ebb9869bcbe2c36b24.r2.dev"
     },
     {
       "key": "content_type",
@@ -1784,7 +1780,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"{{media_public_url}}\"\n}",
+              "raw": "{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"{{storage_key}}\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -1792,7 +1788,7 @@
               "host": ["{{base_url}}"],
               "path": ["trips", "{{trip_id}}", "messages"]
             },
-            "description": "Send a chat photo using a **real R2 public URL** (`{{media_public_url}}`).\n\n**Prerequisite:** Run **Uploads → 1. Presign** → **2. Upload File to R2 (PUT)** first (register optional — chat auto-creates `trip_documents` with `from_chat=true`).\n\nConfirms chat media + Media tab integration with actual stored files."
+            "description": "Send a chat photo using the uploaded **storage_key** (`{{storage_key}}`). Backend derives the R2 key and returns a presigned `media_url` in the response.\n\n**Prerequisite:** Run **Uploads → 1. Presign** → **2. Upload File to R2 (PUT)** first (register optional — chat auto-creates `trip_documents` with `from_chat=true`).\n\nConfirms chat media + Media tab integration with actual stored files."
           },
           "response": []
         },
@@ -1947,7 +1943,17 @@
                   "    if (body.data && body.data.length > 0) {",
                   "        pm.environment.set('document_id', body.data[0].id);",
                   "        pm.collectionVariables.set('document_id', body.data[0].id);",
+                  "        if (body.data[0].url) {",
+                  "            pm.environment.set('media_presigned_url', body.data[0].url);",
+                  "            pm.collectionVariables.set('media_presigned_url', body.data[0].url);",
+                  "        }",
                   "    }",
+                  "    pm.test('Document url is presigned (has X-Amz-Signature)', function () {",
+                  "        if (body.data && body.data[0] && body.data[0].url) {",
+                  "            pm.expect(body.data[0].url).to.include('X-Amz-Signature');",
+                  "            pm.expect(body.data[0]).to.have.property('url_expires_in', 3600);",
+                  "        }",
+                  "    });",
                   "}",
                   "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
                 ]
@@ -1962,7 +1968,7 @@
               "host": ["{{base_url}}"],
               "path": ["trips", "{{trip_id}}", "documents"]
             },
-            "description": "List all media for a trip (Media tab). Includes chat-sourced items (`from_chat: true`).\n\nTest script auto-saves `document_id` from the newest item.\n\n**Response 200:**\n```json\n{ \"data\": [{ \"id\": \"...\", \"url\": \"...\", \"is_cover\": false, \"from_chat\": true, ... }] }\n```"
+            "description": "List all media for a trip (Media tab). Includes chat-sourced items (`from_chat: true`).\n\nTest script auto-saves `document_id` and `media_presigned_url` from the newest item.\n\n**Response 200:**\n```json\n{ \"data\": [{ \"id\": \"...\", \"url\": \"https://...X-Amz-Signature=...\", \"url_expires_in\": 3600, \"is_cover\": false, \"from_chat\": true, ... }] }\n```\n\nThe `url` field is a **presigned GET URL** (1 hour expiry) — not a public R2 dev URL."
           },
           "response": []
         },
@@ -1999,9 +2005,14 @@
                   "        pm.collectionVariables.set('document_id', body.id);",
                   "    }",
                   "    if (body.url) {",
-                  "        pm.environment.set('media_public_url', body.url);",
-                  "        pm.collectionVariables.set('media_public_url', body.url);",
+                  "        pm.environment.set('media_presigned_url', body.url);",
+                  "        pm.collectionVariables.set('media_presigned_url', body.url);",
                   "    }",
+                  "    pm.test('Response url is presigned', function () {",
+                  "        const b = pm.response.json();",
+                  "        pm.expect(b.url).to.include('X-Amz-Signature');",
+                  "        pm.expect(b).to.have.property('url_expires_in', 3600);",
+                  "    });",
                   "}",
                   "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
                 ]
@@ -2062,7 +2073,7 @@
     },
     {
       "name": "Uploads",
-      "description": "Direct-to-R2 upload (M7). **NestJS never proxies binary** — the file goes straight to Cloudflare R2.\n\n## Full flow (run in order)\n1. **Presign Upload** — get `upload_url`, `storage_key`, `public_url`\n2. **Upload File to R2 (PUT)** — select a `.jpg` file in Body → binary; `Content-Type` must match presign\n3. **Media → Register Document** — verify object in R2 + save DB row\n4. **Media → List Documents** — confirm `url` is fetchable\n5. *(optional)* **Chat → Send Photo Message (R2 URL)** — chat + auto `from_chat` document\n\nRequires valid `R2_*` in `backend/.env` and R2 bucket public access via `R2_PUBLIC_URL`.",
+      "description": "Direct-to-R2 upload (M7). **NestJS never proxies binary** — the file goes straight to Cloudflare R2.\n\n## Full flow (run in order)\n1. **Presign Upload** — get `upload_url` + `storage_key`\n2. **Upload File to R2 (PUT)** — select a `.jpg` file in Body → binary; `Content-Type` must match presign\n3. **Media → Register Document** — verify object in R2 + save DB row (response includes presigned `url`)\n4. **Verify Presigned Download URL (GET)** — confirm the presigned `url` fetches the image\n5. *(optional)* **Chat → Send Photo Message (R2 URL)** — uses `storage_key`; response `media_url` is presigned\n\nRequires valid `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` in `backend/.env`. Public R2 dev URL / custom domain is **not** required.",
       "item": [
         {
           "name": "1. Presign Upload",
@@ -2083,16 +2094,12 @@
                   "        pm.environment.set('upload_url', data.upload_url);",
                   "        pm.collectionVariables.set('upload_url', data.upload_url);",
                   "    }",
-                  "    const publicUrl = data.public_url || (pm.environment.get('r2_public_url').replace(/\\/+$/, '') + '/' + data.storage_key);",
-                  "    if (publicUrl) {",
-                  "        pm.environment.set('media_public_url', publicUrl);",
-                  "        pm.collectionVariables.set('media_public_url', publicUrl);",
-                  "    }",
-                  "    pm.test('Has upload_url, storage_key, public_url', function () {",
+                  "    pm.test('Has upload_url and storage_key', function () {",
                   "        const d = pm.response.json();",
                   "        pm.expect(d).to.have.property('upload_url');",
                   "        pm.expect(d).to.have.property('storage_key');",
-                  "        pm.expect(d).to.have.property('public_url');",
+                  "        pm.expect(d).to.have.property('expires_in', 300);",
+                  "        pm.expect(d).to.not.have.property('public_url');",
                   "    });",
                   "}"
                 ]
@@ -2112,7 +2119,7 @@
               "host": ["{{base_url}}"],
               "path": ["uploads", "presign"]
             },
-            "description": "**Step 1** — Issue a presigned R2 PUT URL (5 min expiry). Participants only.\n\n**Body:**\n- `trip_id` — trip UUID\n- `media_type` — `\"photo\"` or `\"video\"`\n- `content_type` — MIME type; must match the PUT upload header exactly (default `image/jpeg`)\n\n**Response 200:**\n```json\n{\n  \"upload_url\": \"https://...r2.cloudflarestorage.com/...\",\n  \"storage_key\": \"trips/{tripId}/{uuid}.jpg\",\n  \"public_url\": \"https://pub-....r2.dev/trips/{tripId}/{uuid}.jpg\",\n  \"expires_in\": 300\n}\n```\n\nSaves `upload_url`, `storage_key`, `media_public_url` automatically."
+            "description": "**Step 1** — Issue a presigned R2 PUT URL (5 min expiry). Participants only.\n\n**Body:**\n- `trip_id` — trip UUID\n- `media_type` — `\"photo\"` or `\"video\"`\n- `content_type` — MIME type; must match the PUT upload header exactly (default `image/jpeg`)\n\n**Response 200:**\n```json\n{\n  \"upload_url\": \"https://...r2.cloudflarestorage.com/...\",\n  \"storage_key\": \"trips/{tripId}/{uuid}.jpg\",\n  \"expires_in\": 300\n}\n```\n\nSaves `upload_url` and `storage_key` automatically. Download URLs are presigned separately via Register/List Documents."
           },
           "response": []
         },
@@ -2151,14 +2158,14 @@
           "response": []
         },
         {
-          "name": "3. Verify Public URL (GET)",
+          "name": "3. Verify Presigned Download URL (GET)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('File is publicly fetchable (200)', function () {",
+                  "pm.test('Presigned download succeeded (200)', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
                   "pm.test('Content-Type is image', function () {",
@@ -2172,8 +2179,8 @@
             "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
-            "url": "{{media_public_url}}",
-            "description": "**Step 2b (optional)** — Verify the uploaded file is publicly readable via `R2_PUBLIC_URL`.\n\nRun after **Upload File to R2 (PUT)**. Uses `{{media_public_url}}` from presign/register response.\n\nIf this fails with 404, enable public access on your R2 bucket custom domain / r2.dev URL in Cloudflare dashboard."
+            "url": "{{media_presigned_url}}",
+            "description": "**Step 4** — Verify the presigned GET URL fetches the uploaded file.\n\n**Prerequisite:** Run **Media → Register Document** first (saves `media_presigned_url` from response `url`).\n\nUses `{{media_presigned_url}}` — a time-limited signed URL (1 hour expiry) generated by the backend. No public R2 dev URL or custom domain needed.\n\n**Common errors:**\n- `403 AccessDenied` / expired — URL older than 1 hour; re-run Register Document or List Documents\n- Empty `media_presigned_url` — run Register Document first"
           },
           "response": []
         }

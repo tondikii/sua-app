@@ -1,10 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 
-const PRESIGN_EXPIRY_SECONDS = 300; // 5 minutes (ARCHITECTURE §7)
+/** Presigned PUT URL for direct client uploads (ARCHITECTURE §7). */
+export const PRESIGN_UPLOAD_EXPIRY_SECONDS = 300;
+
+/** Presigned GET URL for serving media to clients without a public bucket URL. */
+export const PRESIGN_DOWNLOAD_EXPIRY_SECONDS = 3600;
 
 const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -55,15 +64,48 @@ export class R2Service {
     });
 
     const uploadUrl = await getSignedUrl(this.client, command, {
-      expiresIn: PRESIGN_EXPIRY_SECONDS,
+      expiresIn: PRESIGN_UPLOAD_EXPIRY_SECONDS,
     });
 
     return {
       upload_url: uploadUrl,
       storage_key: storageKey,
-      public_url: this.resolvePublicUrl(storageKey),
-      expires_in: PRESIGN_EXPIRY_SECONDS,
+      expires_in: PRESIGN_UPLOAD_EXPIRY_SECONDS,
     };
+  }
+
+  /**
+   * Issue a time-limited presigned GET URL so clients can fetch an object
+   * without relying on R2 public dev URLs or a custom domain.
+   */
+  async presignDownload(storageKey: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: storageKey,
+    });
+
+    return getSignedUrl(this.client, command, {
+      expiresIn: PRESIGN_DOWNLOAD_EXPIRY_SECONDS,
+    });
+  }
+
+  /** Batch variant for list endpoints (e.g. trip cards with cover images). */
+  async presignDownloads(storageKeys: string[]): Promise<Map<string, string>> {
+    const uniqueKeys = [...new Set(storageKeys.filter(Boolean))];
+    const entries = await Promise.all(
+      uniqueKeys.map(async (key) => [key, await this.presignDownload(key)] as const),
+    );
+    return new Map(entries);
+  }
+
+  /** Derive the R2 object key from a stored URL or return the key as-is. */
+  extractStorageKey(urlOrKey: string): string {
+    try {
+      const { pathname } = new URL(urlOrKey);
+      return pathname.replace(/^\/+/, '');
+    } catch {
+      return urlOrKey;
+    }
   }
 
   /** Verify an object actually landed in R2 before registering it as a document. */

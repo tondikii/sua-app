@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ActivityService } from './activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 describe('ActivityService', () => {
   let service: ActivityService;
@@ -34,6 +35,15 @@ describe('ActivityService', () => {
         ActivityService,
         { provide: PrismaService, useValue: prisma },
         { provide: GoogleMapsService, useValue: googleMaps },
+        {
+          provide: R2Service,
+          useValue: {
+            presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
+            presignDownloads: jest.fn(async (keys: string[]) =>
+              new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
+            ),
+          },
+        },
       ],
     }).compile();
 

@@ -73,6 +73,8 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 3. Set `google_id_token` di environment
 4. Jalankan **Auth → Google Sign-In** (token tersimpan otomatis)
 
+**Alur upload media R2** (folder `Uploads` + `Media`): Presign Upload → PUT file ke R2 → Register Document → Verify Presigned Download URL. Variabel `media_presigned_url` diisi otomatis dari response `url` Register/List — **bukan** dari Presign Upload.
+
 ---
 
 ## M0 — Fondasi Dokumentasi ✅ SELESAI
@@ -228,15 +230,18 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 - [x] Endpoint mint token Realtime (Supabase-compatible JWT, `sub` = user id) — dikembalikan bersama `access_token` di `POST /v1/auth/google`
 
 ### Checklist — Media & R2
-- [x] `R2Service` — presign PUT/GET (`@aws-sdk/client-s3` + `s3-request-presigner`)
-- [x] `POST /v1/uploads/presign` — `{ trip_id, media_type, content_type }` → `{ upload_url, storage_key, expires_in }`
+- [x] `R2Service` — presign PUT (upload, 5 min) + presign GET (download, 1 jam) via `@aws-sdk/client-s3` + `s3-request-presigner`
+- [x] `POST /v1/uploads/presign` — `{ trip_id, media_type, content_type }` → `{ upload_url, storage_key, expires_in }` (no `public_url`)
+- [x] API responses (`documents`, trip `cover_image_url`, chat `media_url`, activity thumbnails) return presigned GET URLs — tidak bergantung public `.r2.dev` / custom domain
 - [x] Prisma model `TripDocument`
 - [x] `GET/POST/DELETE /v1/trips/:tripId/documents` — registrasi objek R2 yang sudah diunggah (verifikasi via `HeadObject`)
 - [x] Chat media message (`message_kind=photo|video`) otomatis insert `trip_documents` dengan `from_chat=true`
 - [x] `PUT /v1/trips/:tripId/cover` — set `trips.cover_document_id`
 - [x] Migrasi SQL: tambah kolom `trips.cover_document_id`, `trip_activities.cover_document_id` (FK ke `trip_documents`, `DEFERRABLE` karena circular FK — lihat `ARCHITECTURE.md §3.3`)
 - [x] Unit + e2e tests: kirim pesan text/media, soft delete, presign flow (mock R2), cover selection, RLS policy (integration test terhadap Supabase lokal)
-- [x] Postman — tambah folder `Chat`, `Media`, `Uploads` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M7)
+- [x] Postman — tambah folder `Chat`, `Media`, `Uploads` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M7); alur R2 diperbarui untuk presigned GET (`media_presigned_url` dari Register/List Documents)
+
+> **Keputusan R2 (Juli 2026)**: Public Development URL (`.r2.dev`) terkena rate-limit ISP lokal. Akses media ke client memakai **presigned GET URL** (1 jam) yang di-generate backend — lihat `ARCHITECTURE.md §7`.
 
 > **Catatan implementasi**: `PUT /v1/trips/:tripId/cover` sudah ada sejak M6 (`trips.service.ts#setTripCover`) yang mem-validasi `trip_documents` — endpoint tersebut kini fungsional penuh setelah `TripDocument` dibuat di M7. RLS policy & `ALTER PUBLICATION` perlu dijalankan langsung di Supabase (lihat `WIRING_NOTES.md`); e2e/integration test terhadap Supabase lokal belum dijalankan otomatis di CI dan perlu `supabase start` secara manual.
 

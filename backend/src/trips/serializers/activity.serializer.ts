@@ -39,7 +39,11 @@ export class ActivitySerializer {
    * List-view shape for Itinerary tab (WORKFLOW §7).
    * Groups activities by day, includes cover thumb, time state.
    */
-  static toList(activity: ActivityLike, coverDocument?: DocumentLike | null) {
+  static toList(
+    activity: ActivityLike,
+    coverDocument?: DocumentLike | null,
+    coverThumbnailUrl?: string | null,
+  ) {
     return {
       id: activity.id,
       place_name: activity.placeName,
@@ -55,7 +59,8 @@ export class ActivitySerializer {
         source: activity.coverSource,
         icon: activity.coverIcon,
         document_id: activity.coverDocumentId,
-        thumbnail_url: activity.thumbnailUrl || (coverDocument?.storageUrl ?? null),
+        thumbnail_url:
+          activity.thumbnailUrl || coverThumbnailUrl || coverDocument?.storageUrl || null,
       },
       sort_order: activity.sortOrder,
       created_at: activity.createdAt.toISOString(),
@@ -66,7 +71,11 @@ export class ActivitySerializer {
   /**
    * Detail-view shape for Activity detail sheet (WORKFLOW §7, Screen 51–53).
    */
-  static toDetail(activity: ActivityLike, coverDocument?: DocumentLike | null) {
+  static toDetail(
+    activity: ActivityLike,
+    coverDocument?: DocumentLike | null,
+    coverThumbnailUrl?: string | null,
+  ) {
     return {
       id: activity.id,
       place_name: activity.placeName,
@@ -81,7 +90,8 @@ export class ActivitySerializer {
       cover_source: activity.coverSource,
       cover_icon: activity.coverIcon,
       cover_document_id: activity.coverDocumentId,
-      thumbnail_url: activity.thumbnailUrl || (coverDocument?.storageUrl ?? null),
+      thumbnail_url:
+        activity.thumbnailUrl || coverThumbnailUrl || coverDocument?.storageUrl || null,
       sort_order: activity.sortOrder,
       created_at: activity.createdAt.toISOString(),
       updated_at: activity.updatedAt.toISOString(),

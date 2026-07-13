@@ -723,7 +723,7 @@ CREATE TABLE trip_messages (
     message_kind   VARCHAR(10) NOT NULL DEFAULT 'text'
                        CHECK (message_kind IN ('text', 'photo', 'video')),
     message_text   TEXT,             -- required for 'text', optional caption for 'photo'/'video'
-    media_url      TEXT,             -- required for 'photo'/'video' (Cloudflare R2 public URL)
+    media_url      TEXT,             -- storage key or legacy URL; API returns presigned GET URL to clients
     media_duration INTERVAL,         -- video only
     reply_to_id    UUID REFERENCES trip_messages(id) ON DELETE SET NULL,
     deleted_at     TIMESTAMPTZ,      -- soft delete; sender-only DELETE endpoint
@@ -765,7 +765,7 @@ CREATE TABLE trip_documents (
     uploaded_by  UUID NOT NULL REFERENCES users(id),
     media_type   VARCHAR(10) NOT NULL CHECK (media_type IN ('photo', 'video')),
     storage_key  TEXT NOT NULL,       -- R2 object key, e.g. trips/{tripId}/{uuid}.jpg
-    storage_url  TEXT NOT NULL,       -- resolved public/CDN URL for the object
+    storage_url  TEXT NOT NULL,       -- internal canonical reference (R2_PUBLIC_URL + key); not returned to clients
     from_chat    BOOLEAN NOT NULL DEFAULT FALSE,  -- true when auto-saved from a chat photo/video message
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -1014,7 +1014,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
     "status": "voting_pending",
     "start_date": null,
     "end_date": null,
-    "cover_image_url": "https://...",
+    "cover_image_url": "https://<account>.r2.cloudflarestorage.com/trips/.../uuid.jpg?X-Amz-Signature=...",
     "voting_deadline": "2026-06-18T00:00:00Z",
     "participant_count": 4,
     "participants_preview": [{ "id": "uuid", "name": "Rina", "username": "rina_travel", "avatar_url": null }]
@@ -1049,6 +1049,24 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
   "expires_in": 300
 }
 ```
+
+**`GET /v1/trips/:tripId/documents`** — each item includes a presigned GET URL (see §7):
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "storage_key": "trips/<tripId>/<uuid>.jpg",
+      "url": "https://<account>.r2.cloudflarestorage.com/...?X-Amz-Signature=...",
+      "url_expires_in": 3600,
+      "is_cover": false,
+      "from_chat": false
+    }
+  ]
+}
+```
+
+`POST /v1/trips/:tripId/documents` (register) returns the same `url` + `url_expires_in` shape. Trip list/detail `cover_image_url` and chat `media_url` are also presigned GET URLs — never raw `.r2.dev` or custom-domain public URLs.
 
 **Pagination**: cursor-based everywhere (`?cursor=<RFC3339 timestamp>` or `?cursor=<uuid>` depending on sort column). Default page size 20, max 100. `OFFSET`-based pagination is forbidden.
 
@@ -1248,14 +1266,17 @@ sequenceDiagram
     R2-->>App: 200 OK
     App->>BE: POST /v1/trips/:tripId/documents { storage_key, media_type }
     BE->>R2: HEAD object (verify it exists, get size)
-    BE->>BE: Insert trip_documents row (storage_url resolved from bucket's public/CDN domain)
-    BE-->>App: { document }
+    BE->>R2: presign GET (GetObjectCommand, expires_in: 3600)
+    BE->>BE: Insert trip_documents row (storage_key + internal storage_url)
+    BE-->>App: { document with url (presigned GET), url_expires_in: 3600 }
 ```
 
 - Bucket layout: `trips/{tripId}/{uuid}.{ext}` — one bucket for the whole app (`atur-perjalanan-media`), no per-environment bucket needed for MVP scale (use a `staging/` prefix instead if a second environment is needed).
-- Public read is served via R2's custom domain / public bucket URL (no egress cost); write access is exclusively through presigned URLs issued by `R2Service`, scoped to a single object key and a 5-minute expiry.
+- **Upload (write)**: exclusively via presigned PUT URLs issued by `R2Service` (`expires_in: 300`, 5 minutes), scoped to a single object key.
+- **Download (read)**: exclusively via presigned GET URLs issued by `R2Service` (`expires_in: 3600`, 1 hour) when the backend returns media to clients (documents, trip covers, chat media, activity thumbnails). The mobile client **never** fetches objects via R2 public dev URL (`.r2.dev`) or a custom domain — this avoids ISP rate-limits on public dev URLs and works without configuring a custom domain.
+- `trip_documents.storage_url` in the DB is an internal canonical reference (`R2_PUBLIC_URL` + key, if set); it is **not** returned to clients. API responses expose `url` (presigned GET) instead.
 - The NestJS `R2Service` uses the S3-compatible API (`@aws-sdk/client-s3` + `@aws-sdk/s3-request-presigner`) pointed at `https://<account_id>.r2.cloudflarestorage.com`.
-- Chat photo/video messages (`trip_messages.media_url`) and Media-tab uploads (`trip_documents.storage_url`) share the same presign endpoint and bucket; a chat media message additionally inserts a `trip_documents` row with `from_chat = true` so it also appears in the Media tab grid.
+- Chat photo/video messages and Media-tab uploads share the same presign-upload endpoint and bucket; a chat media message additionally inserts a `trip_documents` row with `from_chat = true` so it also appears in the Media tab grid. When listing messages, `media_url` is presigned on the fly from the stored key/URL.
 
 ---
 
@@ -1277,6 +1298,6 @@ The following environment variables are required by the backend. They must **nev
 | `R2_ACCOUNT_ID` | Cloudflare account ID |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 API token credentials (scoped to the media bucket only) |
 | `R2_BUCKET_NAME` | e.g. `atur-perjalanan-media` |
-| `R2_PUBLIC_URL` | Public/CDN base URL for resolving `storage_url` |
+| `R2_PUBLIC_URL` | *(Optional)* Internal canonical base URL stored in `trip_documents.storage_url`. **Not** used for client-facing media access — clients receive presigned GET URLs instead (§7). |
 | `PORT` | HTTP server port (default: `8080`) |
 | `APP_ENV` | `development` \| `staging` \| `production` |

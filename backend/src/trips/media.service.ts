@@ -5,7 +5,7 @@ import {
     ForbiddenException,
   } from '@nestjs/common';
   import { PrismaService } from '../prisma/prisma.service';
-  import { R2Service } from '../integrations/r2/r2.service';
+  import { R2Service, PRESIGN_DOWNLOAD_EXPIRY_SECONDS } from '../integrations/r2/r2.service';
   import { PresignUploadDto, CreateDocumentDto } from './dto/media.dto';
   import { DocumentSerializer } from './serializers/document.serializer';
   
@@ -39,7 +39,9 @@ import {
       });
   
       return {
-        data: documents.map((d) => DocumentSerializer.toList(d, trip.coverDocumentId)),
+        data: await Promise.all(
+          documents.map((d) => this.toDocumentResponse(d, trip.coverDocumentId)),
+        ),
       };
     }
   
@@ -82,7 +84,7 @@ import {
         select: { coverDocumentId: true },
       });
   
-      return DocumentSerializer.toList(document, trip?.coverDocumentId ?? null);
+      return this.toDocumentResponse(document, trip?.coverDocumentId ?? null);
     }
   
     /**
@@ -132,6 +134,28 @@ import {
       });
     }
   
+    private async toDocumentResponse(
+      doc: {
+        id: string;
+        tripId: string;
+        uploadedBy: string;
+        mediaType: string;
+        storageKey: string;
+        storageUrl: string;
+        fromChat: boolean;
+        createdAt: Date;
+      },
+      coverDocumentId: string | null,
+    ) {
+      const accessUrl = await this.r2.presignDownload(doc.storageKey);
+      return DocumentSerializer.toList(
+        doc,
+        coverDocumentId,
+        accessUrl,
+        PRESIGN_DOWNLOAD_EXPIRY_SECONDS,
+      );
+    }
+
     private async assertParticipant(tripId: string, userId: string) {
       const trip = await this.prisma.trip.findFirst({
         where: { id: tripId, participants: { some: { userId } } },

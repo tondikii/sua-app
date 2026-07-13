@@ -84,7 +84,7 @@ export class TripSerializer {
     trip: TripLike & {
       creator: UserLike;
       participants: ParticipantLike[];
-      coverDocument?: { storageUrl: string } | null;
+      coverDocument?: { storageKey?: string; storageUrl?: string } | null;
       dateCandidates?: Array<{
         id: string;
         startDate: Date;
@@ -92,6 +92,7 @@ export class TripSerializer {
         votes: Array<{ userId: string }>;
       }>;
     },
+    coverImageUrl: string | null = null,
   ) {
     return {
       id: trip.id,
@@ -104,7 +105,7 @@ export class TripSerializer {
       start_time: toTime(trip.startTime),
       end_time: toTime(trip.endTime),
       is_public: trip.isPublic,
-      cover_image_url: trip.coverDocument?.storageUrl ?? null,
+      cover_image_url: coverImageUrl,
       voting_deadline: trip.votingDeadline?.toISOString() ?? null,
       creator: TripSerializer.userSummary(trip.creator),
       participant_count: trip.participants.length,

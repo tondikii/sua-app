@@ -20,7 +20,7 @@ Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-te
 * **Mobile**: Expo (React Native) — satu codebase iOS & Android
 * **Database**: PostgreSQL terkelola oleh **Supabase**
 * **Realtime**: Supabase Realtime (chat trip live tanpa WebSocket gateway custom)
-* **File Storage**: Cloudflare R2 (S3-compatible, free tier 10 GB + zero egress) untuk foto/video chat, media trip, cover
+* **File Storage**: Cloudflare R2 (S3-compatible) — upload via presigned PUT; akses media via presigned GET (1 jam) yang di-generate backend. Tidak memerlukan public `.r2.dev` URL atau custom domain.
 * **Integrasi**: Google Sign-In, Google Calendar API (tambah event ke kalender sendiri via menu ⋮ — opsional)
 
 > Riwayat keputusan stack ada di [docs/MILESTONES.md](docs/MILESTONES.md) dan detail arsitektur lengkap di [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -70,6 +70,9 @@ cd atur-perjalanan
 # Install semua dependency (root + backend + mobile) via workspace
 pnpm install
 
+# Generate Prisma client (wajib setelah install atau perubahan schema)
+pnpm --filter backend prisma:generate
+
 # Buat dua file .env (wajib dua file terpisah)
 cp .env.example .env               # Digunakan tooling root (Supabase CLI, dsb.)
 cp .env.example backend/.env       # Digunakan NestJS server
@@ -77,6 +80,8 @@ cp .env.example backend/.env       # Digunakan NestJS server
 # Edit kedua file: isi JWT_SECRET, GOOGLE_CLIENT_ID, SUPABASE_URL,
 # SUPABASE_SERVICE_ROLE_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
 # R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, dll.
+# R2_PUBLIC_URL opsional (hanya referensi internal di DB); akses media ke client
+# memakai presigned GET URL — lihat docs/ARCHITECTURE.md §7.
 # Generate JWT secret: openssl rand -hex 32
 #
 # Catatan: Database berjalan di Supabase (cloud), bukan Docker lokal.
@@ -107,6 +112,16 @@ pnpm start          # membuka Expo Dev Tools (Metro bundler)
 
 Scan QR code dengan aplikasi **Expo Go** di HP, atau tekan `i` (iOS Simulator) / `a` (Android Emulator) di terminal.
 
+### 4. Uji API dengan Postman (opsional)
+
+Koleksi Postman ada di `docs/postman/`:
+
+1. Import `atur-perjalanan-api.postman_collection.json` + `atur-perjalanan-local.postman_environment.json`
+2. Set `google_id_token`, jalankan **Auth → Google Sign-In**
+3. Untuk alur upload media R2: **Uploads** (Presign → PUT) → **Media → Register Document** → **Verify Presigned Download URL**
+
+Detail alur presigned URL: `docs/ARCHITECTURE.md` §7.
+
 ### Perintah Berguna
 
 ```bash
@@ -122,5 +137,6 @@ pnpm --filter mobile build:ios         # EAS Build iOS (M20)
 
 | Versi | Tanggal | Perubahan |
 |-------|---------|-----------|
+| 2.1 | Juli 2026 | Media R2: akses download via presigned GET URL (1 jam) dari backend; tidak bergantung public `.r2.dev` / custom domain. |
 | 2.0 | Juli 2026 | Migrasi tech stack: Go/Gin/KMP → **NestJS + Expo (React Native)** full TypeScript; DB tetap PostgreSQL namun dikelola **Supabase**; chat pakai **Supabase Realtime**; file upload pakai **Cloudflare R2**. |
 | 1.0 | — | Rilis awal dokumentasi (Go/Gin backend, Kotlin Multiplatform mobile). |
