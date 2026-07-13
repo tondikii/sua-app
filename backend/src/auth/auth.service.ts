@@ -7,11 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
-import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleAuthDto } from './dto/google-auth.dto';
 import { CompleteRegistrationDto } from './dto/complete-registration.dto';
 import { UserSummarySerializer } from '../users/serializers/user.serializer';
+import { RealtimeTokenService } from '../integrations/supabase/realtime-token.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +21,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly realtimeToken: RealtimeTokenService,
   ) {
     this.googleClient = new OAuth2Client(config.get<string>('google.clientId'));
   }
@@ -78,7 +79,7 @@ export class AuthService {
       isNewUser || /^user_\d+$/.test(user.username);
 
     const accessToken = this.signAppJwt(user.id);
-    const realtimeToken = this.signRealtimeJwt(user.id);
+    const realtimeToken = this.realtimeToken.mint(user.id);
 
 
     return {
@@ -121,16 +122,5 @@ export class AuthService {
 
   private signAppJwt(userId: string): string {
     return this.jwtService.sign({ sub: userId });
-  }
-
-  private signRealtimeJwt(userId: string): string {
-    const secret = this.config.get<string>('supabase.jwtSecret') ?? '';
-    if (!secret) return '';
-    // Supabase-compatible JWT for Realtime RLS — short-lived (1h)
-    return jwt.sign(
-      { sub: userId, role: 'authenticated', iat: Math.floor(Date.now() / 1000) },
-      secret,
-      { expiresIn: '1h' },
-    );
   }
 }

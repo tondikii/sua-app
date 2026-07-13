@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RealtimeTokenService } from '../integrations/supabase/realtime-token.service';
 
 // Mock google-auth-library
 const mockVerifyIdToken = jest.fn();
@@ -47,6 +48,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        RealtimeTokenService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
         {

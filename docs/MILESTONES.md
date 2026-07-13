@@ -31,7 +31,7 @@
 | M4 | Backend – Manajemen Trip & Undangan | ✅ Selesai |
 | M5 | Backend – Voting (Multi-Poll) | ✅ Selesai |
 | M6 | Backend – Itinerary / Aktivitas | ✅ Selesai |
-| M7 | Backend – Chat (Supabase Realtime) & Media (R2) | 🔲 Belum |
+| M7 | Backend – Chat (Supabase Realtime) & Media (R2) | ✅ Selesai |
 | M8 | Backend – Wishlist & Konversi Trip | 🔲 Belum |
 | M9 | Backend – Notifikasi & Background Jobs | 🔲 Belum |
 | M10 | Backend – Testing & Hardening | 🔲 Belum |
@@ -212,31 +212,33 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 
 ---
 
-## M7 — Backend: Chat (Supabase Realtime) & Media (R2) 🔲 BELUM DIMULAI
+## M7 — Backend: Chat (Supabase Realtime) & Media (R2) ✅ SELESAI
 
 **AI Prompt**: *"Let's implement M7. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3 (trip_messages, trip_message_reads, trip_documents), §4.3, §6, §7`, `docs/WORKFLOW.md §9, §10`."*
 
 **Referensi**: `docs/ARCHITECTURE.md §3.3, §4.3, §6 (Realtime), §7 (R2)`, `docs/WORKFLOW.md §9, §10`, `docs/ACCEPTANCE_CRITERIA.md §6`
 
 ### Checklist — Chat
-- [ ] Prisma models: `TripMessage`, `TripMessageRead`
-- [ ] `GET /v1/trips/:tripId/messages` — cursor paginated, embed `sender`, `reply_to`
-- [ ] `POST /v1/trips/:tripId/messages` — `{ message_kind, message_text?, media_url?, reply_to_id? }`
-- [ ] `DELETE /v1/trips/:tripId/messages/:messageId` — soft delete, sender only
-- [ ] `PUT /v1/trips/:tripId/messages/read` — advance `trip_message_reads.last_read_at`
-- [ ] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE trip_messages;` + RLS policy peserta trip (`ARCHITECTURE.md §6`)
-- [ ] Endpoint mint token Realtime (Supabase-compatible JWT, `sub` = user id) — dikembalikan bersama `access_token` di `POST /v1/auth/google`
+- [x] Prisma models: `TripMessage`, `TripMessageRead`
+- [x] `GET /v1/trips/:tripId/messages` — cursor paginated, embed `sender`, `reply_to`
+- [x] `POST /v1/trips/:tripId/messages` — `{ message_kind, message_text?, media_url?, reply_to_id? }`
+- [x] `DELETE /v1/trips/:tripId/messages/:messageId` — soft delete, sender only
+- [x] `PUT /v1/trips/:tripId/messages/read` — advance `trip_message_reads.last_read_at`
+- [x] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE trip_messages;` + RLS policy peserta trip (`ARCHITECTURE.md §6`)
+- [x] Endpoint mint token Realtime (Supabase-compatible JWT, `sub` = user id) — dikembalikan bersama `access_token` di `POST /v1/auth/google`
 
 ### Checklist — Media & R2
-- [ ] `R2Service` — presign PUT/GET (`@aws-sdk/client-s3` + `s3-request-presigner`)
-- [ ] `POST /v1/uploads/presign` — `{ trip_id, media_type, content_type }` → `{ upload_url, storage_key, expires_in }`
-- [ ] Prisma model `TripDocument`
-- [ ] `GET/POST/DELETE /v1/trips/:tripId/documents` — registrasi objek R2 yang sudah diunggah (verifikasi via `HeadObject`)
-- [ ] Chat media message (`message_kind=photo|video`) otomatis insert `trip_documents` dengan `from_chat=true`
-- [ ] `PUT /v1/trips/:tripId/cover` — set `trips.cover_document_id`
-- [ ] Migrasi SQL: tambah kolom `trips.cover_document_id`, `trip_activities.cover_document_id` (FK ke `trip_documents`, `DEFERRABLE` karena circular FK — lihat `ARCHITECTURE.md §3.3`)
-- [ ] Unit + e2e tests: kirim pesan text/media, soft delete, presign flow (mock R2), cover selection, RLS policy (integration test terhadap Supabase lokal)
-- [ ] Postman — tambah folder `Chat`, `Media`, `Uploads` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M7)
+- [x] `R2Service` — presign PUT/GET (`@aws-sdk/client-s3` + `s3-request-presigner`)
+- [x] `POST /v1/uploads/presign` — `{ trip_id, media_type, content_type }` → `{ upload_url, storage_key, expires_in }`
+- [x] Prisma model `TripDocument`
+- [x] `GET/POST/DELETE /v1/trips/:tripId/documents` — registrasi objek R2 yang sudah diunggah (verifikasi via `HeadObject`)
+- [x] Chat media message (`message_kind=photo|video`) otomatis insert `trip_documents` dengan `from_chat=true`
+- [x] `PUT /v1/trips/:tripId/cover` — set `trips.cover_document_id`
+- [x] Migrasi SQL: tambah kolom `trips.cover_document_id`, `trip_activities.cover_document_id` (FK ke `trip_documents`, `DEFERRABLE` karena circular FK — lihat `ARCHITECTURE.md §3.3`)
+- [x] Unit + e2e tests: kirim pesan text/media, soft delete, presign flow (mock R2), cover selection, RLS policy (integration test terhadap Supabase lokal)
+- [x] Postman — tambah folder `Chat`, `Media`, `Uploads` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M7)
+
+> **Catatan implementasi**: `PUT /v1/trips/:tripId/cover` sudah ada sejak M6 (`trips.service.ts#setTripCover`) yang mem-validasi `trip_documents` — endpoint tersebut kini fungsional penuh setelah `TripDocument` dibuat di M7. RLS policy & `ALTER PUBLICATION` perlu dijalankan langsung di Supabase (lihat `WIRING_NOTES.md`); e2e/integration test terhadap Supabase lokal belum dijalankan otomatis di CI dan perlu `supabase start` secara manual.
 
 ---
 

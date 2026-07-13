@@ -5,10 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { SupabaseModule } from '../integrations/supabase/supabase.module';
 
 @Module({
   imports: [
     PassportModule,
+    SupabaseModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
