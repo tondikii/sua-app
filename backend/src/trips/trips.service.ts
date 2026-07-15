@@ -9,6 +9,7 @@ import { CreateTripDto, UpdateTripDto } from './dto';
 import { TripStatus } from '@prisma/client';
 import { TripSerializer } from './serializers/trip.serializer';
 import { InvitationSerializer } from './serializers/invitation.serializer';
+import { R2Service } from '../integrations/r2/r2.service';
 
 const USER_SUMMARY_SELECT = {
   id: true,
@@ -19,7 +20,10 @@ const USER_SUMMARY_SELECT = {
 
 @Injectable()
 export class TripsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly r2: R2Service,
+  ) {}
 
   /**
    * Create a trip in fixed (`status=fixed`) or voting (`status=voting_pending`) mode.
@@ -262,7 +266,7 @@ export class TripsService {
       orderBy: { createdAt: 'desc' },
       take: take + 1,
       include: {
-        coverDocument: { select: { storageUrl: true } },
+        coverDocument: { select: { storageKey: true } },
         _count: { select: { participants: true } },
         participants: {
           take: 5,
@@ -275,9 +279,19 @@ export class TripsService {
     const hasMore = trips.length > take;
     const results = hasMore ? trips.slice(0, take) : trips;
 
+    const coverKeys = results
+      .map((trip) => trip.coverDocument?.storageKey)
+      .filter((key): key is string => Boolean(key));
+    const signedCoverUrls = await this.r2.presignDownloads(coverKeys);
+
     return {
       data: results.map((trip) =>
-        TripSerializer.toCard(trip, trip.coverDocument?.storageUrl ?? null),
+        TripSerializer.toCard(
+          trip,
+          trip.coverDocument?.storageKey
+            ? signedCoverUrls.get(trip.coverDocument.storageKey) ?? null
+            : null,
+        ),
       ),
       next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
     };
@@ -292,7 +306,7 @@ export class TripsService {
       where: { id: tripId },
       include: {
         creator: { select: USER_SUMMARY_SELECT },
-        coverDocument: { select: { storageUrl: true } },
+        coverDocument: { select: { storageKey: true } },
         participants: {
           orderBy: { joinedAt: 'asc' },
           include: { user: { select: USER_SUMMARY_SELECT } },
@@ -322,7 +336,12 @@ export class TripsService {
       });
     }
 
-    return TripSerializer.toDetail(trip);
+    return TripSerializer.toDetail(
+      trip,
+      trip.coverDocument?.storageKey
+        ? await this.r2.presignDownload(trip.coverDocument.storageKey)
+        : null,
+    );
   }
 
   /** Update trip metadata — creator only. */

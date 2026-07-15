@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 describe('ChatService', () => {
   let service: ChatService;
@@ -29,7 +30,17 @@ describe('ChatService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ChatService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        ChatService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: R2Service,
+          useValue: {
+            presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
+            extractStorageKey: jest.fn((url: string) => url.replace('https://cdn.example.com/', '')),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<ChatService>(ChatService);

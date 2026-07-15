@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { TripsService } from './trips.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 /**
  * Unit tests for TripsService (M4). Prisma is fully mocked; `$transaction`
@@ -70,7 +71,19 @@ describe('TripsService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TripsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        TripsService,
+        { provide: PrismaService, useValue: prisma },
+        {
+          provide: R2Service,
+          useValue: {
+            presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
+            presignDownloads: jest.fn(async (keys: string[]) =>
+              new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
+            ),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<TripsService>(TripsService);

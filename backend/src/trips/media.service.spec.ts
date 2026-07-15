@@ -41,6 +41,7 @@ describe('MediaService', () => {
 
     r2 = {
       presignUpload: jest.fn(),
+      presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
       headObject: jest.fn(),
       resolvePublicUrl: jest.fn((key: string) => `https://cdn.example.com/${key}`),
     };

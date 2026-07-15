@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 import { CreateActivityDto, UpdateActivityDto } from './dto/activity.dto';
 import { ActivitySerializer } from './serializers/activity.serializer';
+import { R2Service } from '../integrations/r2/r2.service';
 
 @Injectable()
 export class ActivityService {
@@ -17,6 +18,7 @@ export class ActivityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly googleMaps: GoogleMapsService,
+    private readonly r2: R2Service,
   ) {}
 
   /**
@@ -39,13 +41,25 @@ export class ActivityService {
 
     const activities = await this.prisma.tripActivity.findMany({
       where: { tripId },
-      include: { coverDocument: { select: { id: true, storageUrl: true } } },
+      include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
       orderBy: [{ activityDate: 'asc' }, { startTime: 'asc' }],
     });
 
+    const coverKeys = activities
+      .filter((a) => !a.thumbnailUrl && a.coverDocument?.storageKey)
+      .map((a) => a.coverDocument!.storageKey);
+    const signedCoverUrls = await this.r2.presignDownloads(coverKeys);
+
     return {
       data: activities.map((a) =>
-        ActivitySerializer.toList(a, a.coverDocument),
+        ActivitySerializer.toList(
+          a,
+          a.coverDocument,
+          a.thumbnailUrl ||
+            (a.coverDocument?.storageKey
+              ? signedCoverUrls.get(a.coverDocument.storageKey) ?? null
+              : null),
+        ),
       ),
       next_cursor: null,
     };
@@ -69,14 +83,18 @@ export class ActivityService {
 
     const activity = await this.prisma.tripActivity.findFirst({
       where: { id: activityId, tripId },
-      include: { coverDocument: { select: { id: true, storageUrl: true } } },
+      include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
 
     if (!activity) {
       throw new NotFoundException('Activity not found');
     }
 
-    return ActivitySerializer.toDetail(activity, activity.coverDocument);
+    return ActivitySerializer.toDetail(
+      activity,
+      activity.coverDocument,
+      await this.resolveCoverThumbnailUrl(activity),
+    );
   }
 
   /**
@@ -157,12 +175,16 @@ export class ActivityService {
         thumbnailUrl: dto.thumbnail_url,
         sortOrder: dto.sort_order || 0,
       },
-      include: { coverDocument: { select: { id: true, storageUrl: true } } },
+      include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
 
     this.scheduleThumbnailResolve(activity.id, dto.maps_link);
 
-    return ActivitySerializer.toDetail(activity, activity.coverDocument);
+    return ActivitySerializer.toDetail(
+      activity,
+      activity.coverDocument,
+      await this.resolveCoverThumbnailUrl(activity),
+    );
   }
 
   /**
@@ -269,7 +291,7 @@ export class ActivityService {
         sortOrder:
           dto.sort_order !== undefined ? dto.sort_order : undefined,
       },
-      include: { coverDocument: { select: { id: true, storageUrl: true } } },
+      include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
 
     const mapsLink =
@@ -282,7 +304,11 @@ export class ActivityService {
       this.scheduleThumbnailResolve(activityId, mapsLink);
     }
 
-    return ActivitySerializer.toDetail(updated, updated.coverDocument);
+    return ActivitySerializer.toDetail(
+      updated,
+      updated.coverDocument,
+      await this.resolveCoverThumbnailUrl(updated),
+    );
   }
 
   /**
@@ -355,6 +381,15 @@ export class ActivityService {
   /**
    * Helper: Convert "HH:MM" string to a Date object (midnight-relative).
    */
+  private async resolveCoverThumbnailUrl(activity: {
+    thumbnailUrl: string | null;
+    coverDocument?: { storageKey: string } | null;
+  }): Promise<string | null> {
+    if (activity.thumbnailUrl) return activity.thumbnailUrl;
+    if (!activity.coverDocument?.storageKey) return null;
+    return this.r2.presignDownload(activity.coverDocument.storageKey);
+  }
+
   private parseTimeToDate(timeStr: string): Date {
     const [h, m] = timeStr.split(':').map(Number);
     const d = new Date('1970-01-01');

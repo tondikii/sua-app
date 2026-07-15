@@ -5,6 +5,7 @@ import request = require('supertest');
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { R2Service } from '../src/integrations/r2/r2.service';
 
 /**
  * End-to-end coverage for Milestone 4 (Trips & Invitations).
@@ -451,7 +452,8 @@ describe('Trips E2E (M4)', () => {
         .send({ document_id: doc.id })
         .expect(HttpStatus.OK);
 
-      expect(res.body.cover_image_url).toBe('https://example.com/photo.jpg');
+      expect(res.body.cover_image_url).toContain('test-key');
+      expect(res.body.cover_image_url).toContain('X-Amz-Signature');
     });
   });
 
@@ -617,6 +619,439 @@ describe('Trips E2E (M4)', () => {
         .delete(`/v1/trips/${trip.id}`)
         .set(auth(otherToken))
         .expect(HttpStatus.FORBIDDEN);
+    });
+  });
+});
+
+/**
+ * End-to-end coverage for Milestone 7 (Chat & Media).
+ *
+ * Requires a reachable Postgres (DATABASE_URL). `R2Service` is mocked so the
+ * suite never touches Cloudflare R2 over the network (no credentials needed,
+ * no real objects created) — mirroring how the Auth suite mocks Google. All
+ * S3 interactions (presign upload/download, HeadObject) return deterministic
+ * fixtures, letting us assert the surrounding DB + authorization behaviour.
+ */
+describe('Chat & Media E2E (M7)', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let jwt: JwtService;
+
+  let creatorId: string;
+  let creatorToken: string;
+  let memberId: string;
+  let memberToken: string;
+  let outsiderToken: string;
+
+  let tripId: string;
+
+  const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+  let uploadCounter = 0;
+
+  // Mock R2 — presign is normally a local signing op, HeadObject a network call.
+  const r2Mock = {
+    presignUpload: jest.fn(async (tripIdArg: string, contentType: string) => {
+      const ext = contentType.split('/')[1] ?? 'bin';
+      const storageKey = `trips/${tripIdArg}/mock-${uploadCounter++}.${ext}`;
+      return {
+        upload_url: `https://r2-upload.example.com/${storageKey}?X-Amz-Signature=putsig`,
+        storage_key: storageKey,
+        expires_in: 300,
+      };
+    }),
+    headObject: jest.fn(async () => ({ exists: true, size: 1024 })),
+    presignDownload: jest.fn(
+      async (storageKey: string) =>
+        `https://r2-signed.example.com/${storageKey}?X-Amz-Signature=getsig&X-Amz-Expires=3600`,
+    ),
+    presignDownloads: jest.fn(async (storageKeys: string[]) => {
+      const unique = [...new Set(storageKeys.filter(Boolean))];
+      return new Map(
+        unique.map((key) => [
+          key,
+          `https://r2-signed.example.com/${key}?X-Amz-Signature=getsig&X-Amz-Expires=3600`,
+        ]),
+      );
+    }),
+    extractStorageKey: jest.fn((urlOrKey: string) => {
+      try {
+        return new URL(urlOrKey).pathname.replace(/^\/+/, '');
+      } catch {
+        return urlOrKey;
+      }
+    }),
+    resolvePublicUrl: jest.fn((storageKey: string) => `https://cdn.example.com/${storageKey}`),
+  };
+
+  jest.setTimeout(60000);
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(R2Service)
+      .useValue(r2Mock)
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('v1');
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+    );
+    app.useGlobalFilters(new HttpExceptionFilter());
+    await app.init();
+
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    jwt = moduleFixture.get<JwtService>(JwtService);
+
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE users CASCADE');
+
+    const creator = await prisma.user.create({
+      data: {
+        googleId: 'google-m7-1',
+        email: 'creator-m7@example.com',
+        name: 'Creator M7',
+        username: 'creator_m7',
+      },
+    });
+    creatorId = creator.id;
+    creatorToken = jwt.sign({ sub: creatorId });
+
+    const member = await prisma.user.create({
+      data: {
+        googleId: 'google-m7-2',
+        email: 'member-m7@example.com',
+        name: 'Member M7',
+        username: 'member_m7',
+      },
+    });
+    memberId = member.id;
+    memberToken = jwt.sign({ sub: memberId });
+
+    const outsider = await prisma.user.create({
+      data: {
+        googleId: 'google-m7-3',
+        email: 'outsider-m7@example.com',
+        name: 'Outsider M7',
+        username: 'outsider_m7',
+      },
+    });
+    outsiderToken = jwt.sign({ sub: outsider.id });
+
+    const trip = await prisma.trip.create({
+      data: {
+        creatorId,
+        name: 'Media Trip',
+        status: 'fixed',
+        startDate: new Date('2027-06-19'),
+        endDate: new Date('2027-06-22'),
+      },
+    });
+    tripId = trip.id;
+    await prisma.tripParticipant.createMany({
+      data: [
+        { tripId, userId: creatorId },
+        { tripId, userId: memberId },
+      ],
+    });
+  }, 60000);
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('POST /v1/uploads/presign', () => {
+    it('issues a presigned upload for a participant', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/v1/uploads/presign')
+        .set(auth(memberToken))
+        .send({ trip_id: tripId, media_type: 'photo', content_type: 'image/jpeg' })
+        .expect(HttpStatus.OK);
+
+      expect(res.body).toHaveProperty('upload_url');
+      expect(res.body.storage_key).toContain(`trips/${tripId}/`);
+      expect(res.body.expires_in).toBe(300);
+      expect(res.body).not.toHaveProperty('public_url');
+    });
+
+    it('denies presign for a non-participant', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/uploads/presign')
+        .set(auth(outsiderToken))
+        .send({ trip_id: tripId, media_type: 'photo', content_type: 'image/jpeg' })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+
+    it('rejects an invalid media_type', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/uploads/presign')
+        .set(auth(memberToken))
+        .send({ trip_id: tripId, media_type: 'audio', content_type: 'audio/mp3' })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it('rejects unauthenticated requests', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/uploads/presign')
+        .send({ trip_id: tripId, media_type: 'photo', content_type: 'image/jpeg' })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe('POST /v1/trips/:tripId/documents (register)', () => {
+    it('registers a verified R2 object and returns a presigned url', async () => {
+      const storageKey = `trips/${tripId}/registered.jpg`;
+
+      const res = await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/documents`)
+        .set(auth(memberToken))
+        .send({ storage_key: storageKey, media_type: 'photo' })
+        .expect(HttpStatus.CREATED);
+
+      expect(res.body.storage_key).toBe(storageKey);
+      expect(res.body.url).toContain('X-Amz-Signature');
+      expect(res.body.url_expires_in).toBe(3600);
+      expect(res.body.from_chat).toBe(false);
+
+      const row = await prisma.tripDocument.findUnique({ where: { id: res.body.id } });
+      expect(row).not.toBeNull();
+      expect(row?.uploadedBy).toBe(memberId);
+    });
+
+    it('rejects a storage_key that belongs to another trip', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/documents`)
+        .set(auth(memberToken))
+        .send({ storage_key: 'trips/00000000-0000-0000-0000-000000000000/x.jpg', media_type: 'photo' })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it('rejects when the object is not present in R2', async () => {
+      r2Mock.headObject.mockResolvedValueOnce({ exists: false, size: 0 });
+
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/documents`)
+        .set(auth(memberToken))
+        .send({ storage_key: `trips/${tripId}/missing.jpg`, media_type: 'photo' })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it('denies registration by a non-participant', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/documents`)
+        .set(auth(outsiderToken))
+        .send({ storage_key: `trips/${tripId}/nope.jpg`, media_type: 'photo' })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('GET /v1/trips/:tripId/documents', () => {
+    it('lists documents with presigned urls for a participant', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/trips/${tripId}/documents`)
+        .set(auth(creatorToken))
+        .expect(HttpStatus.OK);
+
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body.data[0].url).toContain('X-Amz-Signature');
+      expect(res.body.data[0].url_expires_in).toBe(3600);
+    });
+
+    it('denies listing for a non-participant', async () => {
+      await request(app.getHttpServer())
+        .get(`/v1/trips/${tripId}/documents`)
+        .set(auth(outsiderToken))
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('POST /v1/trips/:tripId/messages', () => {
+    it('sends a text message', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .send({ message_kind: 'text', message_text: 'Halo semua!' })
+        .expect(HttpStatus.CREATED);
+
+      expect(res.body.message_kind).toBe('text');
+      expect(res.body.message_text).toBe('Halo semua!');
+      expect(res.body.sender.username).toBe('creator_m7');
+    });
+
+    it('rejects a text message without message_text', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .send({ message_kind: 'text' })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it('rejects a photo message without media_url', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .send({ message_kind: 'photo' })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it('sends a photo message and auto-creates a from_chat document', async () => {
+      const storageKey = `trips/${tripId}/chat-photo.jpg`;
+
+      const res = await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(memberToken))
+        .send({ message_kind: 'photo', media_url: storageKey })
+        .expect(HttpStatus.CREATED);
+
+      expect(res.body.message_kind).toBe('photo');
+      expect(res.body.media_url).toContain('X-Amz-Signature');
+
+      const chatDoc = await prisma.tripDocument.findFirst({
+        where: { tripId, fromChat: true, storageKey },
+      });
+      expect(chatDoc).not.toBeNull();
+      expect(chatDoc?.uploadedBy).toBe(memberId);
+    });
+
+    it('returns 404 when replying to a message from another trip', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .send({
+          message_kind: 'text',
+          message_text: 'reply',
+          reply_to_id: '00000000-0000-0000-0000-000000000000',
+        })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+
+    it('denies sending by a non-participant', async () => {
+      await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(outsiderToken))
+        .send({ message_kind: 'text', message_text: 'intruder' })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('GET /v1/trips/:tripId/messages', () => {
+    it('lists messages in a { data, next_cursor } envelope, newest first', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/v1/trips/${tripId}/messages`)
+        .set(auth(memberToken))
+        .expect(HttpStatus.OK);
+
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      expect(res.body).toHaveProperty('next_cursor');
+
+      const photo = res.body.data.find((m: any) => m.message_kind === 'photo');
+      expect(photo?.media_url).toContain('X-Amz-Signature');
+    });
+
+    it('denies listing for a non-participant', async () => {
+      await request(app.getHttpServer())
+        .get(`/v1/trips/${tripId}/messages`)
+        .set(auth(outsiderToken))
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+
+  describe('PUT /v1/trips/:tripId/messages/read', () => {
+    it('advances the read cursor for the caller', async () => {
+      await request(app.getHttpServer())
+        .put(`/v1/trips/${tripId}/messages/read`)
+        .set(auth(memberToken))
+        .expect(HttpStatus.NO_CONTENT);
+
+      const readRow = await prisma.tripMessageRead.findUnique({
+        where: { tripId_userId: { tripId, userId: memberId } },
+      });
+      expect(readRow).not.toBeNull();
+      expect(readRow?.lastReadAt).toBeTruthy();
+    });
+  });
+
+  describe('DELETE /v1/trips/:tripId/messages/:messageId', () => {
+    let messageId: string;
+
+    beforeAll(async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .send({ message_kind: 'text', message_text: 'to be deleted' })
+        .expect(HttpStatus.CREATED);
+      messageId = res.body.id;
+    });
+
+    it('denies deletion by a non-sender', async () => {
+      await request(app.getHttpServer())
+        .delete(`/v1/trips/${tripId}/messages/${messageId}`)
+        .set(auth(memberToken))
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it('soft-deletes the message for its sender and excludes it from the list', async () => {
+      await request(app.getHttpServer())
+        .delete(`/v1/trips/${tripId}/messages/${messageId}`)
+        .set(auth(creatorToken))
+        .expect(HttpStatus.NO_CONTENT);
+
+      const row = await prisma.tripMessage.findUnique({ where: { id: messageId } });
+      expect(row?.deletedAt).not.toBeNull();
+
+      const list = await request(app.getHttpServer())
+        .get(`/v1/trips/${tripId}/messages`)
+        .set(auth(creatorToken))
+        .expect(HttpStatus.OK);
+
+      // listMessages filters deletedAt: null — soft-deleted rows stay in DB but
+      // are not returned in the thread (clients render placeholders via Realtime).
+      expect(list.body.data.find((m: any) => m.id === messageId)).toBeUndefined();
+    });
+  });
+
+  describe('DELETE /v1/trips/:tripId/documents/:documentId', () => {
+    let documentId: string;
+
+    beforeAll(async () => {
+      const doc = await prisma.tripDocument.create({
+        data: {
+          tripId,
+          uploadedBy: memberId,
+          mediaType: 'photo',
+          storageKey: `trips/${tripId}/deletable.jpg`,
+          storageUrl: `https://cdn.example.com/trips/${tripId}/deletable.jpg`,
+        },
+      });
+      documentId = doc.id;
+    });
+
+    it('denies deletion by a non-uploader, non-creator', async () => {
+      await request(app.getHttpServer())
+        .delete(`/v1/trips/${tripId}/documents/${documentId}`)
+        .set(auth(outsiderToken))
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it('lets the trip creator delete another member’s upload and clears cover refs', async () => {
+      await prisma.trip.update({
+        where: { id: tripId },
+        data: { coverDocumentId: documentId },
+      });
+
+      await request(app.getHttpServer())
+        .delete(`/v1/trips/${tripId}/documents/${documentId}`)
+        .set(auth(creatorToken))
+        .expect(HttpStatus.NO_CONTENT);
+
+      const row = await prisma.tripDocument.findUnique({ where: { id: documentId } });
+      expect(row).toBeNull();
+
+      const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+      expect(trip?.coverDocumentId).toBeNull();
     });
   });
 });

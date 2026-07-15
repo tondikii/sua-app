@@ -7,6 +7,7 @@ import {
   import { PrismaService } from '../prisma/prisma.service';
   import { CreateMessageDto } from './dto/chat.dto';
   import { MessageSerializer } from './serializers/message.serializer';
+  import { R2Service } from '../integrations/r2/r2.service';
   
   const USER_SUMMARY_SELECT = {
     id: true,
@@ -24,7 +25,10 @@ import {
   
   @Injectable()
   export class ChatService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+      private readonly prisma: PrismaService,
+      private readonly r2: R2Service,
+    ) {}
   
     /**
      * List messages for a trip, most recent first, cursor paginated by
@@ -50,7 +54,7 @@ import {
       const results = hasMore ? messages.slice(0, take) : messages;
   
       return {
-        data: results.map((m) => MessageSerializer.toList(m)),
+        data: await Promise.all(results.map((m) => this.toMessageResponse(m))),
         next_cursor: hasMore
           ? results[results.length - 1]?.createdAt.toISOString() ?? null
           : null,
@@ -114,7 +118,7 @@ import {
               tripId,
               uploadedBy: userId,
               mediaType: dto.message_kind,
-              storageKey: this.storageKeyFromUrl(dto.media_url!),
+              storageKey: this.r2.extractStorageKey(dto.media_url!),
               storageUrl: dto.media_url!,
               fromChat: true,
             },
@@ -124,7 +128,7 @@ import {
         return created;
       });
   
-      return MessageSerializer.toList(message);
+      return this.toMessageResponse(message);
     }
   
     /**
@@ -172,6 +176,24 @@ import {
       });
     }
   
+    private async toMessageResponse(
+      message: Parameters<typeof MessageSerializer.toList>[0],
+    ) {
+      const mediaUrl = await this.resolveMediaUrl(message);
+      return MessageSerializer.toList(message, mediaUrl);
+    }
+
+    private async resolveMediaUrl(
+      message: Pick<Parameters<typeof MessageSerializer.toList>[0], 'messageKind' | 'mediaUrl' | 'deletedAt'>,
+    ): Promise<string | null> {
+      if (message.deletedAt || !message.mediaUrl) return message.mediaUrl;
+      if (message.messageKind !== 'photo' && message.messageKind !== 'video') {
+        return message.mediaUrl;
+      }
+
+      return this.r2.presignDownload(this.r2.extractStorageKey(message.mediaUrl));
+    }
+
     private async assertParticipant(tripId: string, userId: string) {
       const trip = await this.prisma.trip.findFirst({
         where: { id: tripId, participants: { some: { userId } } },
@@ -186,15 +208,5 @@ import {
       }
   
       return trip;
-    }
-  
-    /** Best-effort derivation of the R2 object key from a public/CDN media URL. */
-    private storageKeyFromUrl(url: string): string {
-      try {
-        const { pathname } = new URL(url);
-        return pathname.replace(/^\/+/, '');
-      } catch {
-        return url;
-      }
     }
   }

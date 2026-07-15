@@ -36,16 +36,17 @@ type UserSummary = {
      * their envelope (id, sender, created_at) but blank out content so clients
      * can render a "Pesan dihapus" placeholder without a second lookup.
      */
-    static toList(message: MessageRow) {
+    static toList(message: MessageRow, mediaUrlOverride?: string | null) {
       const isDeleted = !!message.deletedAt;
-  
+      const mediaUrl = mediaUrlOverride ?? message.mediaUrl;
+
       return {
         id: message.id,
         trip_id: message.tripId,
         sender: toUserSummary(message.sender ?? null),
         message_kind: message.messageKind,
         message_text: isDeleted ? null : message.messageText,
-        media_url: isDeleted ? null : message.mediaUrl,
+        media_url: isDeleted ? null : mediaUrl,
         media_duration_seconds: this.durationToSeconds(message.mediaDuration),
         reply_to: message.replyTo
           ? {
