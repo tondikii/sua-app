@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f8e7d6c5-b4a3-2918-7654-3210fedcba98",
     "name": "Atur Perjalanan API",
-    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities | M7 — Chat & Media | M8 — Wishlist & Conversion | M9 — Notifications & Background Jobs\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID — set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` | Chat message UUID (auto-saved) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `notification_id` | Notification UUID for mark-as-read operations |\n\n**M9:** Notifications CRUD, voting deadline reminders (background jobs), Supabase Realtime integration",
+    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities | M7 — Chat & Media | M8 — Wishlist & Conversion | M9 — Notifications & Background Jobs\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID — set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` | Chat message UUID (auto-saved) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `notification_id` | Notification UUID for mark-as-read operations |\n| `wishlist_id` | Wishlist UUID for update/delete/convert operations |",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -80,6 +80,31 @@
     {
       "key": "cursor",
       "value": ""
+    },
+    {
+      "key": "member_id",
+      "value": "",
+      "description": "User UUID of trip member to remove"
+    },
+    {
+      "key": "message_id",
+      "value": "",
+      "description": "Chat message UUID"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "description": "Media document UUID"
+    },
+    {
+      "key": "wishlist_id",
+      "value": "",
+      "description": "Wishlist UUID for update/delete/convert operations"
+    },
+    {
+      "key": "q",
+      "value": "",
+      "description": "Search query for users/wishlists"
     }
   ],
   "item": [
@@ -162,6 +187,1852 @@
               "path": ["auth", "google"]
             },
             "description": "Authenticate with Google ID token.\n\n**Request body:**\n```json\n{\n  \"id_token\": \"google-oauth-id-token\"\n}\n```\n\n**Response 200:**\n```json\n{\n  \"access_token\": \"jwt-token\",\n  \"realtime_token\": \"supabase-jwt-token\",\n  \"user\": {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": null,\n    \"bio\": null,\n    \"website_url\": null,\n    \"location_label\": null,\n    \"is_public\": true\n  }\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Registration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated user', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('user');",
+                  "    pm.expect(body.user).to.have.property('username');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.user && body.user.username) {",
+                  "        pm.collectionVariables.set('username', body.user.username);",
+                  "        pm.environment.set('username', body.user.username);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/complete-registration",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "complete-registration"]
+            },
+            "description": "Complete user registration by setting a username. Required after first Google Sign-In.\n\n**Request body:**\n```json\n{\n  \"username\": \"johndoe\"\n}\n```\n\n**Username requirements:**\n- 3-30 characters\n- Only letters, numbers, and underscores\n- No spaces or special characters\n\n**Response 200:**\n```json\n{\n  \"user\": {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": null,\n    \"bio\": null,\n    \"website_url\": null,\n    \"location_label\": null,\n    \"is_public\": true\n  }\n}\n```\n\n**Response 400:** Invalid username format or already taken"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User profile management and search (M3). Most endpoints require authentication.",
+      "item": [
+        {
+          "name": "Check Username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has available boolean', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('available');",
+                  "    pm.expect(body.available).to.be.a('boolean');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/check-username?username=testuser",
+              "host": ["{{base_url}}"],
+              "path": ["users", "check-username"],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "testuser",
+                  "description": "Username to check availability"
+                }
+              ]
+            },
+            "description": "Check if a username is available (public endpoint). Call this before setting username during registration.\n\n**Query params:**\n- `username`: Username to check\n\n**Response 200:**\n```json\n{\n  \"available\": true\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has data array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "pm.test('Response has next_cursor', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('next_cursor');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/search?q=john&cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john",
+                  "description": "Search query (name or username)"
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "Search for users by name or username using pg_trgm fuzzy matching. Cursor paginated.\n\n**Query params:**\n- `q`: Search query (matches name or username)\n- `cursor`: Pagination cursor (optional)\n- `limit`: Results per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"avatar_url\": \"https://...\",\n      \"bio\": \"Travel enthusiast\"\n    }\n  ],\n  \"next_cursor\": \"cursor-string\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has user data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('username');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Get current user's profile.\n\n**Response 200:**\n```json\n{\n  \"id\": \"user-uuid\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"username\": \"johndoe\",\n  \"avatar_url\": null,\n  \"bio\": null,\n  \"website_url\": null,\n  \"location_label\": null,\n  \"is_public\": true,\n  \"created_at\": \"2026-07-01T10:00:00Z\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated user', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('bio');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Travel enthusiast and food lover\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Update current user's profile. All fields are optional.\n\n**Request body:**\n```json\n{\n  \"bio\": \"Travel enthusiast\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}\n```\n\n**Field validations:**\n- `bio`: max 150 characters\n- `website_url`: must be valid URL\n- `location_label`: max 100 characters\n- `is_public`: boolean\n\n**Response 200:** Returns updated user profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete My Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Delete current user's account (hard delete). This action cannot be undone.\n\n**Response 204:** No content (account deleted)\n\n**Response 401:** Unauthorized (invalid token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has user profile', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('username');",
+                  "    pm.expect(body).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/johndoe",
+              "host": ["{{base_url}}"],
+              "path": ["users", "johndoe"]
+            },
+            "description": "Get public profile of a user by username. Shows limited info if profile is private.\n\n**URL params:**\n- `username`: User's username\n\n**Response 200:**\n```json\n{\n  \"id\": \"user-uuid\",\n  \"name\": \"John Doe\",\n  \"username\": \"johndoe\",\n  \"avatar_url\": \"https://...\",\n  \"bio\": \"Travel enthusiast\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}\n```\n\n**Response 404:** User not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Public Trips",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has trips array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/johndoe/trips?cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users", "johndoe", "trips"],
+              "query": [
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "Get public trips of a user. Only shows trips where `is_public = true` unless viewer is the owner.\n\n**URL params:**\n- `username`: User's username\n\n**Query params:**\n- `cursor`: Pagination cursor (optional)\n- `limit`: Results per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"trip-uuid\",\n      \"name\": \"Bali Adventure\",\n      \"status\": \"upcoming\",\n      \"start_date\": \"2026-08-01\",\n      \"end_date\": \"2026-08-05\",\n      \"cover_image_url\": \"https://...\",\n      \"participant_count\": 4\n    }\n  ],\n  \"next_cursor\": \"cursor-string\"\n}\n```"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "description": "Trip management and invitations (M4). All endpoints require authentication.",
+      "item": [
+        {
+          "name": "List Trips",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has data array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "pm.test('Response has next_cursor', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('next_cursor');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.data && body.data.length > 0) {",
+                  "        pm.collectionVariables.set('trip_id', body.data[0].id);",
+                  "        pm.environment.set('trip_id', body.data[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips?tab=upcoming&cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips"],
+              "query": [
+                {
+                  "key": "tab",
+                  "value": "upcoming",
+                  "description": "Filter: upcoming or completed",
+                  "enum": ["upcoming", "completed"]
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "List user's trips with enriched data (cover, participants, voting status). Cursor paginated.\n\n**Query params:**\n- `tab`: Filter by 'upcoming' or 'completed' (default: upcoming)\n- `cursor`: Pagination cursor (optional)\n- `limit`: Results per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"trip-uuid\",\n      \"name\": \"Bali Adventure\",\n      \"status\": \"voting_pending\",\n      \"start_date\": \"2026-08-01\",\n      \"end_date\": \"2026-08-05\",\n      \"cover_image_url\": \"https://...\",\n      \"participant_count\": 3,\n      \"participants_preview\": [\n        {\"id\": \"user1\", \"name\": \"Jane\", \"avatar_url\": \"https://...\"},\n        {\"id\": \"user2\", \"name\": \"Bob\", \"avatar_url\": \"https://...\"}\n      ],\n      \"voting_deadline\": \"2026-07-25T23:59:59Z\"\n    }\n  ],\n  \"next_cursor\": \"cursor-string\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has trip data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('name');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('trip_id', body.id);",
+                  "    pm.environment.set('trip_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bali Adventure 2026\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-05\",\n  \"is_all_day\": true,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips",
+              "host": ["{{base_url}}"],
+              "path": ["trips"]
+            },
+            "description": "Create a new trip. Can be created in fixed-date mode or voting mode.\n\n**Request body (Fixed date mode):**\n```json\n{\n  \"name\": \"Bali Adventure 2026\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-05\",\n  \"is_all_day\": true,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\"\n}\n```\n\n**Request body (Voting mode):**\n```json\n{\n  \"name\": \"Bali Adventure 2026\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"candidates\": [\n    {\"start_date\": \"2026-08-01\", \"end_date\": \"2026-08-05\"},\n    {\"start_date\": \"2026-08-08\", \"end_date\": \"2026-08-12\"}\n  ],\n  \"voting_deadline\": \"2026-07-25T23:59:59Z\"\n}\n```\n\n**Response 201:** Returns created trip with `status: fixed` or `status: voting_pending`"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip Detail",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has trip data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('name');",
+                  "    pm.expect(body).to.have.property('participants');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Get detailed information about a specific trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n{\n  \"id\": \"trip-uuid\",\n  \"name\": \"Bali Adventure\",\n  \"status\": \"voting_pending\",\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-05\",\n  \"is_all_day\": true,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"cover_image_url\": \"https://...\",\n  \"creator_id\": \"user-uuid\",\n  \"created_at\": \"2026-07-15T10:00:00Z\",\n  \"participants\": [\n    {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"avatar_url\": \"https://...\",\n      \"role\": \"creator\"\n    }\n  ],\n  \"voting_deadline\": \"2026-07-25T23:59:59Z\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated trip', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bali Adventure - Updated\",\n  \"tags\": [\"beach\", \"adventure\", \"relaxation\"],\n  \"is_all_day\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Update trip details. Only trip creator can update.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"name\": \"Updated Trip Name\",\n  \"tags\": [\"updated\", \"tags\"],\n  \"start_date\": \"2026-08-02\",\n  \"end_date\": \"2026-08-06\",\n  \"is_all_day\": false,\n  \"start_time\": \"10:00\",\n  \"end_time\": \"20:00\"\n}\n```\n\n**Response 200:** Returns updated trip\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}"]
+            },
+            "description": "Soft delete a trip. Only trip creator can delete. Sets `deleted_at` timestamp.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 204:** No content (trip soft-deleted)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip not found or already deleted"
+          },
+          "response": []
+        },
+        {
+          "name": "Set Trip Cover",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated trip with cover', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('cover_image_url');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_id\": \"{{document_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/cover",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "cover"]
+            },
+            "description": "Set the cover image for a trip from one of the trip's uploaded documents.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"document_id\": \"document-uuid\"\n}\n```\n\n**Response 200:** Returns updated trip with `cover_image_url`\n\n**Response 400:** Invalid document ID or document not owned by trip\n\n**Response 404:** Trip or document not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip Members",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has members array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/members",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "members"]
+            },
+            "description": "List all members (participants) of a trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": \"https://...\",\n    \"role\": \"creator\",\n    \"joined_at\": \"2026-07-15T10:00:00Z\"\n  },\n  {\n    \"id\": \"user-uuid-2\",\n    \"name\": \"Jane Smith\",\n    \"username\": \"janesmith\",\n    \"avatar_url\": \"https://...\",\n    \"role\": \"participant\",\n    \"joined_at\": \"2026-07-16T10:00:00Z\"\n  }\n]\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Trip Member",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/members/{{member_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "members", "{{member_id}}"]
+            },
+            "description": "Remove a member from a trip. Only trip creator can remove members.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `memberId`: User UUID of member to remove\n\n**Response 204:** No content (member removed)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip or member not found"
+          },
+          "response": []
+        },
+        {
+          "name": "List My Invitations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has data array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.data && body.data.length > 0) {",
+                  "        pm.collectionVariables.set('invitation_id', body.data[0].id);",
+                  "        pm.environment.set('invitation_id', body.data[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/invitations?cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "invitations"],
+              "query": [
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "List current user's pending trip invitations.\n\n**Query params:**\n- `cursor`: Pagination cursor (optional)\n- `limit`: Results per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"invitation-uuid\",\n      \"trip\": {\n        \"id\": \"trip-uuid\",\n        \"name\": \"Bali Adventure\",\n        \"status\": \"voting_pending\",\n        \"start_date\": \"2026-08-01\",\n        \"end_date\": \"2026-08-05\",\n        \"cover_image_url\": \"https://...\"\n      },\n      \"inviter\": {\n        \"id\": \"user-uuid\",\n        \"name\": \"John Doe\",\n        \"username\": \"johndoe\",\n        \"avatar_url\": \"https://...\"\n      },\n      \"status\": \"pending\",\n      \"created_at\": \"2026-07-15T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": \"cursor-string\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Invitation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has invitation data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('trip');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('invitation_id', body.id);",
+                  "    pm.environment.set('invitation_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"janedoe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations"]
+            },
+            "description": "Invite a user to a trip via username or email. Only trip participants can invite.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (via username):**\n```json\n{\n  \"username\": \"janedoe\"\n}\n```\n\n**Request body (via email):**\n```json\n{\n  \"email\": \"jane@example.com\"\n}\n```\n\n**Response 201:** Returns created invitation with enriched trip and inviter data\n\n**Response 400:** Invalid input or user already invited/participant\n\n**Response 404:** User or trip not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Respond to Invitation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accept\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+            },
+            "description": "Accept or decline a trip invitation. Only the invited user can respond.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `invitationId`: Invitation UUID\n\n**Request body (accept):**\n```json\n{\n  \"accept\": true\n}\n```\n\n**Request body (decline):**\n```json\n{\n  \"accept\": false\n}\n```\n\n**Response 204:** No content (invitation responded)\n- If accept=true: User added as trip participant, invitation deleted\n- If accept=false: Invitation marked as declined, deleted\n\n**Response 404:** Invitation not found or already responded"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Invitation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+            },
+            "description": "Cancel a pending invitation. Only the inviter can cancel their own invitations.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `invitationId`: Invitation UUID\n\n**Response 204:** No content (invitation cancelled)\n\n**Response 403:** Forbidden (not the inviter)\n\n**Response 404:** Invitation not found or already responded"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Voting",
+      "description": "Voting system for trips (M5). Supports date candidates and activity/other polls.",
+      "item": [
+        {
+          "name": "List Polls",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has polls array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('poll_id', body[0].id);",
+                  "        pm.environment.set('poll_id', body[0].id);",
+                  "        if (body[0].options && body[0].options.length > 0) {",
+                  "            pm.collectionVariables.set('option_id', body[0].options[0].id);",
+                  "            pm.environment.set('option_id', body[0].options[0].id);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls"]
+            },
+            "description": "List all polls for a trip including date candidates, activity polls, and custom polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"poll-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"poll_type\": \"tanggal\",\n    \"title\": \"Voting Jadwal\",\n    \"status\": \"active\",\n    \"created_at\": \"2026-07-15T10:00:00Z\",\n    \"options\": [\n      {\n        \"id\": \"option-uuid\",\n        \"label\": \"1-5 August 2026\",\n        \"vote_count\": 3,\n        \"candidate_id\": \"candidate-uuid\"\n      }\n    ],\n    \"my_vote\": {\n      \"option_id\": \"option-uuid\",\n      \"candidate_id\": \"candidate-uuid\"\n    }\n  },\n  {\n    \"id\": \"poll-uuid-2\",\n    \"trip_id\": \"trip-uuid\",\n    \"poll_type\": \"aktivitas\",\n    \"title\": \"Activities\",\n    \"status\": \"active\",\n    \"options\": [\n      {\n        \"id\": \"option-uuid-2\",\n        \"label\": \"Surfing lessons\",\n        \"vote_count\": 2\n      }\n    ],\n    \"my_vote\": {\n      \"option_id\": \"option-uuid-2\"\n    }\n  }\n]\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has poll data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('poll_type');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('poll_id', body.id);",
+                  "    pm.environment.set('poll_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poll_type\": \"aktivitas\",\n  \"title\": \"Activity Preferences\",\n  \"options\": [\n    {\"label\": \"Surfing lessons\"},\n    {\"label\": \"Temple tours\"},\n    {\"label\": \"Beach relaxation\"}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls"]
+            },
+            "description": "Create a new poll (activities or other). Max 1 active poll per type.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"poll_type\": \"aktivitas\",\n  \"title\": \"Activity Preferences\",\n  \"options\": [\n    {\"label\": \"Surfing lessons\"},\n    {\"label\": \"Temple tours\"},\n    {\"label\": \"Beach relaxation\"}\n  ]\n}\n```\n\n**Poll types:**\n- `aktivitas`: Activity preferences\n- `lainnya`: Custom/other polls\n- Note: `tanggal` polls are auto-created with date candidates, do not create manually\n\n**Response 201:** Returns created poll with options\n\n**Response 400:** Invalid input or active poll already exists for this type"
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{option_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Vote on a poll option. Only trip participants can vote. Overwrites previous vote.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Request body:**\n```json\n{\n  \"option_id\": \"option-uuid\"\n}\n```\n\n**Response 204:** No content (vote recorded)\n\n**Response 400:** Poll not active or invalid option\n\n**Response 404:** Poll or option not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Retract Poll Vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+            },
+            "description": "Retract (remove) your vote from a poll.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Response 204:** No content (vote retracted)\n\n**Response 404:** Poll not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Vote on Date Candidate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+            },
+            "description": "Vote on a date candidate for the trip. Only trip participants can vote. Overwrites previous vote.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `candidateId`: Date candidate UUID\n\n**Response 204:** No content (vote recorded)\n\n**Response 400:** Voting deadline passed or trip status changed\n\n**Response 404:** Candidate or trip not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Retract Date Vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+            },
+            "description": "Retract (remove) your vote from a date candidate.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `candidateId`: Date candidate UUID\n\n**Response 204:** No content (vote retracted)\n\n**Response 404:** Candidate or trip not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Lock Poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/lock",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "lock"]
+            },
+            "description": "Lock a poll and set the winning option. Only trip creator can lock polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**For date polls (poll_type=tanggal):**\n- Sets `trips.start_date` and `trips.end_date` to winning candidate\n- Updates `trips.status` to `fixed`\n- Clears `trips.voting_deadline`\n\n**For other polls:**\n- Marks poll as `status: locked`\n- Stores winning option\n\n**Response 204:** No content (poll locked)\n\n**Response 400:** Poll already locked or no votes yet\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Poll not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}"]
+            },
+            "description": "Delete a poll. Only trip creator can delete active polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Response 204:** No content (poll deleted)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Poll not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Activities",
+      "description": "Trip itinerary activities (M6). CRUD operations for trip activities.",
+      "item": [
+        {
+          "name": "List Activities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has activities array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('activity_id', body[0].id);",
+                  "        pm.environment.set('activity_id', body[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/activities",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "activities"]
+            },
+            "description": "List all activities for a trip, grouped/sorted by date and time.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"activity-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"activity_date\": \"2026-08-01\",\n    \"start_time\": \"09:00\",\n    \"end_time\": \"12:00\",\n    \"kind\": \"destination\",\n    \"title\": \"Visit Uluwatu Temple\",\n    \"description\": \"Famous cliffside temple\",\n    \"location_label\": \"Uluwatu, Bali\",\n    \"maps_link\": \"https://maps.google.com/...\",\n    \"ref_links\": [\"https://example.com/tickets\"],\n    \"cover_source\": \"maps\",\n    \"cover_icon\": \"temple\",\n    \"cover_document_id\": \"doc-uuid\",\n    \"thumbnail_url\": \"https://maps.googleapis.com/...\",\n    \"created_at\": \"2026-07-15T10:00:00Z\"\n  }\n]\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has activity data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+            },
+            "description": "Get a single activity by ID.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Response 200:** Returns activity object with full details\n\n**Response 404:** Activity not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has activity data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('activity_id', body.id);",
+                  "    pm.environment.set('activity_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activity_date\": \"2026-08-01\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"12:00\",\n  \"kind\": \"destination\",\n  \"title\": \"Visit Uluwatu Temple\",\n  \"description\": \"Famous cliffside temple with sunset views\",\n  \"location_label\": \"Uluwatu, Bali\",\n  \"maps_link\": \"https://maps.google.com/?q=uluwatu+temple\",\n  \"ref_links\": [\"https://example.com/tickets\"],\n  \"cover_source\": \"document\",\n  \"cover_document_id\": \"{{document_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/activities",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "activities"]
+            },
+            "description": "Create a new trip activity. Any trip participant can create activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"activity_date\": \"2026-08-01\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"12:00\",\n  \"kind\": \"destination\",\n  \"title\": \"Visit Uluwatu Temple\",\n  \"description\": \"Famous cliffside temple\",\n  \"location_label\": \"Uluwatu, Bali\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [\"https://example.com/tickets\"],\n  \"cover_source\": \"document\",\n  \"cover_document_id\": \"doc-uuid\"\n}\n```\n\n**Activity kinds:**\n- `destination`: Main attractions/activities\n- `logistics`: Transport, check-in, etc.\n- `food`: Meals and dining\n- `rest`: Free time/breaks\n\n**Cover sources:**\n- `document`: Use trip document image\n- `icon`: Use built-in icon\n- `google`: Auto-resolve from maps_link\n\n**Response 201:** Returns created activity\n\n**Response 400:** Invalid date (outside trip date range for fixed trips)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated activity', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('title');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Visit Uluwatu Temple - Updated\",\n  \"description\": \"Famous cliffside temple with amazing sunset views\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"13:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+            },
+            "description": "Update an existing activity. Any trip participant can update activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"activity_date\": \"2026-08-02\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"13:00\",\n  \"kind\": \"logistics\",\n  \"title\": \"Updated Activity\",\n  \"description\": \"Updated description\",\n  \"location_label\": \"New Location\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [\"https://example.com/new-link\"],\n  \"cover_source\": \"icon\",\n  \"cover_icon\": \"restaurant\"\n}\n```\n\n**Response 200:** Returns updated activity\n\n**Response 404:** Activity not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Activity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+            },
+            "description": "Delete an activity. Any trip participant can delete activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Response 204:** No content (activity deleted)\n\n**Response 404:** Activity not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "description": "Trip chat messaging (M7). Real-time chat with Supabase Realtime.",
+      "item": [
+        {
+          "name": "List Messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has data array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.data && body.data.length > 0) {",
+                  "        pm.collectionVariables.set('message_id', body.data[0].id);",
+                  "        pm.environment.set('message_id', body.data[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/messages?cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "messages"],
+              "query": [
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Messages per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "List messages in a trip chat. Cursor paginated by created_at (most recent first).\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Query params:**\n- `cursor`: Pagination cursor (optional)\n- `limit`: Messages per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"message-uuid\",\n      \"trip_id\": \"trip-uuid\",\n      \"sender_id\": \"user-uuid\",\n      \"sender\": {\n        \"id\": \"user-uuid\",\n        \"name\": \"John Doe\",\n        \"username\": \"johndoe\",\n        \"avatar_url\": \"https://...\"\n      },\n      \"message_kind\": \"text\",\n      \"message_text\": \"Hey everyone, excited for the trip!\",\n      \"media_url\": null,\n      \"reply_to_id\": \"parent-message-uuid\",\n      \"reply_to\": {\n        \"id\": \"parent-message-uuid\",\n        \"message_text\": \"Original message\",\n        \"sender\": {\"name\": \"Jane\", \"username\": \"jane\"}\n      },\n      \"created_at\": \"2026-07-15T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": \"2026-07-15T09:30:00Z\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has message data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('message_kind');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('message_id', body.id);",
+                  "    pm.environment.set('message_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Hey everyone! Ready for the trip?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "messages"]
+            },
+            "description": "Send a message in trip chat. Only trip participants can send messages.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (text message):**\n```json\n{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Hey everyone!\"\n}\n```\n\n**Request body (media message):**\n```json\n{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"https://r2-presigned-url/file.jpg\"\n}\n```\n\n**Request body (with reply):**\n```json\n{\n  \"message_kind\": \"text\",\n  \"message_text\": \"I agree!\",\n  \"reply_to_id\": \"parent-message-uuid\"\n}\n```\n\n**Message kinds:**\n- `text`: Plain text message\n- `photo`: Image/video\n- `video`: Video file\n\n**Response 201:** Returns created message with enriched sender data\n\n**Response 400:** Invalid input or not a trip participant"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Messages Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/messages/read",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "messages", "read"]
+            },
+            "description": "Mark all messages in the trip as read for the current user. Updates `trip_message_reads.last_read_at` timestamp.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 204:** No content (messages marked as read)\n\n**Response 404:** Trip not found or user not a participant"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/messages/{{message_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "messages", "{{message_id}}"]
+            },
+            "description": "Soft delete a message. Only the sender can delete their own messages.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `messageId`: Message UUID\n\n**Response 204:** No content (message soft-deleted)\n\n**Response 403:** Forbidden (not the sender)\n\n**Response 404:** Message not found or already deleted"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "description": "Trip media/documents management (M7). Register and manage uploaded files.",
+      "item": [
+        {
+          "name": "List Documents",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has documents array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('document_id', body[0].id);",
+                  "        pm.environment.set('document_id', body[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/documents",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "documents"]
+            },
+            "description": "List all documents (media files) registered for a trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"document-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"uploader_id\": \"user-uuid\",\n    \"filename\": \"sunset.jpg\",\n    \"media_type\": \"image\",\n    \"content_type\": \"image/jpeg\",\n    \"storage_key\": \"trips/trip-uuid/user-uuid/file.jpg\",\n    \"size_bytes\": 2048576,\n    \"from_chat\": false,\n    \"presigned_url\": \"https://r2-presigned-url/file.jpg\",\n    \"created_at\": \"2026-07-15T10:00:00Z\"\n  }\n]\n```\n\n**Note:** `presigned_url` is a 1-hour presigned GET URL for direct download"
+          },
+          "response": []
+        },
+        {
+          "name": "Register Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has document data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('storage_key');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('document_id', body.id);",
+                  "    pm.environment.set('document_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"sunset.jpg\",\n  \"storage_key\": \"trips/{{trip_id}}/user-uuid/20260715-sunset.jpg\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"size_bytes\": 2048576,\n  \"from_chat\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/documents",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "documents"]
+            },
+            "description": "Register an uploaded R2 object as a trip document. Use after presigned upload.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"filename\": \"sunset.jpg\",\n  \"storage_key\": \"trips/trip-uuid/user-uuid/file.jpg\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"size_bytes\": 2048576,\n  \"from_chat\": false\n}\n```\n\n**Media types:**\n- `image`: Photo/image files\n- `video`: Video files\n\n**Note:** `storage_key` must match the key used in the presigned upload.\n\n**Response 201:** Returns registered document with presigned download URL\n\n**Response 400:** Invalid input or R2 object verification failed"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trips/{{trip_id}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trips", "{{trip_id}}", "documents", "{{document_id}}"]
+            },
+            "description": "Delete a document from R2 and remove database record. Only uploader or trip creator can delete.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `documentId`: Document UUID\n\n**Response 204:** No content (document deleted from R2 and database)\n\n**Response 403:** Forbidden (not uploader or creator)\n\n**Response 404:** Document not found"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "description": "R2 presigned upload flow (M7). Get presigned URLs for direct upload to Cloudflare R2.",
+      "item": [
+        {
+          "name": "Presign Upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has upload_url', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('upload_url');",
+                  "    pm.expect(body).to.have.property('storage_key');",
+                  "    pm.expect(body).to.have.property('expires_in');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('presigned_upload_url', body.upload_url);",
+                  "    pm.environment.set('presigned_upload_url', body.upload_url);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trip_id\": \"{{trip_id}}\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"filename\": \"sunset.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/uploads/presign",
+              "host": ["{{base_url}}"],
+              "path": ["uploads", "presign"]
+            },
+            "description": "Get a presigned PUT URL for direct upload to Cloudflare R2. Valid for 5 minutes.\n\n**Request body:**\n```json\n{\n  \"trip_id\": \"trip-uuid\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"filename\": \"sunset.jpg\"\n}\n```\n\n**Media types:**\n- `image`: Photo/image files\n- `video`: Video files\n\n**Response 200:**\n```json\n{\n  \"upload_url\": \"https://r2-url/...?X-Amz-...\",\n  \"storage_key\": \"trips/trip-uuid/user-uuid/20260715-120000-sunset.jpg\",\n  \"expires_in\": 300\n}\n```\n\n**Upload Flow:**\n1. Call this endpoint to get presigned PUT URL\n2. PUT file directly to R2 using the returned `upload_url`\n3. Call `POST /trips/:tripId/documents` to register the uploaded file\n\n**Response 400:** Invalid input or not a trip participant"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "description": "Wishlist management and trip conversion (M8). Save activity ideas and convert to trips.",
+      "item": [
+        {
+          "name": "List Wishlists",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has data array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.data && body.data.length > 0) {",
+                  "        pm.collectionVariables.set('wishlist_id', body.data[0].id);",
+                  "        pm.environment.set('wishlist_id', body.data[0].id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/wishlists?priority=high&tag=bali&cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists"],
+              "query": [
+                {
+                  "key": "priority",
+                  "value": "high",
+                  "description": "Filter by priority (optional)",
+                  "enum": ["high", "medium", "low"]
+                },
+                {
+                  "key": "tag",
+                  "value": "bali",
+                  "description": "Filter by tag (optional)"
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "description": "Pagination cursor (optional)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Results per page (default: 20, max: 100)"
+                }
+              ]
+            },
+            "description": "List user's wishlists with optional filters. Cursor paginated.\n\n**Query params:**\n- `priority`: Filter by priority level (high/medium/low)\n- `tag`: Filter by tag\n- `cursor`: Pagination cursor (optional)\n- `limit`: Results per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"wishlist-uuid\",\n      \"title\": \"Surfing lessons in Uluwatu\",\n      \"location_label\": \"Bali, Indonesia\",\n      \"notes\": \"Want to try surfing for the first time\",\n      \"tags\": [\"bali\", \"surfing\", \"adventure\"],\n      \"priority_level\": \"high\",\n      \"thumbnail_url\": \"https://...\",\n      \"created_at\": \"2026-07-10T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": \"cursor-string\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Wishlist Tags",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has tags array', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/wishlists/tags",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists", "tags"]
+            },
+            "description": "Get all unique tags from user's wishlists for filter chips.\n\n**Response 200:**\n```json\n[\n  \"bali\",\n  \"surfing\",\n  \"adventure\",\n  \"food\",\n  \"culture\"\n]\n```\n\n**Note:** Returns empty array if user has no wishlists"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has wishlist data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('title');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('wishlist_id', body.id);",
+                  "    pm.environment.set('wishlist_id', body.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Surfing lessons in Uluwatu\",\n  \"location_label\": \"Bali, Indonesia\",\n  \"notes\": \"Want to try surfing for the first time, maybe take lessons from a local instructor\",\n  \"tags\": [\"bali\", \"surfing\", \"adventure\"],\n  \"thumbnail_url\": \"https://example.com/surfing.jpg\",\n  \"priority_level\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/wishlists",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists"]
+            },
+            "description": "Create a new wishlist item for trip ideas.\n\n**Request body:**\n```json\n{\n  \"title\": \"Surfing lessons in Uluwatu\",\n  \"location_label\": \"Bali, Indonesia\",\n  \"notes\": \"Want to try surfing for the first time\",\n  \"tags\": [\"bali\", \"surfing\", \"adventure\"],\n  \"thumbnail_url\": \"https://example.com/surfing.jpg\",\n  \"priority_level\": \"high\"\n}\n```\n\n**Priority levels:**\n- `high`: Must-do activities\n- `medium`: Nice to have\n- `low`: Optional/low priority\n\n**Response 201:** Returns created wishlist item"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test('Response has updated wishlist', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('title');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced surfing lessons in Uluwatu\",\n  \"notes\": \"Updated: Want to take advanced surfing lessons\",\n  \"priority_level\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists", "{{wishlist_id}}"]
+            },
+            "description": "Update an existing wishlist item. All fields are optional.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"title\": \"Updated title\",\n  \"location_label\": \"New location\",\n  \"notes\": \"Updated notes\",\n  \"tags\": [\"updated\", \"tags\"],\n  \"thumbnail_url\": \"https://example.com/new-thumb.jpg\",\n  \"priority_level\": \"medium\"\n}\n```\n\n**Response 200:** Returns updated wishlist\n\n**Response 404:** Wishlist not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Wishlist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists", "{{wishlist_id}}"]
+            },
+            "description": "Soft delete a wishlist item. Only the owner can delete their wishlists.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Response 204:** No content (wishlist soft-deleted)\n\n**Response 404:** Wishlist not found"
+          },
+          "response": []
+        },
+        {
+          "name": "Convert to Trip",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "pm.test('Response has trip data', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('trip');",
+                  "    pm.expect(body).to.have.property('activities');",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.trip && body.trip.id) {",
+                  "        pm.collectionVariables.set('trip_id', body.trip.id);",
+                  "        pm.environment.set('trip_id', body.trip.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trip_name\": \"Bali Surfing Adventure\",\n  \"start_date\": \"2026-09-01\",\n  \"end_date\": \"2026-09-05\",\n  \"tags\": [\"surfing\", \"adventure\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/wishlists/{{wishlist_id}}/convert-to-trip",
+              "host": ["{{base_url}}"],
+              "path": ["wishlists", "{{wishlist_id}}", "convert-to-trip"]
+            },
+            "description": "Convert a wishlist item into a trip with seeded activities. Atomic transaction.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Request body:**\n```json\n{\n  \"trip_name\": \"Bali Surfing Adventure\",\n  \"start_date\": \"2026-09-01\",\n  \"end_date\": \"2026-09-05\",\n  \"tags\": [\"surfing\", \"adventure\"]\n}\n```\n\n**Transaction flow:**\n1. Creates trip with `status: fixed`\n2. Seeds day 1 activities from wishlist data\n3. Soft deletes the wishlist item\n4. Returns trip + created activities\n5. Rollbacks on any failure\n\n**Response 201:**\n```json\n{\n  \"trip\": {\n    \"id\": \"trip-uuid\",\n    \"name\": \"Bali Surfing Adventure\",\n    \"status\": \"fixed\",\n    \"start_date\": \"2026-09-01\",\n    \"end_date\": \"2026-09-05\",\n    \"tags\": [\"surfing\", \"adventure\"],\n    ...\n  },\n  \"activities\": [\n    {\n      \"id\": \"activity-uuid\",\n      \"title\": \"Surfing lessons in Uluwatu\",\n      \"activity_date\": \"2026-09-01\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"12:00\",\n      ...\n    }\n  ]\n}\n```\n\n**Response 404:** Wishlist not found"
           },
           "response": []
         }
@@ -277,9 +2148,9 @@
             "method": "PUT",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/notifications/:id/read",
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
               "host": ["{{base_url}}"],
-              "path": ["notifications", ":id", "read"],
+              "path": ["notifications", "{{notification_id}}", "read"],
               "variable": [
                 {
                   "key": "id",

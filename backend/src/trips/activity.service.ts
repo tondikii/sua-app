@@ -116,6 +116,7 @@ export class ActivityService {
         id: tripId,
         participants: { some: { userId } },
       },
+      include: { participants: true },
     });
 
     if (!trip) {
@@ -226,6 +227,7 @@ export class ActivityService {
         id: tripId,
         participants: { some: { userId } },
       },
+      include: { participants: true },
     });
 
     if (!trip) {
@@ -370,6 +372,7 @@ export class ActivityService {
         id: tripId,
         participants: { some: { userId } },
       },
+      include: { participants: true },
     });
 
     if (!trip) {

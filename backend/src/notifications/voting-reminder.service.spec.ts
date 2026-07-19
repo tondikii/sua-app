@@ -50,10 +50,12 @@ describe('VotingReminderService', () => {
 
   describe('7 days before deadline reminders', () => {
     beforeEach(() => {
-      // Clear previous calls and mock empty results for other time windows
-      mockPrismaService.trip.findMany.mockImplementation(({ where }) => {
-        // Return trips only for 7-day window, empty for others
-        if (where?.votingDeadline?.gte?.getTime && where.votingDeadline.gte.getTime() > Date.now() + 6 * 24 * 60 * 60 * 1000) {
+      // Track how many times findMany is called to return different data for each time window
+      let callCount = 0;
+      mockPrismaService.trip.findMany.mockImplementation(() => {
+        callCount++;
+        // Return trips only for the first call (7-day window), empty for others
+        if (callCount === 1) {
           return Promise.resolve([
             {
               id: 'trip-1',
@@ -122,6 +124,7 @@ describe('VotingReminderService', () => {
     });
 
     it('should not send reminders for trips with different status', async () => {
+      // Return trips with wrong status for all time windows
       mockPrismaService.trip.findMany.mockResolvedValue([
         {
           id: 'trip-1',
@@ -145,23 +148,32 @@ describe('VotingReminderService', () => {
     });
 
     it('should send reminders for trips with voting deadline exactly 1 day from now', async () => {
-      mockPrismaService.trip.findMany.mockResolvedValue([
-        {
-          id: 'trip-2',
-          creatorId: 'creator-2',
-          votingDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          status: TripStatus.voting_pending,
-          participants: [
-            { userId: 'user-1' },
-            { userId: 'user-2' },
-          ],
-          dateCandidates: [
+      // Track which call is being made to return appropriate data for each time window
+      let callCount = 0;
+      mockPrismaService.trip.findMany.mockImplementation(() => {
+        callCount++;
+        // Return trips only for the second call (1-day window), empty for others
+        if (callCount === 2) {
+          return Promise.resolve([
             {
-              votes: [{ userId: 'user-1' }], // Only user-1 has voted
+              id: 'trip-2',
+              creatorId: 'creator-2',
+              votingDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              status: TripStatus.voting_pending,
+              participants: [
+                { userId: 'user-1' },
+                { userId: 'user-2' },
+              ],
+              dateCandidates: [
+                {
+                  votes: [{ userId: 'user-1' }], // Only user-1 has voted
+                },
+              ],
             },
-          ],
-        },
-      ]);
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       await service.handleVotingReminders();
 
@@ -186,24 +198,33 @@ describe('VotingReminderService', () => {
     });
 
     it('should send reminders for trips with voting deadline exactly 1 hour from now', async () => {
-      mockPrismaService.trip.findMany.mockResolvedValue([
-        {
-          id: 'trip-3',
-          creatorId: 'creator-3',
-          votingDeadline: new Date(Date.now() + 60 * 60 * 1000),
-          status: TripStatus.voting_pending,
-          participants: [
-            { userId: 'user-1' },
-            { userId: 'user-2' },
-            { userId: 'user-3' },
-          ],
-          dateCandidates: [
+      // Track which call is being made to return appropriate data for each time window
+      let callCount = 0;
+      mockPrismaService.trip.findMany.mockImplementation(() => {
+        callCount++;
+        // Return trips only for the third call (1-hour window), empty for others
+        if (callCount === 3) {
+          return Promise.resolve([
             {
-              votes: [{ userId: 'user-1' }], // Only user-1 has voted
+              id: 'trip-3',
+              creatorId: 'creator-3',
+              votingDeadline: new Date(Date.now() + 60 * 60 * 1000),
+              status: TripStatus.voting_pending,
+              participants: [
+                { userId: 'user-1' },
+                { userId: 'user-2' },
+                { userId: 'user-3' },
+              ],
+              dateCandidates: [
+                {
+                  votes: [{ userId: 'user-1' }], // Only user-1 has voted
+                },
+              ],
             },
-          ],
-        },
-      ]);
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       await service.handleVotingReminders();
 
