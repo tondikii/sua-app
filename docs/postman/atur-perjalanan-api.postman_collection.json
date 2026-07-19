@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f8e7d6c5-b4a3-2918-7654-3210fedcba98",
     "name": "Atur Perjalanan API",
-    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 \u2014 Health, Auth, Users | M4 \u2014 Trips & Invitations | M5 \u2014 Voting | M6 \u2014 Activities | M7 \u2014 Chat & Media\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan \u2014 Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth \u2192 Google Sign-In** \u2014 test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Two-user testing (invitations, voting, chat)\nSome flows need two people at once (invite \u2192 accept, multi-voter tallies, multi-user chat). This collection keeps **two independent sessions** so you never have to log out and back in:\n\n- **User 1** uses `access_token` (the default Bearer auth for every request).\n- **User 2** uses `access_token_2`. Requests suffixed **(User 2)** override their auth to use it.\n\nSteps:\n1. Set both `google_id_token` and `google_id_token_2` in the environment.\n2. Run **Auth \u2192 Google Sign-In** and **Auth \u2192 Google Sign-In (User 2)** \u2014 each saves its own token.\n3. (New users) run **Complete Registration** and **Complete Registration (User 2)**.\n4. Typical flows:\n   - **Invitations:** Invite User (User 1) \u2192 Get My Invitations (User 2) \u2192 Accept Invitation (User 2).\n   - **Voting:** Vote on Poll (User 1) + Vote on Poll (User 2).\n   - **Chat:** Send Text Message (User 1) \u2192 List Messages (User 2) \u2192 Send Text Message (User 2) \u2192 Mark Chat Read (User 2).\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID \u2014 set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` / `message_id_2` | Chat message UUID (auto-saved; User 1 / User 2) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `storage_key` | R2 object key from Presign Upload (auto-saved) |\n| `upload_url` | Presigned R2 PUT URL from Presign Upload (5 min expiry) |\n| `media_presigned_url` | Presigned R2 GET URL from Register/List Documents `url` field (1 hour expiry) |\n| `content_type` | MIME type for presign + R2 PUT (must match on both) |\n| `cursor` | Pagination cursor \u2014 RFC3339 timestamp from `next_cursor` in list responses |\n\n## R2 media upload flow\n1. **Uploads \u2192 Presign Upload** \u2192 `upload_url` + `storage_key`\n2. **Uploads \u2192 Upload File to R2 (PUT)** \u2192 200 OK (empty body)\n3. **Media \u2192 Register Document** \u2192 response `url` saved as `media_presigned_url`\n4. **Uploads \u2192 Verify Presigned Download URL** \u2192 GET `media_presigned_url` \u2192 image\n\nPublic `.r2.dev` URL is **not** required. See `docs/ARCHITECTURE.md` \u00a77.\nList endpoints (messages, trips, users, \u2026) return `next_cursor` when more pages exist. To fetch the **next page**, copy `next_cursor` into the `cursor` query param and re-run the list request. Leave `cursor` empty for the first page. Chat messages use **RFC3339 timestamps** (e.g. `2026-07-13T04:28:14.108Z`), not UUIDs.\n\n## Error format\n```json\n{ \"error\": { \"code\": \"ERROR_CODE\", \"message\": \"...\" }, \"requestId\": \"...\" }\n```\n\n**M8:** Wishlist CRUD & Atomic Trip Conversion",
+    "description": "REST API collection for Atur Perjalanan backend (NestJS).\n\n**Milestone coverage:** M3 — Health, Auth, Users | M4 — Trips & Invitations | M5 — Voting | M6 — Activities | M7 — Chat & Media | M8 — Wishlist & Conversion | M9 — Notifications & Background Jobs\n\n## Setup\n1. Import this collection and `atur-perjalanan-local.postman_environment.json`\n2. Select the **Atur Perjalanan — Local** environment\n3. Set `google_id_token` in the environment (from Google Sign-In on mobile/web)\n4. Run **Auth → Google Sign-In** — test script saves `access_token` automatically\n5. For new users, run **Complete Registration** before other authenticated requests\n\n## Variables\n| Variable | Description |\n|----------|-------------|\n| `base_url` | API base URL (default `http://localhost:8080/v1`) |\n| `google_id_token` / `google_id_token_2` | Google OAuth ID token for User 1 / User 2 |\n| `access_token` / `access_token_2` | App JWT for User 1 / User 2 (auto-saved after sign-in) |\n| `realtime_token` / `realtime_token_2` | Supabase-compatible JWT for Realtime WebSocket (User 1 / User 2) |\n| `username` / `username_2` | Username for User 1 / User 2 |\n| `trip_id` | Trip UUID — set after Create Trip or copy from List Trips |\n| `invitation_id` | Invitation UUID for respond/cancel |\n| `poll_id` / `option_id` / `candidate_id` | Voting IDs (copy from List Polls response) |\n| `activity_id` | Activity UUID for get/update/delete |\n| `member_id` | User UUID of trip member to remove |\n| `message_id` | Chat message UUID (auto-saved) |\n| `document_id` | Media document UUID (auto-saved from List Documents) |\n| `notification_id` | Notification UUID for mark-as-read operations |\n\n**M9:** Notifications CRUD, voting deadline reminders (background jobs), Supabase Realtime integration",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -48,23 +48,11 @@
       "value": ""
     },
     {
-      "key": "search_query",
-      "value": "john"
-    },
-    {
       "key": "trip_id",
       "value": ""
     },
     {
       "key": "invitation_id",
-      "value": ""
-    },
-    {
-      "key": "member_id",
-      "value": ""
-    },
-    {
-      "key": "document_id",
       "value": ""
     },
     {
@@ -84,54 +72,14 @@
       "value": ""
     },
     {
-      "key": "google_id_token_2",
-      "value": ""
-    },
-    {
-      "key": "access_token_2",
-      "value": ""
-    },
-    {
-      "key": "realtime_token_2",
-      "value": ""
-    },
-    {
-      "key": "username_2",
-      "value": "user2_travel"
-    },
-    {
-      "key": "message_id",
-      "value": ""
-    },
-    {
-      "key": "message_id_2",
-      "value": ""
-    },
-    {
-      "key": "storage_key",
-      "value": ""
-    },
-    {
-      "key": "upload_url",
-      "value": ""
-    },
-    {
-      "key": "media_presigned_url",
-      "value": ""
-    },
-    {
-      "key": "content_type",
-      "value": "image/jpeg"
+      "key": "notification_id",
+      "value": "",
+      "type": "string",
+      "description": "Notification UUID. Copy from List Notifications response."
     },
     {
       "key": "cursor",
       "value": ""
-    },
-    {
-      "key": "wishlist_id",
-      "value": "",
-      "type": "string",
-      "description": "Wishlist item UUID. Auto-saved from Create/List/Convert-to-Trip responses."
     }
   ],
   "item": [
@@ -149,12 +97,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health"]
             },
             "description": "Returns server health status.\n\n**Response 200:**\n```json\n{ \"status\": \"ok\", \"timestamp\": \"2026-07-12T12:00:00.000Z\" }\n```"
           },
@@ -189,31 +133,20 @@
                   "        pm.environment.set('username', body.user.username);",
                   "    }",
                   "}",
-                  "",
                   "pm.test('Status is 200 or 201', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
                   "});",
-                  "",
                   "pm.test('Response has access_token', function () {",
                   "    const body = pm.response.json();",
                   "    pm.expect(body).to.have.property('access_token');",
-                  "    pm.expect(body).to.have.property('is_new_user');",
                   "});"
                 ]
               }
             }
           ],
           "request": {
-            "auth": {
-              "type": "noauth"
-            },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"id_token\": \"{{google_id_token}}\"\n}",
@@ -225,2286 +158,89 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/google",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "google"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
             },
-            "description": "Verify Google ID token and sign in / register user.\n\n**Auth:** None (public)\n\n**Body:**\n- `id_token` (string, required) \u2014 Google OAuth ID token\n\n**Response:**\n```json\n{\n  \"access_token\": \"...\",\n  \"realtime_token\": \"...\",\n  \"is_new_user\": false,\n  \"user\": { \"id\": \"...\", \"name\": \"...\", \"username\": \"...\", ... }\n}\n```\n\n`user` is omitted when `is_new_user` is `true` \u2014 call **Complete Registration** next.\n\n**Errors:** `401` invalid Google token"
-          },
-          "response": []
-        },
-        {
-          "name": "Complete Registration",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.user && body.user.username) {",
-                  "        pm.collectionVariables.set('username', body.user.username);",
-                  "        pm.environment.set('username', body.user.username);",
-                  "    }",
-                  "}",
-                  "",
-                  "pm.test('Status is 200 or 201', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-                  "});",
-                  "",
-                  "pm.test('Response has user profile', function () {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body).to.have.property('user');",
-                  "    pm.expect(body.user).to.have.property('username');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/complete-registration",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "complete-registration"
-              ]
-            },
-            "description": "Set username for a newly registered user.\n\n**Auth:** Bearer JWT (required)\n\n**Body:**\n- `username` (string, required) \u2014 3\u201330 chars, `[a-zA-Z0-9_]+`\n\n**Response:**\n```json\n{ \"user\": { \"id\": \"...\", \"username\": \"...\", ... } }\n```\n\n**Errors:** `409 USERNAME_TAKEN`, `400 USERNAME_INVALID`"
-          },
-          "response": []
-        },
-        {
-          "name": "Google Sign-In (User 2)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.access_token) {",
-                  "        pm.collectionVariables.set('access_token_2', body.access_token);",
-                  "        pm.environment.set('access_token_2', body.access_token);",
-                  "    }",
-                  "    if (body.realtime_token) {",
-                  "        pm.collectionVariables.set('realtime_token_2', body.realtime_token);",
-                  "        pm.environment.set('realtime_token_2', body.realtime_token);",
-                  "    }",
-                  "    if (body.user && body.user.username) {",
-                  "        pm.collectionVariables.set('username_2', body.user.username);",
-                  "        pm.environment.set('username_2', body.user.username);",
-                  "    }",
-                  "}",
-                  "",
-                  "pm.test('Status is 200 or 201', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-                  "});",
-                  "",
-                  "pm.test('Response has access_token', function () {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body).to.have.property('access_token');",
-                  "    pm.expect(body).to.have.property('is_new_user');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id_token\": \"{{google_id_token_2}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/google",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "google"
-              ]
-            },
-            "description": "Sign in the **second** test user. Saves the returned JWT to `access_token_2` (and `realtime_token_2`) so you can act as two users at once without re-logging in.\n\nSet `google_id_token_2` in the environment to User 2's Google ID token before running.\n\nUse `{{access_token_2}}` as the Bearer token in any request you want to send *as User 2* (several ready-made variants are included in the Invitations and Voting folders)."
-          },
-          "response": []
-        },
-        {
-          "name": "Complete Registration (User 2)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.user && body.user.username) {",
-                  "        pm.collectionVariables.set('username_2', body.user.username);",
-                  "        pm.environment.set('username_2', body.user.username);",
-                  "    }",
-                  "}",
-                  "",
-                  "pm.test('Status is 200 or 201', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"{{username_2}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/complete-registration",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "complete-registration"
-              ]
-            },
-            "description": "Set the username for the **second** newly-registered user. Authenticated as User 2 (`{{access_token_2}}`)."
+            "description": "Authenticate with Google ID token.\n\n**Request body:**\n```json\n{\n  \"id_token\": \"google-oauth-id-token\"\n}\n```\n\n**Response 200:**\n```json\n{\n  \"access_token\": \"jwt-token\",\n  \"realtime_token\": \"supabase-jwt-token\",\n  \"user\": {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": null,\n    \"bio\": null,\n    \"website_url\": null,\n    \"location_label\": null,\n    \"is_public\": true\n  }\n}\n```"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Users",
-      "description": "User profile, search, and public profile endpoints (M3).",
+      "name": "Notifications",
+      "description": "Notification management and real-time updates (M9). All endpoints require authentication.",
       "item": [
         {
-          "name": "Check Username",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/check-username?username={{username}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "check-username"
-              ],
-              "query": [
-                {
-                  "key": "username",
-                  "value": "{{username}}",
-                  "description": "3\u201330 chars, letters/numbers/underscore"
-                }
-              ]
-            },
-            "description": "Check if a username is available (real-time validation during onboarding).\n\n**Auth:** None (public)\n\n**Query:**\n- `username` (required)\n\n**Response:**\n```json\n{ \"username\": \"johndoe\", \"available\": true }\n```"
-          },
-          "response": []
-        },
-        {
-          "name": "Search Users",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/search?q={{search_query}}&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "{{search_query}}",
-                  "description": "Search query (min 1 char)"
-                },
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "description": "UUID cursor for pagination",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Page size (default 20, max 100)"
-                }
-              ]
-            },
-            "description": "Search users by name or username (pg_trgm).\n\n**Auth:** Bearer JWT (required)\n\n**Query:**\n- `q` (required, min 1 char)\n- `cursor` (optional, UUID)\n- `limit` (optional, default 20, max 100)\n\n**Response:**\n```json\n{\n  \"data\": [{ \"id\": \"...\", \"name\": \"...\", \"username\": \"...\", \"avatar_url\": null, \"trip_count\": 0 }],\n  \"next_cursor\": null\n}\n```"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Me",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "me"
-              ]
-            },
-            "description": "Get the authenticated user's profile.\n\n**Auth:** Bearer JWT (required)\n\n**Response:** `UserProfile`\n```json\n{\n  \"id\": \"...\",\n  \"name\": \"...\",\n  \"username\": \"...\",\n  \"avatar_url\": null,\n  \"bio\": null,\n  \"website_url\": null,\n  \"location_label\": null,\n  \"is_public\": true,\n  \"trip_count\": 0,\n  \"created_at\": \"...\"\n}\n```"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Me",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"bio\": \"Travel enthusiast from Jakarta\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/users/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "me"
-              ]
-            },
-            "description": "Update the authenticated user's profile.\n\n**Auth:** Bearer JWT (required)\n\n**Body (all optional):**\n- `bio` (string, max 150)\n- `website_url` (valid URL, max 255)\n- `location_label` (string, max 100)\n- `is_public` (boolean)\n\n**Response:** Updated `UserProfile`"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Me",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "me"
-              ]
-            },
-            "description": "Permanently delete the authenticated user's account.\n\n**Auth:** Bearer JWT (required)\n\n**Response:** `204 No Content` (empty body)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Profile by Username",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/{{username}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "{{username}}"
-              ]
-            },
-            "description": "Get a user's public profile by username.\n\n**Auth:** Bearer JWT (required)\n\n**Path:**\n- `username` (string)\n\n**Response:** `UserProfile`\n\n**Errors:**\n- `404 USER_NOT_FOUND`\n- `403 PROFILE_PRIVATE` (private profile, viewer is not owner)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get User Trips",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users/{{username}}/trips?limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "{{username}}",
-                "trips"
-              ],
-              "query": [
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "description": "Trip UUID cursor",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Page size (default 20, max 100)"
-                }
-              ]
-            },
-            "description": "List trips for a user (privacy-aware).\n\n**Auth:** Bearer JWT (required)\n\n**Path:**\n- `username` (string)\n\n**Query:**\n- `cursor` (optional, trip UUID)\n- `limit` (optional, default 20, max 100)\n\n**Response:**\n```json\n{\n  \"data\": [{ \"id\": \"...\", \"name\": \"...\", \"status\": \"fixed\", ... }],\n  \"next_cursor\": null\n}\n```\n\nOwner sees all trips; non-owner sees only `is_public: true` trips.\n\n**Errors:** `404 USER_NOT_FOUND`"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Trips",
-      "description": "Trip CRUD and management (M4). Create trips in fixed or voting mode, invite users, manage members, set cover.",
-      "item": [
-        {
-          "name": "Create Trip",
+          "name": "List Notifications",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    pm.collectionVariables.set('trip_id', body.id);",
-                  "    pm.environment.set('trip_id', body.id);",
-                  "}",
-                  "",
-                  "pm.test('Status is 200 or 201', function () {",
+                  "pm.test('Status is 200', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
                   "});",
-                  "",
-                  "pm.test('Response has trip ID and name', function () {",
+                  "pm.test('Response has data array', function () {",
                   "    const body = pm.response.json();",
-                  "    pm.expect(body).to.have.property('id');",
-                  "    pm.expect(body).to.have.property('name');",
-                  "    pm.expect(body).to.have.property('status');",
+                  "    pm.expect(body).to.have.property('data');",
+                  "    pm.expect(body.data).to.be.an('array');",
                   "});",
-                  ""
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Lombok Beach Trip\",\n  \"tags\": [\"#pantai\", \"#alam\"],\n  \"start_date\": \"2026-06-19\",\n  \"end_date\": \"2026-06-22\",\n  \"is_all_day\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips"
-              ]
-            },
-            "description": "Create a new trip in fixed (certain dates) or voting (candidate dates) mode.\\n\\n**Auth:** Bearer JWT (required)\\n\\n**Body:**\\n- `name` (string, required, max 255)\\n- `tags` (string[], optional)\\n- `start_date` & `end_date` for fixed mode OR `candidates` array (1-3 items) for voting mode\\n\\n**Response:** Trip object with id, status (fixed|voting_pending), and voting_deadline if voting mode"
-          },
-          "response": []
-        },
-        {
-          "name": "List Trips (Upcoming)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips?tab=upcoming&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips"
-              ],
-              "query": [
-                {
-                  "key": "tab",
-                  "value": "upcoming",
-                  "description": "upcoming|completed"
-                },
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "description": "UUID for pagination",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Default 20, max 100"
-                }
-              ]
-            },
-            "description": "List trips for the authenticated user with enriched data (participant_count, participants_preview, cover_image_url)."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Trip Detail",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}"
-              ]
-            },
-            "description": "Get details of a specific trip. Must be creator, participant, or invited user."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Trip",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Trip Name\",\n  \"tags\": [\"#updated\"],\n  \"is_public\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}"
-              ]
-            },
-            "description": "Update trip details. Creator only."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Trip",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}"
-              ]
-            },
-            "description": "Soft-delete a trip. Creator only. Returns 204 No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Set Trip Cover",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"document_id\": \"{{document_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/cover",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "cover"
-              ]
-            },
-            "description": "Set or update trip cover image. Creator only. Document must exist in this trip."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Trip Members",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/members",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "members"
-              ]
-            },
-            "description": "Members screen payload (WORKFLOW \u00a711). Returns `{ is_creator, members[], invitations[] }`.\n\n- `members[]`: active participants \u2014 `{ id, name, username, avatar_url, joined_at, role: creator|member }`\n- `invitations[]`: outstanding invites (pending + declined) \u2014 `{ id, method, status, state, invited_user, invited_email, invited_by, created_at }` where `state` is `email_sent` | `pending_accept` | `rejected`. Use `state=rejected` rows for the \"Undang kembali\" action; use `invited_user`/`invited_email` to mark already-invited rows in search results.\n\nAny member may view. `is_creator` gates the \"Keluarkan\" button."
-          },
-          "response": []
-        },
-        {
-          "name": "Remove Trip Member",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/members/{{member_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "members",
-                "{{member_id}}"
-              ]
-            },
-            "description": "Remove a member from trip. Creator only. Returns 204 No Content."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Invitations",
-      "description": "Trip invitation management \u2014 invite users, respond to invitations, cancel pending invites (M4).",
-      "item": [
-        {
-          "name": "Get My Invitations",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/invitations?limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "invitations"
-              ],
-              "query": [
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "description": "UUID for pagination",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Default 20, max 100"
-                }
-              ]
-            },
-            "description": "List pending invitations for the current user, enriched with trip and inviter summaries."
-          },
-          "response": []
-        },
-        {
-          "name": "Invite User",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "pm.test('Response has next_cursor', function () {",
                   "    const body = pm.response.json();",
-                  "    pm.collectionVariables.set('invitation_id', body.id);",
-                  "    pm.environment.set('invitation_id', body.id);",
+                  "    pm.expect(body).to.have.property('next_cursor');",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.data && body.data.length > 0) {",
+                  "        pm.collectionVariables.set('notification_id', body.data[0].id);",
+                  "        pm.environment.set('notification_id', body.data[0].id);",
+                  "    }",
                   "}"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"user2_travel\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "invitations"
-              ]
-            },
-            "description": "Invite a user to a trip via username or email. Only trip participants can invite. Provide exactly one of: `username` or `email`.\n\nAlso serves as **re-invite (\"Undang kembali\")**: if the target has a `declined`/`cancelled` invitation, it is reactivated to `pending` (no duplicate row). Returns `409 INVITATION_EXISTS` only if a `pending` invite already exists, `409 ALREADY_PARTICIPANT` if already a member."
-          },
-          "response": []
-        },
-        {
-          "name": "Accept Invitation",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"accept\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "invitations",
-                "{{invitation_id}}"
-              ]
-            },
-            "description": "Accept or decline a trip invitation. Set accept to true/false. Returns 204 No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Cancel Invitation",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "invitations",
-                "{{invitation_id}}"
-              ]
-            },
-            "description": "Cancel a pending invitation. Inviter only. Returns 204 No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Get My Invitations (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/trips/invitations?limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "invitations"
-              ],
-              "query": [
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "description": "UUID for pagination",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Default 20, max 100"
-                }
-              ]
-            },
-            "description": "List pending invitations **for User 2** (`{{access_token_2}}`). Run this after User 1 invites User 2 to grab the `invitation_id` to accept.\n\nTip: add a test script to auto-save `invitation_id` from `data[0].id` if you like."
-          },
-          "response": []
-        },
-        {
-          "name": "Accept Invitation (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"accept\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "invitations",
-                "{{invitation_id}}"
-              ]
-            },
-            "description": "Accept (or decline) the invitation **as User 2** (`{{access_token_2}}`) \u2014 no login switch needed. Set `accept` to true/false. Returns 204 No Content.\n\nTypical flow: **Invite User** (as User 1) \u2192 **Get My Invitations (User 2)** \u2192 **Accept Invitation (User 2)**."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Voting",
-      "description": "Multi-poll voting for trip dates, activities, and other options (M5).",
-      "item": [
-        {
-          "name": "List Polls",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls"
-              ]
-            },
-            "description": "List all polls for a trip with vote tallies and current user vote.\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"poll-1\",\n      \"poll_type\": \"aktivitas\",\n      \"title\": \"Best Activity\",\n      \"status\": \"active\",\n      \"deadline\": null,\n      \"locked_at\": null,\n      \"creator\": { \"id\": \"user-1\", \"name\": \"Alice\", \"username\": \"alice\", \"avatar_url\": null },\n      \"options\": [\n        { \"id\": \"opt-1\", \"label\": \"Hiking\", \"sort_order\": 0, \"candidate_id\": null, \"vote_count\": 2 },\n        { \"id\": \"opt-2\", \"label\": \"Swimming\", \"sort_order\": 1, \"candidate_id\": null, \"vote_count\": 1 }\n      ],\n      \"voted_option_id\": \"opt-1\",\n      \"created_at\": \"2026-07-12T12:00:00.000Z\"\n    }\n  ],\n  \"next_cursor\": null\n}\n```"
-          },
-          "response": []
-        },
-        {
-          "name": "Create Poll",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Best Activity\",\n  \"poll_type\": \"aktivitas\",\n  \"options\": [\"Hiking\", \"Swimming\"],\n  \"deadline\": null\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls"
-              ]
-            },
-            "description": "Create a new poll (aktivitas or lainnya). Tanggal polls are auto-created when trip enters voting_pending. Creator only.\n\n**Request body:**\n- `title` (string): Poll title\n- `poll_type` ('aktivitas' | 'lainnya'): Poll type\n- `options` (string[]): 2\u201310 option labels\n- `deadline` (ISO 8601 string, optional): Vote deadline\n\n**Response 201:** Poll object with empty vote counts.\n\n**Errors:**\n- 400: Fewer than 2 options, tanggal poll creation attempt, > 10 options\n- 409: Active poll already exists for this poll_type"
-          },
-          "response": []
-        },
-        {
-          "name": "Vote on Poll",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"option_id\": \"{{option_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}",
-                "vote"
-              ]
-            },
-            "description": "Vote on a poll option. Replaces previous vote if voter already voted. No-op if voting for same option. Set `poll_id` and `option_id` (real UUIDs from **List Polls**) in the environment first.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Retract Poll Vote",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}",
-                "vote"
-              ]
-            },
-            "description": "Retract the current user's vote on a poll.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Vote on Date Candidate",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"candidate_id\": \"{{candidate_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "candidates",
-                "{{candidate_id}}",
-                "vote"
-              ]
-            },
-            "description": "Vote on a date candidate. Separate from generic polls (tanggal poll voting). Set `candidate_id` (real UUID) in the environment first.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Retract Date Candidate Vote",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "candidates",
-                "{{candidate_id}}",
-                "vote"
-              ]
-            },
-            "description": "Retract the current user's vote on a date candidate.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Lock Poll",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/lock",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}",
-                "lock"
-              ]
-            },
-            "description": "Lock a poll (creator only). If tanggal poll, updates trip dates to winning candidate and sets trip status to 'fixed'.\n\n**Response 204:** No Content.\n\n**Errors:**\n- 403: Not the trip creator"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Poll",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}"
-              ]
-            },
-            "description": "Delete an active poll (creator only). Response 204: No Content. Errors: 400 Poll not active, 403 Not the trip creator"
-          },
-          "response": []
-        },
-        {
-          "name": "Vote on Poll (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"option_id\": \"{{option_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}",
-                "vote"
-              ]
-            },
-            "description": "Cast a vote **as User 2** (`{{access_token_2}}`) \u2014 lets you build up a real tally with two voters without switching login. User 2 must be a participant of the trip (accept the invitation first). Set `poll_id` and `option_id` from **List Polls**.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Retract Vote (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "polls",
-                "{{poll_id}}",
-                "vote"
-              ]
-            },
-            "description": "Retract User 2's vote on a poll (`{{access_token_2}}`).\n\n**Response 204:** No Content."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Activities",
-      "description": "CRUD endpoints for trip itinerary activities (M6).",
-      "item": [
-        {
-          "name": "List Activities",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/activities",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "activities"
-              ]
-            },
-            "description": "List all activities for a trip, grouped by date and sorted by start_time. Response 200: Array of activity objects with place_name, times, kind, cover info."
-          },
-          "response": []
-        },
-        {
-          "name": "Get Activity",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "activities",
-                "{{activity_id}}"
-              ]
-            },
-            "description": "Get a single activity by ID. Set `activity_id` (real UUID) in the environment first. Response 200: Activity detail object."
-          },
-          "response": []
-        },
-        {
-          "name": "Create Activity",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"place_name\": \"Breakfast at Warung\",\n  \"activity_date\": \"2027-06-20\",\n  \"start_time\": \"07:00\",\n  \"end_time\": \"09:00\",\n  \"kind\": \"meal\",\n  \"location_label\": \"Ubud\",\n  \"description\": \"Local breakfast\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [],\n  \"cover_source\": \"none\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/activities",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "activities"
-              ]
-            },
-            "description": "Create a new activity. Participants can create. Validation: times must be HH:MM, start_time <= end_time, activity_date within trip range if fixed. Response 201: Activity detail."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Activity",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"place_name\": \"Updated Activity Name\",\n  \"description\": \"New description\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "activities",
-                "{{activity_id}}"
-              ]
-            },
-            "description": "Update an activity (partial update supported). Response 200: Updated activity object."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Activity",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "activities",
-                "{{activity_id}}"
-              ]
-            },
-            "description": "Delete an activity. Response 204: No Content."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Chat",
-      "description": "Chat endpoints \u2014 messages with reply support, read receipts (M7).\n\n**Two-user flow:** User 1 creates trip & invites User 2 \u2192 User 2 accepts \u2192 **Send Text Message** (User 1) \u2192 **List Messages** (User 2) sees it \u2192 **Send Text Message (User 2)** \u2192 **Mark Chat Read (User 2)**.\n\n**Multi-photo (FE pattern):** 1 photo = 1 message. Select 4 photos \u2192 send 4 POST requests; put caption only on the last one (`message_text` on final photo message).\n\n**Auto-saved variables:** `message_id` / `message_id_2` from send/list; `cursor` from `next_cursor` when paginating.",
-      "item": [
-        {
-          "name": "List Messages",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.data && body.data.length > 0) {",
-                  "        pm.environment.set('message_id', body.data[0].id);",
-                  "        pm.collectionVariables.set('message_id', body.data[0].id);",
-                  "    }",
-                  "    if (body.next_cursor) {",
-                  "        pm.environment.set('cursor', body.next_cursor);",
-                  "        pm.collectionVariables.set('cursor', body.next_cursor);",
-                  "    }",
-                  "}",
-                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages?cursor={{cursor}}&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ],
+              "raw": "{{base_url}}/notifications?cursor={{cursor}}&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"],
               "query": [
                 {
                   "key": "cursor",
                   "value": "{{cursor}}",
-                  "description": "Pagination cursor \u2014 RFC3339 timestamp from previous response `next_cursor` (e.g. `2026-07-13T04:28:14.108Z`). Leave empty for the first (newest) page. Enable this param only when fetching page 2+.",
-                  "disabled": true
+                  "description": "RFC3339 timestamp for pagination (optional)"
                 },
                 {
                   "key": "limit",
                   "value": "20",
-                  "description": "Max messages per page (default 20, max 100).",
-                  "disabled": true
+                  "description": "Number of items per page (default: 20, max: 100)"
                 }
               ]
             },
-            "description": "List messages for a trip, **most recent first**. Participants only.\n\n**Query:**\n- `cursor` (optional) \u2014 copy `next_cursor` from the previous response to load older messages\n- `limit` (optional, default 20)\n\n**Response 200:**\n```json\n{\n  \"data\": [{ \"id\": \"...\", \"message_kind\": \"text\", \"message_text\": \"...\", \"is_deleted\": false, ... }],\n  \"next_cursor\": \"2026-07-13T04:28:14.108Z\"\n}\n```\n\nTest script auto-saves `message_id` (newest) and `cursor` when present."
+            "description": "Get current user's notifications with enriched actor/trip data. Cursor paginated by `created_at` timestamp.\n\n**Query params:**\n- `cursor` (optional): RFC3339 timestamp for pagination\n- `limit` (optional): Items per page (default: 20, max: 100)\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"notif-uuid\",\n      \"type\": \"invite\",\n      \"actor\": {\n        \"id\": \"user-uuid\",\n        \"name\": \"Jane Doe\",\n        \"username\": \"janedoe\",\n        \"avatar_url\": \"https://...\"\n      },\n      \"trip\": {\n        \"id\": \"trip-uuid\",\n        \"name\": \"Bali Trip\",\n        \"status\": \"voting_pending\",\n        \"start_date\": \"2026-08-01\",\n        \"end_date\": \"2026-08-05\"\n      },\n      \"payload\": { \"invitation_id\": \"inv-uuid\" },\n      \"is_read\": false,\n      \"created_at\": \"2026-07-19T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": \"2026-07-19T09:30:00Z\"\n}\n```\n\n**Notification types:**\n- `invite`: Trip invitation received\n- `follow`: User followed you (post-MVP)\n- `voting_deadline`: Voting deadline reminder (H-7d, H-1d, H-1h)\n- `activity_update`: Activity created or modified"
           },
           "response": []
         },
         {
-          "name": "List Messages (User 2)",
+          "name": "Get Unread Count",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.data && body.data.length > 0) {",
-                  "        pm.environment.set('message_id_2', body.data[0].id);",
-                  "    }",
-                  "}",
-                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages?limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ],
-              "query": [
-                {
-                  "key": "cursor",
-                  "value": "{{cursor}}",
-                  "description": "RFC3339 timestamp from `next_cursor` \u2014 enable only for page 2+",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "description": "Default 20, max 100",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "List messages **as User 2** (`{{access_token_2}}`). Use after User 1 sends a message to verify both participants can read the thread. User 2 must be a trip participant (accept invitation first)."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Text Message",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) {",
-                  "        pm.environment.set('message_id', body.id);",
-                  "        pm.collectionVariables.set('message_id', body.id);",
-                  "    }",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Halo semua!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Send a text message as **User 1**.\n\n**Body:**\n- `message_kind` (required) \u2014 `\"text\"`\n- `message_text` (required for text) \u2014 message content\n- `reply_to_id` (optional) \u2014 UUID of message to reply to\n\n**Response 201:** Message object. Saves `message_id` automatically."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Text Message (User 2)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) pm.environment.set('message_id_2', body.id);",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Halo dari User 2!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Send a text message **as User 2** (`{{access_token_2}}`). User 2 must be a trip participant."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Photo Message",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) {",
-                  "        pm.environment.set('message_id', body.id);",
-                  "        pm.collectionVariables.set('message_id', body.id);",
-                  "    }",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"https://cdn.example.com/trips/{{trip_id}}/photo-1.jpg\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Send a **single** photo message (User 1). Auto-inserts `trip_documents` with `from_chat=true`.\n\n**Body:**\n- `message_kind` \u2014 `\"photo\"` or `\"video\"`\n- `media_url` (required) \u2014 public CDN/R2 URL of the uploaded file\n- `message_text` (optional) \u2014 caption; typically only on the **last** photo when sending multiple\n\n**Multi-photo:** duplicate this request per photo (change `media_url`). No backend batch endpoint \u2014 FE sends N requests.\n\nFor real R2 uploads use **Send Photo Message (R2 URL)** after the Uploads flow."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Photo Message (R2 URL)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) pm.environment.set('message_id', body.id);",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"{{storage_key}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Send a chat photo using the uploaded **storage_key** (`{{storage_key}}`). Backend derives the R2 key and returns a presigned `media_url` in the response.\n\n**Prerequisite:** Run **Uploads \u2192 1. Presign** \u2192 **2. Upload File to R2 (PUT)** first (register optional \u2014 chat auto-creates `trip_documents` with `from_chat=true`).\n\nConfirms chat media + Media tab integration with actual stored files."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Photo Message (last with caption)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) pm.environment.set('message_id', body.id);",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"https://cdn.example.com/trips/{{trip_id}}/photo-4.jpg\",\n  \"message_text\": \"Caption untuk 4 foto ini\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Example of the **last photo in a multi-photo send** with caption on the final message only (recommended FE pattern). Run **Send Photo Message** 3\u00d7 without caption, then this request as the 4th."
-          },
-          "response": []
-        },
-        {
-          "name": "Send Message (Reply)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) pm.environment.set('message_id', body.id);",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Thanks!\",\n  \"reply_to_id\": \"{{message_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages"
-              ]
-            },
-            "description": "Reply to another message.\n\n**Body:**\n- `reply_to_id` \u2014 UUID of the message being quoted (use `{{message_id}}` from List/Send)\n\nResponse embeds `reply_to` with sender + preview text."
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Chat Read",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages/read",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages",
-                "read"
-              ]
-            },
-            "description": "Advance **User 1's** read cursor (`trip_message_reads.last_read_at`). Used for unread badge \u2014 messages with `created_at` after this timestamp count as unread.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Chat Read (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages/read",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages",
-                "read"
-              ]
-            },
-            "description": "Advance **User 2's** read cursor (`{{access_token_2}}`). Each participant has their own read position."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Own Message",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages/{{message_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages",
-                "{{message_id}}"
-              ]
-            },
-            "description": "Soft-delete **User 1's own** message (`{{message_id}}`). Sender only \u2014 sets `deleted_at`, content blanked in list (`is_deleted: true`).\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Own Message (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/messages/{{message_id_2}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "messages",
-                "{{message_id_2}}"
-              ]
-            },
-            "description": "Soft-delete **User 2's own** message (`{{message_id_2}}`). Run **Send Text Message (User 2)** first to populate `message_id_2`."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Media",
-      "description": "Media upload/register/cover endpoints (M7).\n\n**R2 flow:** See **Uploads** folder (steps 1\u21922\u21923), then **Register Document** here, then **List Documents** / **Set Trip Cover**.\n\nChat photos uploaded via R2 can skip Register \u2014 use **Chat \u2192 Send Photo Message (R2 URL)** instead (auto `from_chat` document).",
-      "item": [
-        {
-          "name": "List Documents",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.data && body.data.length > 0) {",
-                  "        pm.environment.set('document_id', body.data[0].id);",
-                  "        pm.collectionVariables.set('document_id', body.data[0].id);",
-                  "        if (body.data[0].url) {",
-                  "            pm.environment.set('media_presigned_url', body.data[0].url);",
-                  "            pm.collectionVariables.set('media_presigned_url', body.data[0].url);",
-                  "        }",
-                  "    }",
-                  "    pm.test('Document url is presigned (has X-Amz-Signature)', function () {",
-                  "        if (body.data && body.data[0] && body.data[0].url) {",
-                  "            pm.expect(body.data[0].url).to.include('X-Amz-Signature');",
-                  "            pm.expect(body.data[0]).to.have.property('url_expires_in', 3600);",
-                  "        }",
-                  "    });",
-                  "}",
-                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/documents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "documents"
-              ]
-            },
-            "description": "List all media for a trip (Media tab). Includes chat-sourced items (`from_chat: true`).\n\nTest script auto-saves `document_id` and `media_presigned_url` from the newest item.\n\n**Response 200:**\n```json\n{ \"data\": [{ \"id\": \"...\", \"url\": \"https://...X-Amz-Signature=...\", \"url_expires_in\": 3600, \"is_cover\": false, \"from_chat\": true, ... }] }\n```\n\nThe `url` field is a **presigned GET URL** (1 hour expiry) \u2014 not a public R2 dev URL."
-          },
-          "response": []
-        },
-        {
-          "name": "List Documents (User 2)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token_2}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/documents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "documents"
-              ]
-            },
-            "description": "List media **as User 2** \u2014 verify participant access after chat photos or registered uploads."
-          },
-          "response": []
-        },
-        {
-          "name": "Register Document",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    const body = pm.response.json();",
-                  "    if (body.id) {",
-                  "        pm.environment.set('document_id', body.id);",
-                  "        pm.collectionVariables.set('document_id', body.id);",
-                  "    }",
-                  "    if (body.url) {",
-                  "        pm.environment.set('media_presigned_url', body.url);",
-                  "        pm.collectionVariables.set('media_presigned_url', body.url);",
-                  "    }",
-                  "    pm.test('Response url is presigned', function () {",
-                  "        const b = pm.response.json();",
-                  "        pm.expect(b.url).to.include('X-Amz-Signature');",
-                  "        pm.expect(b).to.have.property('url_expires_in', 3600);",
-                  "    });",
-                  "}",
-                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"storage_key\": \"{{storage_key}}\",\n  \"media_type\": \"photo\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/documents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "documents"
-              ]
-            },
-            "description": "Register an object **already uploaded to R2** as a `trip_documents` row. Run **Presign Upload** first, PUT the file to `upload_url`, then call this.\n\n**Body:**\n- `storage_key` (required) \u2014 from Presign response, must start with `trips/{trip_id}/`\n- `media_type` (required) \u2014 `\"photo\"` or `\"video\"`\n\n**Errors:** `400 OBJECT_NOT_FOUND` if file not yet in R2."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Document",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/documents/{{document_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "documents",
-                "{{document_id}}"
-              ]
-            },
-            "description": "Delete a document. Uploader or trip creator only. Clears `cover_document_id` references first.\n\n**Response 204:** No Content."
-          },
-          "response": []
-        },
-        {
-          "name": "Set Trip Cover",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"document_id\": \"{{document_id}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/trips/{{trip_id}}/cover",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "trips",
-                "{{trip_id}}",
-                "cover"
-              ]
-            },
-            "description": "Set trip cover from an existing document. **Trip creator only.**\n\n**Body:**\n- `document_id` \u2014 UUID from List Documents or Register Document\n\n**Response 200:** Updated trip summary."
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Uploads",
-      "description": "Direct-to-R2 upload (M7). **NestJS never proxies binary** \u2014 the file goes straight to Cloudflare R2.\n\n## Full flow (run in order)\n1. **Presign Upload** \u2014 get `upload_url` + `storage_key`\n2. **Upload File to R2 (PUT)** \u2014 select a `.jpg` file in Body \u2192 binary; `Content-Type` must match presign\n3. **Media \u2192 Register Document** \u2014 verify object in R2 + save DB row (response includes presigned `url`)\n4. **Verify Presigned Download URL (GET)** \u2014 confirm the presigned `url` fetches the image\n5. *(optional)* **Chat \u2192 Send Photo Message (R2 URL)** \u2014 uses `storage_key`; response `media_url` is presigned\n\nRequires valid `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` in `backend/.env`. Public R2 dev URL / custom domain is **not** required.",
-      "item": [
-        {
-          "name": "1. Presign Upload",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-                  "if (pm.response.code === 200) {",
-                  "    const data = pm.response.json();",
-                  "    if (data.storage_key) {",
-                  "        pm.environment.set('storage_key', data.storage_key);",
-                  "        pm.collectionVariables.set('storage_key', data.storage_key);",
-                  "    }",
-                  "    if (data.upload_url) {",
-                  "        pm.environment.set('upload_url', data.upload_url);",
-                  "        pm.collectionVariables.set('upload_url', data.upload_url);",
-                  "    }",
-                  "    pm.test('Has upload_url and storage_key', function () {",
-                  "        const d = pm.response.json();",
-                  "        pm.expect(d).to.have.property('upload_url');",
-                  "        pm.expect(d).to.have.property('storage_key');",
-                  "        pm.expect(d).to.have.property('expires_in', 300);",
-                  "        pm.expect(d).to.not.have.property('public_url');",
-                  "    });",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"trip_id\": \"{{trip_id}}\",\n  \"media_type\": \"photo\",\n  \"content_type\": \"{{content_type}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/uploads/presign",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "uploads",
-                "presign"
-              ]
-            },
-            "description": "**Step 1** \u2014 Issue a presigned R2 PUT URL (5 min expiry). Participants only.\n\n**Body:**\n- `trip_id` \u2014 trip UUID\n- `media_type` \u2014 `\"photo\"` or `\"video\"`\n- `content_type` \u2014 MIME type; must match the PUT upload header exactly (default `image/jpeg`)\n\n**Response 200:**\n```json\n{\n  \"upload_url\": \"https://...r2.cloudflarestorage.com/...\",\n  \"storage_key\": \"trips/{tripId}/{uuid}.jpg\",\n  \"expires_in\": 300\n}\n```\n\nSaves `upload_url` and `storage_key` automatically. Download URLs are presigned separately via Register/List Documents."
-          },
-          "response": []
-        },
-        {
-          "name": "2. Upload File to R2 (PUT)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('R2 upload succeeded (200)', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "{{content_type}}",
-                "description": "Must exactly match content_type from Presign Upload \u2014 mismatch causes R2 signature error."
-              }
-            ],
-            "body": {
-              "mode": "file",
-              "file": {}
-            },
-            "url": "{{upload_url}}",
-            "description": "**Step 2** \u2014 Upload raw file bytes **directly to R2** (not through NestJS).\n\n**Setup in Postman:**\n1. Run **1. Presign Upload** first (`upload_url` must be set)\n2. Body tab \u2192 **binary** \u2192 **Select File** \u2192 pick any `.jpg` (or file matching `content_type`)\n3. Send\n\n**Auth:** None \u2014 the presigned URL embeds credentials.\n\n**Response 200:** Empty body from R2 = success.\n\n**Common errors:**\n- `403 SignatureDoesNotMatch` \u2014 `Content-Type` header doesn't match presign\n- `403 ExpiredToken` \u2014 presign older than 5 minutes; re-run step 1\n\nNext: **Media \u2192 Register Document**"
-          },
-          "response": []
-        },
-        {
-          "name": "3. Verify Presigned Download URL (GET)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Presigned download succeeded (200)', function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
                   "});",
-                  "pm.test('Content-Type is image', function () {",
-                  "    pm.expect(pm.response.headers.get('Content-Type')).to.match(/image\\//);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": "{{media_presigned_url}}",
-            "description": "**Step 4** \u2014 Verify the presigned GET URL fetches the uploaded file.\n\n**Prerequisite:** Run **Media \u2192 Register Document** first (saves `media_presigned_url` from response `url`).\n\nUses `{{media_presigned_url}}` \u2014 a time-limited signed URL (1 hour expiry) generated by the backend. No public R2 dev URL or custom domain needed.\n\n**Common errors:**\n- `403 AccessDenied` / expired \u2014 URL older than 1 hour; re-run Register Document or List Documents\n- Empty `media_presigned_url` \u2014 run Register Document first"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Wishlists",
-      "description": "Wishlist aktivitas impian & konversi ke trip (M8). WORKFLOW \u00a712 \u2014 grid 2 kolom, filter/sort, atomic \"Jadikan Perjalanan\".",
-      "item": [
-        {
-          "name": "List Wishlists",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Has data array and next_cursor', function () {",
-                  "    pm.expect(data).to.have.property('data').that.is.an('array');",
-                  "    pm.expect(data).to.have.property('next_cursor');",
-                  "});",
-                  "if (data.data && data.data.length > 0) {",
-                  "    const first = data.data[0];",
-                  "    pm.collectionVariables.set('wishlist_id', first.id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/wishlists?limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists"
-              ],
-              "query": [
-                {
-                  "key": "priority",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "tag",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "cursor",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "disabled": false
-                }
-              ]
-            },
-            "description": "**GET /v1/wishlists** \u2014 List current user's wishlist items.\n\n**Query params:**\n- `priority` (optional) \u2014 filter by `high|medium|low`\n- `tag` (optional) \u2014 filter by single tag (e.g. `#pantai`)\n- `cursor` (optional) \u2014 pagination cursor from `next_cursor` response\n- `limit` (optional, default 20) \u2014 results per page\n\n**Response 200:**\n```json\n{\n  \"data\": [\n    {\n      \"id\": \"uuid\",\n      \"place_name\": \"Pantai Tanjung Aan\",\n      \"start_time\": \"13:00\",\n      \"end_time\": \"16:00\",\n      \"location_label\": \"Lombok, NTB\",\n      \"link\": \"https://maps.google.com/...\",\n      \"notes\": \"Bawa sunscreen\",\n      \"tags\": [\"#pantai\", \"#sunset\"],\n      \"priority_level\": \"high\",\n      \"thumbnail_url\": null,\n      \"created_at\": \"2026-07-01T10:00:00Z\",\n      \"updated_at\": \"2026-07-01T10:00:00Z\"\n    }\n  ],\n  \"next_cursor\": null\n}\n```\n\nSaves first item's `id` as `wishlist_id` for subsequent requests."
-          },
-          "response": []
-        },
-        {
-          "name": "List Wishlist Tags",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const data = pm.response.json();",
-                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Has tags array', function () {",
-                  "    pm.expect(data).to.have.property('tags').that.is.an('array');",
-                  "});",
-                  "pm.test('Tags are sorted alphabetically', function () {",
-                  "    const tags = data.tags;",
-                  "    const sorted = [...tags].sort();",
-                  "    pm.expect(tags).to.eql(sorted);",
+                  "pm.test('Response has unread_count', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('unread_count');",
+                  "    pm.expect(body.unread_count).to.be.a('number');",
                   "});"
                 ]
               }
@@ -2514,81 +250,24 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/wishlists/tags",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists",
-                "tags"
-              ]
+              "raw": "{{base_url}}/notifications/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "unread-count"]
             },
-            "description": "**GET /v1/wishlists/tags** — Get all unique tags from user's wishlists for filter chips (WORKFLOW §12, `WishlistTagFilters`).\n\n**Response 200:**\n```json\n{\n  \"tags\": [\"#alam\", \"#kuliner\", \"#pantai\", \"#snorkeling\", \"#sunset\"]\n}\n```\n\nReturns sorted array of unique hashtags across all user's active (non-deleted) wishlist items. Empty array if user has no wishlists or no tags.\n\n**Frontend usage:** Populate tag filter chips on Wishlist screen (`Screen105`) — \"Semua\" chip (reset filter) + dynamic tag chips from this response."
+            "description": "Get count of unread notifications for the current user. Used for notification badge on home screen.\n\n**Response 200:**\n```json\n{\n  \"unread_count\": 5\n}\n```"
           },
           "response": []
         },
         {
-          "name": "Create Wishlist",
+          "name": "Mark as Read",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const data = pm.response.json();",
-                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
-                  "pm.test('Has id, place_name, priority_level', function () {",
-                  "    pm.expect(data).to.have.property('id');",
-                  "    pm.expect(data).to.have.property('place_name');",
-                  "    pm.expect(data).to.have.property('priority_level');",
-                  "});",
-                  "pm.collectionVariables.set('wishlist_id', data.id);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"place_name\": \"Pantai Tanjung Aan\",\n  \"start_time\": \"13:00\",\n  \"end_time\": \"16:00\",\n  \"location_label\": \"Lombok, NTB\",\n  \"link\": \"https://maps.google.com/xyz\",\n  \"notes\": \"Bawa sunscreen\",\n  \"tags\": [\"#pantai\", \"#sunset\"],\n  \"priority_level\": \"high\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/wishlists",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists"
-              ]
-            },
-            "description": "**POST /v1/wishlists** \u2014 Create a new wishlist item.\n\n**Body (all optional except place_name):**\n- `place_name` (required, string \u2264255) \u2014 e.g. *Pantai Tanjung Aan*\n- `start_time` (optional) \u2014 HH:MM format (e.g. \"13:00\")\n- `end_time` (optional) \u2014 HH:MM format\n- `location_label` (optional) \u2014 e.g. *Lombok, NTB*\n- `link` (optional) \u2014 valid URL (Google Maps link)\n- `notes` (optional) \u2014 free text\n- `tags` (optional array) \u2014 hashtags (e.g. `[\"#pantai\", \"#sunset\"]`)\n- `priority_level` (optional) \u2014 `high|medium|low` (default `medium`)\n\n**Response 201:** Wishlist item (id, times, tags, priority, etc.)."
-          },
-          "response": []
-        },
-        {
-          "name": "Update Wishlist",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response has updated fields', function () {",
-                  "    const data = pm.response.json();",
-                  "    pm.expect(data.notes).to.equal('Updated notes');",
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
                   "});"
                 ]
               }
@@ -2596,120 +275,106 @@
           ],
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"notes\": \"Updated notes\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists",
-                "{{wishlist_id}}"
-              ]
-            },
-            "description": "**PUT /v1/wishlists/:id** \u2014 Update a wishlist item (owner only, WORKFLOW \u00a712 `Screen111`).\n\n**Path params:**\n- `id` \u2014 wishlist UUID (set as `wishlist_id` after List or Create)\n\n**Body:** Same fields as Create (all optional). Omit unchanged fields.\n\n**Response 200:** Updated wishlist item.\n\n**Error 403:** Not the owner."
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Wishlist",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status 204 (soft delete)', function () { pm.response.to.have.status(204); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists",
-                "{{wishlist_id}}"
+              "raw": "{{base_url}}/notifications/:id/read",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", ":id", "read"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{notification_id}}",
+                  "description": "Notification UUID"
+                }
               ]
             },
-            "description": "**DELETE /v1/wishlists/:id** \u2014 Soft-delete a wishlist item (owner only, WORKFLOW \u00a712 `Screen113`).\n\n**Response 204:** No content (soft delete). Item no longer in List Wishlists."
+            "description": "Mark a single notification as read. User can only mark their own notifications.\n\n**URL params:**\n- `id`: Notification UUID\n\n**Response 204:** No content (notification marked as read)\n\n**Response 404:** Notification not found\n\n**Response 403:** Access denied (notification belongs to another user)"
           },
           "response": []
         },
         {
-          "name": "Convert to Trip (Jadikan Perjalanan)",
+          "name": "Mark All as Read",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const data = pm.response.json();",
-                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
-                  "pm.test('Created trip is fixed status', function () {",
-                  "    pm.expect(data.status).to.equal('fixed');",
-                  "});",
-                  "pm.test('Trip has start_date and end_date', function () {",
-                  "    pm.expect(data).to.have.property('start_date');",
-                  "    pm.expect(data).to.have.property('end_date');",
-                  "});",
-                  "if (data.id) {",
-                  "    pm.collectionVariables.set('trip_id', data.id);",
-                  "}"
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"trip_name\": \"Lombok Weekend Escape\",\n  \"tags\": [\"#pantai\", \"#sunset\"],\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-03\",\n  \"is_all_day\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
+            "method": "PUT",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/wishlists/{{wishlist_id}}/convert-to-trip",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "wishlists",
-                "{{wishlist_id}}",
-                "convert-to-trip"
-              ]
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "read-all"]
             },
-            "description": "**POST /v1/wishlists/:id/convert-to-trip** \u2014 Atomic conversion: create trip + seed day-1 activity + soft-delete wishlist (WORKFLOW \u00a712 Screen114\u2013117).\n\n**Path params:**\n- `id` \u2014 wishlist UUID\n\n**Body:**\n- `trip_name` (optional) \u2014 defaults to wishlist `place_name` if omitted\n- `tags` (optional array) \u2014 defaults to wishlist tags if omitted\n- `start_date` (required) \u2014 YYYY-MM-DD\n- `end_date` (required) \u2014 YYYY-MM-DD\n- `is_all_day` (optional, default true)\n\n**Response 201:** Full trip detail (fixed status, created with creator as participant + day-1 activity seeded from wishlist fields).\n\n**Atomicity:** All three operations (trip INSERT, activity INSERT, wishlist soft DELETE) rollback together if any fails. Date validation happens before transaction.\n\n**Error 400:** start_date after end_date; no rollback, wishlist unchanged.\n\n**Postcondition:** Wishlist no longer in List Wishlists; trip ready for invite/itinerary/chat."
+            "description": "Mark all notifications as read for the current user.\n\n**Response 204:** No content (all notifications marked as read)"
           },
           "response": []
+        },
+        {
+          "name": "Test Notification Flow",
+          "description": "Complete flow: Create invitation → Check notifications → Mark as read",
+          "item": [
+            {
+              "name": "1. Create Trip Invitation",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"janedoe\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
+                  "host": ["{{base_url}}"],
+                  "path": ["trips", "{{trip_id}}", "invitations"]
+                },
+                "description": "Create a trip invitation (triggers notification creation)"
+              },
+              "response": []
+            },
+            {
+              "name": "2. Check Notifications",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/notifications",
+                  "host": ["{{base_url}}"],
+                  "path": ["notifications"]
+                },
+                "description": "Verify notification was created for the invited user"
+              },
+              "response": []
+            },
+            {
+              "name": "3. Mark as Read",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+                  "host": ["{{base_url}}"],
+                  "path": ["notifications", "{{notification_id}}", "read"]
+                },
+                "description": "Mark the notification as read"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }

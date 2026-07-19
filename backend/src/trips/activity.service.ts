@@ -10,6 +10,7 @@ import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 import { CreateActivityDto, UpdateActivityDto } from './dto/activity.dto';
 import { ActivitySerializer } from './serializers/activity.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ActivityService {
@@ -19,6 +20,7 @@ export class ActivityService {
     private readonly prisma: PrismaService,
     private readonly googleMaps: GoogleMapsService,
     private readonly r2: R2Service,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -178,6 +180,27 @@ export class ActivityService {
       include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
 
+    // Create notifications for all trip participants (except the creator)
+    const participantsToNotify = trip.participants
+      .filter((p) => p.userId !== userId)
+      .map((p) => p.userId);
+
+    await Promise.all(
+      participantsToNotify.map((participantId) =>
+        this.notifications.createNotification({
+          userId: participantId,
+          type: 'activity_update',
+          actorId: userId,
+          tripId,
+          payload: {
+            activity_id: activity.id,
+            activity_name: activity.placeName,
+            action: 'created',
+          },
+        }),
+      ),
+    );
+
     this.scheduleThumbnailResolve(activity.id, dto.maps_link);
 
     return ActivitySerializer.toDetail(
@@ -293,6 +316,27 @@ export class ActivityService {
       },
       include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
+
+    // Create notifications for all trip participants (except the updater)
+    const participantsToNotify = trip.participants
+      .filter((p) => p.userId !== userId)
+      .map((p) => p.userId);
+
+    await Promise.all(
+      participantsToNotify.map((participantId) =>
+        this.notifications.createNotification({
+          userId: participantId,
+          type: 'activity_update',
+          actorId: userId,
+          tripId,
+          payload: {
+            activity_id: updated.id,
+            activity_name: updated.placeName,
+            action: 'updated',
+          },
+        }),
+      ),
+    );
 
     const mapsLink =
       dto.maps_link !== undefined ? dto.maps_link : existing.mapsLink;

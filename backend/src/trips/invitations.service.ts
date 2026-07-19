@@ -8,10 +8,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvitationDto } from './dto';
 import { InvitationSerializer } from './serializers/invitation.serializer';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class InvitationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * Invite a user to a trip via username or email (exactly one).
@@ -97,13 +101,24 @@ export class InvitationsService {
     }
 
     if (existing) {
-      return this.prisma.tripInvitation.update({
+      const invitation = await this.prisma.tripInvitation.update({
         where: { id: existing.id },
         data: { status: 'pending', method: 'username', invitedBy: inviterId },
       });
+
+      // Create notification for reactivated invitation
+      await this.notifications.createNotification({
+        userId: invitedUser.id,
+        type: 'invite',
+        actorId: inviterId,
+        tripId,
+        payload: { invitation_id: invitation.id },
+      });
+
+      return invitation;
     }
 
-    return this.prisma.tripInvitation.create({
+    const invitation = await this.prisma.tripInvitation.create({
       data: {
         tripId,
         invitedBy: inviterId,
@@ -112,6 +127,17 @@ export class InvitationsService {
         status: 'pending',
       },
     });
+
+    // Create notification for new invitation
+    await this.notifications.createNotification({
+      userId: invitedUser.id,
+      type: 'invite',
+      actorId: inviterId,
+      tripId,
+      payload: { invitation_id: invitation.id },
+    });
+
+    return invitation;
   }
 
   private async inviteByEmail(
@@ -156,7 +182,7 @@ export class InvitationsService {
     }
 
     if (existing) {
-      return this.prisma.tripInvitation.update({
+      const invitation = await this.prisma.tripInvitation.update({
         where: { id: existing.id },
         data: {
           status: 'pending',
@@ -165,9 +191,22 @@ export class InvitationsService {
           invitedUserId: existingUser?.id ?? null,
         },
       });
+
+      // Create notification for reactivated invitation (only for registered users)
+      if (existingUser) {
+        await this.notifications.createNotification({
+          userId: existingUser.id,
+          type: 'invite',
+          actorId: inviterId,
+          tripId,
+          payload: { invitation_id: invitation.id },
+        });
+      }
+
+      return invitation;
     }
 
-    return this.prisma.tripInvitation.create({
+    const invitation = await this.prisma.tripInvitation.create({
       data: {
         tripId,
         invitedBy: inviterId,
@@ -177,6 +216,19 @@ export class InvitationsService {
         status: 'pending',
       },
     });
+
+    // Create notification for new invitation (only for registered users)
+    if (existingUser) {
+      await this.notifications.createNotification({
+        userId: existingUser.id,
+        type: 'invite',
+        actorId: inviterId,
+        tripId,
+        payload: { invitation_id: invitation.id },
+      });
+    }
+
+    return invitation;
   }
 
   /**

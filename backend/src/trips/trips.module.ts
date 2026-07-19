@@ -14,9 +14,10 @@ import { UploadsController } from './upload.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { GoogleMapsModule } from '../common/google-maps/google-maps.module';
 import { R2Module } from '../integrations/r2/r2.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PrismaModule, GoogleMapsModule, R2Module],
+  imports: [PrismaModule, GoogleMapsModule, R2Module, NotificationsModule],
   controllers: [TripsController, VotingController, ActivityController, ChatController, MediaController, UploadsController],
   providers: [TripsService, InvitationsService, VotingService, ActivityService, ChatService, MediaService],
   exports: [TripsService, InvitationsService, VotingService, ActivityService, ChatService, MediaService],
