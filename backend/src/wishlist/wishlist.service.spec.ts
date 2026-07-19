@@ -237,4 +237,54 @@ describe('WishlistService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('getWishlistTags', () => {
+    it('returns empty array when user has no wishlists', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([]);
+
+      const result = await service.getWishlistTags(OWNER);
+
+      expect(result.tags).toEqual([]);
+    });
+
+    it('returns sorted unique tags from user wishlists', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([
+        wishlistRow({ tags: ['#pantai', '#sunset'] }),
+        wishlistRow({ tags: ['#kuliner', '#pantai'] }), // duplicate #pantai
+        wishlistRow({ tags: ['#snorkeling'] }),
+      ]);
+
+      const result = await service.getWishlistTags(OWNER);
+
+      expect(result.tags).toEqual(['#kuliner', '#pantai', '#snorkeling', '#sunset']);
+    });
+
+    it('excludes soft-deleted wishlist tags', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([
+        wishlistRow({ tags: ['#pantai'] }),
+        // soft-deleted wishlist should be filtered out by the service's WHERE clause
+      ]);
+
+      const result = await service.getWishlistTags(OWNER);
+
+      expect(result.tags).toEqual(['#pantai']);
+      expect(prisma.wishlist.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ deletedAt: null }),
+        }),
+      );
+    });
+
+    it('handles wishlists with empty/null tags arrays', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([
+        wishlistRow({ tags: [] }),
+        wishlistRow({ tags: null }),
+        wishlistRow({ tags: ['#alam'] }),
+      ]);
+
+      const result = await service.getWishlistTags(OWNER);
+
+      expect(result.tags).toEqual(['#alam']);
+    });
+  });
 });

@@ -32,7 +32,7 @@
 | M5 | Backend – Voting (Multi-Poll) | ✅ Selesai |
 | M6 | Backend – Itinerary / Aktivitas | ✅ Selesai |
 | M7 | Backend – Chat (Supabase Realtime) & Media (R2) | ✅ Selesai |
-| M8 | Backend – Wishlist & Konversi Trip | 🔲 Belum |
+| M8 | Backend – Wishlist & Konversi Trip | ✅ Selesai |
 | M9 | Backend – Notifikasi & Background Jobs | 🔲 Belum |
 | M10 | Backend – Testing & Hardening | 🔲 Belum |
 | M11 | Mobile – Fondasi Expo (Shell, Auth Client, Theme) | 🔲 Belum |
@@ -256,10 +256,11 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 ### Checklist
 - [x] Prisma model `Wishlist` (times, `location_label`, `notes`, `thumbnail_url`, `priority_level`)
 - [x] `GET /v1/wishlists` — filter tag/priority, cursor pagination
+- [x] `GET /v1/wishlists/tags` — get all unique tags from user's wishlists for filter chips (WORKFLOW §12, `WishlistTagFilters`)
 - [x] `POST /v1/wishlists`, `PUT /v1/wishlists/:id` (ownership check), `DELETE /v1/wishlists/:id` (soft delete)
 - [x] `POST /v1/wishlists/:id/convert-to-trip` — **transaksi atomik**: insert `trips` + seed `trip_activities` hari 1, soft-delete `wishlists`
-- [x] Unit + e2e tests: CRUD wishlist, convert-to-trip (verifikasi atomicity — rollback jika salah satu langkah gagal)
-- [ ] Postman — tambah folder `Wishlists` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M8) — **belum dilakukan**: file koleksi Postman tidak tersedia di lingkungan implementasi ini; tambahkan folder `Wishlists` (Create/List/Update/Delete/Convert-to-Trip) secara manual mengikuti konvensi § Postman Collection sebelum menandai item ini selesai.
+- [x] Unit + e2e tests: CRUD wishlist, convert-to-trip, list tags (verifikasi atomicity — rollback jika salah satu langkah gagal)
+- [x] Postman — folder `Wishlists` lengkap di `docs/postman/atur-perjalanan-api.postman_collection.json` (Create/List/Update/Delete/Convert-to-Trip + List Tags)
 
 > **Catatan implementasi**: model `Wishlist` sudah ada di `schema.prisma` sejak sebelumnya (tidak perlu migrasi baru — kolom sudah sesuai `ARCHITECTURE.md §3.3`). Konversi ke trip hanya mendukung mode tanggal pasti (`fixed`), bukan voting kandidat, karena tabel yang dimutasi dalam transaksi atomik menurut `ARCHITECTURE.md §3.4` hanya `trips`, `trip_activities`, `wishlists` (tidak ada `trip_date_candidates`/`trip_polls`) — selaras `WORKFLOW.md` Screen114–115 yang menampilkan satu rentang tanggal terpilih, bukan multi-kandidat voting.
 

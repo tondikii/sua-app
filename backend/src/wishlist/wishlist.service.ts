@@ -160,6 +160,23 @@ export class WishlistService {
     return this.tripsService.getTripDetail(trip.id, userId);
   }
 
+  /**
+   * Get all unique tags from the user's active wishlists for filter chips
+   * (WORKFLOW §12, `WishlistTagFilters`).
+   */
+  async getWishlistTags(userId: string) {
+    const wishlists = await this.prisma.wishlist.findMany({
+      where: { userId, deletedAt: null },
+      select: { tags: true },
+    });
+
+    // Extract all tags and deduplicate
+    const allTags = wishlists.flatMap((w) => (w.tags as string[]) ?? []);
+    const uniqueTags = [...new Set(allTags)].sort(); // Sort alphabetically
+
+    return { tags: uniqueTags };
+  }
+
   /** Load a wishlist item and assert `userId` owns it. Returns the row. */
   private async assertOwner(wishlistId: string, userId: string) {
     const wishlist = await this.prisma.wishlist.findFirst({

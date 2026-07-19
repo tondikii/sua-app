@@ -240,4 +240,116 @@ describe('Wishlist E2E (M8)', () => {
         .expect(HttpStatus.FORBIDDEN);
     });
   });
+
+  describe('GET /v1/wishlists/tags', () => {
+    it('returns sorted unique tags across all user wishlists', async () => {
+      // Create multiple wishlists with overlapping tags
+      await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(userToken))
+        .send({
+          place_name: 'Pantai Tanjung Aan',
+          tags: ['#pantai', '#sunset'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(userToken))
+        .send({
+          place_name: 'Bukit Merese',
+          tags: ['#pantai', '#hiking'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(userToken))
+        .send({
+          place_name: 'Gili Nanggu',
+          tags: ['#snorkeling'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      const res = await request(app.getHttpServer())
+        .get('/v1/wishlists/tags')
+        .set(auth(userToken))
+        .expect(HttpStatus.OK);
+
+      expect(res.body.tags).toEqual(['#hiking', '#pantai', '#snorkeling', '#sunset']);
+    });
+
+    it('returns empty array for user with no wishlists', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/wishlists/tags')
+        .set(auth(otherToken)) // other user has no wishlists
+        .expect(HttpStatus.OK);
+
+      expect(res.body.tags).toEqual([]);
+    });
+
+    it('does not leak tags from other users', async () => {
+      // Create wishlist for user1
+      await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(userToken))
+        .send({
+          place_name: 'Pantai Kuta',
+          tags: ['#pantai', '#crowded'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      // Create wishlist for user2
+      await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(otherToken))
+        .send({
+          place_name: 'Sembalun Village',
+          tags: ['#cultural', '#mountains'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      // User1 only sees their own tags
+      const res = await request(app.getHttpServer())
+        .get('/v1/wishlists/tags')
+        .set(auth(userToken))
+        .expect(HttpStatus.OK);
+
+      expect(res.body.tags).toEqual(['#crowded', '#pantai']);
+      expect(res.body.tags).not.toContain('#cultural');
+      expect(res.body.tags).not.toContain('#mountains');
+    });
+
+    it('excludes soft-deleted wishlist tags', async () => {
+      // Create wishlist with tags
+      const create = await request(app.getHttpServer())
+        .post('/v1/wishlists')
+        .set(auth(userToken))
+        .send({
+          place_name: 'Mawun Beach',
+          tags: ['#pantai', '#quiet'],
+        })
+        .expect(HttpStatus.CREATED);
+
+      // Verify tags are included
+      const before = await request(app.getHttpServer())
+        .get('/v1/wishlists/tags')
+        .set(auth(userToken))
+        .expect(HttpStatus.OK);
+      expect(before.body.tags).toContain('#quiet');
+
+      // Soft-delete the wishlist
+      await request(app.getHttpServer())
+        .delete(`/v1/wishlists/${create.body.id}`)
+        .set(auth(userToken))
+        .expect(HttpStatus.NO_CONTENT);
+
+      // Tags should now be excluded
+      const after = await request(app.getHttpServer())
+        .get('/v1/wishlists/tags')
+        .set(auth(userToken))
+        .expect(HttpStatus.OK);
+      expect(after.body.tags).not.toContain('#quiet');
+    });
+  });
 });

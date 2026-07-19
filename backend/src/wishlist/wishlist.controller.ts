@@ -47,6 +47,12 @@ export class WishlistController {
     });
   }
 
+  // GET /v1/wishlists/tags
+  @Get('tags')
+  getWishlistTags(@CurrentUser() user: CurrentUserPayload) {
+    return this.wishlistService.getWishlistTags(user.userId);
+  }
+
   // PUT /v1/wishlists/:id
   @Put(':id')
   updateWishlist(

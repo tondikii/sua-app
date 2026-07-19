@@ -2489,6 +2489,45 @@
           "response": []
         },
         {
+          "name": "List Wishlist Tags",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has tags array', function () {",
+                  "    pm.expect(data).to.have.property('tags').that.is.an('array');",
+                  "});",
+                  "pm.test('Tags are sorted alphabetically', function () {",
+                  "    const tags = data.tags;",
+                  "    const sorted = [...tags].sort();",
+                  "    pm.expect(tags).to.eql(sorted);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/wishlists/tags",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists",
+                "tags"
+              ]
+            },
+            "description": "**GET /v1/wishlists/tags** — Get all unique tags from user's wishlists for filter chips (WORKFLOW §12, `WishlistTagFilters`).\n\n**Response 200:**\n```json\n{\n  \"tags\": [\"#alam\", \"#kuliner\", \"#pantai\", \"#snorkeling\", \"#sunset\"]\n}\n```\n\nReturns sorted array of unique hashtags across all user's active (non-deleted) wishlist items. Empty array if user has no wishlists or no tags.\n\n**Frontend usage:** Populate tag filter chips on Wishlist screen (`Screen105`) — \"Semua\" chip (reset filter) + dynamic tag chips from this response."
+          },
+          "response": []
+        },
+        {
           "name": "Create Wishlist",
           "event": [
             {
