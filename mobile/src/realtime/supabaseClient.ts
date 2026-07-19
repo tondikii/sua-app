@@ -1,24 +1,36 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// This client is used ONLY for Realtime subscriptions.
-// All REST API calls go through apiClient (→ NestJS backend).
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // We manage auth via NestJS — disable Supabase auth
-    autoRefreshToken: false,
-    persistSession: false,
-    detectSessionInUrl: false,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
+/**
+ * Supabase client used ONLY for Realtime subscriptions. All REST calls go
+ * through `apiClient` (→ NestJS). Auth is managed by NestJS, so Supabase auth
+ * is fully disabled; the Realtime WebSocket is authenticated per-session via
+ * `setRealtimeAuthToken()` using the backend-minted Supabase-compatible JWT.
+ *
+ * The client is created only when both env values are present, so a dev
+ * environment without Supabase configured still boots cleanly (subscriptions
+ * simply no-op until M14 + real keys). See ARCHITECTURE.md §6.
+ */
+let _client: SupabaseClient | null = null;
+if (supabaseUrl && supabaseAnonKey) {
+  _client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
     },
-  },
-});
+    realtime: {
+      params: { eventsPerSecond: 10 },
+    },
+  });
+}
 
-export function setRealtimeAuthToken(token: string) {
-  supabase.realtime.setAuth(token);
+export const supabase: SupabaseClient | null = _client;
+
+/** Push the backend-minted realtime JWT so RLS `auth.uid()` resolves. */
+export function setRealtimeAuthToken(token: string): void {
+  if (!_client || !token) return;
+  _client.realtime.setAuth(token);
 }

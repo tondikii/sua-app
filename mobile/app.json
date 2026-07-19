@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "aturperjalanan",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B6B"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "id.sudutkode.aturperjalanan"
@@ -24,11 +19,22 @@
       "package": "id.sudutkode.aturperjalanan"
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-system-ui",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#FF6B6B"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

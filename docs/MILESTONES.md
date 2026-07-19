@@ -16,6 +16,7 @@
 |-------|-----------|
 | 2.0 | **Revamp menyeluruh** menyusul migrasi tech stack (Go/Gin/KMP → **NestJS + Expo**, full TypeScript). Urutan milestone diperbaiki agar mencerminkan pengerjaan nyata: fondasi dokumen → **desain Figma Make dulu** → baru backend & mobile. Backend/mobile lama (Go/KMP) dianggap usang total; progress di-reset ke 🔲 karena tidak ada baris kode TypeScript yang bisa diwariskan dari implementasi Go. Gap-tracking yang dulu tersebar di beberapa milestone (M5.1/M5.2) sekarang melebur jadi satu rangkaian milestone backend yang linear, karena tidak ada lagi "MVP tipis" vs "gap desain" — backend baru dibangun langsung menyasar skema penuh di `ARCHITECTURE.md`. |
 | 2.1 | Tambah konvensi **Postman Collection** inkremental per milestone backend (`docs/postman/`); checklist Postman di M3–M10 & M16. |
+| 2.2 | **Web target first-class** (react-native-web) ditambahkan ke client; M11 client foundation di-upgrade dari scaffold SDK 51 ke **Expo SDK 57** (RN 0.86, React 19.2, expo-router 5). Token storage di-split per-platform (native: `expo-secure-store`; web: in-memory + `sessionStorage`). Selaras `ARCHITECTURE.md §5`. |
 | 2.x | (Go/Gin + KMP) — superseded, riwayat detail tidak dipertahankan di sini; lihat git history jika perlu referensi arsip. |
 
 ---
@@ -35,7 +36,7 @@
 | M8 | Backend – Wishlist & Konversi Trip | ✅ Selesai |
 | M9 | Backend – Notifikasi & Background Jobs | ✅ Selesai |
 | M10 | Backend – Testing & Hardening | ✅ Selesai |
-| M11 | Mobile – Fondasi Expo (Shell, Auth Client, Theme) | 🔲 Belum |
+| M11 | Client – Fondasi Expo (Shell, Auth, Theme, Web) | ✅ Selesai |
 | M12 | Mobile – Auth & Onboarding UI | 🔲 Belum |
 | M13 | Mobile – Beranda & Trip Detail Shell UI | 🔲 Belum |
 | M14 | Mobile – Voting, Chat, Media, Kelola Trip UI | 🔲 Belum |
@@ -307,9 +308,9 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 
 ---
 
-## M11 — Mobile: Fondasi Expo (Shell, Auth Client, Theme) 🔲 BELUM DIMULAI
+## M11 — Client: Fondasi Expo (Shell, Auth, Theme, Web) ✅ SELESAI
 
-**AI Prompt**: *"Let's implement M11. Read `docs/ARCHITECTURE.md §5`, `docs/WORKFLOW.md` → Panduan Implementasi §1–§3. Set up the Expo app shell, typed API client, theme tokens, and auth storage."*
+**AI Prompt**: *"Let's implement M11. Read `docs/ARCHITECTURE.md §5`, `docs/WORKFLOW.md` → Panduan Implementasi §1–§3. Set up the Expo app shell, typed API client, theme tokens, and auth storage — sekaligus target web (react-native-web)."*
 
 **Referensi**: `docs/ARCHITECTURE.md §5`
 
@@ -317,24 +318,40 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 
 ### Scope Pekerjaan
 ```
-mobile/src/
-├── api/            (typed REST client, auth header injection)
-├── realtime/       (Supabase JS client wrapper)
-├── store/          (Zustand — ephemeral UI state)
-├── theme/          (tokens dari figma/src/app/components/colors.ts)
-└── lib/secureStorage.ts   (expo-secure-store wrapper)
+mobile/
+├── app/                # Expo Router — (auth)/, (tabs)/, trip/[tripId]/, _layout.tsx (providers + auth gate)
+├── src/
+│   ├── api/            # typed REST client (Bearer inject, 401 hook, x-request-id)
+│   ├── auth/           # AuthProvider Context (user + token, hydrate, signIn/signOut)
+│   ├── components/     # SplashScreen (port Screen1Splash), ComingSoon
+│   ├── lib/            # tokenStorage.types + secureStorage.native/.web (platform split)
+│   ├── realtime/       # Supabase JS client (Realtime only, anon key)
+│   ├── store/          # Zustand — ephemeral UI state (auth ada di AuthProvider)
+│   └── theme/          # tokens 1:1 dari figma/.../colors.ts (colors/typography/spacing/radius/shadows)
+├── assets/             # icon, adaptive-icon, splash, favicon (gradient placeholder)
+├── scripts/            # generate-placeholder-assets.cjs
+├── app.json            # web.output: single (SPA)
+└── babel.config.js
 ```
 
 ### Checklist
-- [ ] `src/api/client.ts` — typed fetch wrapper, auto-attach `Authorization: Bearer`, refresh-on-401 hook point
-- [ ] `src/theme/` — color/typography/spacing tokens mirrored 1:1 dari `figma/src/app/components/colors.ts`
-- [ ] `QueryClientProvider` + `@tanstack/query-async-storage-persister` di `app/_layout.tsx`
-- [ ] `src/realtime/supabaseClient.ts` — Supabase JS client (anon key), token exchange hook untuk Realtime auth
-- [ ] `src/lib/secureStorage.ts` — wrapper `expo-secure-store` untuk access token (**bukan** AsyncStorage)
-- [ ] `AuthProvider` (Context) — expose current user + token ke seluruh app
-- [ ] Expo Router base layout: `(auth)/`, `(tabs)/`, `trip/[tripId]/` sesuai `ARCHITECTURE.md §5.3`
-- [ ] `packages/shared-types` diimpor dan dipakai di `src/api/`
-- [ ] `pnpm --filter mobile start` — Metro bundler jalan tanpa error di Expo Go
+- [x] `src/api/client.ts` — typed fetch wrapper, auto-attach `Authorization: Bearer`, refresh-on-401 hook point (`setOnUnauthorized`), `x-request-id` capture
+- [x] `src/theme/` — color/typography/spacing/radius/shadows mirrored 1:1 dari `figma/src/app/components/colors.ts` + `Screen125DesignTokens`
+- [x] `PersistQueryClientProvider` + `@tanstack/query-async-storage-persister` (AsyncStorage) di `app/_layout.tsx`
+- [x] `src/realtime/supabaseClient.ts` — Supabase JS client (anon key), `setRealtimeAuthToken()` untuk Realtime auth (guard bila env kosong)
+- [x] `src/lib/secureStorage.*` — platform-split: `expo-secure-store` di native, in-memory + `sessionStorage` di web
+- [x] `AuthProvider` (Context) — expose current user + token ke seluruh app; hydrate dari secure storage, push realtime token
+- [x] Expo Router base layout: `(auth)/`, `(tabs)/`, `trip/[tripId]/` sesuai `ARCHITECTURE.md §5.3` (+ auth gate via `useAuth`)
+- [x] `packages/shared-types` diimpor dan dipakai di `src/auth/AuthProvider` (`AuthResponse`, `UserProfile`)
+- [x] **Web target**: `react-native-web` + `@expo/metro-runtime`, `app.json web.output: "single"` (SPA), boot screen port `Screen1Splash`
+- [x] Verifikasi: `pnpm --filter mobile lint` bersih; `expo-doctor` 20/20; `expo export --platform web` & `--platform android` lulus
+
+> **Catatan implementasi**:
+> - **Web kini target first-class** (selain iOS & Android) — satu codebase Expo + `react-native-web`. M11 dikerjakan ulang dari scaffold M2 (SDK 51) ke **Expo SDK 57** (React Native 0.86, React 19.2, expo-router 5); SDK 51 sudah 4 versi di belakang dan momen fondasi adalah termurah untuk upgrade sebelum 100+ layar dibangun di M12–M15.
+> - **Deviasi penyimpanan token (web)** — *justified*: browser tidak punya keystore, jadi `expo-secure-store` tidak bisa dipakai di web. Token disimpan **in-memory + `sessionStorage`** (clear on tab close) lewat `TokenStorage` interface; native tetap `expo-secure-store` (Keychain/Keystore). `realtime_token` memang harus JS-readable (Supabase) sehingga postur ini konsisten. Lihat `ARCHITECTURE.md §5` (web target). Interface ini memungkinkan swap ke httpOnly-cookie di kemudian hari tanpa menyentuh layer auth.
+> - **Auth dipindah Zustand → Context** (`AuthProvider`) sesuai `ARCHITECTURE.md §5.5`; `src/store/` kembali ke peran aslinya (ephemeral UI state saja).
+> - **Splash**: `Screen1Splash` (React + SVG) di-port ke RN (`react-native-svg` + `expo-linear-gradient`) sebagai boot screen; native splash PNG memakai gradient coral yang sama agar transisi mulus. Aset brand masih placeholder (generate via `scripts/`) — ganti dengan artwork final sebelum rilis (M20).
+> - Real OAuth Google + layar onboarding/username adalah **M12**; tombol sign-in masih placeholder.
 
 ---
 

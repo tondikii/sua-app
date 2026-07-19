@@ -1125,7 +1125,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
 ---
 
-## 5. Mobile Architecture Pattern (Expo / React Native)
+## 5. Client Architecture Pattern (Expo / React Native + react-native-web)
 
 ### 5.1 Module Boundaries
 
@@ -1134,13 +1134,14 @@ mobile/
 ├── app/              # Expo Router — screens, purely presentational + hook composition
 ├── src/
 │   ├── api/          # Typed REST client — no business logic, just HTTP + auth header injection
+│   ├── auth/         # AuthProvider (Context) — current user + token, hydrate, signIn/signOut
 │   ├── features/     # Feature-sliced domain logic: hooks (TanStack Query) + components
 │   ├── realtime/     # Supabase JS client — Realtime channel subscriptions only (no writes)
 │   ├── store/        # Zustand — ephemeral/local UI state (e.g. active tab, form drafts)
 │   └── theme/        # Design tokens (colors, spacing, typography) mirrored from figma/
 ```
 
-There is no platform split (no `ios/` vs `android/` business logic) — Expo's managed workflow keeps 100% of application code in TypeScript/React Native shared across both platforms; native modules are only touched via config plugins in `app.json`.
+There is no platform split (no `ios/` vs `android/` business logic) — Expo's managed workflow keeps 100% of application code in TypeScript/React Native shared across all targets. **Web is a first-class target** alongside iOS & Android via `react-native-web`; `app.json` sets `web.output: "single"` (SPA — the app is auth-gated, so no SSR). Native modules are only touched via config plugins in `app.json`; browser-only platform differences (token storage, OAuth redirect) are isolated behind platform files (`.native.ts` / `.web.ts`) selected by Metro.
 
 ### 5.2 Data Layer — TanStack Query
 
@@ -1160,7 +1161,7 @@ export function useTrips(tab: 'upcoming' | 'completed') {
 - **Cache-then-network** behavior for list endpoints (home trips, wishlist, activities) comes for free from TanStack Query's cache + background refetch-on-mount.
 - Persistence across app restarts uses `@tanstack/query-async-storage-persister` backed by `expo-sqlite`'s key-value store or `AsyncStorage`.
 - Chat messages use TanStack Query for the initial page load (`GET /trips/:id/messages`) but **live updates come from Supabase Realtime**, not polling or refetch-on-focus (§6) — the Realtime event handler calls `queryClient.setQueryData` to append the new message directly into the cache.
-- Auth tokens are stored via **`expo-secure-store`** (backed by iOS Keychain / Android Keystore). **Never** store tokens in AsyncStorage, MMKV without encryption, or the TanStack Query cache.
+- Auth tokens are stored via a platform-split `TokenStorage` interface (`src/lib/secureStorage.*`, resolved by Metro): **`expo-secure-store`** (iOS Keychain / Android Keystore) on native, and **in-memory + `sessionStorage`** on web — browsers have no keystore, and the `realtime_token` must be JS-readable anyway (Supabase Realtime, §6). **Never** store tokens in AsyncStorage, MMKV without encryption, or the TanStack Query cache. The interface lets an httpOnly-cookie impl drop in later without touching the auth layer.
 
 ### 5.3 Navigation
 

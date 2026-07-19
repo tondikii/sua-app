@@ -1,32 +1,74 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { useAuthStore } from '../../src/store/authStore';
-import { apiClient } from '../../src/api/client';
+import { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { useAuth } from '../../src/auth/AuthProvider';
+import { theme } from '../../src/theme';
 
 export default function SignIn() {
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { signInGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    // TODO (M12): Integrate expo-auth-session Google OAuth
-    // For now this is a placeholder — the backend POST /v1/auth/google is ready
-    console.log('Google Sign-In — implement in M12');
+    // TODO (M12): open Google Sign-In via expo-auth-session, then pass the
+    // returned ID token to signInGoogle(idToken).
+    setLoading(true);
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Atur Perjalanan</Text>
-      <Text style={styles.tagline}>Rencanakan. Jelajahi. Kenang.</Text>
-      <TouchableOpacity style={styles.button} onPress={handleGoogleSignIn}>
-        <Text style={styles.buttonText}>Lanjutkan dengan Google</Text>
+      <View>
+        <Text style={styles.title}>Atur Perjalanan</Text>
+        <Text style={styles.tagline}>Rencanakan. Jelajahi. Kenang.</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleGoogleSignIn}
+        disabled={loading}
+        activeOpacity={0.9}
+      >
+        {loading ? (
+          <ActivityIndicator color={theme.colors.white} />
+        ) : (
+          <Text style={styles.buttonText}>Lanjutkan dengan Google</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 24 },
-  title: { fontSize: 28, fontWeight: '800', color: '#FF6B6B', marginBottom: 8 },
-  tagline: { fontSize: 14, color: '#9091A0', marginBottom: 48 },
-  button: { backgroundColor: '#FF6B6B', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 16, width: '100%', alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    paddingHorizontal: theme.spacing.xxl,
+    paddingTop: 96,
+    paddingBottom: 48,
+  },
+  title: {
+    ...theme.typography.h1,
+    color: theme.colors.coral,
+    marginBottom: theme.spacing.sm,
+  },
+  tagline: {
+    ...theme.typography.body,
+    color: theme.colors.muted,
+  },
+  button: {
+    backgroundColor: theme.colors.coral,
+    paddingVertical: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    alignItems: 'center',
+    ...theme.shadows.button,
+  },
+  buttonText: {
+    ...theme.typography.h3,
+    color: theme.colors.white,
+  },
 });

@@ -1,7 +1,13 @@
 import { Redirect } from 'expo-router';
-import { useAuthStore } from '../src/store/authStore';
 
+import { useAuth } from '../src/auth/AuthProvider';
+
+/**
+ * Entry route — gates the app until the session has hydrated, then routes to
+ * the signed-in tabs or the sign-in screen.
+ */
 export default function Index() {
-  const token = useAuthStore((state) => state.token);
-  return <Redirect href={token ? '/(tabs)/' : '/(auth)/sign-in'} />;
+  const { isHydrated, isAuthenticated } = useAuth();
+  if (!isHydrated) return null;
+  return <Redirect href={isAuthenticated ? '/(tabs)/' : '/(auth)/sign-in'} />;
 }

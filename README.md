@@ -17,7 +17,7 @@ Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-te
 
 * **Arsitektur**: Monorepo (Turborepo) — Full TypeScript end-to-end
 * **Backend**: NestJS (Node.js) + Prisma ORM
-* **Mobile**: Expo (React Native) — satu codebase iOS & Android
+* **Client**: Expo (React Native + react-native-web) — satu codebase untuk iOS, Android & Web
 * **Database**: PostgreSQL terkelola oleh **Supabase**
 * **Realtime**: Supabase Realtime (chat trip live tanpa WebSocket gateway custom)
 * **File Storage**: Cloudflare R2 (S3-compatible) — upload via presigned PUT; akses media via presigned GET (1 jam) yang di-generate backend. Tidak memerlukan public `.r2.dev` URL atau custom domain.
@@ -108,9 +108,10 @@ Server berjalan di `http://localhost:8080`. Health check: `GET /health`.
 cd mobile
 pnpm install
 pnpm start          # membuka Expo Dev Tools (Metro bundler)
+pnpm web            # jalankan target web (http://localhost:8081)
 ```
 
-Scan QR code dengan aplikasi **Expo Go** di HP, atau tekan `i` (iOS Simulator) / `a` (Android Emulator) di terminal.
+Scan QR code dengan aplikasi **Expo Go** di HP, atau tekan `i` (iOS Simulator) / `a` (Android Emulator) / `w` (Web) di terminal. Token autentikasi: native di `expo-secure-store`, web di in-memory + `sessionStorage` (lihat `docs/ARCHITECTURE.md` §5).
 
 ### 4. Uji API dengan Postman (opsional)
 

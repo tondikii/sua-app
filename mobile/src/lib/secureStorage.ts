@@ -1,22 +1,10 @@
-import * as SecureStore from 'expo-secure-store';
-
-const TOKEN_KEY = 'ap_access_token';
-const REALTIME_KEY = 'ap_realtime_token';
-
-export const secureStorage = {
-  async getToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(TOKEN_KEY);
-  },
-  async setToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
-  },
-  async removeToken(): Promise<void> {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-  },
-  async getRealtimeToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(REALTIME_KEY);
-  },
-  async setRealtimeToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync(REALTIME_KEY, token);
-  },
-};
+/**
+ * Platform-abstracted token storage.
+ *
+ * This base file exists ONLY so TypeScript can resolve the bare import
+ * `'@/lib/secureStorage'`. Metro selects the platform-specific sibling at
+ * bundle time — `secureStorage.native.ts` on native, `secureStorage.web.ts`
+ * on web — and never bundles this file. See `tokenStorage.types.ts`.
+ */
+export type { TokenStorage } from './tokenStorage.types';
+export { secureStorage } from './secureStorage.native';
