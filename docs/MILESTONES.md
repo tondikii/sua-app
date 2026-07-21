@@ -17,6 +17,7 @@
 | 2.0 | **Revamp menyeluruh** menyusul migrasi tech stack (Go/Gin/KMP → **NestJS + Expo**, full TypeScript). Urutan milestone diperbaiki agar mencerminkan pengerjaan nyata: fondasi dokumen → **desain Figma Make dulu** → baru backend & mobile. Backend/mobile lama (Go/KMP) dianggap usang total; progress di-reset ke 🔲 karena tidak ada baris kode TypeScript yang bisa diwariskan dari implementasi Go. Gap-tracking yang dulu tersebar di beberapa milestone (M5.1/M5.2) sekarang melebur jadi satu rangkaian milestone backend yang linear, karena tidak ada lagi "MVP tipis" vs "gap desain" — backend baru dibangun langsung menyasar skema penuh di `ARCHITECTURE.md`. |
 | 2.1 | Tambah konvensi **Postman Collection** inkremental per milestone backend (`docs/postman/`); checklist Postman di M3–M10 & M16. |
 | 2.2 | **Web target first-class** (react-native-web) ditambahkan ke client; M11 client foundation di-upgrade dari scaffold SDK 51 ke **Expo SDK 57** (RN 0.86, React 19.2, expo-router 5). Token storage di-split per-platform (native: `expo-secure-store`; web: in-memory + `sessionStorage`). Selaras `ARCHITECTURE.md §5`. |
+| 2.3 | **M12: Web max-width container** — `MobileContainer` di root `_layout.tsx` enforce max-width 430px pada web; app terpusat di tengah layar dengan backdrop charcoal gelap. Selaras taste "constrain web layout to mobile phone max-width". |
 | 2.x | (Go/Gin + KMP) — superseded, riwayat detail tidak dipertahankan di sini; lihat git history jika perlu referensi arsip. |
 
 ---
@@ -37,7 +38,7 @@
 | M9 | Backend – Notifikasi & Background Jobs | ✅ Selesai |
 | M10 | Backend – Testing & Hardening | ✅ Selesai |
 | M11 | Client – Fondasi Expo (Shell, Auth, Theme, Web) | ✅ Selesai |
-| M12 | Mobile – Auth & Onboarding UI | 🔲 Belum |
+| M12 | Mobile – Auth & Onboarding UI | ✅ Selesai |
 | M13 | Mobile – Beranda & Trip Detail Shell UI | 🔲 Belum |
 | M14 | Mobile – Voting, Chat, Media, Kelola Trip UI | 🔲 Belum |
 | M15 | Mobile – Pencarian, Profil & Wishlist UI | 🔲 Belum |
@@ -355,19 +356,22 @@ mobile/
 
 ---
 
-## M12 — Mobile: Auth & Onboarding UI 🔲 BELUM DIMULAI
+## M12 — Mobile: Auth & Onboarding UI ✅ SELESAI
 
 **AI Prompt**: *"Implement M12. Read `docs/WORKFLOW.md` §1–§2, `docs/ACCEPTANCE_CRITERIA.md §1`, `docs/FIGMA.md` §1–§2. Build Expo Auth & Onboarding screens matching `App.tsx` registry id 1–2."*
 
 **Referensi Figma**: `App.tsx` workflowSections id 1–2 · `Screen1Splash`, `Screen2EduOnboarding`, `Screen3Auth`, `Screen4Username`
 
 ### Checklist
-- [ ] `app/(auth)/splash.tsx` — kompas + gradient coral + tagline (`Screen1Splash`)
-- [ ] `app/(auth)/onboarding.tsx` — carousel **4 slide**, copy persis `SLIDES[]`; hanya first install (persist flag via `expo-secure-store` atau `AsyncStorage`)
-- [ ] `app/(auth)/sign-in.tsx` — hero + *Mulai Perjalananmu* + **Lanjutkan dengan Google** (`expo-auth-session` Google provider); **sembunyikan** Masuk dengan Email
-- [ ] `app/(auth)/username-setup.tsx` — hint underscore, validasi real-time (`GET /users/check-username`), error duplikat
-- [ ] Navigasi: Splash → (pertama) Onboarding → SignIn → (baru) UsernameSetup → Home; lama → SignIn → Home
-- [ ] Expo Go / dev build berjalan mulus di iOS & Android untuk flow ini
+- [x] `app/(auth)/splash.tsx` — kompas + gradient coral + tagline (`Screen1Splash`) — **implemented as `src/components/SplashScreen.tsx` (reused from M11)**
+- [x] `app/(auth)/onboarding.tsx` — carousel **4 slide**, copy persis `SLIDES[]`; hanya first install (persist flag via `AsyncStorage`)
+- [x] `app/(auth)/sign-in.tsx` — hero + *Mulai Perjalananmu* + **Lanjutkan dengan Google** (`expo-auth-session` Google provider); **sembunyikan** Masuk dengan Email
+- [x] `app/(auth)/username-setup.tsx` — hint underscore, validasi real-time (`GET /users/check-username`), error duplikat, suggestion chips
+- [x] Navigasi: Splash → (pertama) Onboarding → SignIn → (baru) UsernameSetup → Home; lama → SignIn → Home
+- [x] **Web target**: root layout enforces max-width 430px centered in charcoal backdrop — design mirrors mobile exactly
+- [x] Expo Go / dev build berjalan mulus di iOS & Android untuk flow ini
+- [x] `pnpm --filter mobile lint` — TypeScript compilation bersih
+- [x] `expo export --platform web` + `--platform android` lulus
 
 ---
 

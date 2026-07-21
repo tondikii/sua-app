@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as ExpoSplashScreen from 'expo-splash-screen';
@@ -23,19 +24,44 @@ ExpoSplashScreen.preventAutoHideAsync();
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
+/** On web, centres the app at mobile width inside a dark backdrop. */
+function MobileContainer({ children }: { children: ReactNode }) {
+  if (Platform.OS !== 'web') return <>{children}</>;
+  return (
+    <View style={styles.webBackdrop}>
+      <View style={styles.webFrame}>{children}</View>
+    </View>
+  );
+}
+
 /** Shows the branded splash until fonts are ready AND the session has hydrated. */
 function RootGate({ children }: { children: ReactNode }) {
   const { isHydrated } = useAuth();
 
-  // Fonts are ready by the time RootGate mounts — reveal RN content immediately,
-  // then swap to the real app once the session has hydrated.
   useEffect(() => {
     ExpoSplashScreen.hideAsync();
   }, []);
 
   if (!isHydrated) return <SplashScreen />;
-  return <>{children}</>;
+  return <MobileContainer>{children}</MobileContainer>;
 }
+
+const MAX_WIDTH = 430;
+
+const styles = StyleSheet.create({
+  webBackdrop: {
+    flex: 1,
+    backgroundColor: '#1A1A2E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  webFrame: {
+    width: '100%',
+    height: '100%',
+    maxWidth: MAX_WIDTH,
+    overflow: 'hidden',
+  },
+});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({

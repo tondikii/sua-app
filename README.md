@@ -130,8 +130,12 @@ pnpm -w lint           # Lint seluruh workspace (backend + mobile)
 pnpm -w test           # Unit tests seluruh workspace
 pnpm --filter backend prisma:studio    # Buka Prisma Studio (GUI DB)
 pnpm --filter backend test:e2e         # Integration tests backend
-pnpm --filter mobile build:android     # EAS Build Android (M20)
-pnpm --filter mobile build:ios         # EAS Build iOS (M20)
+pnpm --filter mobile build:development:android    # EAS dev build (APK)
+pnpm --filter mobile build:development:ios        # EAS dev build (IPA — simulator)
+pnpm --filter mobile build:preview:android         # EAS preview build (APK — internal)
+pnpm --filter mobile build:preview:ios             # EAS preview build (IPA — internal)
+pnpm --filter mobile build:production:android      # EAS production build (AAB — Play Store)
+pnpm --filter mobile build:production:ios          # EAS production build (IPA — App Store)
 ```
 
 ## 📝 Changelog Dokumen

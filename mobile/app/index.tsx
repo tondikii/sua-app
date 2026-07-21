@@ -1,13 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '../src/auth/AuthProvider';
 
-/**
- * Entry route — gates the app until the session has hydrated, then routes to
- * the signed-in tabs or the sign-in screen.
- */
 export default function Index() {
   const { isHydrated, isAuthenticated } = useAuth();
-  if (!isHydrated) return null;
-  return <Redirect href={isAuthenticated ? '/(tabs)/' : '/(auth)/sign-in'} />;
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('has_completed_onboarding').then((val) => {
+      setHasCompletedOnboarding(val === 'true');
+      setOnboardingChecked(true);
+    });
+  }, []);
+
+  if (!isHydrated || !onboardingChecked) return null;
+
+  if (isAuthenticated) return <Redirect href="/(tabs)/" />;
+  if (!hasCompletedOnboarding) return <Redirect href="/(auth)/onboarding" />;
+  return <Redirect href="/(auth)/sign-in" />;
 }
