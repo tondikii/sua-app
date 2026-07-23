@@ -1,1 +1,3 @@
 - Delegates task prioritization to the agent — prefers open-ended prompts like "lanjutkan saja yang menurutmu paling tepat" (just continue with what you think is most appropriate), signaling trust in the agent's judgment to autonomously decide the next priority, rather than micromanaging step-by-step direction. Confidence: 0.8
+
+- Reports bugs with systemic scope signals ("kemungkinan pada semua ts file" / "possibly in all ts files") and expects the agent to autonomously diagnose and fix across the entire codebase, not just in isolated files — trusts the agent to determine the full blast radius without being guided file-by-file. Confidence: 0.8

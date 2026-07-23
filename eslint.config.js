@@ -33,9 +33,19 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'error',
     },
   },
-  // Mobile — just type-check (tsc --noEmit is its own lint)
+  // Mobile — Expo (React Native) with TypeScript + JSX
   {
     files: ['mobile/**/*.{ts,tsx}'],
-    rules: {},
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
+    },
+    plugins: { '@typescript-eslint': tsPlugin },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
   },
 ];
