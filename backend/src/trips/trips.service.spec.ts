@@ -40,7 +40,11 @@ describe('TripsService', () => {
     updatedAt: new Date('2026-06-01'),
     creator: userRow(CREATOR, 'Creator', 'creator'),
     participants: [
-      { userId: CREATOR, joinedAt: new Date('2026-06-01'), user: userRow(CREATOR, 'Creator', 'creator') },
+      {
+        userId: CREATOR,
+        joinedAt: new Date('2026-06-01'),
+        user: userRow(CREATOR, 'Creator', 'creator'),
+      },
     ],
     invitations: [],
     dateCandidates: [],
@@ -78,8 +82,9 @@ describe('TripsService', () => {
           provide: R2Service,
           useValue: {
             presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
-            presignDownloads: jest.fn(async (keys: string[]) =>
-              new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
+            presignDownloads: jest.fn(
+              async (keys: string[]) =>
+                new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
             ),
           },
         },
@@ -152,8 +157,16 @@ describe('TripsService', () => {
       prisma.trip.create.mockResolvedValue({ id: 'trip-1' });
       prisma.tripParticipant.create.mockResolvedValue({});
       prisma.tripDateCandidate.create
-        .mockResolvedValueOnce({ id: 'c1', startDate: new Date('2026-08-01'), endDate: new Date('2026-08-05') })
-        .mockResolvedValueOnce({ id: 'c2', startDate: new Date('2026-09-01'), endDate: new Date('2026-09-05') });
+        .mockResolvedValueOnce({
+          id: 'c1',
+          startDate: new Date('2026-08-01'),
+          endDate: new Date('2026-08-05'),
+        })
+        .mockResolvedValueOnce({
+          id: 'c2',
+          startDate: new Date('2026-09-01'),
+          endDate: new Date('2026-09-05'),
+        });
       prisma.tripPoll.create.mockResolvedValue({ id: 'poll-1' });
       prisma.tripPollOption.create.mockResolvedValue({});
       prisma.trip.update.mockResolvedValue({ id: 'trip-1' });
@@ -176,7 +189,9 @@ describe('TripsService', () => {
       );
       expect(prisma.tripPollOption.create).toHaveBeenCalledTimes(2);
       expect(prisma.trip.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ votingDeadline: expect.any(Date) }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ votingDeadline: expect.any(Date) }),
+        }),
       );
       expect(result.status).toBe('voting_pending');
       expect(result.voting_deadline).toBeTruthy();
@@ -231,9 +246,7 @@ describe('TripsService', () => {
 
     it('throws Forbidden for an unrelated user', async () => {
       prisma.trip.findFirst.mockResolvedValue(tripDetailRow());
-      await expect(service.getTripDetail('trip-1', 'stranger')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.getTripDetail('trip-1', 'stranger')).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -274,8 +287,16 @@ describe('TripsService', () => {
     it('returns members + outstanding invitations for a member', async () => {
       prisma.trip.findFirst.mockResolvedValue({ id: 'trip-1', creatorId: CREATOR });
       prisma.tripParticipant.findMany.mockResolvedValue([
-        { userId: CREATOR, joinedAt: new Date('2026-06-01'), user: userRow(CREATOR, 'Creator', 'creator') },
-        { userId: 'm2', joinedAt: new Date('2026-06-02'), user: userRow('m2', 'Member Two', 'member2') },
+        {
+          userId: CREATOR,
+          joinedAt: new Date('2026-06-01'),
+          user: userRow(CREATOR, 'Creator', 'creator'),
+        },
+        {
+          userId: 'm2',
+          joinedAt: new Date('2026-06-02'),
+          user: userRow('m2', 'Member Two', 'member2'),
+        },
       ]);
       prisma.tripInvitation.findMany.mockResolvedValue([
         {

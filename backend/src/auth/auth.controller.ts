@@ -1,8 +1,12 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { GoogleAuthDto } from './dto/google-auth.dto';
-import { CompleteRegistrationDto } from './dto/complete-registration.dto';
+import { GoogleAuthSchema, CompleteRegistrationSchema } from '@atur-perjalanan/shared-validation';
+import type {
+  GoogleAuthInput,
+  CompleteRegistrationInput,
+} from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 
@@ -12,7 +16,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('google')
-  googleLogin(@Body() dto: GoogleAuthDto) {
+  googleLogin(@Body(new ZodValidationPipe(GoogleAuthSchema)) dto: GoogleAuthInput) {
     return this.authService.googleLogin(dto);
   }
 
@@ -21,7 +25,7 @@ export class AuthController {
   @ApiBearerAuth()
   completeRegistration(
     @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: CompleteRegistrationDto,
+    @Body(new ZodValidationPipe(CompleteRegistrationSchema)) dto: CompleteRegistrationInput,
   ) {
     return this.authService.completeRegistration(user.userId, dto);
   }

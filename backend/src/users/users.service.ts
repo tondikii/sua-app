@@ -7,8 +7,9 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import type { UpdateUserInput } from '@atur-perjalanan/shared-validation';
 import { UserSummarySerializer } from './serializers/user.serializer';
+import { toDateOnly, toTime } from '../common/helpers/date.helpers';
 
 const USER_SELECT = {
   id: true,
@@ -42,9 +43,7 @@ export class UsersService {
 
   async searchUsers(q: string, cursor?: string, limit = 20) {
     const take = Math.min(limit, 100);
-    const cursorCondition = cursor
-      ? Prisma.sql`AND u.id < ${cursor}::uuid`
-      : Prisma.empty;
+    const cursorCondition = cursor ? Prisma.sql`AND u.id < ${cursor}::uuid` : Prisma.empty;
 
     // Use pg_trgm similarity via raw query for best search quality
     const users = await this.prisma.$queryRaw<
@@ -88,7 +87,7 @@ export class UsersService {
         avatar_url: u.avatar_url,
         trip_count: Number(u.trip_count),
       })),
-      next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
+      next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 
@@ -106,7 +105,7 @@ export class UsersService {
     return UserSummarySerializer.toProfile(user);
   }
 
-  async updateMe(userId: string, dto: UpdateUserDto) {
+  async updateMe(userId: string, dto: UpdateUserInput) {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -201,11 +200,11 @@ export class UsersService {
         name: t.name,
         tags: t.tags as string[],
         status: t.status,
-        start_date: t.startDate?.toISOString().split('T')[0] ?? null,
-        end_date: t.endDate?.toISOString().split('T')[0] ?? null,
+        start_date: toDateOnly(t.startDate),
+        end_date: toDateOnly(t.endDate),
         is_all_day: t.isAllDay,
-        start_time: t.startTime ? new Date(t.startTime).toTimeString().slice(0, 5) : null,
-        end_time: t.endTime ? new Date(t.endTime).toTimeString().slice(0, 5) : null,
+        start_time: toTime(t.startTime),
+        end_time: toTime(t.endTime),
         cover_image_url: t.coverDocument?.storageUrl ?? null,
         voting_deadline: t.votingDeadline?.toISOString() ?? null,
         participant_count: t._count.participants,
@@ -216,7 +215,7 @@ export class UsersService {
           avatar_url: p.user.avatarUrl,
         })),
       })),
-      next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
+      next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 }

@@ -37,7 +37,9 @@ describe('ChatService', () => {
           provide: R2Service,
           useValue: {
             presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
-            extractStorageKey: jest.fn((url: string) => url.replace('https://cdn.example.com/', '')),
+            extractStorageKey: jest.fn((url: string) =>
+              url.replace('https://cdn.example.com/', ''),
+            ),
           },
         },
       ],
@@ -110,15 +112,15 @@ describe('ChatService', () => {
     });
 
     it('rejects text message without message_text', async () => {
-      await expect(
-        service.createMessage(TRIP, USER, { message_kind: 'text' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createMessage(TRIP, USER, { message_kind: 'text' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('rejects photo message without media_url', async () => {
-      await expect(
-        service.createMessage(TRIP, USER, { message_kind: 'photo' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createMessage(TRIP, USER, { message_kind: 'photo' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('creates a photo message and auto-inserts a trip_documents row with from_chat=true', async () => {
@@ -190,16 +192,12 @@ describe('ChatService', () => {
         senderId: OTHER,
         deletedAt: null,
       });
-      await expect(service.deleteMessage(TRIP, MESSAGE, USER)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.deleteMessage(TRIP, MESSAGE, USER)).rejects.toThrow(ForbiddenException);
     });
 
     it('throws NotFound when message missing', async () => {
       prisma.tripMessage.findFirst.mockResolvedValue(null);
-      await expect(service.deleteMessage(TRIP, MESSAGE, USER)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteMessage(TRIP, MESSAGE, USER)).rejects.toThrow(NotFoundException);
     });
   });
 

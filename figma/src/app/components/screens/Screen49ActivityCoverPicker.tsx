@@ -1,4 +1,8 @@
-import { ActivityCoverPickerSheet, ActivitySheetScreen, DEMO_ACTIVITY_MAPS_NO_THUMB } from '../trip/ActivityParts';
+import {
+  ActivityCoverPickerSheet,
+  ActivitySheetScreen,
+  DEMO_ACTIVITY_MAPS_NO_THUMB,
+} from '../trip/ActivityParts';
 import { ACTIVITY_BACKDROP_PENDING } from '../trip/ActivitySheetBackdropPresets';
 
 /** Sheet pilih cover — media perjalanan */

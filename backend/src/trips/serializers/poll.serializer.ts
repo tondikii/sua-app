@@ -1,3 +1,6 @@
+import type { TripPoll } from '@atur-perjalanan/shared-types';
+import type { UserSummary } from '@atur-perjalanan/shared-types';
+
 type UserLike = {
   id: string;
   name: string;
@@ -33,10 +36,6 @@ type PollVoteLike = {
 };
 
 export class PollSerializer {
-  /**
-   * List-view shape per WORKFLOW §8 — poll card + options with vote tallies.
-   * Includes `voted_option_id` (if viewer voted) and `vote_count` per option.
-   */
   static toList(
     poll: PollLike,
     options: Array<PollOptionLike & { votes?: PollVoteLike[] }>,
@@ -68,10 +67,6 @@ export class PollSerializer {
     };
   }
 
-  /**
-   * Date candidate vote tally — used when listing tanggal poll in the voting tab.
-   * Includes `vote_count` and `voters_preview` (first 3 users).
-   */
   static toDateCandidateTally(
     candidate: { id: string; startDate: Date; endDate: Date },
     votes: Array<PollVoteLike & { user: UserLike }>,
@@ -82,14 +77,12 @@ export class PollSerializer {
       start_date: candidate.startDate.toISOString().split('T')[0],
       end_date: candidate.endDate.toISOString().split('T')[0],
       vote_count: votes.length,
-      voters_preview: votes
-        .slice(0, 3)
-        .map((v) => ({
-          id: v.user.id,
-          name: v.user.name,
-          username: v.user.username,
-          avatar_url: v.user.avatarUrl,
-        })),
+      voters_preview: votes.slice(0, 3).map((v) => ({
+        id: v.user.id,
+        name: v.user.name,
+        username: v.user.username,
+        avatar_url: v.user.avatarUrl,
+      })),
       current_user_voted: currentUserVoted,
     };
   }

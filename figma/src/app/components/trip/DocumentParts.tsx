@@ -29,7 +29,10 @@ type DocumentGridProps = {
   showSetCover?: boolean;
 };
 
-export function DocumentGrid({ documents = SAMPLE_DOCUMENTS, showSetCover = false }: DocumentGridProps) {
+export function DocumentGrid({
+  documents = SAMPLE_DOCUMENTS,
+  showSetCover = false,
+}: DocumentGridProps) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
       <button

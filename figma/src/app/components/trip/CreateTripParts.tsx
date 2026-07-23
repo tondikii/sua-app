@@ -40,9 +40,33 @@ export type TripDateCandidate = {
 };
 
 export const TRIP_DATE_CANDIDATES: TripDateCandidate[] = [
-  { id: 1, start: 12, end: 15, range: '12 – 15 Jun 2026', days: '4 hari', weekdays: 'Jumat – Senin', timeLabel: 'Sepanjang hari' },
-  { id: 2, start: 19, end: 22, range: '19 – 22 Jun 2026', days: '4 hari', weekdays: 'Jumat – Senin', timeLabel: '08:00 – 17:00' },
-  { id: 3, start: 26, end: 29, range: '26 – 29 Jun 2026', days: '4 hari', weekdays: 'Jumat – Senin', timeLabel: '08:00 – 17:00' },
+  {
+    id: 1,
+    start: 12,
+    end: 15,
+    range: '12 – 15 Jun 2026',
+    days: '4 hari',
+    weekdays: 'Jumat – Senin',
+    timeLabel: 'Sepanjang hari',
+  },
+  {
+    id: 2,
+    start: 19,
+    end: 22,
+    range: '19 – 22 Jun 2026',
+    days: '4 hari',
+    weekdays: 'Jumat – Senin',
+    timeLabel: '08:00 – 17:00',
+  },
+  {
+    id: 3,
+    start: 26,
+    end: 29,
+    range: '26 – 29 Jun 2026',
+    days: '4 hari',
+    weekdays: 'Jumat – Senin',
+    timeLabel: '08:00 – 17:00',
+  },
 ];
 
 /** Tanggal perjalanan saat ini — kandidat default awal voting tanggal */
@@ -68,9 +92,30 @@ export const TRIP_LOCKED_DATES = {
 export const TRIP_DATE_PENDING = 'Tanggal sedang divoting';
 
 export const VOTING_DATE_CANDIDATES = [
-  { id: 1, range: TRIP_DATE_CANDIDATES[0].range, days: candidateMetaLine(TRIP_DATE_CANDIDATES[0]), votes: 2, avatars: ['R', 'B'], voted: false },
-  { id: 2, range: TRIP_DATE_CANDIDATES[1].range, days: candidateMetaLine(TRIP_DATE_CANDIDATES[1]), votes: 4, avatars: ['R', 'B', 'A', 'D'], voted: true },
-  { id: 3, range: TRIP_DATE_CANDIDATES[2].range, days: candidateMetaLine(TRIP_DATE_CANDIDATES[2]), votes: 1, avatars: ['S'], voted: false },
+  {
+    id: 1,
+    range: TRIP_DATE_CANDIDATES[0].range,
+    days: candidateMetaLine(TRIP_DATE_CANDIDATES[0]),
+    votes: 2,
+    avatars: ['R', 'B'],
+    voted: false,
+  },
+  {
+    id: 2,
+    range: TRIP_DATE_CANDIDATES[1].range,
+    days: candidateMetaLine(TRIP_DATE_CANDIDATES[1]),
+    votes: 4,
+    avatars: ['R', 'B', 'A', 'D'],
+    voted: true,
+  },
+  {
+    id: 3,
+    range: TRIP_DATE_CANDIDATES[2].range,
+    days: candidateMetaLine(TRIP_DATE_CANDIDATES[2]),
+    votes: 1,
+    avatars: ['S'],
+    voted: false,
+  },
 ];
 
 export const DAY_HEADERS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
@@ -171,7 +216,9 @@ export function TripNameField({
         {hasError && <AlertCircle size={17} color={ERROR_RED} strokeWidth={2.5} />}
       </div>
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}
+        >
           <AlertCircle size={12} color={ERROR_RED} strokeWidth={2.5} />
           <span style={{ fontSize: 12, color: ERROR_RED, fontWeight: 600 }}>{error}</span>
         </div>
@@ -242,7 +289,9 @@ export function TripTagsField({ tags = [], error, compact = false }: TripTagsFie
         <span style={{ fontSize: 13, color: C.mutedLight }}>+ Tambah tag...</span>
       </div>
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 7, paddingLeft: 2 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 7, paddingLeft: 2 }}
+        >
           <AlertCircle size={12} color={ERROR_RED} strokeWidth={2.5} />
           <span style={{ fontSize: 12, color: ERROR_RED, fontWeight: 600 }}>{error}</span>
         </div>
@@ -308,7 +357,9 @@ export function TripCalendar({
         >
           <ChevronLeft size={isCompact ? 14 : 16} color={C.muted} />
         </div>
-        <span style={{ fontSize: monthSize, fontWeight: 800, color: C.charcoal }}>{TRIP_DRAFT.monthLabel}</span>
+        <span style={{ fontSize: monthSize, fontWeight: 800, color: C.charcoal }}>
+          {TRIP_DRAFT.monthLabel}
+        </span>
         <div
           style={{
             width: navSize,
@@ -325,7 +376,13 @@ export function TripCalendar({
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: isCompact ? 4 : 6 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          marginBottom: isCompact ? 4 : 6,
+        }}
+      >
         {DAY_HEADERS.map((d) => (
           <div
             key={d}
@@ -357,8 +414,20 @@ export function TripCalendar({
 
             if (muted) {
               return (
-                <div key={di} style={{ height: cellH - 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: isCompact ? 11 : 12, fontWeight: 500, color: C.mutedLight }}>{day}</span>
+                <div
+                  key={di}
+                  style={{
+                    height: cellH - 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{ fontSize: isCompact ? 11 : 12, fontWeight: 500, color: C.mutedLight }}
+                  >
+                    {day}
+                  </span>
                 </div>
               );
             }
@@ -373,7 +442,11 @@ export function TripCalendar({
                   justifyContent: 'center',
                   position: 'relative',
                   backgroundColor: isInRange ? C.coralLight : 'transparent',
-                  borderRadius: isStart ? `${dayRadius}px 0 0 ${dayRadius}px` : isEnd ? `0 ${dayRadius}px ${dayRadius}px 0` : 0,
+                  borderRadius: isStart
+                    ? `${dayRadius}px 0 0 ${dayRadius}px`
+                    : isEnd
+                      ? `0 ${dayRadius}px ${dayRadius}px 0`
+                      : 0,
                   cursor: 'pointer',
                 }}
               >
@@ -393,7 +466,13 @@ export function TripCalendar({
                     style={{
                       fontSize: dayFont,
                       fontWeight: isSelected || isInRange ? 700 : 500,
-                      color: isSelected ? 'white' : isInRange ? C.coral : day === 7 ? C.muted : C.charcoal,
+                      color: isSelected
+                        ? 'white'
+                        : isInRange
+                          ? C.coral
+                          : day === 7
+                            ? C.muted
+                            : C.charcoal,
                     }}
                   >
                     {day}
@@ -467,7 +546,12 @@ export function AddCandidateDateButton({
         }}
       >
         <span>+ Tambah Kandidat Tanggal</span>
-        <Info size={15} color={highlighted ? C.coral : C.muted} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+        <Info
+          size={15}
+          color={highlighted ? C.coral : C.muted}
+          strokeWidth={2.5}
+          style={{ flexShrink: 0 }}
+        />
       </button>
     </div>
   );
@@ -487,9 +571,19 @@ export function TripVotingDeadlineField({
 
   return (
     <div>
-      <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+      <label
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: C.charcoal,
+          display: 'block',
+          marginBottom: 8,
+        }}
+      >
         Tenggat voting tanggal
-        <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>(opsional)</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>
+          (opsional)
+        </span>
       </label>
       <div
         style={{
@@ -508,7 +602,15 @@ export function TripVotingDeadlineField({
         <Calendar size={16} color={C.muted} strokeWidth={2.5} />
         <span style={{ flex: 1 }}>{value || placeholder}</span>
       </div>
-      <p style={{ fontSize: 10, color: C.mutedLight, margin: '4px 0 0', lineHeight: 1.4, fontWeight: 500 }}>
+      <p
+        style={{
+          fontSize: 10,
+          color: C.mutedLight,
+          margin: '4px 0 0',
+          lineHeight: 1.4,
+          fontWeight: 500,
+        }}
+      >
         Opsional — kosongkan jika voting hanya dikunci manual.
       </p>
     </div>
@@ -557,10 +659,19 @@ function DateCandidateRow({
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? 'white' : C.coral }}>{cand.id}</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? 'white' : C.coral }}>
+          {cand.id}
+        </span>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 800, color: isActive ? C.coral : C.charcoal, margin: 0 }}>
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: isActive ? C.coral : C.charcoal,
+            margin: 0,
+          }}
+        >
           Kandidat {cand.id}: {cand.range}
         </p>
         <p
@@ -592,7 +703,15 @@ export function TripDateCandidateList({
   return (
     <div>
       {!hideLabel && (
-        <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.charcoal,
+            display: 'block',
+            marginBottom: 8,
+          }}
+        >
           Kandidat Tanggal
           {savedCandidates.length > 0 && (
             <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 6 }}>
@@ -634,7 +753,9 @@ export function TripDateCandidateList({
                 flexShrink: 0,
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 800, color: C.muted }}>{savedCandidates.length + 1}</span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: C.muted }}>
+                {savedCandidates.length + 1}
+              </span>
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: C.mutedLight, margin: 0 }}>
@@ -671,7 +792,11 @@ function TripTimePickerColumn({
 }) {
   return (
     <div style={{ flex: 1, textAlign: 'center' }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 6 }}>{label}</span>
+      <span
+        style={{ fontSize: 10, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 6 }}
+      >
+        {label}
+      </span>
       <div
         style={{
           maxHeight: 140,
@@ -727,10 +852,19 @@ export function TripTimeFields({
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+        }}
+      >
         <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal }}>Waktu</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: allDay ? C.coral : C.muted }}>Sepanjang hari</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: allDay ? C.coral : C.muted }}>
+            Sepanjang hari
+          </span>
           <div
             style={{
               width: 44,
@@ -765,7 +899,15 @@ export function TripTimeFields({
               { label: 'Selesai', value: endTime, active: false },
             ].map((field) => (
               <div key={field.label} style={{ flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: C.muted,
+                    display: 'block',
+                    marginBottom: 6,
+                  }}
+                >
                   {field.label}
                 </span>
                 <div
@@ -780,7 +922,9 @@ export function TripTimeFields({
                   }}
                 >
                   <Clock size={14} color={field.active ? C.coral : C.muted} strokeWidth={2.5} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.charcoal }}>{field.value}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: C.charcoal }}>
+                    {field.value}
+                  </span>
                 </div>
               </div>
             ))}
@@ -802,9 +946,22 @@ export function TripTimeFields({
                   selected={startHour}
                   options={buildHourOptions(nowHour)}
                 />
-                <TripTimePickerColumn label="Menit" selected={startMinute} options={buildMinuteOptions()} />
+                <TripTimePickerColumn
+                  label="Menit"
+                  selected={startMinute}
+                  options={buildMinuteOptions()}
+                />
               </div>
-              <p style={{ fontSize: 10, color: C.muted, margin: '8px 0 0', lineHeight: 1.4, fontWeight: 500, textAlign: 'center' }}>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: C.muted,
+                  margin: '8px 0 0',
+                  lineHeight: 1.4,
+                  fontWeight: 500,
+                  textAlign: 'center',
+                }}
+              >
                 Jam sebelum {formatTripTime(now)} tidak bisa dipilih
               </p>
             </div>
@@ -889,7 +1046,9 @@ export function TripDateSection({
         )}
       </div>
       {error && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}
+        >
           <AlertCircle size={12} color={ERROR_RED} strokeWidth={2.5} />
           <span style={{ fontSize: 12, color: ERROR_RED, fontWeight: 600 }}>{error}</span>
         </div>
@@ -1033,14 +1192,19 @@ export function CreateTripFooter({
 }: CreateTripFooterProps) {
   const errorList = errors ?? (errorSummary ? [errorSummary] : []);
   const summary =
-    errorList.length > 1
-      ? `${errorList.length} hal wajib belum lengkap`
-      : errorList[0];
+    errorList.length > 1 ? `${errorList.length} hal wajib belum lengkap` : errorList[0];
   const isDisabled = disabled || loading;
   const buttonLabel = loading ? 'Membuat...' : label;
 
   return (
-    <div style={{ padding: SHEET_FOOTER_PADDING, backgroundColor: C.white, borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
+    <div
+      style={{
+        padding: SHEET_FOOTER_PADDING,
+        backgroundColor: C.white,
+        borderTop: `1px solid ${C.border}`,
+        flexShrink: 0,
+      }}
+    >
       {errorList.length > 0 && (
         <div
           style={{
@@ -1052,13 +1216,23 @@ export function CreateTripFooter({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-            <AlertCircle size={14} color={ERROR_RED} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 1 }} />
+            <AlertCircle
+              size={14}
+              color={ERROR_RED}
+              strokeWidth={2.5}
+              style={{ flexShrink: 0, marginTop: 1 }}
+            />
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, color: ERROR_RED, fontWeight: 700, margin: '0 0 4px' }}>{summary}</p>
+              <p style={{ fontSize: 12, color: ERROR_RED, fontWeight: 700, margin: '0 0 4px' }}>
+                {summary}
+              </p>
               {errorList.length > 1 && (
                 <ul style={{ margin: 0, padding: '0 0 0 14px' }}>
                   {errorList.map((e) => (
-                    <li key={e} style={{ fontSize: 11, color: ERROR_RED, fontWeight: 500, lineHeight: 1.5 }}>
+                    <li
+                      key={e}
+                      style={{ fontSize: 11, color: ERROR_RED, fontWeight: 500, lineHeight: 1.5 }}
+                    >
                       {e}
                     </li>
                   ))}

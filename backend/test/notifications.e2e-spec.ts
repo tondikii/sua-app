@@ -30,11 +30,9 @@ describe('Notifications E2E', () => {
 
     // Create a test user and get JWT token
     // This assumes you have a working auth endpoint
-    const response = await request(app.getHttpServer())
-      .post('/v1/auth/google')
-      .send({
-        id_token: 'test-token', // You'll need to mock this or use a test token
-      });
+    const response = await request(app.getHttpServer()).post('/v1/auth/google').send({
+      id_token: 'test-token', // You'll need to mock this or use a test token
+    });
 
     // For testing purposes, you might need to create the user directly in DB
     // and generate a test JWT token
@@ -142,9 +140,7 @@ describe('Notifications E2E', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      await request(app.getHttpServer())
-        .get('/v1/notifications')
-        .expect(401);
+      await request(app.getHttpServer()).get('/v1/notifications').expect(401);
     });
   });
 

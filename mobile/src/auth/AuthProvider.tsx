@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { AuthResponse, UserProfile } from '@atur-perjalanan/shared-types';
 
 import { apiClient, setOnUnauthorized, setTokenGetter } from '../api/client';
@@ -92,26 +100,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [clearAuth]);
 
-  const signInGoogle = useCallback(
-    async (idToken: string) => {
-      const res = await apiClient.post<AuthResponse>('/auth/google', { id_token: idToken }, false);
-      tokenRef.current = res.access_token;
-      await secureStorage.setAccessToken(res.access_token);
-      if (res.realtime_token) {
-        await secureStorage.setRealtimeToken(res.realtime_token);
-        setRealtimeAuthToken(res.realtime_token);
-      }
-      setAccessToken(res.access_token);
-      setRealtimeToken(res.realtime_token || null);
-      setIsNewUser(res.is_new_user);
+  const signInGoogle = useCallback(async (idToken: string) => {
+    const res = await apiClient.post<AuthResponse>('/auth/google', { id_token: idToken }, false);
+    tokenRef.current = res.access_token;
+    await secureStorage.setAccessToken(res.access_token);
+    if (res.realtime_token) {
+      await secureStorage.setRealtimeToken(res.realtime_token);
+      setRealtimeAuthToken(res.realtime_token);
+    }
+    setAccessToken(res.access_token);
+    setRealtimeToken(res.realtime_token || null);
+    setIsNewUser(res.is_new_user);
 
-      if (!res.is_new_user) {
-        setUser(res.user ?? (await apiClient.get<UserProfile>('/users/me')));
-      }
-      return { isNewUser: res.is_new_user };
-    },
-    [],
-  );
+    if (!res.is_new_user) {
+      setUser(res.user ?? (await apiClient.get<UserProfile>('/users/me')));
+    }
+    return { isNewUser: res.is_new_user };
+  }, []);
 
   const completeRegistration = useCallback(async (username: string) => {
     const { user: me } = await apiClient.post<{ user: UserProfile }>(

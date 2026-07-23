@@ -1,11 +1,25 @@
 import { Prisma } from '@prisma/client';
+import type { UserSummary, UserProfile } from '@atur-perjalanan/shared-types';
 
-type UserWithCount = Prisma.UserGetPayload<{ select: { id: true; name: true; username: true; avatarUrl: true; bio: true; websiteUrl: true; locationLabel: true; isPublic: true; createdAt: true; updatedAt: true } }> & {
+type UserWithCount = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    username: true;
+    avatarUrl: true;
+    bio: true;
+    websiteUrl: true;
+    locationLabel: true;
+    isPublic: true;
+    createdAt: true;
+    updatedAt: true;
+  };
+}> & {
   _count?: { tripsCreated?: number };
 };
 
 export class UserSummarySerializer {
-  static toSummary(user: UserWithCount) {
+  static toSummary(user: UserWithCount): UserSummary {
     return {
       id: user.id,
       name: user.name,
@@ -14,7 +28,7 @@ export class UserSummarySerializer {
     };
   }
 
-  static toProfile(user: UserWithCount) {
+  static toProfile(user: UserWithCount): UserProfile {
     return {
       id: user.id,
       name: user.name,

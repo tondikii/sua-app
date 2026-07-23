@@ -61,9 +61,26 @@ export function Screen18EditProfil() {
         </button>
       </div>
 
-      <div style={{ flex: 1, padding: '20px 22px 0', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'auto' }}>
+      <div
+        style={{
+          flex: 1,
+          padding: '20px 22px 0',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          overflow: 'auto',
+        }}
+      >
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Nama Lengkap
           </label>
           <div
@@ -79,12 +96,22 @@ export function Screen18EditProfil() {
             }}
           >
             <User size={16} color={C.muted} strokeWidth={2} />
-            <span style={{ fontSize: 15, color: C.charcoal, fontWeight: 500, flex: 1 }}>Budi Santoso</span>
+            <span style={{ fontSize: 15, color: C.charcoal, fontWeight: 500, flex: 1 }}>
+              Budi Santoso
+            </span>
           </div>
         </div>
 
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Username
           </label>
           <div
@@ -104,7 +131,15 @@ export function Screen18EditProfil() {
         </div>
 
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Bio
           </label>
           <div
@@ -119,7 +154,12 @@ export function Screen18EditProfil() {
               minHeight: 88,
             }}
           >
-            <AlignLeft size={16} color={C.muted} strokeWidth={2} style={{ marginTop: 2, flexShrink: 0 }} />
+            <AlignLeft
+              size={16}
+              color={C.muted}
+              strokeWidth={2}
+              style={{ marginTop: 2, flexShrink: 0 }}
+            />
             <span style={{ fontSize: 14, color: C.charcoal, fontWeight: 400, lineHeight: 1.6 }}>
               Travel enthusiast 🌏 | Jakarta | Suka jelajahi pantai dan budaya lokal Indonesia 🇮🇩
             </span>
@@ -130,7 +170,15 @@ export function Screen18EditProfil() {
         </div>
 
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Website / Sosial Media
           </label>
           <div
@@ -145,12 +193,20 @@ export function Screen18EditProfil() {
             }}
           >
             <Globe size={16} color={C.muted} strokeWidth={2} />
-            <span style={{ fontSize: 14, color: C.teal, fontWeight: 600 }}>instagram.com/budi_santoso</span>
+            <span style={{ fontSize: 14, color: C.teal, fontWeight: 600 }}>
+              instagram.com/budi_santoso
+            </span>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: '16px 22px 32px', backgroundColor: C.white, borderTop: `1px solid ${C.border}` }}>
+      <div
+        style={{
+          padding: '16px 22px 32px',
+          backgroundColor: C.white,
+          borderTop: `1px solid ${C.border}`,
+        }}
+      >
         <button
           type="button"
           style={{

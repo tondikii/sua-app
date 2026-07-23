@@ -4,24 +4,24 @@
 
 > Mengubah wacana perjalanan menjadi kenyataan.
 
-Atur Perjalanan adalah aplikasi *trip planner* yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun *itinerary*, dan berkolaborasi dalam satu platform terpusat.
+Atur Perjalanan adalah aplikasi _trip planner_ yang memudahkan kamu dan teman-temanmu untuk merencanakan perjalanan, menyusun _itinerary_, dan berkolaborasi dalam satu platform terpusat.
 
 ## ✨ Fitur Utama (MVP)
 
-* **Manajemen Perjalanan:** Hub terpusat perjalanan grup · beranda · buat trip · voting jadwal · itinerary · chat & media · undang teman.
-* **Wishlist Aktivitas:** Tabung ide aktivitas impian · filter & prioritas · **Jadikan Perjalanan** jadi trip siap dijalankan.
+- **Manajemen Perjalanan:** Hub terpusat perjalanan grup · beranda · buat trip · voting jadwal · itinerary · chat & media · undang teman.
+- **Wishlist Aktivitas:** Tabung ide aktivitas impian · filter & prioritas · **Jadikan Perjalanan** jadi trip siap dijalankan.
 
-*(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md) dan [BRIEF](docs/BRIEF.md).)*
+_(Detail lengkap mengenai MVP dan cara kerja fitur dapat dilihat pada dokumen [PRD](docs/PRD.md) dan [BRIEF](docs/BRIEF.md).)_
 
 ## ⚙️ Tech Stack
 
-* **Arsitektur**: Monorepo (Turborepo) — Full TypeScript end-to-end
-* **Backend**: NestJS (Node.js) + Prisma ORM
-* **Client**: Expo (React Native + react-native-web) — satu codebase untuk iOS, Android & Web
-* **Database**: PostgreSQL terkelola oleh **Supabase**
-* **Realtime**: Supabase Realtime (chat trip live tanpa WebSocket gateway custom)
-* **File Storage**: Cloudflare R2 (S3-compatible) — upload via presigned PUT; akses media via presigned GET (1 jam) yang di-generate backend. Tidak memerlukan public `.r2.dev` URL atau custom domain.
-* **Integrasi**: Google Sign-In, Google Calendar API (tambah event ke kalender sendiri via menu ⋮ — opsional)
+- **Arsitektur**: Monorepo (Turborepo) — Full TypeScript end-to-end
+- **Backend**: NestJS (Node.js) + Prisma ORM
+- **Client**: Expo (React Native + react-native-web) — satu codebase untuk iOS, Android & Web
+- **Database**: PostgreSQL terkelola oleh **Supabase**
+- **Realtime**: Supabase Realtime (chat trip live tanpa WebSocket gateway custom)
+- **File Storage**: Cloudflare R2 (S3-compatible) — upload via presigned PUT; akses media via presigned GET (1 jam) yang di-generate backend. Tidak memerlukan public `.r2.dev` URL atau custom domain.
+- **Integrasi**: Google Sign-In, Google Calendar API (tambah event ke kalender sendiri via menu ⋮ — opsional)
 
 > Riwayat keputusan stack ada di [docs/MILESTONES.md](docs/MILESTONES.md) dan detail arsitektur lengkap di [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -36,6 +36,7 @@ cd figma && npm i && npm run dev
 Registry layar dikelompokkan **§1–§13** di `figma/src/app/App.tsx` (selaras `docs/WORKFLOW.md`). Referensi lengkap: [docs/FIGMA.md](docs/FIGMA.md).
 
 ## 📚 Direktori Dokumentasi
+
 Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 1. [Project Brief](docs/BRIEF.md) - Latar belakang, masalah, dan target audiens.
@@ -50,15 +51,15 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 
 ### Prasyarat
 
-| Tools | Versi Minimum |
-|-------|---------------|
-| [Node.js](https://nodejs.org/) | 20 LTS+ |
-| [pnpm](https://pnpm.io/installation) | 9+ |
-| [Supabase CLI](https://supabase.com/docs/guides/cli) | latest |
-| [Expo CLI](https://docs.expo.dev/more/expo-cli/) | latest (`npx expo`) |
-| [EAS CLI](https://docs.expo.dev/eas/) | latest (build/submit — M20) |
-| Xcode (untuk build iOS) | 15+ (opsional, jika tidak pakai EAS Build cloud) |
-| Android Studio (untuk emulator Android) | Hedgehog (2023.1.1)+ |
+| Tools                                                | Versi Minimum                                    |
+| ---------------------------------------------------- | ------------------------------------------------ |
+| [Node.js](https://nodejs.org/)                       | 20 LTS+                                          |
+| [pnpm](https://pnpm.io/installation)                 | 9+                                               |
+| [Supabase CLI](https://supabase.com/docs/guides/cli) | latest                                           |
+| [Expo CLI](https://docs.expo.dev/more/expo-cli/)     | latest (`npx expo`)                              |
+| [EAS CLI](https://docs.expo.dev/eas/)                | latest (build/submit — M20)                      |
+| Xcode (untuk build iOS)                              | 15+ (opsional, jika tidak pakai EAS Build cloud) |
+| Android Studio (untuk emulator Android)              | Hedgehog (2023.1.1)+                             |
 
 ### 1. Setup Environment
 
@@ -140,8 +141,8 @@ pnpm --filter mobile build:production:ios          # EAS production build (IPA �
 
 ## 📝 Changelog Dokumen
 
-| Versi | Tanggal | Perubahan |
-|-------|---------|-----------|
-| 2.1 | Juli 2026 | Media R2: akses download via presigned GET URL (1 jam) dari backend; tidak bergantung public `.r2.dev` / custom domain. |
-| 2.0 | Juli 2026 | Migrasi tech stack: Go/Gin/KMP → **NestJS + Expo (React Native)** full TypeScript; DB tetap PostgreSQL namun dikelola **Supabase**; chat pakai **Supabase Realtime**; file upload pakai **Cloudflare R2**. |
-| 1.0 | — | Rilis awal dokumentasi (Go/Gin backend, Kotlin Multiplatform mobile). |
+| Versi | Tanggal   | Perubahan                                                                                                                                                                                                  |
+| ----- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.1   | Juli 2026 | Media R2: akses download via presigned GET URL (1 jam) dari backend; tidak bergantung public `.r2.dev` / custom domain.                                                                                    |
+| 2.0   | Juli 2026 | Migrasi tech stack: Go/Gin/KMP → **NestJS + Expo (React Native)** full TypeScript; DB tetap PostgreSQL namun dikelola **Supabase**; chat pakai **Supabase Realtime**; file upload pakai **Cloudflare R2**. |
+| 1.0   | —         | Rilis awal dokumentasi (Go/Gin backend, Kotlin Multiplatform mobile).                                                                                                                                      |

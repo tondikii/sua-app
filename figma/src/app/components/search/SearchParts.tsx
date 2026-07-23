@@ -58,11 +58,7 @@ type SearchInputProps = {
 };
 
 /** Field pencarian — ikon search, teks/placeholder, tombol clear (X) saat ada nilai */
-export function SearchInput({
-  value,
-  placeholder = 'Cari...',
-  focused,
-}: SearchInputProps) {
+export function SearchInput({ value, placeholder = 'Cari...', focused }: SearchInputProps) {
   const isActive = focused ?? Boolean(value);
 
   return (
@@ -82,7 +78,9 @@ export function SearchInput({
       {value ? (
         <span style={{ fontSize: 14, color: C.charcoal, fontWeight: 500, flex: 1 }}>{value}</span>
       ) : (
-        <span style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500, flex: 1 }}>{placeholder}</span>
+        <span style={{ fontSize: 14, color: C.mutedLight, fontWeight: 500, flex: 1 }}>
+          {placeholder}
+        </span>
       )}
       {value && (
         <div
@@ -111,7 +109,11 @@ type SearchBarProps = {
   placeholder?: string;
 };
 
-export function SearchBar({ query, focused, placeholder = 'Cari nama atau username...' }: SearchBarProps) {
+export function SearchBar({
+  query,
+  focused,
+  placeholder = 'Cari nama atau username...',
+}: SearchBarProps) {
   return <SearchInput value={query} focused={focused} placeholder={placeholder} />;
 }
 
@@ -122,7 +124,12 @@ type SearchUserRowProps = {
   highlight?: boolean;
 };
 
-export function SearchUserRow({ user, variant, showBorder = true, highlight = false }: SearchUserRowProps) {
+export function SearchUserRow({
+  user,
+  variant,
+  showBorder = true,
+  highlight = false,
+}: SearchUserRowProps) {
   const avatarSize = 44;
   const avatarBg = user.avatarGradient ?? user.color ?? AVATAR_COLORS[0];
 
@@ -155,10 +162,20 @@ export function SearchUserRow({ user, variant, showBorder = true, highlight = fa
         {user.initial}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.2 }}>
+        <p
+          style={{
+            fontSize: 14,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: 0,
+            letterSpacing: -0.2,
+          }}
+        >
           {user.name}
         </p>
-        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>@{user.username}</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>
+          @{user.username}
+        </p>
         {variant === 'result' && user.trips !== undefined && (
           <p style={{ fontSize: 11, color: C.mutedLight, margin: '2px 0 0', fontWeight: 500 }}>
             {user.trips} perjalanan

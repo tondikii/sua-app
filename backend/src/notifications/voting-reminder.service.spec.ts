@@ -109,10 +109,7 @@ describe('VotingReminderService', () => {
           ],
           dateCandidates: [
             {
-              votes: [
-                { userId: 'user-1' },
-                { userId: 'user-2' },
-              ], // Both users have voted
+              votes: [{ userId: 'user-1' }, { userId: 'user-2' }], // Both users have voted
             },
           ],
         },
@@ -160,10 +157,7 @@ describe('VotingReminderService', () => {
               creatorId: 'creator-2',
               votingDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
               status: TripStatus.voting_pending,
-              participants: [
-                { userId: 'user-1' },
-                { userId: 'user-2' },
-              ],
+              participants: [{ userId: 'user-1' }, { userId: 'user-2' }],
               dateCandidates: [
                 {
                   votes: [{ userId: 'user-1' }], // Only user-1 has voted
@@ -210,11 +204,7 @@ describe('VotingReminderService', () => {
               creatorId: 'creator-3',
               votingDeadline: new Date(Date.now() + 60 * 60 * 1000),
               status: TripStatus.voting_pending,
-              participants: [
-                { userId: 'user-1' },
-                { userId: 'user-2' },
-                { userId: 'user-3' },
-              ],
+              participants: [{ userId: 'user-1' }, { userId: 'user-2' }, { userId: 'user-3' }],
               dateCandidates: [
                 {
                   votes: [{ userId: 'user-1' }], // Only user-1 has voted

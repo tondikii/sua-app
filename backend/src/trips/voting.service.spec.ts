@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { VotingService } from './voting.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -72,12 +77,30 @@ describe('VotingService', () => {
           createdAt: new Date(),
           creator: userRow(CREATOR),
           options: [
-            { id: 'opt-1', pollId: 'poll-1', label: 'Hiking', sortOrder: 0, candidateId: null, votes: [{ userId: PARTICIPANT }] },
-            { id: 'opt-2', pollId: 'poll-1', label: 'Swimming', sortOrder: 1, candidateId: null, votes: [] },
+            {
+              id: 'opt-1',
+              pollId: 'poll-1',
+              label: 'Hiking',
+              sortOrder: 0,
+              candidateId: null,
+              votes: [{ userId: PARTICIPANT }],
+            },
+            {
+              id: 'opt-2',
+              pollId: 'poll-1',
+              label: 'Swimming',
+              sortOrder: 1,
+              candidateId: null,
+              votes: [],
+            },
           ],
         },
       ]);
-      prisma.tripPollVote.findFirst.mockResolvedValue({ pollId: 'poll-1', optionId: 'opt-1', userId: PARTICIPANT });
+      prisma.tripPollVote.findFirst.mockResolvedValue({
+        pollId: 'poll-1',
+        optionId: 'opt-1',
+        userId: PARTICIPANT,
+      });
 
       const result = await service.listPolls(TRIP, PARTICIPANT);
 
@@ -111,10 +134,18 @@ describe('VotingService', () => {
 
     it('creates an aktivitas poll with options', async () => {
       prisma.tripPoll.findFirst.mockResolvedValue(null);
-      
+
       // Mock the transaction to execute the callback
       const mockTx = {
-        tripPoll: { create: jest.fn().mockResolvedValue({ id: 'poll-1', tripId: TRIP, pollType: 'aktivitas', createdBy: CREATOR, createdAt: new Date() }) },
+        tripPoll: {
+          create: jest.fn().mockResolvedValue({
+            id: 'poll-1',
+            tripId: TRIP,
+            pollType: 'aktivitas',
+            createdBy: CREATOR,
+            createdAt: new Date(),
+          }),
+        },
         tripPollOption: { create: jest.fn().mockResolvedValue({}) },
       };
       prisma.$transaction.mockImplementation((cb: any) => cb(mockTx));
@@ -131,8 +162,22 @@ describe('VotingService', () => {
         createdAt: new Date(),
         creator: userRow(CREATOR),
         options: [
-          { id: 'opt-1', pollId: 'poll-1', label: 'Hiking', sortOrder: 0, candidateId: null, votes: [] },
-          { id: 'opt-2', pollId: 'poll-1', label: 'Swimming', sortOrder: 1, candidateId: null, votes: [] },
+          {
+            id: 'opt-1',
+            pollId: 'poll-1',
+            label: 'Hiking',
+            sortOrder: 0,
+            candidateId: null,
+            votes: [],
+          },
+          {
+            id: 'opt-2',
+            pollId: 'poll-1',
+            label: 'Swimming',
+            sortOrder: 1,
+            candidateId: null,
+            votes: [],
+          },
         ],
       });
 
@@ -203,7 +248,11 @@ describe('VotingService', () => {
     });
 
     it('replaces vote when voting again', async () => {
-      prisma.tripPollVote.findFirst.mockResolvedValue({ pollId: 'poll-1', userId: PARTICIPANT, optionId: 'opt-2' });
+      prisma.tripPollVote.findFirst.mockResolvedValue({
+        pollId: 'poll-1',
+        userId: PARTICIPANT,
+        optionId: 'opt-2',
+      });
 
       await service.voteOnPoll(TRIP, 'poll-1', PARTICIPANT, 'opt-1');
 
@@ -212,7 +261,11 @@ describe('VotingService', () => {
     });
 
     it('no-op when voting for same option', async () => {
-      prisma.tripPollVote.findFirst.mockResolvedValue({ pollId: 'poll-1', userId: PARTICIPANT, optionId: 'opt-1' });
+      prisma.tripPollVote.findFirst.mockResolvedValue({
+        pollId: 'poll-1',
+        userId: PARTICIPANT,
+        optionId: 'opt-1',
+      });
 
       await service.voteOnPoll(TRIP, 'poll-1', PARTICIPANT, 'opt-1');
 
@@ -226,7 +279,9 @@ describe('VotingService', () => {
         tripId: TRIP,
         status: 'locked',
       });
-      await expect(service.voteOnPoll(TRIP, 'poll-1', PARTICIPANT, 'opt-1')).rejects.toThrow(BadRequestException);
+      await expect(service.voteOnPoll(TRIP, 'poll-1', PARTICIPANT, 'opt-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -248,7 +303,14 @@ describe('VotingService', () => {
           candidateId: 'cand-1',
           votes: [{ userId: PARTICIPANT }],
         },
-        { id: 'opt-2', pollId: 'poll-1', label: 'July 1-5', sortOrder: 1, candidateId: 'cand-2', votes: [] },
+        {
+          id: 'opt-2',
+          pollId: 'poll-1',
+          label: 'July 1-5',
+          sortOrder: 1,
+          candidateId: 'cand-2',
+          votes: [],
+        },
       ]);
       prisma.tripDateCandidate.findUnique.mockResolvedValue({
         id: 'cand-1',
@@ -272,7 +334,9 @@ describe('VotingService', () => {
     it('rejects lock by non-creator', async () => {
       prisma.tripPoll.findFirst.mockResolvedValue({ id: 'poll-1', tripId: TRIP, status: 'active' });
       prisma.trip.findUnique.mockResolvedValue({ id: TRIP, creatorId: CREATOR });
-      await expect(service.lockPoll(TRIP, 'poll-1', PARTICIPANT)).rejects.toThrow(ForbiddenException);
+      await expect(service.lockPoll(TRIP, 'poll-1', PARTICIPANT)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('locks an aktivitas poll and seeds the winning option into the itinerary', async () => {
@@ -289,7 +353,14 @@ describe('VotingService', () => {
         startDate: new Date('2027-06-19'),
       });
       prisma.tripPollOption.findMany.mockResolvedValue([
-        { id: 'opt-1', pollId: 'poll-1', label: 'Hiking', sortOrder: 0, candidateId: null, votes: [] },
+        {
+          id: 'opt-1',
+          pollId: 'poll-1',
+          label: 'Hiking',
+          sortOrder: 0,
+          candidateId: null,
+          votes: [],
+        },
         {
           id: 'opt-2',
           pollId: 'poll-1',
@@ -355,7 +426,10 @@ describe('VotingService', () => {
     it('no-op when already voted', async () => {
       prisma.tripDateCandidate.findFirst.mockResolvedValue({ id: 'cand-1', tripId: TRIP });
       prisma.tripParticipant.findUnique.mockResolvedValue({ tripId: TRIP, userId: PARTICIPANT });
-      prisma.tripDateVote.findUnique.mockResolvedValue({ candidateId: 'cand-1', userId: PARTICIPANT });
+      prisma.tripDateVote.findUnique.mockResolvedValue({
+        candidateId: 'cand-1',
+        userId: PARTICIPANT,
+      });
 
       await service.voteOnDateCandidate(TRIP, 'cand-1', PARTICIPANT);
 
@@ -385,7 +459,9 @@ describe('VotingService', () => {
       });
       prisma.trip.findUnique.mockResolvedValue({ id: TRIP, creatorId: CREATOR });
 
-      await expect(service.deletePoll(TRIP, 'poll-1', CREATOR)).rejects.toThrow(BadRequestException);
+      await expect(service.deletePoll(TRIP, 'poll-1', CREATOR)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

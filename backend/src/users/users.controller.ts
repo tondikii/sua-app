@@ -14,9 +14,13 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CheckUsernameDto } from './dto/check-username.dto';
-import { SearchUsersDto } from './dto/search-users.dto';
+import {
+  CheckUsernameSchema,
+  SearchUsersSchema,
+  UpdateUserSchema,
+} from '@atur-perjalanan/shared-validation';
+import type { CheckUsernameInput, UpdateUserInput } from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('users')
 @Controller('users')
@@ -25,7 +29,7 @@ export class UsersController {
 
   // GET /v1/users/check-username?username=xxx  — Public
   @Get('check-username')
-  checkUsername(@Query() query: CheckUsernameDto) {
+  checkUsername(@Query(new ZodValidationPipe(CheckUsernameSchema)) query: CheckUsernameInput) {
     return this.usersService.checkUsername(query.username);
   }
 
@@ -33,7 +37,7 @@ export class UsersController {
   @Get('search')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  searchUsers(@Query() query: SearchUsersDto) {
+  searchUsers(@Query(new ZodValidationPipe(SearchUsersSchema)) query: any) {
     return this.usersService.searchUsers(query.q, query.cursor, query.limit);
   }
 
@@ -49,7 +53,10 @@ export class UsersController {
   @Put('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  updateMe(@CurrentUser() user: CurrentUserPayload, @Body() dto: UpdateUserDto) {
+  updateMe(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body(new ZodValidationPipe(UpdateUserSchema)) dto: UpdateUserInput,
+  ) {
     return this.usersService.updateMe(user.userId, dto);
   }
 
@@ -66,10 +73,7 @@ export class UsersController {
   @Get(':username')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  getProfile(
-    @Param('username') username: string,
-    @CurrentUser() user: CurrentUserPayload,
-  ) {
+  getProfile(@Param('username') username: string, @CurrentUser() user: CurrentUserPayload) {
     return this.usersService.getPublicProfile(username, user?.userId);
   }
 

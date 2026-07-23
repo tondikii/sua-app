@@ -1,3 +1,6 @@
+import { toDateOnly, toTime } from '../../common/helpers/date.helpers';
+import type { TripInvitation } from '@atur-perjalanan/shared-types';
+
 type UserLike = {
   id: string;
   name: string;
@@ -28,19 +31,6 @@ type InvitationLike = {
   updatedAt: Date;
 };
 
-const toDateOnly = (d: Date | null): string | null =>
-  d ? d.toISOString().split('T')[0] : null;
-
-const toTime = (d: Date | null): string | null =>
-  d ? new Date(d).toTimeString().slice(0, 5) : null;
-
-/**
- * UI-facing state for a trip-scoped invitation row (WORKFLOW §6, §11 —
- * `EmailInviteStatus` in the design):
- *   - `email_sent`     : pending, invited via email, invitee not registered yet
- *   - `pending_accept` : pending, invitee is a registered user (hasn't responded)
- *   - `rejected`       : invitee declined (shown with an "Undang kembali" action)
- */
 export type InvitationState = 'email_sent' | 'pending_accept' | 'rejected';
 
 export class InvitationSerializer {
@@ -63,12 +53,6 @@ export class InvitationSerializer {
     };
   }
 
-  /**
-   * Trip-scoped invitation row for the members/invite screens
-   * (WORKFLOW §6 Screen 41, §11 Screen 97–102). Carries the derived UI `state`
-   * plus enough identity (`invited_user` / `invited_email`) for the client to
-   * render "Batalkan" / "Undang kembali" and cross-reference search results.
-   */
   static toManaged(inv: InvitationLike & { invitedUser?: UserLike | null }) {
     return {
       id: inv.id,
@@ -89,10 +73,6 @@ export class InvitationSerializer {
     };
   }
 
-  /**
-   * Enriched pending-invitation shape for GET /v1/trips/invitations
-   * (WORKFLOW §3 — tab Undangan / InvitationCard).
-   */
   static toEnriched(
     inv: InvitationLike & {
       trip: TripSummaryLike;

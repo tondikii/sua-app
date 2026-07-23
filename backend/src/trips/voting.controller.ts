@@ -14,7 +14,8 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { VotingService } from './voting.service';
-import { CreatePollDto, VoteDto, LockPollDto, VoteDateCandidateDto } from './dto/voting.dto';
+import { CreatePollSchema, VoteSchema } from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('voting')
 @ApiBearerAuth()
@@ -38,7 +39,7 @@ export class VotingController {
   createPoll(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
-    @Body() dto: CreatePollDto,
+    @Body(new ZodValidationPipe(CreatePollSchema)) dto: any,
   ) {
     return this.votingService.createPoll(tripId, user.userId, dto);
   }
@@ -50,7 +51,7 @@ export class VotingController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('pollId', ParseUUIDPipe) pollId: string,
-    @Body() dto: VoteDto,
+    @Body(new ZodValidationPipe(VoteSchema)) dto: any,
   ) {
     return this.votingService.voteOnPoll(tripId, pollId, user.userId, dto.option_id);
   }
@@ -95,7 +96,7 @@ export class VotingController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('pollId', ParseUUIDPipe) pollId: string,
-    @Body() _dto: LockPollDto, // Empty body, but accepts {}
+    @Body() _dto: any, // Empty body, but accepts {}
   ) {
     return this.votingService.lockPoll(tripId, pollId, user.userId);
   }

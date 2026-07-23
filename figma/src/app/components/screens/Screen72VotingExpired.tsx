@@ -40,9 +40,30 @@ export function Screen72VotingExpired() {
         >
           <VotingCandidateList
             items={[
-              { id: 1, range: '12 – 15 Jun 2026', days: '4 hari', votes: 2, avatars: ['R', 'B'], voted: false },
-              { id: 2, range: '19 – 22 Jun 2026', days: '4 hari', votes: 4, avatars: ['R', 'B', 'A', 'D'], voted: true },
-              { id: 3, range: '26 – 29 Jun 2026', days: '4 hari', votes: 1, avatars: ['S'], voted: false },
+              {
+                id: 1,
+                range: '12 – 15 Jun 2026',
+                days: '4 hari',
+                votes: 2,
+                avatars: ['R', 'B'],
+                voted: false,
+              },
+              {
+                id: 2,
+                range: '19 – 22 Jun 2026',
+                days: '4 hari',
+                votes: 4,
+                avatars: ['R', 'B', 'A', 'D'],
+                voted: true,
+              },
+              {
+                id: 3,
+                range: '26 – 29 Jun 2026',
+                days: '4 hari',
+                votes: 1,
+                avatars: ['S'],
+                voted: false,
+              },
             ]}
             labelKey="range"
           />
@@ -60,7 +81,10 @@ export function Screen72VotingExpired() {
               id: i + 1,
               name,
               votes: [3, 2][i],
-              avatars: [['R', 'B', 'A'], ['S', 'M']][i],
+              avatars: [
+                ['R', 'B', 'A'],
+                ['S', 'M'],
+              ][i],
             }))}
             labelKey="name"
             readOnly

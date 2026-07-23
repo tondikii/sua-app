@@ -1,5 +1,9 @@
 import { C, FONT } from '../colors';
-import { TRIP_LOCKED_DATES, TRIP_DATE_PENDING, VOTING_DATE_CANDIDATES } from '../trip/CreateTripParts';
+import {
+  TRIP_LOCKED_DATES,
+  TRIP_DATE_PENDING,
+  VOTING_DATE_CANDIDATES,
+} from '../trip/CreateTripParts';
 import { TripDetailHeader, TripDetailTabs } from '../trip/TripDetailParts';
 import { VotingCollapseSection, VotingCandidateList } from '../trip/VotingParts';
 import { VotingLockedModal } from '../trip/VotingLockedModal';
@@ -46,7 +50,14 @@ export function Screen73StatusLocked() {
         </VotingCollapseSection>
       </div>
 
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,46,0.45)', zIndex: 10 }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(26,26,46,0.45)',
+          zIndex: 10,
+        }}
+      />
       <VotingLockedModal
         type="tanggal"
         title="Tanggal Perjalanan"

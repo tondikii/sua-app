@@ -130,16 +130,16 @@ describe('WishlistService', () => {
 
     it('throws Forbidden when not owner', async () => {
       prisma.wishlist.findFirst.mockResolvedValue(wishlistRow({ userId: 'other' }));
-      await expect(
-        service.updateWishlist('wish-1', OWNER, { place_name: 'x' }),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.updateWishlist('wish-1', OWNER, { place_name: 'x' })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('throws NotFound when missing', async () => {
       prisma.wishlist.findFirst.mockResolvedValue(null);
-      await expect(
-        service.updateWishlist('nope', OWNER, { place_name: 'x' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateWishlist('nope', OWNER, { place_name: 'x' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -178,7 +178,11 @@ describe('WishlistService', () => {
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.trip.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ creatorId: OWNER, status: 'fixed', name: 'Pantai Tanjung Aan' }),
+          data: expect.objectContaining({
+            creatorId: OWNER,
+            status: 'fixed',
+            name: 'Pantai Tanjung Aan',
+          }),
         }),
       );
       expect(prisma.tripParticipant.create).toHaveBeenCalledWith({

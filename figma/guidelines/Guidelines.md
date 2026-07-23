@@ -4,14 +4,14 @@ Panduan untuk AI agents & developer saat mengedit bundle React di `figma/`.
 
 ## Sumber kebenaran
 
-| Dokumen | Isi |
-|---------|-----|
-| `figma/src/app/App.tsx` | Registry **125 layar**, §1–§13 |
+| Dokumen                              | Isi                                                                    |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| `figma/src/app/App.tsx`              | Registry **125 layar**, §1–§13                                         |
 | `figma/src/app/components/colors.ts` | Design tokens (`C.*`, `FONT`) — **wajib** dipakai, jangan hardcode hex |
-| `docs/WORKFLOW.md` | Alur user + kontrak API per § (✅ vs 🔜 M5.2) |
-| `docs/FIGMA.md` | Inventori layar, gap API, onboarding copy |
-| `docs/ARCHITECTURE.md` | **Schema §3**, endpoint §4.3 — sumber kebenaran teknis BE |
-| `docs/MILESTONES.md` | M5.2 = target implementasi gap BE |
+| `docs/WORKFLOW.md`                   | Alur user + kontrak API per § (✅ vs 🔜 M5.2)                          |
+| `docs/FIGMA.md`                      | Inventori layar, gap API, onboarding copy                              |
+| `docs/ARCHITECTURE.md`               | **Schema §3**, endpoint §4.3 — sumber kebenaran teknis BE              |
+| `docs/MILESTONES.md`                 | M5.2 = target implementasi gap BE                                      |
 
 ## Konvensi layar
 
@@ -22,13 +22,13 @@ Panduan untuk AI agents & developer saat mengedit bundle React di `figma/`.
 
 ## Naming UI vs backend
 
-| UI (Figma) | Backend (unchanged MVP) |
-|------------|-------------------------|
-| Itinerary / aktivitas | `trip_destinations`, `/destinations` |
-| Voting tipe Aktivitas | poll type `destinasi` |
-| Undang via search | Tidak ada saran teman; email `Screen39`→`Screen40` tanpa konfirmasi terpisah |
-| Voting sheet tanggal | Tanpa field judul — badge jenis + kandidat + tenggat (`CreateVotingTanggalDetailsForm`) |
-| Chat hapus pesan | Hanya long-press pesan sendiri (`ChatLongPressMenu isOwnMessage`) |
+| UI (Figma)            | Backend (unchanged MVP)                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| Itinerary / aktivitas | `trip_destinations`, `/destinations`                                                    |
+| Voting tipe Aktivitas | poll type `destinasi`                                                                   |
+| Undang via search     | Tidak ada saran teman; email `Screen39`→`Screen40` tanpa konfirmasi terpisah            |
+| Voting sheet tanggal  | Tanpa field judul — badge jenis + kandidat + tenggat (`CreateVotingTanggalDetailsForm`) |
+| Chat hapus pesan      | Hanya long-press pesan sendiri (`ChatLongPressMenu isOwnMessage`)                       |
 
 ## Voting sheets (`CreateVotingSheetParts.tsx`)
 
@@ -52,10 +52,10 @@ Panduan untuk AI agents & developer saat mengedit bundle React di `figma/`.
 
 4 slide carousel — copy selaras `docs/BRIEF.md` / `docs/WORKFLOW.md §1`:
 
-1. *Selamat datang* — Realisasikan Wacana Liburanmu  
-2. Sepakat Jadwal Susah Banget → Vote Bareng, Hasil Jelas  
-3. Rencana Berserakan, Urutan Nggak Jelas → Timeline Harian yang Jelas (+ preview itinerary multi-hari)  
-4. Chat Trip Kecampur → Ruang Diskusi Khusus Trip  
+1. _Selamat datang_ — Realisasikan Wacana Liburanmu
+2. Sepakat Jadwal Susah Banget → Vote Bareng, Hasil Jelas
+3. Rencana Berserakan, Urutan Nggak Jelas → Timeline Harian yang Jelas (+ preview itinerary multi-hari)
+4. Chat Trip Kecampur → Ruang Diskusi Khusus Trip
 
 Sticky pagination dots (klikable) + fixed CTA; konten scrollable full-screen; tanpa skip.
 

@@ -823,7 +823,10 @@ describe('Chat & Media E2E (M7)', () => {
       await request(app.getHttpServer())
         .post(`/v1/trips/${tripId}/documents`)
         .set(auth(memberToken))
-        .send({ storage_key: 'trips/00000000-0000-0000-0000-000000000000/x.jpg', media_type: 'photo' })
+        .send({
+          storage_key: 'trips/00000000-0000-0000-0000-000000000000/x.jpg',
+          media_type: 'photo',
+        })
         .expect(HttpStatus.BAD_REQUEST);
     });
 

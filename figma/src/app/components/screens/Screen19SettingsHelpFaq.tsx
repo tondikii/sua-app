@@ -76,7 +76,15 @@ export function Screen19SettingsHelpFaq() {
                     textAlign: 'left',
                   }}
                 >
-                  <span style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, lineHeight: 1.4, flex: 1 }}>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: C.charcoal,
+                      lineHeight: 1.4,
+                      flex: 1,
+                    }}
+                  >
                     {item.q}
                   </span>
                   <ChevronDown
@@ -136,8 +144,12 @@ export function Screen19SettingsHelpFaq() {
             <Mail size={18} color={C.teal} strokeWidth={2} />
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>Masih butuh bantuan?</p>
-            <p style={{ fontSize: 12, color: C.teal, margin: 0, fontWeight: 600 }}>bantuan@aturperjalanan.id</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>
+              Masih butuh bantuan?
+            </p>
+            <p style={{ fontSize: 12, color: C.teal, margin: 0, fontWeight: 600 }}>
+              bantuan@aturperjalanan.id
+            </p>
           </div>
         </div>
       </div>

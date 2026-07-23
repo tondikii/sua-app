@@ -72,7 +72,9 @@ export function ConfirmDialogModal({
         <X size={13} color={C.muted} strokeWidth={2.5} />
       </button>
 
-      {icon && <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>{icon}</div>}
+      {icon && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>{icon}</div>
+      )}
 
       <h2
         style={{
@@ -136,7 +138,9 @@ export function ConfirmDialogModal({
             fontWeight: 700,
             cursor: 'pointer',
             fontFamily: FONT,
-            boxShadow: isDestructive ? `0 6px 16px ${DESTRUCTIVE.bg}35` : `0 6px 18px ${onConfirmAccent}40`,
+            boxShadow: isDestructive
+              ? `0 6px 16px ${DESTRUCTIVE.bg}35`
+              : `0 6px 18px ${onConfirmAccent}40`,
           }}
         >
           {confirmLabel}

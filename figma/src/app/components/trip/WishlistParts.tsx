@@ -93,7 +93,9 @@ export const WISHLIST_FORM_FILLED = {
   endTime: '16:00',
   hasMapsLink: true,
   mapsPlaceName: WISHLIST_SAMPLE.name,
-  refLinks: [{ id: 1, url: WISHLIST_SAMPLE.link ?? '', label: 'Panduan Pantai Tanjung Aan' }] as ActivityRefLink[],
+  refLinks: [
+    { id: 1, url: WISHLIST_SAMPLE.link ?? '', label: 'Panduan Pantai Tanjung Aan' },
+  ] as ActivityRefLink[],
   selectedPriority: 'high',
 };
 
@@ -143,9 +145,20 @@ export const WISHLIST_SORT_COUNTS: Record<WishlistSortTab, number> = {
   rendah: WISHLIST_ITEMS.filter((i) => i.priority === 'Rendah').length,
 };
 
-export const WISHLIST_FILTER_TAGS = ['#Pantai', '#Alam', '#Kuliner', '#Snorkeling', '#Sunset'] as const;
+export const WISHLIST_FILTER_TAGS = [
+  '#Pantai',
+  '#Alam',
+  '#Kuliner',
+  '#Snorkeling',
+  '#Sunset',
+] as const;
 
-export const WISHLIST_PRIORITIES: { label: WishlistPriority; value: string; bg: string; color: string }[] = [
+export const WISHLIST_PRIORITIES: {
+  label: WishlistPriority;
+  value: string;
+  bg: string;
+  color: string;
+}[] = [
   { label: 'Tinggi', value: 'high', bg: C.coralLight, color: C.coral },
   { label: 'Menengah', value: 'mid', bg: '#FFF8ED', color: '#F59E0B' },
   { label: 'Rendah', value: 'low', bg: C.tealLight, color: C.teal },
@@ -234,7 +247,7 @@ export function WishlistPageShell({
           ...(hasEmptyContent ? { justifyContent: 'center', alignItems: 'center' } : {}),
         }}
       >
-        {children ?? (emptyContent ?? <WishlistGrid items={items} menuOpenItemId={menuOpenItemId} />)}
+        {children ?? emptyContent ?? <WishlistGrid items={items} menuOpenItemId={menuOpenItemId} />}
       </div>
 
       {showFab && <WishlistFab />}
@@ -255,7 +268,16 @@ function WishlistHeader({ showAddButton }: { showAddButton: boolean }) {
         flexShrink: 0,
       }}
     >
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.5, flex: 1 }}>
+      <h2
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: C.charcoal,
+          margin: 0,
+          letterSpacing: -0.5,
+          flex: 1,
+        }}
+      >
         Wishlist Aktivitas
       </h2>
       {showAddButton && <WishlistAddButton />}
@@ -300,7 +322,15 @@ export function WishlistSortTabs({
   counts: Record<WishlistSortTab, number>;
 }) {
   return (
-    <div style={{ display: 'flex', margin: '14px 22px 0', borderBottom: `1.5px solid ${C.border}`, overflowX: 'auto', scrollbarWidth: 'none' }}>
+    <div
+      style={{
+        display: 'flex',
+        margin: '14px 22px 0',
+        borderBottom: `1.5px solid ${C.border}`,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+      }}
+    >
       {SORT_TAB_LABELS.map((tab) => {
         const active = tab.id === activeSort;
         const count = counts[tab.id];
@@ -320,7 +350,13 @@ export function WishlistSortTabs({
               flexShrink: 0,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? C.coral : C.muted }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                color: active ? C.coral : C.muted,
+              }}
+            >
               {tab.label}
             </span>
             <span
@@ -346,7 +382,10 @@ export function WishlistSortTabs({
 }
 
 function WishlistTagFilters({ activeTag }: { activeTag: string | null }) {
-  const chips = [{ label: 'Semua', value: null as string | null }, ...WISHLIST_FILTER_TAGS.map((t) => ({ label: t, value: t }))];
+  const chips = [
+    { label: 'Semua', value: null as string | null },
+    ...WISHLIST_FILTER_TAGS.map((t) => ({ label: t, value: t })),
+  ];
 
   return (
     <div
@@ -450,8 +489,20 @@ function WishlistGridCard({ item, menuOpen }: { item: WishlistItem; menuOpen?: b
         position: 'relative',
       }}
     >
-      <div style={{ position: 'relative', height: 118, backgroundColor: '#D8D4CC', borderRadius: '20px 20px 0 0', overflow: 'hidden' }}>
-        <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <div
+        style={{
+          position: 'relative',
+          height: 118,
+          backgroundColor: '#D8D4CC',
+          borderRadius: '20px 20px 0 0',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={item.image}
+          alt={item.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
         <div
           style={{
             position: 'absolute',
@@ -488,8 +539,26 @@ function WishlistGridCard({ item, menuOpen }: { item: WishlistItem; menuOpen?: b
       </div>
 
       <div style={{ padding: '11px 12px 13px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4, marginBottom: 4 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.2, lineHeight: 1.3, flex: 1 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 4,
+            marginBottom: 4,
+          }}
+        >
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: 0,
+              letterSpacing: -0.2,
+              lineHeight: 1.3,
+              flex: 1,
+            }}
+          >
             {item.name}
           </h3>
           <div style={{ position: 'relative', flexShrink: 0, marginTop: -2 }}>
@@ -510,7 +579,9 @@ function WishlistGridCard({ item, menuOpen }: { item: WishlistItem; menuOpen?: b
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
           <MapPin size={11} color={C.muted} strokeWidth={2.5} />
-          <span style={{ fontSize: 10, color: C.muted, fontWeight: 500, lineHeight: 1.35 }}>{item.location}</span>
+          <span style={{ fontSize: 10, color: C.muted, fontWeight: 500, lineHeight: 1.35 }}>
+            {item.location}
+          </span>
         </div>
         <TripTags tags={item.tags} variant="card" maxVisible={2} />
       </div>
@@ -550,7 +621,10 @@ function WishlistEmptyIllustration() {
       <circle cx="128" cy="48" r="3.5" fill="#FFB347" />
       <circle cx="132" cy="98" r="3" fill={C.teal} opacity="0.6" />
       <circle cx="90" cy="72" r="14" fill="white" stroke={C.teal} strokeWidth="1.5" opacity="0.9" />
-      <path d="M90 62 C86 62 83 65 83 69 C83 74 90 82 90 82 C90 82 97 74 97 69 C97 65 94 62 90 62Z" fill={C.teal} />
+      <path
+        d="M90 62 C86 62 83 65 83 69 C83 74 90 82 90 82 C90 82 97 74 97 69 C97 65 94 62 90 62Z"
+        fill={C.teal}
+      />
       <circle cx="90" cy="69" r="2.5" fill="white" />
     </svg>
   );
@@ -571,10 +645,27 @@ export function WishlistEmptyState() {
       }}
     >
       <WishlistEmptyIllustration />
-      <h3 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: '18px 0 10px', letterSpacing: -0.3 }}>
+      <h3
+        style={{
+          fontSize: 20,
+          fontWeight: 800,
+          color: C.charcoal,
+          margin: '18px 0 10px',
+          letterSpacing: -0.3,
+        }}
+      >
         Wishlist masih kosong
       </h3>
-      <p style={{ fontSize: 14, color: C.muted, margin: '0 0 28px', lineHeight: 1.55, fontWeight: 500, maxWidth: 280 }}>
+      <p
+        style={{
+          fontSize: 14,
+          color: C.muted,
+          margin: '0 0 28px',
+          lineHeight: 1.55,
+          fontWeight: 500,
+          maxWidth: 280,
+        }}
+      >
         Simpan aktivitas impianmu di sini — nanti bisa dijadikan perjalanan dengan satu tap.
       </p>
       <button
@@ -627,9 +718,23 @@ export function WishlistFilterEmptyState() {
 export function WishlistSheetBackdrop({ dimmed = true }: { dimmed?: boolean }) {
   return (
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-      <WishlistPageShell items={WISHLIST_ITEMS} showFab={false} showAddButton={false} activeSort="semua" activeTag={null} />
+      <WishlistPageShell
+        items={WISHLIST_ITEMS}
+        showFab={false}
+        showAddButton={false}
+        activeSort="semua"
+        activeTag={null}
+      />
       {dimmed && (
-        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,46,0.45)', zIndex: 10, pointerEvents: 'none' }} />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(26,26,46,0.45)',
+            zIndex: 10,
+            pointerEvents: 'none',
+          }}
+        />
       )}
     </div>
   );
@@ -696,11 +801,26 @@ export function WishlistFormBody({
                 backgroundColor: hasError ? '#FFF5F5' : C.light,
                 borderRadius: 14,
                 padding: '13px 16px',
-                border: hasError ? `2px solid ${ERROR_RED}` : title ? `1.5px solid ${C.coral}` : `1.5px solid ${C.border}`,
+                border: hasError
+                  ? `2px solid ${ERROR_RED}`
+                  : title
+                    ? `1.5px solid ${C.coral}`
+                    : `1.5px solid ${C.border}`,
               }}
             >
-              <MapPin size={16} color={hasError ? ERROR_RED : title ? C.coral : C.muted} strokeWidth={2.5} />
-              <span style={{ fontSize: title ? 15 : 14, color: title ? C.charcoal : C.mutedLight, fontWeight: title ? 500 : 400, flex: 1 }}>
+              <MapPin
+                size={16}
+                color={hasError ? ERROR_RED : title ? C.coral : C.muted}
+                strokeWidth={2.5}
+              />
+              <span
+                style={{
+                  fontSize: title ? 15 : 14,
+                  color: title ? C.charcoal : C.mutedLight,
+                  fontWeight: title ? 500 : 400,
+                  flex: 1,
+                }}
+              >
                 {title || 'Contoh: Pantai Tanjung Aan'}
               </span>
               {hasError && <AlertCircle size={17} color={ERROR_RED} strokeWidth={2.5} />}
@@ -708,7 +828,9 @@ export function WishlistFormBody({
           </div>
         </FormField>
         {titleError && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, paddingLeft: 2 }}
+          >
             <AlertCircle size={12} color={ERROR_RED} strokeWidth={2.5} />
             <span style={{ fontSize: 12, color: ERROR_RED, fontWeight: 600 }}>{titleError}</span>
           </div>
@@ -716,7 +838,15 @@ export function WishlistFormBody({
       </div>
 
       <div>
-        <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 10 }}>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.charcoal,
+            display: 'block',
+            marginBottom: 10,
+          }}
+        >
           Prioritas
         </label>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -794,7 +924,15 @@ export function WishlistFormSheet({
   ...formProps
 }: WishlistFormSheetProps) {
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: FONT,
+      }}
+    >
       <WishlistSheetBackdrop />
       <BottomSheet
         title={title}
@@ -869,7 +1007,8 @@ export function WishlistDeleteModal({ itemName = WISHLIST_SAMPLE.name }: { itemN
       title="Hapus dari wishlist?"
       description={
         <>
-          <strong style={{ color: C.charcoal }}>{itemName}</strong> akan dihapus dari daftar wishlistmu.
+          <strong style={{ color: C.charcoal }}>{itemName}</strong> akan dihapus dari daftar
+          wishlistmu.
         </>
       }
       icon={
@@ -911,7 +1050,17 @@ function WishlistDetailLinkRow({ icon: Icon, label }: { icon: typeof Navigation;
       }}
     >
       <Icon size={15} color={C.teal} strokeWidth={2.5} />
-      <span style={{ fontSize: 13, color: C.charcoal, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span
+        style={{
+          fontSize: 13,
+          color: C.charcoal,
+          fontWeight: 600,
+          flex: 1,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {label}
       </span>
     </button>
@@ -927,7 +1076,15 @@ export function WishlistDetailSheet({ item = WISHLIST_SAMPLE }: WishlistDetailSh
   const ps = priorityStyle(item.priority);
 
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: FONT,
+      }}
+    >
       <WishlistSheetBackdrop />
       <BottomSheet
         title={item.name}
@@ -936,7 +1093,11 @@ export function WishlistDetailSheet({ item = WISHLIST_SAMPLE }: WishlistDetailSh
         footer={<SheetPrimaryButton label="Jadikan Perjalanan" />}
         bodyPinned={
           <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height: 148 }}>
-            <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <img
+              src={item.image}
+              alt={item.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
             <div
               style={{
                 position: 'absolute',
@@ -970,7 +1131,17 @@ export function WishlistDetailSheet({ item = WISHLIST_SAMPLE }: WishlistDetailSh
         </div>
 
         {item.notes && (
-          <p style={{ fontSize: 13, color: C.charcoal, margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{item.notes}</p>
+          <p
+            style={{
+              fontSize: 13,
+              color: C.charcoal,
+              margin: 0,
+              lineHeight: 1.55,
+              fontWeight: 500,
+            }}
+          >
+            {item.notes}
+          </p>
         )}
 
         <div>
@@ -1011,9 +1182,16 @@ export function WishlistRemovedBanner({ itemName = WISHLIST_SAMPLE.name }: { ite
         fontFamily: FONT,
       }}
     >
-      <Heart size={16} color={C.coral} fill={C.coral} strokeWidth={0} style={{ flexShrink: 0, marginTop: 1 }} />
+      <Heart
+        size={16}
+        color={C.coral}
+        fill={C.coral}
+        strokeWidth={0}
+        style={{ flexShrink: 0, marginTop: 1 }}
+      />
       <p style={{ fontSize: 12, color: C.charcoal, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-        <strong style={{ fontWeight: 700 }}>{itemName}</strong> dihapus dari wishlist karena sudah dijadikan perjalanan.
+        <strong style={{ fontWeight: 700 }}>{itemName}</strong> dihapus dari wishlist karena sudah
+        dijadikan perjalanan.
       </p>
     </div>
   );

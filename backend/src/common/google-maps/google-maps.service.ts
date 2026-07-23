@@ -95,9 +95,7 @@ export class GoogleMapsService {
 
   private async resolvePlacePhoto(placeId: string): Promise<string | null> {
     try {
-      const detailsUrl = new URL(
-        'https://maps.googleapis.com/maps/api/place/details/json',
-      );
+      const detailsUrl = new URL('https://maps.googleapis.com/maps/api/place/details/json');
       detailsUrl.searchParams.set('place_id', placeId);
       detailsUrl.searchParams.set('fields', 'photos');
       detailsUrl.searchParams.set('key', this.apiKey!);
@@ -115,9 +113,7 @@ export class GoogleMapsService {
       }
 
       const photoRef = data.result.photos[0].photo_reference;
-      const photoUrl = new URL(
-        'https://maps.googleapis.com/maps/api/place/photo',
-      );
+      const photoUrl = new URL('https://maps.googleapis.com/maps/api/place/photo');
       photoUrl.searchParams.set('maxwidth', '400');
       photoUrl.searchParams.set('photo_reference', photoRef);
       photoUrl.searchParams.set('key', this.apiKey!);

@@ -176,7 +176,15 @@ export function Screen9Notifikasi() {
               </div>
 
               <div style={{ flex: 1, minWidth: 0, paddingRight: n.unread ? 12 : 0 }}>
-                <p style={{ fontSize: 13, color: C.charcoal, margin: '0 0 2px', lineHeight: 1.5, fontWeight: 500 }}>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: C.charcoal,
+                    margin: '0 0 2px',
+                    lineHeight: 1.5,
+                    fontWeight: 500,
+                  }}
+                >
                   {n.title}
                   {n.highlight && (
                     <>

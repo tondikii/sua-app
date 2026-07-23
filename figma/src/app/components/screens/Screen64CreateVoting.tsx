@@ -14,7 +14,11 @@ export function Screen64CreateVoting() {
       subtitle={CREATE_VOTING_TYPE_SUBTITLE}
       footer={<CreateVotingPrimaryButton label="Lanjutkan" />}
     >
-      <VotingTypeOptionList selected="destinasi" disabledTypes={['tanggal']} ongoingTypes={['tanggal']} />
+      <VotingTypeOptionList
+        selected="destinasi"
+        disabledTypes={['tanggal']}
+        ongoingTypes={['tanggal']}
+      />
     </CreateVotingScreen>
   );
 }

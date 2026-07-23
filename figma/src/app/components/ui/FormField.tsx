@@ -14,11 +14,21 @@ type FormFieldProps = {
 export function FormField({ label, required, optional, focused, children, hint }: FormFieldProps) {
   return (
     <div style={{ fontFamily: FONT }}>
-      <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+      <label
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: C.charcoal,
+          display: 'block',
+          marginBottom: 8,
+        }}
+      >
         {label}
         {required && <span style={{ color: C.coral }}> *</span>}
         {optional && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>(opsional)</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>
+            (opsional)
+          </span>
         )}
       </label>
       <div
@@ -34,7 +44,17 @@ export function FormField({ label, required, optional, focused, children, hint }
         {children}
       </div>
       {hint && (
-        <p style={{ fontSize: 11, color: C.muted, margin: '6px 0 0', fontWeight: 500, lineHeight: 1.45 }}>{hint}</p>
+        <p
+          style={{
+            fontSize: 11,
+            color: C.muted,
+            margin: '6px 0 0',
+            fontWeight: 500,
+            lineHeight: 1.45,
+          }}
+        >
+          {hint}
+        </p>
       )}
     </div>
   );
@@ -48,7 +68,13 @@ type FormInputBoxProps = {
   multiline?: boolean;
 };
 
-export function FormInputBox({ value, placeholder, focused = Boolean(value), leftIcon, multiline }: FormInputBoxProps) {
+export function FormInputBox({
+  value,
+  placeholder,
+  focused = Boolean(value),
+  leftIcon,
+  multiline,
+}: FormInputBoxProps) {
   const filled = Boolean(value);
 
   return (
@@ -65,7 +91,9 @@ export function FormInputBox({ value, placeholder, focused = Boolean(value), lef
       }}
     >
       {leftIcon && (
-        <span style={{ flexShrink: 0, display: 'flex', marginTop: multiline ? 2 : 0 }}>{leftIcon}</span>
+        <span style={{ flexShrink: 0, display: 'flex', marginTop: multiline ? 2 : 0 }}>
+          {leftIcon}
+        </span>
       )}
       <span
         style={{

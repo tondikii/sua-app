@@ -6,7 +6,6 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePollDto, VoteDateCandidateDto } from './dto/voting.dto';
 import { PollSerializer } from './serializers/poll.serializer';
 
 const USER_SUMMARY_SELECT = {
@@ -76,7 +75,7 @@ export class VotingService {
    * Enforces: max 1 active poll per poll_type per trip.
    * Participants only.
    */
-  async createPoll(tripId: string, userId: string, dto: CreatePollDto) {
+  async createPoll(tripId: string, userId: string, dto: any) {
     if (!['aktivitas', 'lainnya'].includes(dto.poll_type)) {
       throw new BadRequestException({
         code: 'INVALID_POLL_TYPE',
@@ -133,7 +132,7 @@ export class VotingService {
       });
 
       await Promise.all(
-        dto.options.map((label, idx) =>
+        dto.options.map((label: string, idx: number) =>
           tx.tripPollOption.create({
             data: {
               pollId: created.id,
@@ -260,11 +259,7 @@ export class VotingService {
    * Vote on a date candidate (part of tanggal poll, but stored in trip_date_votes).
    * Participants only; one vote per user per candidate.
    */
-  async voteOnDateCandidate(
-    tripId: string,
-    candidateId: string,
-    userId: string,
-  ) {
+  async voteOnDateCandidate(tripId: string, candidateId: string, userId: string) {
     const candidate = await this.prisma.tripDateCandidate.findFirst({
       where: { id: candidateId, tripId },
     });

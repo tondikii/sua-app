@@ -1,6 +1,10 @@
 import { C, FONT } from '../colors';
 import { TRIP_DATE_PENDING } from '../trip/CreateTripParts';
-import { TripDetailHeader, TripDetailTabs, TRIP_COUNTS_DATE_PENDING } from '../trip/TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  TRIP_COUNTS_DATE_PENDING,
+} from '../trip/TripDetailParts';
 import { DocumentGrid, SAMPLE_DOCUMENTS_WITH_CHAT } from '../trip/DocumentParts';
 
 const MEDIA_COUNTS = { ...TRIP_COUNTS_DATE_PENDING, media: 5 };
@@ -32,7 +36,9 @@ export function Screen94MediaFromChat() {
           flexDirection: 'column',
         }}
       >
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 4px' }}>Media Perjalanan</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 4px' }}>
+          Media Perjalanan
+        </p>
         <p style={{ fontSize: 11, color: C.muted, margin: '0 0 16px', lineHeight: 1.5 }}>
           Unggah manual atau kirim lewat chat — semua tampil di sini.
         </p>

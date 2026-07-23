@@ -19,8 +19,10 @@ import Svg, { Circle, Rect, Path } from 'react-native-svg';
 import { theme } from '../../src/theme';
 
 const IMAGES = {
-  intro: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=700&fit=crop&auto=format',
-  voting: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&h=700&fit=crop&auto=format',
+  intro:
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=700&fit=crop&auto=format',
+  voting:
+    'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&h=700&fit=crop&auto=format',
   itinerary:
     'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=700&fit=crop&auto=format',
   collaboration:
@@ -95,10 +97,7 @@ function AppBadge() {
       <View style={styles.badgeIcon}>
         <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
           <Circle cx={12} cy={12} r={10} stroke="white" strokeWidth={2} />
-          <Path
-            d="M16.24 7.76L14.12 14.12L7.76 16.24L9.88 9.88L16.24 7.76Z"
-            fill="white"
-          />
+          <Path d="M16.24 7.76L14.12 14.12L7.76 16.24L9.88 9.88L16.24 7.76Z" fill="white" />
         </Svg>
       </View>
       <Text style={styles.badgeLabel}>Atur Perjalanan</Text>
@@ -112,7 +111,15 @@ function MiniVotingPreview() {
       <View style={previewStyles.cardHeader}>
         <View style={[previewStyles.typeIcon, { backgroundColor: theme.colors.coralLight }]}>
           <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-            <Rect x={3} y={3} width={18} height={18} rx={2} stroke={theme.colors.coral} strokeWidth={2} />
+            <Rect
+              x={3}
+              y={3}
+              width={18}
+              height={18}
+              rx={2}
+              stroke={theme.colors.coral}
+              strokeWidth={2}
+            />
             <Path d="M3 9h18" stroke={theme.colors.coral} strokeWidth={2} />
             <Path d="M9 21V9" stroke={theme.colors.coral} strokeWidth={2} />
           </Svg>
@@ -185,10 +192,15 @@ function MiniItineraryPreview() {
             <View
               style={[
                 previewStyles.activityCard,
-                isPresent && { borderColor: theme.colors.coral, backgroundColor: theme.colors.coralLight },
+                isPresent && {
+                  borderColor: theme.colors.coral,
+                  backgroundColor: theme.colors.coralLight,
+                },
               ]}
             >
-              <Text style={[previewStyles.activityTime, isPresent && { color: theme.colors.coral }]}>
+              <Text
+                style={[previewStyles.activityTime, isPresent && { color: theme.colors.coral }]}
+              >
                 {item.time}
               </Text>
               <Text style={previewStyles.activityName}>{item.title}</Text>
@@ -367,9 +379,7 @@ export default function Onboarding() {
           ))}
         </View>
         <TouchableOpacity style={styles.cta} onPress={goNext} activeOpacity={0.9}>
-          <Text style={styles.ctaText}>
-            {isLast ? 'Mulai Sekarang' : 'Selanjutnya →'}
-          </Text>
+          <Text style={styles.ctaText}>{isLast ? 'Mulai Sekarang' : 'Selanjutnya →'}</Text>
         </TouchableOpacity>
       </View>
     </View>

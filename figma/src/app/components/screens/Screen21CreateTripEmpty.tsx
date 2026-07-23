@@ -1,4 +1,9 @@
-import { CreateTripFooter, CreateTripFormBody, CreateTripShell, getDefaultTripTimes } from '../trip/CreateTripParts';
+import {
+  CreateTripFooter,
+  CreateTripFormBody,
+  CreateTripShell,
+  getDefaultTripTimes,
+} from '../trip/CreateTripParts';
 
 /** [A] Form kosong — state awal buka sheet, tombol aktif; validasi baru muncul setelah tap Buat Perjalanan */
 export function Screen21CreateTripEmpty() {

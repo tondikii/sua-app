@@ -16,15 +16,48 @@ export function Screen4Username() {
     >
       <div style={{ height: 60 }} />
 
-      <div style={{ flex: 1, padding: '32px 24px 0', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: C.charcoal, margin: '0 0 8px', letterSpacing: -0.5, lineHeight: 1.25 }}>
+      <div
+        style={{
+          flex: 1,
+          padding: '32px 24px 0',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 24,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '0 0 8px',
+            letterSpacing: -0.5,
+            lineHeight: 1.25,
+          }}
+        >
           Buat username
         </h1>
-        <p style={{ fontSize: 14, color: C.muted, margin: '0 0 28px', lineHeight: 1.55, fontWeight: 500 }}>
+        <p
+          style={{
+            fontSize: 14,
+            color: C.muted,
+            margin: '0 0 28px',
+            lineHeight: 1.55,
+            fontWeight: 500,
+          }}
+        >
           Ini nama yang akan dilihat teman saat kamu diundang ke perjalanan.
         </p>
 
-        <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+        <label
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            color: C.charcoal,
+            display: 'block',
+            marginBottom: 8,
+          }}
+        >
           Username
         </label>
         <div
@@ -39,7 +72,9 @@ export function Screen4Username() {
           }}
         >
           <AtSign size={16} color={C.muted} strokeWidth={2.5} />
-          <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: C.charcoal }}>budi_santoso</span>
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: C.charcoal }}>
+            budi_santoso
+          </span>
           <CheckCircle size={17} color={C.teal} strokeWidth={2.5} />
         </div>
         <p style={{ fontSize: 12, color: C.teal, fontWeight: 600, margin: '8px 0 0' }}>

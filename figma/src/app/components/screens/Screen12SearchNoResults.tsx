@@ -22,7 +22,9 @@ export function Screen12SearchNoResults() {
 
       <div style={{ padding: '12px 22px 0', flexShrink: 0 }}>
         <SearchBar query="xyztravel99" focused />
-        <p style={{ fontSize: 12, color: C.muted, margin: '12px 0 0', fontWeight: 600 }}>0 hasil ditemukan</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: '12px 0 0', fontWeight: 600 }}>
+          0 hasil ditemukan
+        </p>
       </div>
 
       <SearchEmptyState />

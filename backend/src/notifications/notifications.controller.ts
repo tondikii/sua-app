@@ -43,10 +43,7 @@ export class NotificationsController {
   // PUT /v1/notifications/:id/read
   @Put(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
-  markAsRead(
-    @CurrentUser() user: CurrentUserPayload,
-    @Param('id') id: string,
-  ) {
+  markAsRead(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
     return this.notificationsService.markAsRead(id, user.userId);
   }
 

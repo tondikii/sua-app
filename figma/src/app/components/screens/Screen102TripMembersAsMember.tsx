@@ -11,7 +11,13 @@ export function Screen102TripMembersAsMember() {
         showInviteSearch: true,
         searchValue: 'karina',
         inviteResults: [
-          { id: 11, name: 'Karina Putri', username: '@karina_putri', initial: 'K', color: AVATAR_COLORS[4] },
+          {
+            id: 11,
+            name: 'Karina Putri',
+            username: '@karina_putri',
+            initial: 'K',
+            color: AVATAR_COLORS[4],
+          },
         ],
         pendingInvites: [
           { id: 'email-pending', email: EXAMPLE_INVITE_EMAIL, status: 'email_sent' },
@@ -33,9 +39,30 @@ export function Screen102TripMembersAsMember() {
           },
         ],
         members: [
-          { id: 0, name: 'Budi Santoso', username: '@budi_santoso', initial: 'B', color: AVATAR_COLORS[0], role: 'creator' },
-          { id: 2, name: 'Kamu (Rudi)', username: '@rudi_travel', initial: 'R', color: AVATAR_COLORS[2], role: 'member' },
-          { id: 3, name: 'Fitra Kusuma', username: '@fitrakusuma', initial: 'F', color: AVATAR_COLORS[3], role: 'member' },
+          {
+            id: 0,
+            name: 'Budi Santoso',
+            username: '@budi_santoso',
+            initial: 'B',
+            color: AVATAR_COLORS[0],
+            role: 'creator',
+          },
+          {
+            id: 2,
+            name: 'Kamu (Rudi)',
+            username: '@rudi_travel',
+            initial: 'R',
+            color: AVATAR_COLORS[2],
+            role: 'member',
+          },
+          {
+            id: 3,
+            name: 'Fitra Kusuma',
+            username: '@fitrakusuma',
+            initial: 'F',
+            color: AVATAR_COLORS[3],
+            role: 'member',
+          },
         ],
       }}
     />

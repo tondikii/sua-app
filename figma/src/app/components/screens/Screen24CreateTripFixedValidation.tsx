@@ -3,7 +3,14 @@ import { CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/C
 /** [A] Tanggal pasti — validasi error setelah submit (nama & tanggal kosong) */
 export function Screen24CreateTripFixedValidation() {
   return (
-    <CreateTripShell footer={<CreateTripFooter disabled errors={['Nama perjalanan wajib diisi', 'Pilih tanggal perjalanan']} />}>
+    <CreateTripShell
+      footer={
+        <CreateTripFooter
+          disabled
+          errors={['Nama perjalanan wajib diisi', 'Pilih tanggal perjalanan']}
+        />
+      }
+    >
       <CreateTripFormBody
         name=""
         tags={[]}

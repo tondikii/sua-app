@@ -41,7 +41,12 @@ export function Screen71VotingEndedMenu() {
           showMenuOpen
           menuVariant="ended"
         >
-          <VotingCandidateList items={VOTING_DATE_CANDIDATES} labelKey="range" readOnly winnerId={2} />
+          <VotingCandidateList
+            items={VOTING_DATE_CANDIDATES}
+            labelKey="range"
+            readOnly
+            winnerId={2}
+          />
         </VotingCollapseSection>
 
         <CreateVotingFab />

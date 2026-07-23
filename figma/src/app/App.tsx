@@ -97,7 +97,10 @@ import { Screen75VotingLockedLainnya } from './components/screens/Screen75Voting
 // §9 Detail Perjalanan — Chat
 import { Screen76Chat } from './components/screens/Screen76Chat';
 import { Screen86EmptyChat } from './components/screens/Screen86EmptyChat';
-import { Screen87ChatLongPress, Screen88ChatLongPressOwn } from './components/screens/Screen87ChatLongPress';
+import {
+  Screen87ChatLongPress,
+  Screen88ChatLongPressOwn,
+} from './components/screens/Screen87ChatLongPress';
 import {
   Screen89ChatReplyMeToOther,
   Screen90ChatReplyMeToSelf,
@@ -210,7 +213,11 @@ const workflowSections: WorkflowSection[] = [
       { index: 11, label: 'Cari — Hasil', component: <Screen11SearchUser /> },
       { index: 12, label: 'Cari — Tidak Ada Hasil', component: <Screen12SearchNoResults /> },
       { index: 13, label: 'Profil Publik', component: <Screen13PublicProfile /> },
-      { index: 14, label: 'Profil Publik — Empty Trip', component: <Screen14PublicProfileEmptyTrip /> },
+      {
+        index: 14,
+        label: 'Profil Publik — Empty Trip',
+        component: <Screen14PublicProfileEmptyTrip />,
+      },
     ],
   },
   {
@@ -235,23 +242,71 @@ const workflowSections: WorkflowSection[] = [
     screens: [
       { index: 21, label: 'A — Form kosong (awal)', component: <Screen21CreateTripEmpty /> },
       { index: 22, label: 'A — Default terisi · waktu custom', component: <Screen22Create /> },
-      { index: 23, label: 'A — Siap submit · sepanjang hari', component: <Screen23CreateTripFixedDate /> },
+      {
+        index: 23,
+        label: 'A — Siap submit · sepanjang hari',
+        component: <Screen23CreateTripFixedDate />,
+      },
       { index: 24, label: 'A — Validasi error', component: <Screen24CreateTripFixedValidation /> },
-      { index: 25, label: 'B — Mode kandidat · belum ada tersimpan', component: <Screen25CreateTripUncertainDate /> },
-      { index: 26, label: 'B — Tooltip info tombol kandidat', component: <Screen26CreateTripUncertainInfo /> },
-      { index: 27, label: 'B — Kandidat 1 aktif · belum simpan', component: <Screen27PickDateCandidate1 /> },
-      { index: 28, label: 'B — Kandidat 1 tersimpan · tenggat muncul', component: <Screen28CreateTripCandidate1Saved /> },
-      { index: 29, label: 'B — 1 tersimpan + kandidat 2 aktif', component: <Screen29PickDateCandidate2 /> },
-      { index: 30, label: 'B — 2 kandidat tersimpan', component: <Screen30CreateTripTwoCandidatesSaved /> },
-      { index: 31, label: 'B — 2 tersimpan + kandidat 3 aktif', component: <Screen31MultiDatePicker /> },
-      { index: 32, label: 'B — 3 kandidat + tenggat · siap submit', component: <Screen32DateCandidatesComplete /> },
+      {
+        index: 25,
+        label: 'B — Mode kandidat · belum ada tersimpan',
+        component: <Screen25CreateTripUncertainDate />,
+      },
+      {
+        index: 26,
+        label: 'B — Tooltip info tombol kandidat',
+        component: <Screen26CreateTripUncertainInfo />,
+      },
+      {
+        index: 27,
+        label: 'B — Kandidat 1 aktif · belum simpan',
+        component: <Screen27PickDateCandidate1 />,
+      },
+      {
+        index: 28,
+        label: 'B — Kandidat 1 tersimpan · tenggat muncul',
+        component: <Screen28CreateTripCandidate1Saved />,
+      },
+      {
+        index: 29,
+        label: 'B — 1 tersimpan + kandidat 2 aktif',
+        component: <Screen29PickDateCandidate2 />,
+      },
+      {
+        index: 30,
+        label: 'B — 2 kandidat tersimpan',
+        component: <Screen30CreateTripTwoCandidatesSaved />,
+      },
+      {
+        index: 31,
+        label: 'B — 2 tersimpan + kandidat 3 aktif',
+        component: <Screen31MultiDatePicker />,
+      },
+      {
+        index: 32,
+        label: 'B — 3 kandidat + tenggat · siap submit',
+        component: <Screen32DateCandidatesComplete />,
+      },
       { index: 33, label: 'B — Validasi error', component: <Screen33FormValidation /> },
       { index: 34, label: 'Submit — Loading', component: <Screen34CreateTripSubmitting /> },
-      { index: 35, label: 'Undang — Sukses buat · search kosong', component: <Screen35BottomSheetUndang /> },
+      {
+        index: 35,
+        label: 'Undang — Sukses buat · search kosong',
+        component: <Screen35BottomSheetUndang />,
+      },
       { index: 36, label: 'Undang — Hasil cari', component: <Screen36InviteSearchResults /> },
-      { index: 37, label: 'Undang — Hasil cari · sebagian terundang', component: <Screen37InvitePartialInvited /> },
+      {
+        index: 37,
+        label: 'Undang — Hasil cari · sebagian terundang',
+        component: <Screen37InvitePartialInvited />,
+      },
       { index: 38, label: 'Undang — Tidak ditemukan', component: <Screen38InviteSearchEmpty /> },
-      { index: 39, label: 'Undang — Email belum terdaftar', component: <Screen39InviteEmailNotRegistered /> },
+      {
+        index: 39,
+        label: 'Undang — Email belum terdaftar',
+        component: <Screen39InviteEmailNotRegistered />,
+      },
       { index: 40, label: 'Undang — Email terkirim', component: <Screen40InviteEmailSent /> },
       { index: 41, label: 'Undang — Daftar terundang', component: <Screen41InviteSent /> },
     ],
@@ -263,19 +318,67 @@ const workflowSections: WorkflowSection[] = [
     accent: C.coral,
     screens: [
       { index: 42, label: 'Itinerary — Empty', component: <Screen42ItineraryEmpty /> },
-      { index: 43, label: 'Itinerary — Tanggal divoting · Hari 1 + gap', component: <Screen43Destinations /> },
-      { index: 44, label: 'Itinerary — Multi-hari (state waktu)', component: <Screen44DestinationsFixedDate /> },
-      { index: 45, label: 'Sheet — Tambah aktivitas (form awal)', component: <Screen45BottomSheetDestinasi /> },
-      { index: 46, label: 'Sheet — Tambah (Maps + cover otomatis)', component: <Screen46ActivityAddLinked /> },
-      { index: 47, label: 'Sheet — Tambah (Maps tanpa thumbnail)', component: <Screen47ActivityMapsNoThumb /> },
-      { index: 48, label: 'Sheet — Tambah (cover media perjalanan)', component: <Screen48ActivityTripMediaCover /> },
-      { index: 49, label: 'Sheet — Pilih cover · Media', component: <Screen49ActivityCoverPicker /> },
-      { index: 50, label: 'Sheet — Pilih cover · Icon', component: <Screen50ActivityCoverIconPicker /> },
-      { index: 51, label: 'Detail aktivitas (cover Maps)', component: <Screen51DestinationDetail /> },
-      { index: 52, label: 'Detail aktivitas (cover icon)', component: <Screen52ActivityDetailNoCover /> },
-      { index: 53, label: 'Detail aktivitas (tanpa cover)', component: <Screen53ActivityDetailBare /> },
+      {
+        index: 43,
+        label: 'Itinerary — Tanggal divoting · Hari 1 + gap',
+        component: <Screen43Destinations />,
+      },
+      {
+        index: 44,
+        label: 'Itinerary — Multi-hari (state waktu)',
+        component: <Screen44DestinationsFixedDate />,
+      },
+      {
+        index: 45,
+        label: 'Sheet — Tambah aktivitas (form awal)',
+        component: <Screen45BottomSheetDestinasi />,
+      },
+      {
+        index: 46,
+        label: 'Sheet — Tambah (Maps + cover otomatis)',
+        component: <Screen46ActivityAddLinked />,
+      },
+      {
+        index: 47,
+        label: 'Sheet — Tambah (Maps tanpa thumbnail)',
+        component: <Screen47ActivityMapsNoThumb />,
+      },
+      {
+        index: 48,
+        label: 'Sheet — Tambah (cover media perjalanan)',
+        component: <Screen48ActivityTripMediaCover />,
+      },
+      {
+        index: 49,
+        label: 'Sheet — Pilih cover · Media',
+        component: <Screen49ActivityCoverPicker />,
+      },
+      {
+        index: 50,
+        label: 'Sheet — Pilih cover · Icon',
+        component: <Screen50ActivityCoverIconPicker />,
+      },
+      {
+        index: 51,
+        label: 'Detail aktivitas (cover Maps)',
+        component: <Screen51DestinationDetail />,
+      },
+      {
+        index: 52,
+        label: 'Detail aktivitas (cover icon)',
+        component: <Screen52ActivityDetailNoCover />,
+      },
+      {
+        index: 53,
+        label: 'Detail aktivitas (tanpa cover)',
+        component: <Screen53ActivityDetailBare />,
+      },
       { index: 54, label: 'Sheet — Edit aktivitas', component: <Screen54ActivityEdit /> },
-      { index: 55, label: 'Menu ⋮ aktivitas (Edit · Hapus)', component: <Screen55ActivityItemMenu /> },
+      {
+        index: 55,
+        label: 'Menu ⋮ aktivitas (Edit · Hapus)',
+        component: <Screen55ActivityItemMenu />,
+      },
     ],
   },
   {
@@ -286,24 +389,76 @@ const workflowSections: WorkflowSection[] = [
     screens: [
       { index: 56, label: 'Voting Aktif (tanggal + aktivitas)', component: <Screen56Voting /> },
       { index: 57, label: 'Voting — Empty', component: <Screen57VotingEmpty /> },
-      { index: 58, label: 'Sheet — Buat voting baru (tanggal)', component: <Screen58CreateVotingTanggal /> },
-      { index: 59, label: 'Sheet — Detail Voting (tanggal · awal)', component: <Screen59CreateVotingTanggalDetails /> },
-      { index: 60, label: 'Sheet — Tambah Kandidat Tanggal (kandidat 2)', component: <Screen60CreateVotingTanggalPickCandidate /> },
-      { index: 61, label: 'Sheet — Detail Voting (2 kandidat)', component: <Screen61VotingTanggalDetailsTwoCandidates /> },
-      { index: 62, label: 'Sheet — Tambah Kandidat Tanggal (kandidat 3)', component: <Screen62VotingTanggalPickCandidate3 /> },
-      { index: 63, label: 'Sheet — Detail Voting (lengkap)', component: <Screen63VotingTanggalDetailsComplete /> },
-      { index: 64, label: 'Sheet — Buat Voting (pilih jenis)', component: <Screen64CreateVoting /> },
-      { index: 65, label: 'Sheet — Detail Voting (aktivitas)', component: <Screen65CreateVotingDetails /> },
+      {
+        index: 58,
+        label: 'Sheet — Buat voting baru (tanggal)',
+        component: <Screen58CreateVotingTanggal />,
+      },
+      {
+        index: 59,
+        label: 'Sheet — Detail Voting (tanggal · awal)',
+        component: <Screen59CreateVotingTanggalDetails />,
+      },
+      {
+        index: 60,
+        label: 'Sheet — Tambah Kandidat Tanggal (kandidat 2)',
+        component: <Screen60CreateVotingTanggalPickCandidate />,
+      },
+      {
+        index: 61,
+        label: 'Sheet — Detail Voting (2 kandidat)',
+        component: <Screen61VotingTanggalDetailsTwoCandidates />,
+      },
+      {
+        index: 62,
+        label: 'Sheet — Tambah Kandidat Tanggal (kandidat 3)',
+        component: <Screen62VotingTanggalPickCandidate3 />,
+      },
+      {
+        index: 63,
+        label: 'Sheet — Detail Voting (lengkap)',
+        component: <Screen63VotingTanggalDetailsComplete />,
+      },
+      {
+        index: 64,
+        label: 'Sheet — Buat Voting (pilih jenis)',
+        component: <Screen64CreateVoting />,
+      },
+      {
+        index: 65,
+        label: 'Sheet — Detail Voting (aktivitas)',
+        component: <Screen65CreateVotingDetails />,
+      },
       { index: 66, label: 'Sheet — Edit Voting (aktivitas)', component: <Screen66EditVoting /> },
-      { index: 67, label: 'Sheet — Edit Voting (tanggal)', component: <Screen67EditVotingTanggal /> },
+      {
+        index: 67,
+        label: 'Sheet — Edit Voting (tanggal)',
+        component: <Screen67EditVotingTanggal />,
+      },
       { index: 68, label: 'Modal — Hapus Voting', component: <Screen68DeleteVotingModal /> },
-      { index: 69, label: 'Menu ⋮ — Aktif (Edit/Akhiri/Hapus)', component: <Screen69VotingCardMenu /> },
-      { index: 70, label: 'Voting — Pipeline + Selesai', component: <Screen70VotingEndedPipeline /> },
+      {
+        index: 69,
+        label: 'Menu ⋮ — Aktif (Edit/Akhiri/Hapus)',
+        component: <Screen69VotingCardMenu />,
+      },
+      {
+        index: 70,
+        label: 'Voting — Pipeline + Selesai',
+        component: <Screen70VotingEndedPipeline />,
+      },
       { index: 71, label: 'Menu ⋮ — Selesai (Hapus saja)', component: <Screen71VotingEndedMenu /> },
       { index: 72, label: 'Voting — Auto Berakhir', component: <Screen72VotingExpired /> },
       { index: 73, label: 'Modal — Akhiri Voting Tanggal', component: <Screen73StatusLocked /> },
-      { index: 74, label: 'Modal — Aktivitas Itinerary Selesai', component: <Screen74VotingLockedDestinasi /> },
-      { index: 75, label: 'Modal — Voting Lainnya Selesai', component: <Screen75VotingLockedLainnya /> },
+      {
+        index: 74,
+        label: 'Modal — Aktivitas Itinerary Selesai',
+        component: <Screen74VotingLockedDestinasi />,
+      },
+      {
+        index: 75,
+        label: 'Modal — Voting Lainnya Selesai',
+        component: <Screen75VotingLockedLainnya />,
+      },
     ],
   },
   {
@@ -315,20 +470,56 @@ const workflowSections: WorkflowSection[] = [
       { index: 76, label: 'Chat — Grup aktif', component: <Screen76Chat /> },
       { index: 77, label: 'Chat — Lampiran foto/video', component: <Screen77ChatAttachMenu /> },
       { index: 78, label: 'Chat — Kirim foto + caption', component: <Screen78ChatSendPhoto /> },
-      { index: 79, label: 'Chat — Kirim foto (caption terisi)', component: <Screen79ChatSendPhotoCaption /> },
+      {
+        index: 79,
+        label: 'Chat — Kirim foto (caption terisi)',
+        component: <Screen79ChatSendPhotoCaption />,
+      },
       { index: 80, label: 'Chat — Kirim video + caption', component: <Screen80ChatSendVideo /> },
-      { index: 81, label: 'Chat — Kirim video (caption terisi)', component: <Screen81ChatSendVideoCaption /> },
+      {
+        index: 81,
+        label: 'Chat — Kirim video (caption terisi)',
+        component: <Screen81ChatSendVideoCaption />,
+      },
       { index: 82, label: 'Chat — Foto terkirim (saya)', component: <Screen82ChatPhotoSent /> },
       { index: 83, label: 'Chat — Video terkirim (saya)', component: <Screen83ChatVideoSent /> },
-      { index: 84, label: 'Chat — Foto dari anggota lain', component: <Screen84ChatPhotoReceived /> },
-      { index: 85, label: 'Chat — Video dari anggota lain', component: <Screen85ChatVideoReceived /> },
+      {
+        index: 84,
+        label: 'Chat — Foto dari anggota lain',
+        component: <Screen84ChatPhotoReceived />,
+      },
+      {
+        index: 85,
+        label: 'Chat — Video dari anggota lain',
+        component: <Screen85ChatVideoReceived />,
+      },
       { index: 86, label: 'Chat — Empty', component: <Screen86EmptyChat /> },
-      { index: 87, label: 'Chat — Long press (pesan orang lain)', component: <Screen87ChatLongPress /> },
-      { index: 88, label: 'Chat — Long press (pesan sendiri)', component: <Screen88ChatLongPressOwn /> },
-      { index: 89, label: 'Chat — Balas (saya → orang lain)', component: <Screen89ChatReplyMeToOther /> },
+      {
+        index: 87,
+        label: 'Chat — Long press (pesan orang lain)',
+        component: <Screen87ChatLongPress />,
+      },
+      {
+        index: 88,
+        label: 'Chat — Long press (pesan sendiri)',
+        component: <Screen88ChatLongPressOwn />,
+      },
+      {
+        index: 89,
+        label: 'Chat — Balas (saya → orang lain)',
+        component: <Screen89ChatReplyMeToOther />,
+      },
       { index: 90, label: 'Chat — Balas (saya → saya)', component: <Screen90ChatReplyMeToSelf /> },
-      { index: 91, label: 'Chat — Balas (orang lain → orang lain)', component: <Screen91ChatReplyOtherToOther /> },
-      { index: 92, label: 'Chat — Balas (orang lain → saya)', component: <Screen92ChatReplyOtherToMe /> },
+      {
+        index: 91,
+        label: 'Chat — Balas (orang lain → orang lain)',
+        component: <Screen91ChatReplyOtherToOther />,
+      },
+      {
+        index: 92,
+        label: 'Chat — Balas (orang lain → saya)',
+        component: <Screen92ChatReplyOtherToMe />,
+      },
     ],
   },
   {
@@ -350,10 +541,26 @@ const workflowSections: WorkflowSection[] = [
       { index: 95, label: 'Modal — Hapus Perjalanan', component: <Screen95TripDelete /> },
       { index: 96, label: 'Modal — Google Calendar', component: <Screen96CalendarSyncModal /> },
       { index: 97, label: 'Anggota — Pembuat', component: <Screen97TripMembers /> },
-      { index: 98, label: 'Anggota — Cari email belum terdaftar', component: <Screen98TripMembersInviteEmail /> },
-      { index: 99, label: 'Anggota — Pending · belum daftar app', component: <Screen99TripMembersEmailInvited /> },
-      { index: 100, label: 'Anggota — Pending · 2 state', component: <Screen100TripMembersPendingInvite /> },
-      { index: 101, label: 'Anggota — Ditolak · undang kembali', component: <Screen101TripMembersRejected /> },
+      {
+        index: 98,
+        label: 'Anggota — Cari email belum terdaftar',
+        component: <Screen98TripMembersInviteEmail />,
+      },
+      {
+        index: 99,
+        label: 'Anggota — Pending · belum daftar app',
+        component: <Screen99TripMembersEmailInvited />,
+      },
+      {
+        index: 100,
+        label: 'Anggota — Pending · 2 state',
+        component: <Screen100TripMembersPendingInvite />,
+      },
+      {
+        index: 101,
+        label: 'Anggota — Ditolak · undang kembali',
+        component: <Screen101TripMembersRejected />,
+      },
       { index: 102, label: 'Anggota — POV anggota', component: <Screen102TripMembersAsMember /> },
       { index: 103, label: 'Edit Info Perjalanan', component: <Screen103TripEdit /> },
     ],
@@ -366,18 +573,54 @@ const workflowSections: WorkflowSection[] = [
     screens: [
       { index: 104, label: 'Empty — Belum ada item', component: <Screen104WishlistEmpty /> },
       { index: 105, label: 'Grid — Daftar terisi', component: <Screen105Wishlist /> },
-      { index: 106, label: 'Filter — Tidak ada hasil', component: <Screen106WishlistFilterEmpty /> },
-      { index: 107, label: 'Sheet — Tambah (form kosong)', component: <Screen107AddWishlistEmpty /> },
-      { index: 108, label: 'Sheet — Tambah (form terisi)', component: <Screen108BottomSheetWishlist /> },
-      { index: 109, label: 'Sheet — Tambah (validasi error)', component: <Screen109AddWishlistValidation /> },
+      {
+        index: 106,
+        label: 'Filter — Tidak ada hasil',
+        component: <Screen106WishlistFilterEmpty />,
+      },
+      {
+        index: 107,
+        label: 'Sheet — Tambah (form kosong)',
+        component: <Screen107AddWishlistEmpty />,
+      },
+      {
+        index: 108,
+        label: 'Sheet — Tambah (form terisi)',
+        component: <Screen108BottomSheetWishlist />,
+      },
+      {
+        index: 109,
+        label: 'Sheet — Tambah (validasi error)',
+        component: <Screen109AddWishlistValidation />,
+      },
       { index: 110, label: 'Detail item', component: <Screen110WishlistDetail /> },
       { index: 111, label: 'Sheet — Edit item', component: <Screen111EditWishlist /> },
-      { index: 112, label: 'Menu ⋮ (Edit · Hapus · Jadikan Perjalanan)', component: <Screen112WishlistCardMenu /> },
+      {
+        index: 112,
+        label: 'Menu ⋮ (Edit · Hapus · Jadikan Perjalanan)',
+        component: <Screen112WishlistCardMenu />,
+      },
       { index: 113, label: 'Modal — Hapus item', component: <Screen113WishlistDelete /> },
-      { index: 114, label: 'Jadikan Perjalanan — Prefill wishlist', component: <Screen114WishlistToTripEmpty /> },
-      { index: 115, label: 'Jadikan Perjalanan — Siap submit', component: <Screen115WishlistToTripReady /> },
-      { index: 116, label: 'Undang — Sukses buat (+ wishlist dihapus)', component: <Screen116WishlistToTripInvite /> },
-      { index: 117, label: 'Itinerary — 1 aktivitas dari wishlist', component: <Screen117ItineraryFromWishlist /> },
+      {
+        index: 114,
+        label: 'Jadikan Perjalanan — Prefill wishlist',
+        component: <Screen114WishlistToTripEmpty />,
+      },
+      {
+        index: 115,
+        label: 'Jadikan Perjalanan — Siap submit',
+        component: <Screen115WishlistToTripReady />,
+      },
+      {
+        index: 116,
+        label: 'Undang — Sukses buat (+ wishlist dihapus)',
+        component: <Screen116WishlistToTripInvite />,
+      },
+      {
+        index: 117,
+        label: 'Itinerary — 1 aktivitas dari wishlist',
+        component: <Screen117ItineraryFromWishlist />,
+      },
     ],
   },
   {
@@ -390,8 +633,16 @@ const workflowSections: WorkflowSection[] = [
       { index: 119, label: 'Toast & Snackbar', component: <Screen119ToastComponents /> },
       { index: 120, label: 'Error — Offline', component: <Screen120Error /> },
       { index: 121, label: 'Media Viewer — Foto', component: <Screen121MediaViewerPhoto /> },
-      { index: 122, label: 'Media Viewer — Video (pause)', component: <Screen122MediaViewerVideo /> },
-      { index: 123, label: 'Media Viewer — Video (playing)', component: <Screen123MediaViewerVideoPlaying /> },
+      {
+        index: 122,
+        label: 'Media Viewer — Video (pause)',
+        component: <Screen122MediaViewerVideo />,
+      },
+      {
+        index: 123,
+        label: 'Media Viewer — Video (playing)',
+        component: <Screen123MediaViewerVideoPlaying />,
+      },
       { index: 124, label: 'Dark Mode — Beranda', component: <Screen124DarkBeranda /> },
       { index: 125, label: 'Design Tokens', component: <Screen125DesignTokens /> },
     ],
@@ -400,7 +651,13 @@ const workflowSections: WorkflowSection[] = [
 
 const TOTAL_SCREENS = workflowSections.reduce((sum, s) => sum + s.screens.length, 0);
 
-function ScreenRow({ sectionId, screens }: { sectionId: number; screens: WorkflowSection['screens'] }) {
+function ScreenRow({
+  sectionId,
+  screens,
+}: {
+  sectionId: number;
+  screens: WorkflowSection['screens'];
+}) {
   return (
     <div
       style={{
@@ -434,11 +691,21 @@ function SectionLabel({
     <div style={{ marginBottom: 24, fontFamily: FONT }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 4, height: 20, backgroundColor: accent, borderRadius: 4 }} />
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.3 }}>
+        <h2
+          style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: 0,
+            letterSpacing: -0.3,
+          }}
+        >
           {title}
         </h2>
       </div>
-      <p style={{ fontSize: 13, color: C.muted, margin: '5px 0 0 14px', fontWeight: 500 }}>{subtitle}</p>
+      <p style={{ fontSize: 13, color: C.muted, margin: '5px 0 0 14px', fontWeight: 500 }}>
+        {subtitle}
+      </p>
     </div>
   );
 }
@@ -454,7 +721,15 @@ export default function App() {
     >
       {/* ── Page header ── */}
       <div style={{ padding: '52px 60px 44px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            marginBottom: 10,
+          }}
+        >
           <div
             style={{
               width: 44,
@@ -467,18 +742,40 @@ export default function App() {
               boxShadow: `0 8px 24px ${C.coral}66`,
             }}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="white" stroke="none" />
+              <polygon
+                points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"
+                fill="white"
+                stroke="none"
+              />
             </svg>
           </div>
-          <h1 style={{ fontSize: 30, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.8 }}>
+          <h1
+            style={{
+              fontSize: 30,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: 0,
+              letterSpacing: -0.8,
+            }}
+          >
             Atur Perjalanan
           </h1>
         </div>
 
         <p style={{ color: C.muted, fontSize: 15, margin: '0 0 22px', fontWeight: 500 }}>
-          Mobile App UI · {TOTAL_SCREENS} Layar High-Fidelity · Dikelompokkan per pipeline docs/WORKFLOW.md
+          Mobile App UI · {TOTAL_SCREENS} Layar High-Fidelity · Dikelompokkan per pipeline
+          docs/WORKFLOW.md
         </p>
 
         {/* Palette swatches */}
@@ -490,7 +787,16 @@ export default function App() {
             { color: C.teal, label: 'Soft Teal' },
           ].map((s) => (
             <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <div style={{ width: 20, height: 20, backgroundColor: s.color, borderRadius: 6, border: s.border ?? 'none', flexShrink: 0 }} />
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: s.color,
+                  borderRadius: 6,
+                  border: s.border ?? 'none',
+                  flexShrink: 0,
+                }}
+              />
               <span style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>{s.label}</span>
             </div>
           ))}
@@ -500,7 +806,11 @@ export default function App() {
       {workflowSections.map((section, i) => (
         <div key={section.id}>
           <div style={{ padding: '0 60px 16px' }}>
-            <SectionLabel title={section.title} subtitle={section.subtitle} accent={section.accent} />
+            <SectionLabel
+              title={section.title}
+              subtitle={section.subtitle}
+              accent={section.accent}
+            />
           </div>
           <div style={{ padding: `0 60px ${i === workflowSections.length - 1 ? 80 : 60}px` }}>
             <ScreenRow sectionId={section.id} screens={section.screens} />

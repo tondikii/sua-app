@@ -13,13 +13,13 @@ Buka URL Vite (biasanya `http://localhost:5173`).
 
 ## Struktur
 
-| Path | Isi |
-|------|-----|
-| `src/app/App.tsx` | Registry **125 layar** dikelompokkan **§1–§13** |
-| `src/app/components/screens/` | Satu file per layar (`Screen{N}*.tsx`) |
-| `src/app/components/trip/` | Composable UI trip (itinerary, voting, chat, dll.) |
-| `src/app/components/colors.ts` | Design tokens (`C`, `AVATAR_COLORS`, `FONT`) |
-| `src/app/components/BottomNav.tsx` | Bottom nav 5 tab |
+| Path                               | Isi                                                |
+| ---------------------------------- | -------------------------------------------------- |
+| `src/app/App.tsx`                  | Registry **125 layar** dikelompokkan **§1–§13**    |
+| `src/app/components/screens/`      | Satu file per layar (`Screen{N}*.tsx`)             |
+| `src/app/components/trip/`         | Composable UI trip (itinerary, voting, chat, dll.) |
+| `src/app/components/colors.ts`     | Design tokens (`C`, `AVATAR_COLORS`, `FONT`)       |
+| `src/app/components/BottomNav.tsx` | Bottom nav 5 tab                                   |
 
 ## Dokumentasi Terkait
 

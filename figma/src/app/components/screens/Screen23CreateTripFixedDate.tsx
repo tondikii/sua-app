@@ -1,4 +1,9 @@
-import { TRIP_DRAFT, CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/CreateTripParts';
+import {
+  TRIP_DRAFT,
+  CreateTripFooter,
+  CreateTripFormBody,
+  CreateTripShell,
+} from '../trip/CreateTripParts';
 
 /** [A] Tanggal pasti — semua field terisi, sepanjang hari, siap submit */
 export function Screen23CreateTripFixedDate() {

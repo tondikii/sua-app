@@ -23,7 +23,15 @@ type FieldState = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 function AtSign() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={theme.colors.muted} strokeWidth={2.5} strokeLinecap="round">
+    <Svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={theme.colors.muted}
+      strokeWidth={2.5}
+      strokeLinecap="round"
+    >
       <Circle cx={12} cy={12} r={4} />
       <Path d="M16 12v1a3 3 0 006 0v-1a10 10 0 10-3.5 7.5" />
     </Svg>
@@ -32,7 +40,16 @@ function AtSign() {
 
 function CheckCircle() {
   return (
-    <Svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke={theme.colors.teal} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={theme.colors.teal}
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Circle cx={12} cy={12} r={10} />
       <Path d="M8 12l3 3 5-5" />
     </Svg>
@@ -41,7 +58,16 @@ function CheckCircle() {
 
 function XCircle() {
   return (
-    <Svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke={theme.colors.danger} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={theme.colors.danger}
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Circle cx={12} cy={12} r={10} />
       <Path d="M15 9l-6 6M9 9l6 6" />
     </Svg>
@@ -141,7 +167,12 @@ export default function UsernameSetup() {
   };
 
   const isCtaDisabled =
-    submitting || !username || fieldState === 'idle' || fieldState === 'checking' || fieldState === 'invalid' || fieldState === 'taken';
+    submitting ||
+    !username ||
+    fieldState === 'idle' ||
+    fieldState === 'checking' ||
+    fieldState === 'invalid' ||
+    fieldState === 'taken';
 
   const borderColor =
     fieldState === 'available'
@@ -189,18 +220,14 @@ export default function UsernameSetup() {
           {(fieldState === 'invalid' || fieldState === 'taken') && <XCircle />}
         </View>
 
-        {fieldState === 'available' && (
-          <Text style={styles.availableText}>Username tersedia</Text>
-        )}
+        {fieldState === 'available' && <Text style={styles.availableText}>Username tersedia</Text>}
         {errorMessage && fieldState !== 'available' && (
           <Text style={[styles.errorText, fieldState === 'invalid' ? styles.hintText : undefined]}>
             {errorMessage}
           </Text>
         )}
         {fieldState === 'idle' && (
-          <Text style={styles.hintText}>
-            Huruf, angka, dan underscore (_) · min. 3 karakter
-          </Text>
+          <Text style={styles.hintText}>Huruf, angka, dan underscore (_) · min. 3 karakter</Text>
         )}
 
         {suggestions.length > 0 && (
@@ -235,9 +262,7 @@ export default function UsernameSetup() {
           {submitting ? (
             <ActivityIndicator color={theme.colors.white} />
           ) : (
-            <Text style={[styles.ctaText, isCtaDisabled && styles.ctaTextDisabled]}>
-              Lanjutkan
-            </Text>
+            <Text style={[styles.ctaText, isCtaDisabled && styles.ctaTextDisabled]}>Lanjutkan</Text>
           )}
         </TouchableOpacity>
       </View>

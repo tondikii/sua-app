@@ -95,7 +95,9 @@ export class NotificationsService {
 
     return {
       data: enrichedData,
-      next_cursor: hasNextPage ? enrichedData[enrichedData.length - 1].created_at.toISOString() : null,
+      next_cursor: hasNextPage
+        ? enrichedData[enrichedData.length - 1].created_at.toISOString()
+        : null,
     };
   }
 

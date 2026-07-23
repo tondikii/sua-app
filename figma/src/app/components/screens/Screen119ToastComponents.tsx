@@ -12,15 +12,14 @@ interface ToastProps {
 function ToastCard({ type, message, submessage, action, icon }: ToastProps) {
   const isInfo = type === 'info';
 
-  const bg =
-    type === 'success' ? C.teal :
-    type === 'error' ? C.coral :
-    C.white;
+  const bg = type === 'success' ? C.teal : type === 'error' ? C.coral : C.white;
 
   const shadow =
-    type === 'success' ? `0 12px 32px ${C.teal}55` :
-    type === 'error' ? `0 12px 32px ${C.coral}55` :
-    `0 8px 24px ${C.shadow}`;
+    type === 'success'
+      ? `0 12px 32px ${C.teal}55`
+      : type === 'error'
+        ? `0 12px 32px ${C.coral}55`
+        : `0 8px 24px ${C.shadow}`;
 
   const titleColor = isInfo ? C.charcoal : 'white';
   const subColor = isInfo ? C.muted : 'rgba(255,255,255,0.75)';
@@ -45,7 +44,15 @@ function ToastCard({ type, message, submessage, action, icon }: ToastProps) {
           {message}
         </p>
         {submessage && (
-          <p style={{ color: subColor, fontSize: 12, margin: '3px 0 0', fontWeight: 500, lineHeight: 1.4 }}>
+          <p
+            style={{
+              color: subColor,
+              fontSize: 12,
+              margin: '3px 0 0',
+              fontWeight: 500,
+              lineHeight: 1.4,
+            }}
+          >
             {submessage}
           </p>
         )}
@@ -139,10 +146,27 @@ export function Screen119ToastComponents() {
       <div style={{ height: 60, flexShrink: 0 }} />
 
       <div style={{ padding: '8px 22px 20px', flexShrink: 0 }}>
-        <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
+        <p
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: C.muted,
+            margin: '0 0 4px',
+            textTransform: 'uppercase',
+            letterSpacing: 1.6,
+          }}
+        >
           Komponen UI
         </p>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.4 }}>
+        <h2
+          style={{
+            fontSize: 20,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: 0,
+            letterSpacing: -0.4,
+          }}
+        >
           Toast & Snackbar
         </h2>
         <p style={{ fontSize: 13, color: C.muted, margin: '4px 0 0', fontWeight: 500 }}>
@@ -164,8 +188,23 @@ export function Screen119ToastComponents() {
         {toasts.map((toast, i) => (
           <div key={toast.type}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-              <div style={{ width: 7, height: 7, backgroundColor: labels[i].color, borderRadius: '50%' }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: labels[i].color, textTransform: 'uppercase', letterSpacing: 1 }}>
+              <div
+                style={{
+                  width: 7,
+                  height: 7,
+                  backgroundColor: labels[i].color,
+                  borderRadius: '50%',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: labels[i].color,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1,
+                }}
+              >
                 {labels[i].label}
               </span>
             </div>
@@ -184,9 +223,15 @@ export function Screen119ToastComponents() {
             gap: 10,
           }}
         >
-          <Info size={15} color={C.teal} style={{ flexShrink: 0, marginTop: 1 }} strokeWidth={2.5} />
+          <Info
+            size={15}
+            color={C.teal}
+            style={{ flexShrink: 0, marginTop: 1 }}
+            strokeWidth={2.5}
+          />
           <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.55, fontWeight: 500 }}>
-            Toast muncul dari bawah selama <span style={{ fontWeight: 700, color: C.charcoal }}>3 detik</span>, atau tutup manual.
+            Toast muncul dari bawah selama{' '}
+            <span style={{ fontWeight: 700, color: C.charcoal }}>3 detik</span>, atau tutup manual.
           </p>
         </div>
       </div>

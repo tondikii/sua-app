@@ -39,10 +39,20 @@ export function ProfileStats({ stats }: { stats: { value: string; label: string 
             borderRight: i < stats.length - 1 ? `1px solid ${C.border}` : 'none',
           }}
         >
-          <div style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, lineHeight: 1, letterSpacing: -0.4 }}>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: C.charcoal,
+              lineHeight: 1,
+              letterSpacing: -0.4,
+            }}
+          >
             {stat.value}
           </div>
-          <div style={{ fontSize: 10, color: C.muted, marginTop: 3, fontWeight: 600 }}>{stat.label}</div>
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 3, fontWeight: 600 }}>
+            {stat.label}
+          </div>
         </div>
       ))}
     </div>
@@ -74,7 +84,9 @@ export function ProfileHeader({ username, action }: { username: string; action?:
       >
         {username}
       </h1>
-      <div style={{ width: 40, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>{action}</div>
+      <div style={{ width: 40, flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+        {action}
+      </div>
     </div>
   );
 }
@@ -166,7 +178,11 @@ export function ProfileTripGrid({
             }}
           >
             <div style={{ height: 96, backgroundColor: '#D8D4CC', position: 'relative' }}>
-              <img src={trip.image} alt={trip.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={trip.image}
+                alt={trip.title}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
               <div
                 style={{
                   position: 'absolute',
@@ -180,7 +196,17 @@ export function ProfileTripGrid({
               </div>
             </div>
             <div style={{ padding: '9px 10px 10px' }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: C.charcoal, margin: 0, lineHeight: 1.3 }}>{trip.title}</p>
+              <p
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: C.charcoal,
+                  margin: 0,
+                  lineHeight: 1.3,
+                }}
+              >
+                {trip.title}
+              </p>
             </div>
           </div>
         ))}
@@ -189,7 +215,13 @@ export function ProfileTripGrid({
   );
 }
 
-export function ProfileCard({ identity, tripCount }: { identity: ProfileIdentity; tripCount: number }) {
+export function ProfileCard({
+  identity,
+  tripCount,
+}: {
+  identity: ProfileIdentity;
+  tripCount: number;
+}) {
   return (
     <div
       style={{
@@ -220,16 +252,34 @@ export function ProfileCard({ identity, tripCount }: { identity: ProfileIdentity
           {identity.initial}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: C.charcoal, margin: '0 0 4px', letterSpacing: -0.3 }}>
+          <h2
+            style={{
+              fontSize: 16,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: '0 0 4px',
+              letterSpacing: -0.3,
+            }}
+          >
             {identity.name}
           </h2>
-          <p style={{ fontSize: 12, color: C.charcoal, margin: '0 0 5px', lineHeight: 1.45, fontWeight: 400 }}>
+          <p
+            style={{
+              fontSize: 12,
+              color: C.charcoal,
+              margin: '0 0 5px',
+              lineHeight: 1.45,
+              fontWeight: 400,
+            }}
+          >
             {identity.bio}
           </p>
           {identity.websiteUrl ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Globe size={11} color={C.teal} strokeWidth={2.2} />
-              <span style={{ fontSize: 11, color: C.teal, fontWeight: 600 }}>{identity.websiteUrl}</span>
+              <span style={{ fontSize: 11, color: C.teal, fontWeight: 600 }}>
+                {identity.websiteUrl}
+              </span>
             </div>
           ) : null}
         </div>

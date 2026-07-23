@@ -20,7 +20,15 @@ export function Screen68DeleteVotingModal() {
         position: 'relative',
       }}
     >
-      <div style={{ opacity: 0.35, pointerEvents: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          opacity: 0.35,
+          pointerEvents: 'none',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <TripDetailHeader title="Lombok Weekend Escape" subtitle={TRIP_DATE_PENDING} />
         <TripDetailTabs activeTab="voting" />
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>

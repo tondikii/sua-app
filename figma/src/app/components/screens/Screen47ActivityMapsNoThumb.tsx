@@ -9,7 +9,11 @@ import { ACTIVITY_BACKDROP_PENDING } from '../trip/ActivitySheetBackdropPresets'
 export function Screen47ActivityMapsNoThumb() {
   return (
     <ActivitySheetScreen backdrop={ACTIVITY_BACKDROP_PENDING}>
-      <ActivityFormSheet title="Tambah Aktivitas" activity={DEMO_ACTIVITY_MAPS_NO_THUMB} mode="add" />
+      <ActivityFormSheet
+        title="Tambah Aktivitas"
+        activity={DEMO_ACTIVITY_MAPS_NO_THUMB}
+        mode="add"
+      />
     </ActivitySheetScreen>
   );
 }

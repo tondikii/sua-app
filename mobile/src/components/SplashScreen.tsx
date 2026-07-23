@@ -28,7 +28,14 @@ function CompassMark() {
   return (
     <Svg width={128} height={128} viewBox="0 0 128 128" fill="none">
       <Circle cx={64} cy={64} r={62} fill="rgba(255,255,255,0.07)" />
-      <Circle cx={64} cy={64} r={54} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={1.5} />
+      <Circle
+        cx={64}
+        cy={64}
+        r={54}
+        fill="none"
+        stroke="rgba(255,255,255,0.28)"
+        strokeWidth={1.5}
+      />
       <Circle cx={64} cy={64} r={38} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
       {TICKS.map((t) => (
         <Line
@@ -51,16 +58,44 @@ function CompassMark() {
       <Circle cx={64} cy={64} r={9} fill="white" />
       <Circle cx={64} cy={64} r={4.5} fill={theme.colors.coral} />
       {/* Cardinal letters (Utara / Selatan / Timur / Barat) */}
-      <SvgText x={64} y={14} textAnchor="middle" fill="white" fontSize={12} fontFamily={fontFamilies.extraBold}>
+      <SvgText
+        x={64}
+        y={14}
+        textAnchor="middle"
+        fill="white"
+        fontSize={12}
+        fontFamily={fontFamilies.extraBold}
+      >
         U
       </SvgText>
-      <SvgText x={64} y={122} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={11} fontFamily={fontFamilies.bold}>
+      <SvgText
+        x={64}
+        y={122}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.45)"
+        fontSize={11}
+        fontFamily={fontFamilies.bold}
+      >
         S
       </SvgText>
-      <SvgText x={121} y={68} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={11} fontFamily={fontFamilies.bold}>
+      <SvgText
+        x={121}
+        y={68}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.45)"
+        fontSize={11}
+        fontFamily={fontFamilies.bold}
+      >
         T
       </SvgText>
-      <SvgText x={7} y={68} textAnchor="middle" fill="rgba(255,255,255,0.45)" fontSize={11} fontFamily={fontFamilies.bold}>
+      <SvgText
+        x={7}
+        y={68}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.45)"
+        fontSize={11}
+        fontFamily={fontFamilies.bold}
+      >
         B
       </SvgText>
     </Svg>

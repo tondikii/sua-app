@@ -85,14 +85,25 @@ export function InviteShell({
               <CheckCircle2 size={22} color={C.teal} strokeWidth={2.5} />
             </div>
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.3 }}>
+              <h2
+                style={{
+                  fontSize: 17,
+                  fontWeight: 800,
+                  color: C.charcoal,
+                  margin: 0,
+                  letterSpacing: -0.3,
+                }}
+              >
                 Perjalanan berhasil dibuat!
               </h2>
-              <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0', fontWeight: 600 }}>{tripName}</p>
+              <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0', fontWeight: 600 }}>
+                {tripName}
+              </p>
             </div>
           </div>
           <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-            Ajak teman ke dalam perjalanan. Atau Kamu bisa lewati dulu dan undang di detail perjalanan.
+            Ajak teman ke dalam perjalanan. Atau Kamu bisa lewati dulu dan undang di detail
+            perjalanan.
           </p>
         </div>
       )}
@@ -106,7 +117,15 @@ export function InviteShell({
       </div>
 
       {children && (
-        <div style={{ flex: 1, padding: '0 22px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            flex: 1,
+            padding: '0 22px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           {children}
         </div>
       )}
@@ -155,7 +174,9 @@ export function InvitePrimaryButton({ label }: { label: string }) {
 export function InviteSearchResultsBody({ results }: { results: InviteUser[] }) {
   return (
     <>
-      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>{results.length} hasil</p>
+      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
+        {results.length} hasil
+      </p>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {results.map((user) => (
           <InviteUserRow key={user.id} user={user} />
@@ -240,7 +261,9 @@ export function InviteUserRow({
         {user.initial}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>{user.name}</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>
+          {user.name}
+        </p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, fontWeight: 500 }}>{subtitle}</p>
       </div>
       {invited && cancelable ? (
@@ -263,7 +286,9 @@ export function InviteUserRow({
           Batalkan
         </button>
       ) : invited ? (
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.teal, flexShrink: 0 }}>✓ Terundang</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: C.teal, flexShrink: 0 }}>
+          ✓ Terundang
+        </span>
       ) : (
         <button
           type="button"
@@ -320,7 +345,9 @@ export function InviteInvitedRow({ user }: { user: InviteUser }) {
         {user.initial}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>{user.name}</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 2px' }}>
+          {user.name}
+        </p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, fontWeight: 500 }}>{subtitle}</p>
       </div>
       <button
@@ -373,7 +400,15 @@ export function EmailInviteSearchResult({ email }: { email: string }) {
           <Mail size={20} color={C.muted} strokeWidth={2.5} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: '0 0 4px', wordBreak: 'break-all' }}>
+          <p
+            style={{
+              fontSize: 14,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: '0 0 4px',
+              wordBreak: 'break-all',
+            }}
+          >
             {email}
           </p>
           <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
@@ -432,21 +467,24 @@ export function EmailInviteSentBanner({ email }: { email: string }) {
         <CheckCircle2 size={20} color={C.teal} strokeWidth={2.5} />
       </div>
       <div>
-        <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: '0 0 4px' }}>Email terkirim</p>
+        <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: '0 0 4px' }}>
+          Email terkirim
+        </p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-          Undangan dikirim ke <strong style={{ color: C.charcoal }}>{email}</strong>. Tunggu unduh app lalu terima dari
-          beranda.
+          Undangan dikirim ke <strong style={{ color: C.charcoal }}>{email}</strong>. Tunggu unduh
+          app lalu terima dari beranda.
         </p>
       </div>
     </div>
   );
 }
 
-const EMAIL_INVITE_STATUS: Record<EmailInviteStatus, { label: string; color: string; bg: string }> = {
-  email_sent: { label: 'Belum daftar app', color: C.muted, bg: C.light },
-  pending_accept: { label: 'Belum menerima', color: C.coral, bg: C.coralLight },
-  rejected: { label: 'Ditolak', color: C.danger, bg: C.dangerLight },
-};
+const EMAIL_INVITE_STATUS: Record<EmailInviteStatus, { label: string; color: string; bg: string }> =
+  {
+    email_sent: { label: 'Belum daftar app', color: C.muted, bg: C.light },
+    pending_accept: { label: 'Belum menerima', color: C.coral, bg: C.coralLight },
+    rejected: { label: 'Ditolak', color: C.danger, bg: C.dangerLight },
+  };
 
 function PendingActionButton({
   label,

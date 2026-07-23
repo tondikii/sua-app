@@ -168,17 +168,13 @@ describe('MediaService', () => {
       prisma.trip.findFirst.mockResolvedValue({ id: TRIP, creatorId: OTHER });
       prisma.tripDocument.findFirst.mockResolvedValue(docRow({ uploadedBy: OTHER }));
 
-      await expect(service.deleteDocument(TRIP, DOC, USER)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.deleteDocument(TRIP, DOC, USER)).rejects.toThrow(ForbiddenException);
     });
 
     it('throws NotFound when document missing', async () => {
       prisma.trip.findFirst.mockResolvedValue({ id: TRIP, creatorId: USER });
       prisma.tripDocument.findFirst.mockResolvedValue(null);
-      await expect(service.deleteDocument(TRIP, DOC, USER)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.deleteDocument(TRIP, DOC, USER)).rejects.toThrow(NotFoundException);
     });
   });
 });

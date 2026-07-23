@@ -5,7 +5,6 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTripDto, UpdateTripDto } from './dto';
 import { TripStatus } from '@prisma/client';
 import { TripSerializer } from './serializers/trip.serializer';
 import { InvitationSerializer } from './serializers/invitation.serializer';
@@ -31,7 +30,7 @@ export class TripsService {
    * sets `voting_deadline` — all inside a single Prisma transaction (ARCHITECTURE §3.4).
    * The creator is always inserted as the first participant.
    */
-  async createTrip(userId: string, dto: CreateTripDto) {
+  async createTrip(userId: string, dto: any) {
     const {
       name,
       tags = [],
@@ -111,9 +110,7 @@ export class TripsService {
               ? new Date(`2000-01-01T${data.start_time}:00`)
               : null,
           endTime:
-            !data.is_all_day && data.end_time
-              ? new Date(`2000-01-01T${data.end_time}:00`)
-              : null,
+            !data.is_all_day && data.end_time ? new Date(`2000-01-01T${data.end_time}:00`) : null,
         },
       });
 
@@ -236,12 +233,7 @@ export class TripsService {
    * List the current user's trips (tab=upcoming|completed), cursor paginated.
    * Returns `{ data, next_cursor }` enriched cards (WORKFLOW §3).
    */
-  async listTrips(
-    userId: string,
-    tab: 'upcoming' | 'completed',
-    cursor?: string,
-    limit = 20,
-  ) {
+  async listTrips(userId: string, tab: 'upcoming' | 'completed', cursor?: string, limit = 20) {
     const take = Math.min(limit, 100);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -289,11 +281,11 @@ export class TripsService {
         TripSerializer.toCard(
           trip,
           trip.coverDocument?.storageKey
-            ? signedCoverUrls.get(trip.coverDocument.storageKey) ?? null
+            ? (signedCoverUrls.get(trip.coverDocument.storageKey) ?? null)
             : null,
         ),
       ),
-      next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
+      next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 
@@ -345,7 +337,7 @@ export class TripsService {
   }
 
   /** Update trip metadata — creator only. */
-  async updateTrip(tripId: string, userId: string, dto: UpdateTripDto) {
+  async updateTrip(tripId: string, userId: string, dto: any) {
     await this.assertCreator(tripId, userId);
 
     await this.prisma.trip.update({
@@ -356,12 +348,8 @@ export class TripsService {
         startDate: dto.start_date ? new Date(dto.start_date) : undefined,
         endDate: dto.end_date ? new Date(dto.end_date) : undefined,
         isAllDay: dto.is_all_day,
-        startTime: dto.start_time
-          ? new Date(`2000-01-01T${dto.start_time}:00`)
-          : undefined,
-        endTime: dto.end_time
-          ? new Date(`2000-01-01T${dto.end_time}:00`)
-          : undefined,
+        startTime: dto.start_time ? new Date(`2000-01-01T${dto.start_time}:00`) : undefined,
+        endTime: dto.end_time ? new Date(`2000-01-01T${dto.end_time}:00`) : undefined,
         isPublic: dto.is_public,
       },
     });
@@ -425,8 +413,7 @@ export class TripsService {
       include: { user: { select: USER_SUMMARY_SELECT } },
     });
 
-    const isMember =
-      trip.creatorId === userId || participants.some((p) => p.userId === userId);
+    const isMember = trip.creatorId === userId || participants.some((p) => p.userId === userId);
     if (!isMember) {
       throw new ForbiddenException({
         code: 'TRIP_ACCESS_DENIED',

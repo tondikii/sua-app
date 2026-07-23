@@ -9,7 +9,11 @@ import { ACTIVITY_BACKDROP_FIXED } from '../trip/ActivitySheetBackdropPresets';
 export function Screen46ActivityAddLinked() {
   return (
     <ActivitySheetScreen backdrop={ACTIVITY_BACKDROP_FIXED}>
-      <ActivityFormSheet title="Tambah Aktivitas" activity={DEMO_ACTIVITY_MAPS_LINKED_ADD} mode="add" />
+      <ActivityFormSheet
+        title="Tambah Aktivitas"
+        activity={DEMO_ACTIVITY_MAPS_LINKED_ADD}
+        mode="add"
+      />
     </ActivitySheetScreen>
   );
 }

@@ -13,7 +13,12 @@ type SettingsItem = {
 const legalItems: SettingsItem[] = [
   { icon: HelpCircle, label: 'Bantuan & FAQ', sub: 'Panduan & pertanyaan umum', color: '#60A5FA' },
   { icon: FileText, label: 'Kebijakan Privasi', sub: 'Cara kami mengelola datamu', color: C.teal },
-  { icon: FileText, label: 'Syarat & Ketentuan', sub: 'Ketentuan penggunaan layanan', color: '#8B7CF6' },
+  {
+    icon: FileText,
+    label: 'Syarat & Ketentuan',
+    sub: 'Ketentuan penggunaan layanan',
+    color: '#8B7CF6',
+  },
 ];
 
 function SettingsRow({ item, isLast }: { item: SettingsItem; isLast?: boolean }) {
@@ -44,7 +49,9 @@ function SettingsRow({ item, isLast }: { item: SettingsItem; isLast?: boolean })
         <Icon size={17} color={item.color} strokeWidth={2} />
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 1px' }}>{item.label}</p>
+        <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: '0 0 1px' }}>
+          {item.label}
+        </p>
         <p style={{ fontSize: 11, color: C.muted, margin: 0, fontWeight: 500 }}>{item.sub}</p>
       </div>
       <ChevronRight size={16} color={C.mutedLight} />
@@ -107,18 +114,47 @@ export function Screen17Settings() {
           B
         </div>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 15, fontWeight: 800, color: C.charcoal, margin: 0 }}>Budi Santoso</p>
-          <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>@budi_santoso</p>
+          <p style={{ fontSize: 15, fontWeight: 800, color: C.charcoal, margin: 0 }}>
+            Budi Santoso
+          </p>
+          <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>
+            @budi_santoso
+          </p>
         </div>
         <ChevronRight size={18} color={C.mutedLight} />
       </div>
 
-      <div style={{ flex: 1, padding: '0 22px', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'auto' }}>
+      <div
+        style={{
+          flex: 1,
+          padding: '0 22px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          overflow: 'auto',
+        }}
+      >
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: C.muted,
+              marginBottom: 8,
+              textTransform: 'uppercase',
+              letterSpacing: 1.2,
+            }}
+          >
             Bantuan & Legal
           </p>
-          <div style={{ backgroundColor: C.white, borderRadius: 18, overflow: 'hidden', boxShadow: `0 3px 16px ${C.shadow}` }}>
+          <div
+            style={{
+              backgroundColor: C.white,
+              borderRadius: 18,
+              overflow: 'hidden',
+              boxShadow: `0 3px 16px ${C.shadow}`,
+            }}
+          >
             {legalItems.map((item, idx) => (
               <SettingsRow key={item.label} item={item} isLast={idx === legalItems.length - 1} />
             ))}
@@ -126,15 +162,38 @@ export function Screen17Settings() {
         </div>
 
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: C.muted,
+              marginBottom: 8,
+              textTransform: 'uppercase',
+              letterSpacing: 1.2,
+            }}
+          >
             Akun
           </p>
-          <div style={{ backgroundColor: C.white, borderRadius: 18, overflow: 'hidden', boxShadow: `0 3px 16px ${C.shadow}` }}>
+          <div
+            style={{
+              backgroundColor: C.white,
+              borderRadius: 18,
+              overflow: 'hidden',
+              boxShadow: `0 3px 16px ${C.shadow}`,
+            }}
+          >
             <SettingsRow item={deleteItem} isLast />
           </div>
         </div>
 
-        <div style={{ backgroundColor: C.white, borderRadius: 18, boxShadow: `0 3px 16px ${C.shadow}`, overflow: 'hidden' }}>
+        <div
+          style={{
+            backgroundColor: C.white,
+            borderRadius: 18,
+            boxShadow: `0 3px 16px ${C.shadow}`,
+            overflow: 'hidden',
+          }}
+        >
           <button
             type="button"
             style={{
@@ -166,7 +225,9 @@ export function Screen17Settings() {
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: C.coral, margin: 0 }}>Keluar</p>
-              <p style={{ fontSize: 11, color: `${C.coral}99`, margin: '1px 0 0', fontWeight: 500 }}>
+              <p
+                style={{ fontSize: 11, color: `${C.coral}99`, margin: '1px 0 0', fontWeight: 500 }}
+              >
                 Keluar dari akun di perangkat ini
               </p>
             </div>
@@ -174,7 +235,15 @@ export function Screen17Settings() {
           </button>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 11, color: C.mutedLight, margin: '4px 0 12px', fontWeight: 500 }}>
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: 11,
+            color: C.mutedLight,
+            margin: '4px 0 12px',
+            fontWeight: 500,
+          }}
+        >
           Atur Perjalanan · v2.4.1
         </p>
       </div>

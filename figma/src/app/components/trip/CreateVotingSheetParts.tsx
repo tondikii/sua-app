@@ -26,8 +26,7 @@ export const CREATE_VOTING_TYPE_SUBTITLE =
   'Pilih jenis voting yang akan diputuskan bersama anggota.';
 
 export const CREATE_VOTING_DETAILS_TITLE = 'Detail Voting';
-export const CREATE_VOTING_DETAILS_SUBTITLE =
-  'Isi judul dan kandidat yang akan divoting anggota.';
+export const CREATE_VOTING_DETAILS_SUBTITLE = 'Isi judul dan kandidat yang akan divoting anggota.';
 export const CREATE_VOTING_TANGGAL_DETAILS_SUBTITLE =
   'Tambahkan kandidat tanggal perjalanan yang akan divoting anggota.';
 
@@ -37,16 +36,30 @@ export const CREATE_VOTING_TANGGAL_ADD_SUBTITLE =
 
 export const EDIT_VOTING_TITLE = 'Edit Voting';
 export const EDIT_VOTING_SUBTITLE = 'Ubah judul, kandidat, atau tenggat voting ini.';
-export const EDIT_VOTING_TANGGAL_SUBTITLE =
-  'Ubah kandidat tanggal atau tenggat voting ini.';
+export const EDIT_VOTING_TANGGAL_SUBTITLE = 'Ubah kandidat tanggal atau tenggat voting ini.';
 
 export function CreateVotingBackdrop({ subtitle = TRIP_DATE_PENDING }: { subtitle?: string }) {
   return (
     <>
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: C.white, opacity: 0.4, pointerEvents: 'none' }}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: C.white,
+          opacity: 0.4,
+          pointerEvents: 'none',
+        }}
+      >
         <TripDetailHeader title="Lombok Weekend Escape" subtitle={subtitle} />
       </div>
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,46,0.45)', zIndex: 10 }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(26,26,46,0.45)',
+          zIndex: 10,
+        }}
+      />
     </>
   );
 }
@@ -62,7 +75,14 @@ type CreateVotingSheetProps = {
 };
 
 /** Bottom sheet buat voting — wrapper shared BottomSheet */
-export function CreateVotingSheet({ title, subtitle, onBack, children, footer, height = 'auto' }: CreateVotingSheetProps) {
+export function CreateVotingSheet({
+  title,
+  subtitle,
+  onBack,
+  children,
+  footer,
+  height = 'auto',
+}: CreateVotingSheetProps) {
   return (
     <BottomSheet title={title} subtitle={subtitle} onBack={onBack} footer={footer} height={height}>
       {children}
@@ -93,7 +113,9 @@ export function VotingTypeOptionList({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <p style={{ fontSize: 12, fontWeight: 700, color: C.muted, margin: '0 0 2px' }}>Pilih jenis voting</p>
+      <p style={{ fontSize: 12, fontWeight: 700, color: C.muted, margin: '0 0 2px' }}>
+        Pilih jenis voting
+      </p>
       {types.map((type) => {
         const meta = VOTING_TYPE_META[type];
         const Icon = meta.icon;
@@ -134,7 +156,9 @@ export function VotingTypeOptionList({
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0 }}>{meta.label}</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0 }}>
+                  {meta.label}
+                </p>
                 {disabled && ongoingTypes.includes(type) && (
                   <span
                     style={{
@@ -180,11 +204,21 @@ export function VotingFormField({
 
   return (
     <div>
-      <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+      <label
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: C.charcoal,
+          display: 'block',
+          marginBottom: 8,
+        }}
+      >
         {label}
         {required && <span style={{ color: C.coral }}> *</span>}
         {optional && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>(opsional)</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginLeft: 4 }}>
+            (opsional)
+          </span>
         )}
       </label>
       <div
@@ -212,7 +246,15 @@ export function VotingFormField({
 export function VotingCandidateChips({ items }: { items: string[] }) {
   return (
     <div>
-      <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+      <label
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: C.charcoal,
+          display: 'block',
+          marginBottom: 8,
+        }}
+      >
         Kandidat <span style={{ color: C.coral }}>*</span>
       </label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -339,7 +381,10 @@ export function VotingTanggalCalendarPicker({
       />
 
       {showList && (
-        <TripDateCandidateList savedCandidates={savedCandidates} activeCandidate={activeCandidate} />
+        <TripDateCandidateList
+          savedCandidates={savedCandidates}
+          activeCandidate={activeCandidate}
+        />
       )}
     </div>
   );
@@ -364,7 +409,12 @@ export function CreateVotingDetailsForm({
       <VotingTypeBadgeInline type={type} />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-        <VotingFormField label="Judul Voting" value={title} placeholder="Contoh: Kulineran siang · Hari 1" required />
+        <VotingFormField
+          label="Judul Voting"
+          value={title}
+          placeholder="Contoh: Kulineran siang · Hari 1"
+          required
+        />
 
         <VotingCandidateChips items={candidates} />
 
@@ -400,7 +450,15 @@ export function CreateVotingTanggalDetailsForm({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Kandidat Tanggal <span style={{ color: C.coral }}>*</span>
           </label>
           <VotingDateCandidateChips
@@ -445,7 +503,13 @@ export function CreateVotingScreen({
   return (
     <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
       <CreateVotingBackdrop subtitle={backdropSubtitle} />
-      <CreateVotingSheet title={title} subtitle={subtitle} onBack={onBack} footer={footer} height={height}>
+      <CreateVotingSheet
+        title={title}
+        subtitle={subtitle}
+        onBack={onBack}
+        footer={footer}
+        height={height}
+      >
         {children}
       </CreateVotingSheet>
     </div>

@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 import { C, FONT } from '../colors';
-import { TripDetailHeader, TripDetailTabs, DEFAULT_TRIP_TAB_COUNTS, type TripDetailTabId, type TripTabCounts } from './TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  DEFAULT_TRIP_TAB_COUNTS,
+  type TripDetailTabId,
+  type TripTabCounts,
+} from './TripDetailParts';
 import { TripDetailMenuSheet, type TripMenuItemId } from './TripDetailMenuSheet';
 import { TRIP_DATE_PENDING } from './CreateTripParts';
 
@@ -37,11 +43,17 @@ export function TripDetailBackdrop({
         position: 'relative',
       }}
     >
-      <TripDetailHeader title="Lombok Weekend Escape" subtitle={subtitle} menuOpen={!!menuHighlightId} />
+      <TripDetailHeader
+        title="Lombok Weekend Escape"
+        subtitle={subtitle}
+        menuOpen={!!menuHighlightId}
+      />
       <TripDetailTabs activeTab={activeTab} counts={counts} />
 
       <div style={{ flex: 1, padding: '16px 20px', opacity: 0.35, pointerEvents: 'none' }}>
-        <div style={{ height: 100, backgroundColor: C.light, borderRadius: 16, marginBottom: 10 }} />
+        <div
+          style={{ height: 100, backgroundColor: C.light, borderRadius: 16, marginBottom: 10 }}
+        />
         <div style={{ height: 100, backgroundColor: C.light, borderRadius: 16 }} />
       </div>
 

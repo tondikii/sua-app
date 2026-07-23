@@ -20,9 +20,7 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": [
-          "// Collection-level pre-request hook (extend per milestone as needed)"
-        ]
+        "exec": ["// Collection-level pre-request hook (extend per milestone as needed)"]
       }
     }
   ],

@@ -1,3 +1,12 @@
+import { Prisma } from '@prisma/client';
+import { toDateOnly, toTime } from '../../common/helpers/date.helpers';
+import type {
+  UserSummary,
+  TripSummary,
+  TripDetail,
+  TripStatus,
+} from '@atur-perjalanan/shared-types';
+
 type UserLike = {
   id: string;
   name: string;
@@ -29,14 +38,8 @@ type TripLike = {
   updatedAt: Date;
 };
 
-const toDateOnly = (d: Date | null): string | null =>
-  d ? d.toISOString().split('T')[0] : null;
-
-const toTime = (d: Date | null): string | null =>
-  d ? new Date(d).toTimeString().slice(0, 5) : null;
-
 export class TripSerializer {
-  static userSummary(user: UserLike) {
+  static userSummary(user: UserLike): UserSummary {
     return {
       id: user.id,
       name: user.name,
@@ -45,10 +48,6 @@ export class TripSerializer {
     };
   }
 
-  /**
-   * Enriched list-card shape per ARCHITECTURE.md §4.3.2 and WORKFLOW §3.
-   * `coverUrl` resolved from the linked trip_documents row (null until M7 media).
-   */
   static toCard(
     trip: TripLike & {
       participants: ParticipantLike[];
@@ -77,9 +76,6 @@ export class TripSerializer {
     };
   }
 
-  /**
-   * Full detail shape for GET /v1/trips/:tripId.
-   */
   static toDetail(
     trip: TripLike & {
       creator: UserLike;

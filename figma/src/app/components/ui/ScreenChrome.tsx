@@ -66,7 +66,9 @@ export function NavHeader({ title, right, onLight = true, border = true }: NavHe
       >
         {title}
       </h1>
-      <div style={{ width: 36, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>{right ?? <span />}</div>
+      <div style={{ width: 36, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+        {right ?? <span />}
+      </div>
     </div>
   );
 }
@@ -95,11 +97,22 @@ export function PageHeader({ title, subtitle, right, background = C.white }: Pag
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
         <BackButton onLight={background !== C.light} />
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.4, lineHeight: 1.2 }}>
+          <h1
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: 0,
+              letterSpacing: -0.4,
+              lineHeight: 1.2,
+            }}
+          >
             {title}
           </h1>
           {subtitle && (
-            <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>{subtitle}</p>
+            <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>
+              {subtitle}
+            </p>
           )}
         </div>
       </div>

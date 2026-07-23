@@ -13,7 +13,8 @@ export function TripDeleteModal({ tripName = 'Lombok Weekend Escape' }: TripDele
       title="Hapus perjalanan?"
       description={
         <>
-          <strong style={{ color: C.charcoal }}>{tripName}</strong> dan semua datanya akan dihapus permanen.
+          <strong style={{ color: C.charcoal }}>{tripName}</strong> dan semua datanya akan dihapus
+          permanen.
         </>
       }
       icon={

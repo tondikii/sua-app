@@ -1,8 +1,4 @@
-import {
-  ActivityFormSheet,
-  ActivitySheetScreen,
-  DEMO_ACTIVITY_NEW,
-} from '../trip/ActivityParts';
+import { ActivityFormSheet, ActivitySheetScreen, DEMO_ACTIVITY_NEW } from '../trip/ActivityParts';
 import { ACTIVITY_BACKDROP_PENDING } from '../trip/ActivitySheetBackdropPresets';
 
 /** Sheet tambah aktivitas — form awal */

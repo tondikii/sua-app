@@ -55,7 +55,11 @@ import { DestinationThumbnail } from './DestinationParts';
 import { TRIP_IMAGES } from '../tripImages';
 import { SAMPLE_DOCUMENTS } from './DocumentParts';
 import type { ItineraryDay, ItineraryItem, ItineraryItemKind } from './ItineraryParts';
-import { getItineraryKindIcon, ItineraryTabBody, LOMBOK_ITINERARY_PENDING_DAY } from './ItineraryParts';
+import {
+  getItineraryKindIcon,
+  ItineraryTabBody,
+  LOMBOK_ITINERARY_PENDING_DAY,
+} from './ItineraryParts';
 import { TripDetailPageShell, type TripTabCounts } from './TripDetailParts';
 import { TRIP_DATE_PENDING } from './CreateTripParts';
 
@@ -147,7 +151,11 @@ export const DEMO_ACTIVITY_WITH_MAPS_COVER: ActivityDraft = {
   hasMapsLink: true,
   mapsPlaceName: 'Pantai Tiga Warna',
   refLinks: [
-    { id: 1, label: 'TikTok — spot snorkeling', url: 'https://tiktok.com/@lomboktrip/video/spot-snorkeling' },
+    {
+      id: 1,
+      label: 'TikTok — spot snorkeling',
+      url: 'https://tiktok.com/@lomboktrip/video/spot-snorkeling',
+    },
     { id: 2, url: 'https://blog.perjalanan.id/panduan-lengkap-pantai-tiga-warna-lombok-timur' },
   ],
 };
@@ -272,7 +280,10 @@ export const COVER_ICON_OPTIONS: {
 ];
 
 function getCoverIconMeta(icon?: ActivityCoverIcon) {
-  return COVER_ICON_OPTIONS.find((o) => o.id === icon) ?? COVER_ICON_OPTIONS.find((o) => o.id === 'destination')!;
+  return (
+    COVER_ICON_OPTIONS.find((o) => o.id === icon) ??
+    COVER_ICON_OPTIONS.find((o) => o.id === 'destination')!
+  );
 }
 
 export function activityHasCover(activity: ActivityDraft): boolean {
@@ -289,7 +300,15 @@ function refLinkDisplayText(link: ActivityRefLink): string {
   return link.label?.trim() || link.url;
 }
 
-function TextAction({ children, accent, muted }: { children: ReactNode; accent?: boolean; muted?: boolean }) {
+function TextAction({
+  children,
+  accent,
+  muted,
+}: {
+  children: ReactNode;
+  accent?: boolean;
+  muted?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -324,7 +343,14 @@ export function ActivityCoverThumb({
       <img
         src={activity.coverUrl}
         alt=""
-        style={{ width: size, height: size, borderRadius: 12, objectFit: 'cover', display: 'block', flexShrink: 0 }}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: 12,
+          objectFit: 'cover',
+          display: 'block',
+          flexShrink: 0,
+        }}
       />
     );
   }
@@ -348,7 +374,9 @@ export function ActivityCoverThumb({
         }}
       >
         <Icon size={Math.round(size * 0.38)} color={meta.color} strokeWidth={2.5} />
-        {showLabel && <span style={{ fontSize: 8, fontWeight: 700, color: meta.color }}>{meta.label}</span>}
+        {showLabel && (
+          <span style={{ fontSize: 8, fontWeight: 700, color: meta.color }}>{meta.label}</span>
+        )}
       </div>
     );
   }
@@ -376,7 +404,9 @@ export function ActivityCoverThumb({
 export function ActivityCoverField({ activity }: { activity: ActivityDraft }) {
   const hasCover = activityHasCover(activity);
   const sourceLabel =
-    activity.coverSource && activity.coverSource !== 'none' ? COVER_SOURCE_LABELS[activity.coverSource] : null;
+    activity.coverSource && activity.coverSource !== 'none'
+      ? COVER_SOURCE_LABELS[activity.coverSource]
+      : null;
   const mapsNoThumb = activity.hasMapsLink && activity.mapsHasCover === false;
   const canSyncMaps = activity.hasMapsLink && activity.mapsHasCover !== false;
 
@@ -398,7 +428,15 @@ export function ActivityCoverField({ activity }: { activity: ActivityDraft }) {
       >
         <ActivityCoverThumb activity={activity} size={52} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: C.charcoal, margin: 0, lineHeight: 1.35 }}>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: C.charcoal,
+              margin: 0,
+              lineHeight: 1.35,
+            }}
+          >
             {hasCover && sourceLabel ? sourceLabel : 'Belum dipilih'}
           </p>
         </div>
@@ -423,7 +461,15 @@ export function ActivityCoverField({ activity }: { activity: ActivityDraft }) {
 }
 
 /** Satu blok input link referensi — judul muncul setelah URL diisi */
-function RefLinkInputGroup({ link, index, showIndex }: { link: ActivityRefLink; index: number; showIndex: boolean }) {
+function RefLinkInputGroup({
+  link,
+  index,
+  showIndex,
+}: {
+  link: ActivityRefLink;
+  index: number;
+  showIndex: boolean;
+}) {
   const hasUrl = Boolean(link.url);
 
   return (
@@ -432,7 +478,17 @@ function RefLinkInputGroup({ link, index, showIndex }: { link: ActivityRefLink; 
         <span style={{ fontSize: 11, fontWeight: 700, color: C.muted }}>Link {index + 1}</span>
       )}
       <div>
-        <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>URL</span>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: C.muted,
+            display: 'block',
+            marginBottom: 6,
+          }}
+        >
+          URL
+        </span>
         <FormInputBox
           value={link.url || undefined}
           placeholder="Tempel link referensi..."
@@ -441,7 +497,15 @@ function RefLinkInputGroup({ link, index, showIndex }: { link: ActivityRefLink; 
       </div>
       {hasUrl && (
         <div>
-          <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: C.muted,
+              display: 'block',
+              marginBottom: 6,
+            }}
+          >
             Judul tampilan
           </span>
           <FormInputBox value={link.label} placeholder="Kosongkan untuk tampilkan URL" />
@@ -534,7 +598,13 @@ type ActivityFormSheetProps = {
   onBack?: boolean;
 };
 
-export function ActivityFormSheet({ title, subtitle, activity, mode = 'add', onBack }: ActivityFormSheetProps) {
+export function ActivityFormSheet({
+  title,
+  subtitle,
+  activity,
+  mode = 'add',
+  onBack,
+}: ActivityFormSheetProps) {
   const refLinks = activityRefLinks(activity);
 
   return (
@@ -544,7 +614,9 @@ export function ActivityFormSheet({ title, subtitle, activity, mode = 'add', onB
       onBack={onBack}
       height="fixed"
       bodyGap={16}
-      footer={<SheetPrimaryButton label={mode === 'edit' ? 'Simpan Perubahan' : 'Simpan Aktivitas'} />}
+      footer={
+        <SheetPrimaryButton label={mode === 'edit' ? 'Simpan Perubahan' : 'Simpan Aktivitas'} />
+      }
     >
       <div style={{ display: 'flex', gap: 10 }}>
         <div style={{ flex: 1 }}>
@@ -637,7 +709,11 @@ export function ActivityDetailSheet({ activity, onBack }: ActivityDetailSheetPro
         )}
 
         {hasCover && activity.coverUrl && (
-          <img src={activity.coverUrl} alt="" style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block' }} />
+          <img
+            src={activity.coverUrl}
+            alt=""
+            style={{ width: '100%', height: 112, objectFit: 'cover', display: 'block' }}
+          />
         )}
 
         {hasCover && activity.coverIcon && !activity.coverUrl && (
@@ -659,17 +735,44 @@ export function ActivityDetailSheet({ activity, onBack }: ActivityDetailSheetPro
           <p style={{ fontSize: 12, fontWeight: 600, color: C.muted, margin: '0 0 4px' }}>
             {activity.startTime} – {activity.endTime}
           </p>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: C.charcoal, margin: '0 0 6px', letterSpacing: -0.2 }}>
+          <h2
+            style={{
+              fontSize: 17,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: '0 0 6px',
+              letterSpacing: -0.2,
+            }}
+          >
             {activity.title}
           </h2>
           {activity.location && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: activity.description ? 8 : 0 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                marginBottom: activity.description ? 8 : 0,
+              }}
+            >
               <MapPin size={13} color={C.muted} strokeWidth={2.5} />
-              <span style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>{activity.location}</span>
+              <span style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>
+                {activity.location}
+              </span>
             </div>
           )}
           {activity.description && (
-            <p style={{ fontSize: 13, color: C.charcoal, margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{activity.description}</p>
+            <p
+              style={{
+                fontSize: 13,
+                color: C.charcoal,
+                margin: 0,
+                lineHeight: 1.55,
+                fontWeight: 500,
+              }}
+            >
+              {activity.description}
+            </p>
           )}
 
           {(activity.hasMapsLink || refLinks.length > 0) && (
@@ -688,7 +791,10 @@ export function ActivityDetailSheet({ activity, onBack }: ActivityDetailSheetPro
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {activity.hasMapsLink && (
-                  <DetailLinkRow icon={Navigation} label={activity.mapsPlaceName || 'Google Maps'} />
+                  <DetailLinkRow
+                    icon={Navigation}
+                    label={activity.mapsPlaceName || 'Google Maps'}
+                  />
                 )}
                 {refLinks.map((link) => (
                   <DetailLinkRow key={link.id} icon={Link2} label={refLinkDisplayText(link)} />
@@ -731,48 +837,50 @@ export function ActivityCoverPickerSheet({
   const sourceSelector = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {sections.map((sec) => {
-          const active = sec.id === activeSection;
-          const SecIcon = sec.icon;
-          return (
-            <button
-              key={sec.id}
-              type="button"
+        const active = sec.id === activeSection;
+        const SecIcon = sec.icon;
+        return (
+          <button
+            key={sec.id}
+            type="button"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 12px',
+              borderRadius: 12,
+              border: active ? `1.5px solid ${C.coral}` : `1px solid ${C.border}`,
+              backgroundColor: active ? C.coralLight : C.white,
+              cursor: 'pointer',
+              fontFamily: FONT,
+              textAlign: 'left',
+            }}
+          >
+            <div
               style={{
-                width: '100%',
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                backgroundColor: active ? C.white : C.light,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
-                padding: '10px 12px',
-                borderRadius: 12,
-                border: active ? `1.5px solid ${C.coral}` : `1px solid ${C.border}`,
-                backgroundColor: active ? C.coralLight : C.white,
-                cursor: 'pointer',
-                fontFamily: FONT,
-                textAlign: 'left',
+                justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  backgroundColor: active ? C.white : C.light,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <SecIcon size={15} color={active ? C.coral : C.muted} strokeWidth={2.5} />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: 0 }}>{sec.label}</p>
-                <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{sec.hint}</p>
-              </div>
-              {active && <Check size={16} color={C.coral} strokeWidth={2.5} />}
-            </button>
-          );
-        })}
+              <SecIcon size={15} color={active ? C.coral : C.muted} strokeWidth={2.5} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: 0 }}>
+                {sec.label}
+              </p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{sec.hint}</p>
+            </div>
+            {active && <Check size={16} color={C.coral} strokeWidth={2.5} />}
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -808,7 +916,11 @@ export function ActivityCoverPickerSheet({
                     cursor: 'pointer',
                   }}
                 >
-                  <img src={doc.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img
+                    src={doc.url}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                   {selected && (
                     <div
                       style={{
@@ -852,7 +964,9 @@ export function ActivityCoverPickerSheet({
             }}
           >
             <Smartphone size={22} color={C.muted} strokeWidth={2} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: C.charcoal }}>Pilih dari galeri</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: C.charcoal }}>
+              Pilih dari galeri
+            </span>
           </button>
         )}
 
@@ -889,7 +1003,15 @@ export function ActivityCoverPickerSheet({
                   >
                     <Icon size={17} color={opt.color} strokeWidth={2.5} />
                   </div>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: C.muted, textAlign: 'center', lineHeight: 1.2 }}>
+                  <span
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 600,
+                      color: C.muted,
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {opt.label}
                   </span>
                 </div>
@@ -1011,9 +1133,26 @@ export function ActivityTimelineThumb({ item }: { item: ItineraryItem }) {
   );
 }
 
-export function ActivityTimeBadge({ startTime, endTime, color }: { startTime: string; endTime: string; color: string }) {
+export function ActivityTimeBadge({
+  startTime,
+  endTime,
+  color,
+}: {
+  startTime: string;
+  endTime: string;
+  color: string;
+}) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color }}>
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 11,
+        fontWeight: 700,
+        color,
+      }}
+    >
       <Clock size={11} strokeWidth={2.5} />
       {startTime} – {endTime}
     </span>
@@ -1046,7 +1185,14 @@ export function ActivitySheetBackdrop({
           <ItineraryTabBody days={days} activeDayId={activeDayId} datePending={datePending} />
         </TripDetailPageShell>
       </div>
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,46,0.45)', zIndex: 10 }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(26,26,46,0.45)',
+          zIndex: 10,
+        }}
+      />
     </>
   );
 }
@@ -1062,7 +1208,15 @@ export function ActivitySheetScreen({
   children: ReactNode;
 }) {
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: FONT,
+      }}
+    >
       <ActivitySheetBackdrop {...backdrop} />
       {children}
     </div>

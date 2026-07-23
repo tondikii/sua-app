@@ -14,7 +14,11 @@ export function Screen78ChatSendPhoto() {
 export function Screen79ChatSendPhotoCaption() {
   return (
     <ChatComposerScreen>
-      <ChatMediaComposer kind="photo" mediaUrl={TRIP_IMAGES.lombok} caption="Pantai pas low tide 🌊" />
+      <ChatMediaComposer
+        kind="photo"
+        mediaUrl={TRIP_IMAGES.lombok}
+        caption="Pantai pas low tide 🌊"
+      />
     </ChatComposerScreen>
   );
 }

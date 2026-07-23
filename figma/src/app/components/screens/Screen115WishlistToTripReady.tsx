@@ -1,4 +1,9 @@
-import { TRIP_DRAFT, CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/CreateTripParts';
+import {
+  TRIP_DRAFT,
+  CreateTripFooter,
+  CreateTripFormBody,
+  CreateTripShell,
+} from '../trip/CreateTripParts';
 import { WISHLIST_TO_TRIP } from '../trip/WishlistParts';
 
 /** Jadikan Perjalanan — prefill wishlist + tanggal terisi, siap submit */

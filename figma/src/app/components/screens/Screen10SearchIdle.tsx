@@ -27,7 +27,15 @@ export function Screen10SearchIdle() {
       <div style={{ flex: 1, minHeight: 0, padding: '20px 22px 0', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
           <Clock size={14} color={C.muted} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: C.muted,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+            }}
+          >
             Pencarian terakhir
           </span>
         </div>
@@ -42,7 +50,15 @@ export function Screen10SearchIdle() {
             />
           ))}
         </div>
-        <p style={{ fontSize: 13, color: C.mutedLight, margin: '16px 0 0', lineHeight: 1.55, fontWeight: 500 }}>
+        <p
+          style={{
+            fontSize: 13,
+            color: C.mutedLight,
+            margin: '16px 0 0',
+            lineHeight: 1.55,
+            fontWeight: 500,
+          }}
+        >
           Temukan teman untuk diajak merencanakan liburan bareng.
         </p>
       </div>

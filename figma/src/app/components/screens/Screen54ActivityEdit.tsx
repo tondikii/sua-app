@@ -9,7 +9,11 @@ import { ACTIVITY_BACKDROP_FIXED } from '../trip/ActivitySheetBackdropPresets';
 export function Screen54ActivityEdit() {
   return (
     <ActivitySheetScreen backdrop={ACTIVITY_BACKDROP_FIXED}>
-      <ActivityFormSheet title="Edit Aktivitas" activity={DEMO_ACTIVITY_WITH_MAPS_COVER} mode="edit" />
+      <ActivityFormSheet
+        title="Edit Aktivitas"
+        activity={DEMO_ACTIVITY_WITH_MAPS_COVER}
+        mode="edit"
+      />
     </ActivitySheetScreen>
   );
 }

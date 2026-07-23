@@ -12,8 +12,7 @@ describe('GoogleMapsService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: (key: string) =>
-              key === 'google.mapsApiKey' ? 'test-api-key' : undefined,
+            get: (key: string) => (key === 'google.mapsApiKey' ? 'test-api-key' : undefined),
           },
         },
       ],
@@ -39,9 +38,7 @@ describe('GoogleMapsService', () => {
     });
 
     it('extracts lat/lng from q param', () => {
-      const result = service.parseMapsLink(
-        'https://maps.google.com/?q=-8.409518,115.188919',
-      );
+      const result = service.parseMapsLink('https://maps.google.com/?q=-8.409518,115.188919');
       expect(result?.lat).toBeCloseTo(-8.409518);
       expect(result?.lng).toBeCloseTo(115.188919);
     });

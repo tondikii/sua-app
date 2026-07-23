@@ -56,7 +56,14 @@ export function MediaTabBackdrop() {
           <BottomNav active="home" />
         </div>
       </div>
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(13,13,18,0.72)', zIndex: 10 }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(13,13,18,0.72)',
+          zIndex: 10,
+        }}
+      />
     </>
   );
 }
@@ -180,7 +187,15 @@ function MediaViewerChrome({
           </button>
         )}
 
-        <div style={{ width: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: '100%',
+            maxHeight: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           {children}
         </div>
 
@@ -215,10 +230,29 @@ function MediaViewerChrome({
         }}
       >
         {caption && (
-          <p style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: '0 0 4px', lineHeight: 1.4 }}>{caption}</p>
+          <p
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'white',
+              margin: '0 0 4px',
+              lineHeight: 1.4,
+            }}
+          >
+            {caption}
+          </p>
         )}
         {meta && (
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: '0 0 12px', fontWeight: 500 }}>{meta}</p>
+          <p
+            style={{
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.55)',
+              margin: '0 0 12px',
+              fontWeight: 500,
+            }}
+          >
+            {meta}
+          </p>
         )}
 
         {isCover ? (
@@ -335,7 +369,12 @@ export function MediaVideoViewer({
   const progressPct = 32;
 
   return (
-    <MediaViewerChrome currentIndex={currentIndex} totalCount={totalCount} caption={document.caption} meta={meta}>
+    <MediaViewerChrome
+      currentIndex={currentIndex}
+      totalCount={totalCount}
+      caption={document.caption}
+      meta={meta}
+    >
       <div style={{ position: 'relative', width: '100%', maxHeight: '100%' }}>
         <img
           src={document.url}
@@ -426,7 +465,14 @@ export function MediaVideoViewer({
                 />
               </div>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.75)', flexShrink: 0 }}>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.75)',
+                flexShrink: 0,
+              }}
+            >
               {document.progress ?? '0:00'} / {document.duration ?? '0:00'}
             </span>
           </div>

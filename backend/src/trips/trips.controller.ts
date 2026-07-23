@@ -18,12 +18,18 @@ import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-us
 import { TripsService } from './trips.service';
 import { InvitationsService } from './invitations.service';
 import {
-  CreateTripDto,
-  UpdateTripDto,
-  CreateInvitationDto,
-  RespondInvitationDto,
-  SetTripCoverDto,
-} from './dto';
+  CreateTripSchema,
+  UpdateTripSchema,
+  CreateInvitationSchema,
+  RespondInvitationSchema,
+  SetTripCoverSchema,
+} from '@atur-perjalanan/shared-validation';
+import type {
+  CreateTripInput,
+  UpdateTripInput,
+  CreateInvitationInput,
+} from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('trips')
 @ApiBearerAuth()
@@ -37,7 +43,10 @@ export class TripsController {
 
   // POST /v1/trips
   @Post()
-  createTrip(@CurrentUser() user: CurrentUserPayload, @Body() dto: CreateTripDto) {
+  createTrip(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body(new ZodValidationPipe(CreateTripSchema)) dto: CreateTripInput,
+  ) {
     return this.tripsService.createTrip(user.userId, dto);
   }
 
@@ -55,12 +64,7 @@ export class TripsController {
         message: 'tab must be "upcoming" or "completed"',
       });
     }
-    return this.tripsService.listTrips(
-      user.userId,
-      tab,
-      cursor,
-      limit ? parseInt(limit, 10) : 20,
-    );
+    return this.tripsService.listTrips(user.userId, tab, cursor, limit ? parseInt(limit, 10) : 20);
   }
 
   // GET /v1/trips/invitations  (must precede :tripId)
@@ -79,10 +83,7 @@ export class TripsController {
 
   // GET /v1/trips/:tripId
   @Get(':tripId')
-  getTripDetail(
-    @CurrentUser() user: CurrentUserPayload,
-    @Param('tripId') tripId: string,
-  ) {
+  getTripDetail(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {
     return this.tripsService.getTripDetail(tripId, user.userId);
   }
 
@@ -91,7 +92,7 @@ export class TripsController {
   updateTrip(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
-    @Body() dto: UpdateTripDto,
+    @Body(new ZodValidationPipe(UpdateTripSchema)) dto: UpdateTripInput,
   ) {
     return this.tripsService.updateTrip(tripId, user.userId, dto);
   }
@@ -99,10 +100,7 @@ export class TripsController {
   // DELETE /v1/trips/:tripId  (soft delete, creator only)
   @Delete(':tripId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteTrip(
-    @CurrentUser() user: CurrentUserPayload,
-    @Param('tripId') tripId: string,
-  ) {
+  deleteTrip(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {
     return this.tripsService.deleteTrip(tripId, user.userId);
   }
 
@@ -111,17 +109,14 @@ export class TripsController {
   setTripCover(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
-    @Body() dto: SetTripCoverDto,
+    @Body(new ZodValidationPipe(SetTripCoverSchema)) dto: any,
   ) {
     return this.tripsService.setTripCover(tripId, user.userId, dto.document_id);
   }
 
   // GET /v1/trips/:tripId/members
   @Get(':tripId/members')
-  getTripMembers(
-    @CurrentUser() user: CurrentUserPayload,
-    @Param('tripId') tripId: string,
-  ) {
+  getTripMembers(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {
     return this.tripsService.getTripMembers(tripId, user.userId);
   }
 
@@ -141,7 +136,7 @@ export class TripsController {
   createInvitation(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
-    @Body() dto: CreateInvitationDto,
+    @Body(new ZodValidationPipe(CreateInvitationSchema)) dto: CreateInvitationInput,
   ) {
     return this.invitationsService.createInvitation(tripId, user.userId, dto);
   }
@@ -153,7 +148,7 @@ export class TripsController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
     @Param('invitationId') invitationId: string,
-    @Body() dto: RespondInvitationDto,
+    @Body(new ZodValidationPipe(RespondInvitationSchema)) dto: any,
   ) {
     return this.invitationsService.respondToInvitation(
       tripId,

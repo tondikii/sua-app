@@ -1,4 +1,9 @@
-import { TRIP_DATE_CANDIDATES, CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/CreateTripParts';
+import {
+  TRIP_DATE_CANDIDATES,
+  CreateTripFooter,
+  CreateTripFormBody,
+  CreateTripShell,
+} from '../trip/CreateTripParts';
 
 /** [B] Submit loading — setelah tap Buat Perjalanan */
 export function Screen34CreateTripSubmitting() {

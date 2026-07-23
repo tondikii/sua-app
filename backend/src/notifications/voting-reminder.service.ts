@@ -96,9 +96,7 @@ export class VotingReminderService {
       );
 
       if (tripsWithDeadline.length > 0) {
-        this.logger.log(
-          `Sent H-7d voting reminders for ${tripsWithDeadline.length} trip(s)`,
-        );
+        this.logger.log(`Sent H-7d voting reminders for ${tripsWithDeadline.length} trip(s)`);
       }
     }
   }
@@ -166,9 +164,7 @@ export class VotingReminderService {
       );
 
       if (tripsWithDeadline.length > 0) {
-        this.logger.log(
-          `Sent H-1d voting reminders for ${tripsWithDeadline.length} trip(s)`,
-        );
+        this.logger.log(`Sent H-1d voting reminders for ${tripsWithDeadline.length} trip(s)`);
       }
     }
   }
@@ -236,9 +232,7 @@ export class VotingReminderService {
       );
 
       if (tripsWithDeadline.length > 0) {
-        this.logger.log(
-          `Sent H-1h voting reminders for ${tripsWithDeadline.length} trip(s)`,
-        );
+        this.logger.log(`Sent H-1h voting reminders for ${tripsWithDeadline.length} trip(s)`);
       }
     }
   }

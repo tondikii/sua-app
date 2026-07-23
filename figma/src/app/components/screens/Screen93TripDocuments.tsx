@@ -1,6 +1,10 @@
 import { C, FONT } from '../colors';
 import { TRIP_DATE_PENDING } from '../trip/CreateTripParts';
-import { TripDetailHeader, TripDetailTabs, TRIP_COUNTS_DATE_PENDING } from '../trip/TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  TRIP_COUNTS_DATE_PENDING,
+} from '../trip/TripDetailParts';
 import { DocumentGrid } from '../trip/DocumentParts';
 
 /** Tab Media — unggah foto/video, pilih salah satu sebagai cover trip */
@@ -30,7 +34,9 @@ export function Screen93TripDocuments() {
           flexDirection: 'column',
         }}
       >
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 4px' }}>Media Perjalanan</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, margin: '0 0 4px' }}>
+          Media Perjalanan
+        </p>
         <p style={{ fontSize: 11, color: C.muted, margin: '0 0 16px', lineHeight: 1.5 }}>
           Unggah foto atau video — termasuk yang dikirim lewat chat grup.
         </p>

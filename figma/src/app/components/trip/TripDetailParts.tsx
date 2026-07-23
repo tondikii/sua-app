@@ -95,7 +95,9 @@ export function TripDetailHeader({ title, subtitle, menuOpen = false }: TripDeta
           >
             {title}
           </h2>
-          <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>{subtitle}</p>
+          <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>
+            {subtitle}
+          </p>
         </div>
         <div
           style={{
@@ -124,7 +126,10 @@ type TripDetailTabsProps = {
   counts?: TripTabCounts;
 };
 
-export function TripDetailTabs({ activeTab, counts = DEFAULT_TRIP_TAB_COUNTS }: TripDetailTabsProps) {
+export function TripDetailTabs({
+  activeTab,
+  counts = DEFAULT_TRIP_TAB_COUNTS,
+}: TripDetailTabsProps) {
   return (
     <div
       style={{
@@ -161,7 +166,13 @@ export function TripDetailTabs({ activeTab, counts = DEFAULT_TRIP_TAB_COUNTS }: 
               gap: 5,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? C.coral : C.muted }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: active ? 700 : 500,
+                color: active ? C.coral : C.muted,
+              }}
+            >
               {tab.label}
             </span>
             {showUnread && (
@@ -236,7 +247,15 @@ export function TripDetailPageShell({
     >
       <TripDetailHeader title={title} subtitle={subtitle} />
       <TripDetailTabs activeTab={activeTab} counts={counts} />
-      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         {children}
       </div>
     </div>

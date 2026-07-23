@@ -55,7 +55,16 @@ export function SearchEmptyState({
       >
         {title}
       </h2>
-      <p style={{ fontSize: compact ? 13 : 13, color: C.muted, margin: 0, lineHeight: 1.6, fontWeight: 500, maxWidth: 280 }}>
+      <p
+        style={{
+          fontSize: compact ? 13 : 13,
+          color: C.muted,
+          margin: 0,
+          lineHeight: 1.6,
+          fontWeight: 500,
+          maxWidth: 280,
+        }}
+      >
         {description}
       </p>
     </div>

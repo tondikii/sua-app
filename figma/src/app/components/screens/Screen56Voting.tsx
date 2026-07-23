@@ -1,6 +1,10 @@
 import { C, FONT } from '../colors';
 import { TRIP_DATE_PENDING, VOTING_DATE_CANDIDATES } from '../trip/CreateTripParts';
-import { TripDetailHeader, TripDetailTabs, TRIP_COUNTS_DATE_PENDING } from '../trip/TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  TRIP_COUNTS_DATE_PENDING,
+} from '../trip/TripDetailParts';
 import { ITINERARY_VOTING_TITLE, ITINERARY_VOTING_CANDIDATES } from '../trip/ItineraryParts';
 import { CreateVotingFab, VotingCollapseSection, VotingCandidateList } from '../trip/VotingParts';
 

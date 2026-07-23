@@ -1,3 +1,6 @@
+import { timeToHHMM, dateToISO } from '../../common/helpers/date.helpers';
+import type { TripActivity } from '@atur-perjalanan/shared-types';
+
 type ActivityLike = {
   id: string;
   tripId: string;
@@ -24,21 +27,7 @@ type DocumentLike = {
   storageUrl: string;
 };
 
-function timeToHHMM(date: Date): string {
-  const h = String(date.getHours()).padStart(2, '0');
-  const m = String(date.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
-}
-
-function dateToISO(date: Date | null): string | null {
-  return date ? date.toISOString().split('T')[0] : null;
-}
-
 export class ActivitySerializer {
-  /**
-   * List-view shape for Itinerary tab (WORKFLOW §7).
-   * Groups activities by day, includes cover thumb, time state.
-   */
   static toList(
     activity: ActivityLike,
     coverDocument?: DocumentLike | null,
@@ -68,9 +57,6 @@ export class ActivitySerializer {
     };
   }
 
-  /**
-   * Detail-view shape for Activity detail sheet (WORKFLOW §7, Screen 51–53).
-   */
   static toDetail(
     activity: ActivityLike,
     coverDocument?: DocumentLike | null,

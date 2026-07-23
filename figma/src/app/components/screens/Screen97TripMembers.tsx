@@ -9,7 +9,13 @@ export function Screen97TripMembers() {
         showInviteSearch: true,
         searchValue: 'rina',
         inviteResults: [
-          { id: 10, name: 'Rina Santoso', username: '@rina_travel', initial: 'R', color: AVATAR_COLORS[2] },
+          {
+            id: 10,
+            name: 'Rina Santoso',
+            username: '@rina_travel',
+            initial: 'R',
+            color: AVATAR_COLORS[2],
+          },
         ],
       }}
     />

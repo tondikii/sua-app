@@ -1,6 +1,10 @@
 import { C, FONT } from '../colors';
 import { TRIP_LOCKED_DATES } from '../trip/CreateTripParts';
-import { TripDetailHeader, TripDetailTabs, TRIP_COUNTS_VOTING_EMPTY } from '../trip/TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  TRIP_COUNTS_VOTING_EMPTY,
+} from '../trip/TripDetailParts';
 import { CreateVotingButton, VotingTabEmptyBody } from '../trip/VotingParts';
 
 /** Tab Voting kosong — tanggal sudah pasti, belum ada voting aktivitas / lainnya */

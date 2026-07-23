@@ -2,7 +2,13 @@ import type { CSSProperties, ReactNode } from 'react';
 import { Send, Paperclip, Image, Video, X, Play, Reply, Copy, Trash2 } from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
 import { TRIP_IMAGES } from '../tripImages';
-import { TripDetailHeader, TripDetailTabs, DEFAULT_TRIP_TAB_COUNTS, TRIP_COUNTS_DATE_PENDING, type TripTabCounts } from './TripDetailParts';
+import {
+  TripDetailHeader,
+  TripDetailTabs,
+  DEFAULT_TRIP_TAB_COUNTS,
+  TRIP_COUNTS_DATE_PENDING,
+  type TripTabCounts,
+} from './TripDetailParts';
 import { TRIP_DATE_PENDING } from './CreateTripParts';
 
 type TripDetailChatLayoutProps = {
@@ -202,7 +208,15 @@ function ChatReplyQuote({
         }}
       >
         <p style={{ fontSize: 11, fontWeight: 700, color: 'white', margin: 0 }}>{label}</p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.88)', margin: '2px 0 0', lineHeight: 1.4, ...truncate }}>
+        <p
+          style={{
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.88)',
+            margin: '2px 0 0',
+            lineHeight: 1.4,
+            ...truncate,
+          }}
+        >
           {reply.text}
         </p>
       </div>
@@ -220,11 +234,12 @@ function ChatReplyQuote({
       }}
     >
       <p style={{ fontSize: 11, fontWeight: 700, color: accentColor, margin: 0 }}>{label}</p>
-      <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', lineHeight: 1.4, ...truncate }}>{reply.text}</p>
+      <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', lineHeight: 1.4, ...truncate }}>
+        {reply.text}
+      </p>
     </div>
   );
 }
-
 
 function ChatMediaBubble({
   msg,
@@ -245,7 +260,9 @@ function ChatMediaBubble({
   const mediaBlock = (
     <div style={{ maxWidth: '72%', minWidth: 140 }}>
       {!msg.isMe && (
-        <p style={{ fontSize: 10, color: C.muted, margin: '0 0 3px 2px', fontWeight: 600 }}>{msg.from}</p>
+        <p style={{ fontSize: 10, color: C.muted, margin: '0 0 3px 2px', fontWeight: 600 }}>
+          {msg.from}
+        </p>
       )}
       <div
         style={{
@@ -347,7 +364,15 @@ function ChatMediaBubble({
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, opacity, zIndex: highlighted ? 20 : 1 }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: 8,
+        opacity,
+        zIndex: highlighted ? 20 : 1,
+      }}
+    >
       <div
         style={{
           width: 30,
@@ -371,7 +396,15 @@ function ChatMediaBubble({
   );
 }
 
-export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: { msg: ChatMessage; dimmed?: boolean; highlighted?: boolean }) {
+export function ChatMessageBubble({
+  msg,
+  dimmed = false,
+  highlighted = false,
+}: {
+  msg: ChatMessage;
+  dimmed?: boolean;
+  highlighted?: boolean;
+}) {
   const kind = msg.kind ?? 'text';
   if (kind === 'photo' || kind === 'video') {
     return <ChatMediaBubble msg={msg} dimmed={dimmed} highlighted={highlighted} />;
@@ -414,7 +447,15 @@ export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: 
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, opacity, zIndex: highlighted ? 20 : 1 }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        gap: 8,
+        opacity,
+        zIndex: highlighted ? 20 : 1,
+      }}
+    >
       <div
         style={{
           width: 30,
@@ -433,7 +474,9 @@ export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: 
         {msg.initial}
       </div>
       <div style={{ maxWidth: '72%' }}>
-        <p style={{ fontSize: 10, color: C.muted, margin: '0 0 3px 2px', fontWeight: 600 }}>{msg.from}</p>
+        <p style={{ fontSize: 10, color: C.muted, margin: '0 0 3px 2px', fontWeight: 600 }}>
+          {msg.from}
+        </p>
         <div
           style={{
             backgroundColor: C.white,
@@ -446,7 +489,9 @@ export function ChatMessageBubble({ msg, dimmed = false, highlighted = false }: 
             boxShadow: `0 3px 12px ${C.shadow}`,
           }}
         >
-          {msg.replyTo && <ChatReplyQuote reply={msg.replyTo} accentColor={msg.color} inOwnBubble={false} />}
+          {msg.replyTo && (
+            <ChatReplyQuote reply={msg.replyTo} accentColor={msg.color} inOwnBubble={false} />
+          )}
           {msg.text}
         </div>
       </div>
@@ -529,7 +574,13 @@ export function ChatAttachMenu() {
   );
 }
 
-export function ChatInputBar({ disabled = false, attachMenuOpen = false }: { disabled?: boolean; attachMenuOpen?: boolean }) {
+export function ChatInputBar({
+  disabled = false,
+  attachMenuOpen = false,
+}: {
+  disabled?: boolean;
+  attachMenuOpen?: boolean;
+}) {
   return (
     <div
       style={{
@@ -780,12 +831,60 @@ export function ChatMediaComposer({
 }
 
 export const DEMO_CHAT_MESSAGES: ChatMessage[] = [
-  { id: 1, from: 'Rina', initial: 'R', color: '#FF6B6B', text: 'Hei guys! Gimana kalau kita berangkat tanggal 15 Juni? 🏝️', time: '10:32', isMe: false },
-  { id: 2, from: 'Me', initial: 'B', color: '#4ECDC4', text: 'Bagus banget! Aku udah cek tiketnya, masih ada yang murah 🎉', time: '10:33', isMe: true },
-  { id: 3, from: 'Budi', initial: 'B', color: '#FFB347', text: 'Aku prefer 22 Juni sih, jadwal kantor masih ada nih minggu itu 😅', time: '10:35', isMe: false },
-  { id: 4, from: 'Rina', initial: 'R', color: '#FF6B6B', text: 'Oh iya, kita voting aja yuk biar fair 🗳️', time: '10:36', isMe: false },
-  { id: 5, from: 'Me', initial: 'B', color: '#4ECDC4', text: 'Setuju banget! Langsung ke tab Voting yuk', time: '10:36', isMe: true },
-  { id: 6, from: 'Sari', initial: 'S', color: '#A78BFA', text: 'Aku vote 15 Juni ya! Siap kapanpun 🙋‍♀️', time: '10:38', isMe: false },
+  {
+    id: 1,
+    from: 'Rina',
+    initial: 'R',
+    color: '#FF6B6B',
+    text: 'Hei guys! Gimana kalau kita berangkat tanggal 15 Juni? 🏝️',
+    time: '10:32',
+    isMe: false,
+  },
+  {
+    id: 2,
+    from: 'Me',
+    initial: 'B',
+    color: '#4ECDC4',
+    text: 'Bagus banget! Aku udah cek tiketnya, masih ada yang murah 🎉',
+    time: '10:33',
+    isMe: true,
+  },
+  {
+    id: 3,
+    from: 'Budi',
+    initial: 'B',
+    color: '#FFB347',
+    text: 'Aku prefer 22 Juni sih, jadwal kantor masih ada nih minggu itu 😅',
+    time: '10:35',
+    isMe: false,
+  },
+  {
+    id: 4,
+    from: 'Rina',
+    initial: 'R',
+    color: '#FF6B6B',
+    text: 'Oh iya, kita voting aja yuk biar fair 🗳️',
+    time: '10:36',
+    isMe: false,
+  },
+  {
+    id: 5,
+    from: 'Me',
+    initial: 'B',
+    color: '#4ECDC4',
+    text: 'Setuju banget! Langsung ke tab Voting yuk',
+    time: '10:36',
+    isMe: true,
+  },
+  {
+    id: 6,
+    from: 'Sari',
+    initial: 'S',
+    color: '#A78BFA',
+    text: 'Aku vote 15 Juni ya! Siap kapanpun 🙋‍♀️',
+    time: '10:38',
+    isMe: false,
+  },
 ];
 
 const CHAT_LONG_PRESS_MESSAGES = withDemoChatColors(DEMO_CHAT_MESSAGES.slice(0, 5));
@@ -931,13 +1030,45 @@ function EmptyChatIllustration() {
   return (
     <svg width="168" height="148" viewBox="0 0 168 148" fill="none">
       <circle cx="84" cy="74" r="64" fill={C.coralLight} />
-      <rect x="18" y="32" width="74" height="46" rx="16" fill={C.white} stroke={C.border} strokeWidth="2" />
-      <path d="M30 78 L22 94 L46 78" fill={C.white} stroke={C.border} strokeWidth="1.5" strokeLinejoin="round" />
+      <rect
+        x="18"
+        y="32"
+        width="74"
+        height="46"
+        rx="16"
+        fill={C.white}
+        stroke={C.border}
+        strokeWidth="2"
+      />
+      <path
+        d="M30 78 L22 94 L46 78"
+        fill={C.white}
+        stroke={C.border}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
       <rect x="28" y="46" width="44" height="7" rx="3.5" fill={C.light} />
       <rect x="28" y="59" width="30" height="7" rx="3.5" fill={C.light} />
       <rect x="76" y="58" width="74" height="46" rx="16" fill={C.coral} opacity="0.18" />
-      <rect x="76" y="58" width="74" height="46" rx="16" fill="none" stroke={C.coral} strokeWidth="1.5" opacity="0.5" />
-      <path d="M138 104 L146 120 L122 104" fill={C.coral} opacity="0.4" stroke={C.coral} strokeWidth="1.5" strokeLinejoin="round" />
+      <rect
+        x="76"
+        y="58"
+        width="74"
+        height="46"
+        rx="16"
+        fill="none"
+        stroke={C.coral}
+        strokeWidth="1.5"
+        opacity="0.5"
+      />
+      <path
+        d="M138 104 L146 120 L122 104"
+        fill={C.coral}
+        opacity="0.4"
+        stroke={C.coral}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
       <rect x="86" y="72" width="44" height="7" rx="3.5" fill={C.coral} opacity="0.25" />
       <rect x="86" y="85" width="32" height="7" rx="3.5" fill={C.coral} opacity="0.2" />
     </svg>
@@ -961,7 +1092,15 @@ export function ChatEmptyState() {
       }}
     >
       <EmptyChatIllustration />
-      <h3 style={{ fontSize: 19, fontWeight: 800, color: C.charcoal, margin: '18px 0 9px', letterSpacing: -0.4 }}>
+      <h3
+        style={{
+          fontSize: 19,
+          fontWeight: 800,
+          color: C.charcoal,
+          margin: '18px 0 9px',
+          letterSpacing: -0.4,
+        }}
+      >
         Belum ada obrolan
       </h3>
       <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.65, fontWeight: 500 }}>
@@ -976,9 +1115,21 @@ const CHAT_COMPOSER_BACKDROP_MESSAGES = withDemoChatColors(DEMO_CHAT_MESSAGES.sl
 /** Shell composer kirim media — chat redup di belakang */
 export function ChatComposerScreen({ children }: { children: ReactNode }) {
   return (
-    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', fontFamily: FONT }}>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        position: 'relative',
+        fontFamily: FONT,
+      }}
+    >
       <div style={{ position: 'absolute', inset: 0, opacity: 0.4, pointerEvents: 'none' }}>
-        <TripDetailChatLayout subtitle={TRIP_DATE_PENDING} counts={TRIP_COUNTS_DATE_PENDING} hideInputBar>
+        <TripDetailChatLayout
+          subtitle={TRIP_DATE_PENDING}
+          counts={TRIP_COUNTS_DATE_PENDING}
+          hideInputBar
+        >
           <div
             style={{
               flex: 1,
@@ -1004,7 +1155,8 @@ export function ChatComposerScreen({ children }: { children: ReactNode }) {
 
 const REPLY_ORIGINAL_RINA_VOTING = 'Oh iya, kita voting aja yuk biar fair 🗳️';
 const REPLY_ORIGINAL_ME_TICKET = 'Bagus banget! Aku udah cek tiketnya, masih ada yang murah 🎉';
-const REPLY_ORIGINAL_BUDI_JUNE = 'Aku prefer 22 Juni sih, jadwal kantor masih ada nih minggu itu 😅';
+const REPLY_ORIGINAL_BUDI_JUNE =
+  'Aku prefer 22 Juni sih, jadwal kantor masih ada nih minggu itu 😅';
 const REPLY_ORIGINAL_ME_VOTING = 'Setuju banget! Langsung ke tab Voting yuk';
 
 /** Saya balas pesan anggota lain */

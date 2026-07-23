@@ -8,7 +8,10 @@ const destCandidates = ITINERARY_VOTING_CANDIDATES.map((name, i) => ({
   id: i + 1,
   name,
   votes: [3, 2][i] ?? 1,
-  avatars: [['R', 'B', 'A'], ['S', 'M']][i] ?? ['D'],
+  avatars: [
+    ['R', 'B', 'A'],
+    ['S', 'M'],
+  ][i] ?? ['D'],
   voted: i === 1,
 }));
 
@@ -47,7 +50,12 @@ export function Screen70VotingEndedPipeline() {
           status="ended"
           canManage
         >
-          <VotingCandidateList items={VOTING_DATE_CANDIDATES} labelKey="range" readOnly winnerId={2} />
+          <VotingCandidateList
+            items={VOTING_DATE_CANDIDATES}
+            labelKey="range"
+            readOnly
+            winnerId={2}
+          />
         </VotingCollapseSection>
 
         <VotingCollapseSection

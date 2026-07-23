@@ -39,8 +39,9 @@ describe('ActivityService', () => {
           provide: R2Service,
           useValue: {
             presignDownload: jest.fn((key: string) => `https://r2.example.com/get/${key}`),
-            presignDownloads: jest.fn(async (keys: string[]) =>
-              new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
+            presignDownloads: jest.fn(
+              async (keys: string[]) =>
+                new Map(keys.map((key) => [key, `https://r2.example.com/get/${key}`])),
             ),
           },
         },
@@ -85,9 +86,7 @@ describe('ActivityService', () => {
 
     it('throws NotFound for non-participant', async () => {
       prisma.trip.findFirst.mockResolvedValue(null);
-      await expect(service.listActivities(TRIP, USER)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.listActivities(TRIP, USER)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -230,10 +229,7 @@ describe('ActivityService', () => {
         maps_link: 'https://maps.google.com/?q=-8.4,115.1',
       });
 
-      expect(scheduleSpy).toHaveBeenCalledWith(
-        ACTIVITY,
-        'https://maps.google.com/?q=-8.4,115.1',
-      );
+      expect(scheduleSpy).toHaveBeenCalledWith(ACTIVITY, 'https://maps.google.com/?q=-8.4,115.1');
     });
   });
 
@@ -290,12 +286,7 @@ describe('ActivityService', () => {
         coverDocument: null,
       });
 
-      const result = await service.updateActivity(
-        TRIP,
-        ACTIVITY,
-        USER,
-        { place_name: 'New Name' },
-      );
+      const result = await service.updateActivity(TRIP, ACTIVITY, USER, { place_name: 'New Name' });
 
       expect(result.place_name).toBe('New Name');
     });

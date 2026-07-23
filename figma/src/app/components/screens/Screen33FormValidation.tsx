@@ -3,7 +3,14 @@ import { CreateTripFooter, CreateTripFormBody, CreateTripShell } from '../trip/C
 /** [Belum pasti] Validasi — nama & minimal 1 kandidat */
 export function Screen33FormValidation() {
   return (
-    <CreateTripShell footer={<CreateTripFooter disabled errors={['Nama perjalanan wajib diisi', 'Pilih minimal 1 kandidat tanggal']} />}>
+    <CreateTripShell
+      footer={
+        <CreateTripFooter
+          disabled
+          errors={['Nama perjalanan wajib diisi', 'Pilih minimal 1 kandidat tanggal']}
+        />
+      }
+    >
       <CreateTripFormBody
         name=""
         tags={[]}

@@ -36,9 +36,27 @@ const semanticSwatches: Swatch[] = [
 const typeScale = [
   { label: 'H1', weight: 'Bold · 800', size: 24, sample: 'Judul Halaman', muted: '24pt / 30px' },
   { label: 'H2', weight: 'SemiBold · 700', size: 18, sample: 'Judul Seksi', muted: '18pt / 22px' },
-  { label: 'H3', weight: 'Medium · 600', size: 15, sample: 'Sub-Judul & Label', muted: '15pt / 19px' },
-  { label: 'Body', weight: 'Regular · 400', size: 14, sample: 'Teks konten dan deskripsi utama.', muted: '14pt / 18px' },
-  { label: 'Caption', weight: 'Medium · 500', size: 12, sample: 'Keterangan · Timestamp', muted: '12pt / 16px' },
+  {
+    label: 'H3',
+    weight: 'Medium · 600',
+    size: 15,
+    sample: 'Sub-Judul & Label',
+    muted: '15pt / 19px',
+  },
+  {
+    label: 'Body',
+    weight: 'Regular · 400',
+    size: 14,
+    sample: 'Teks konten dan deskripsi utama.',
+    muted: '14pt / 18px',
+  },
+  {
+    label: 'Caption',
+    weight: 'Medium · 500',
+    size: 12,
+    sample: 'Keterangan · Timestamp',
+    muted: '12pt / 16px',
+  },
 ];
 
 const radii = [
@@ -71,9 +89,39 @@ function SwatchGrid({ items }: { items: Swatch[] }) {
             }}
           />
           <div style={{ padding: '7px 8px' }}>
-            <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: '0 0 1px', lineHeight: 1.2 }}>{s.name}</p>
-            <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 1px', fontFamily: 'monospace' }}>{s.hex}</p>
-            <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontWeight: 500, lineHeight: 1.3 }}>{s.role}</p>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: C.charcoal,
+                margin: '0 0 1px',
+                lineHeight: 1.2,
+              }}
+            >
+              {s.name}
+            </p>
+            <p
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                color: C.muted,
+                margin: '0 0 1px',
+                fontFamily: 'monospace',
+              }}
+            >
+              {s.hex}
+            </p>
+            <p
+              style={{
+                fontSize: 8,
+                color: C.mutedLight,
+                margin: 0,
+                fontWeight: 500,
+                lineHeight: 1.3,
+              }}
+            >
+              {s.role}
+            </p>
           </div>
         </div>
       ))}
@@ -83,7 +131,16 @@ function SwatchGrid({ items }: { items: Swatch[] }) {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <p style={{ fontSize: 10, fontWeight: 800, color: C.muted, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: 1.6 }}>
+    <p
+      style={{
+        fontSize: 10,
+        fontWeight: 800,
+        color: C.muted,
+        margin: '0 0 10px',
+        textTransform: 'uppercase',
+        letterSpacing: 1.6,
+      }}
+    >
       {children}
     </p>
   );
@@ -107,14 +164,44 @@ export function Screen125DesignTokens() {
 
       <div style={{ padding: '4px 20px 14px', borderBottom: `1px solid #E0DDD8`, flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-          <div style={{ backgroundColor: C.coral, color: 'white', fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div
+            style={{
+              backgroundColor: C.coral,
+              color: 'white',
+              fontSize: 9,
+              fontWeight: 800,
+              padding: '3px 8px',
+              borderRadius: 20,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}
+          >
             Referensi Dev
           </div>
-          <div style={{ backgroundColor: C.tealLight, color: C.teal, fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div
+            style={{
+              backgroundColor: C.tealLight,
+              color: C.teal,
+              fontSize: 9,
+              fontWeight: 800,
+              padding: '3px 8px',
+              borderRadius: 20,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}
+          >
             v2.5.0
           </div>
         </div>
-        <h1 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: '6px 0 2px', letterSpacing: -0.5 }}>
+        <h1
+          style={{
+            fontSize: 20,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '6px 0 2px',
+            letterSpacing: -0.5,
+          }}
+        >
           Design Tokens
         </h1>
         <p style={{ fontSize: 11, color: C.muted, margin: 0, fontWeight: 500 }}>
@@ -141,8 +228,28 @@ export function Screen125DesignTokens() {
         <div style={{ padding: '14px 20px 0' }}>
           <SectionLabel>Button States</SectionLabel>
           <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, backgroundColor: C.white, borderRadius: 14, padding: 12, border: `1px solid ${C.border}`, boxShadow: `0 2px 10px ${C.shadow}` }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>Primary</p>
+            <div
+              style={{
+                flex: 1,
+                backgroundColor: C.white,
+                borderRadius: 14,
+                padding: 12,
+                border: `1px solid ${C.border}`,
+                boxShadow: `0 2px 10px ${C.shadow}`,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: C.muted,
+                  margin: '0 0 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                }}
+              >
+                Primary
+              </p>
               <button
                 type="button"
                 style={{
@@ -160,10 +267,40 @@ export function Screen125DesignTokens() {
               >
                 CTA
               </button>
-              <p style={{ fontSize: 8, color: C.mutedLight, margin: '6px 0 0', fontFamily: 'monospace', textAlign: 'center' }}>{C.coral}</p>
+              <p
+                style={{
+                  fontSize: 8,
+                  color: C.mutedLight,
+                  margin: '6px 0 0',
+                  fontFamily: 'monospace',
+                  textAlign: 'center',
+                }}
+              >
+                {C.coral}
+              </p>
             </div>
-            <div style={{ flex: 1, backgroundColor: C.white, borderRadius: 14, padding: 12, border: `1px solid ${C.border}`, boxShadow: `0 2px 10px ${C.shadow}` }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: 0.8 }}>Danger</p>
+            <div
+              style={{
+                flex: 1,
+                backgroundColor: C.white,
+                borderRadius: 14,
+                padding: 12,
+                border: `1px solid ${C.border}`,
+                boxShadow: `0 2px 10px ${C.shadow}`,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: C.muted,
+                  margin: '0 0 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                }}
+              >
+                Danger
+              </p>
               <button
                 type="button"
                 style={{
@@ -181,17 +318,43 @@ export function Screen125DesignTokens() {
               >
                 Hapus
               </button>
-              <p style={{ fontSize: 8, color: C.mutedLight, margin: '6px 0 0', fontFamily: 'monospace', textAlign: 'center' }}>{C.danger}</p>
+              <p
+                style={{
+                  fontSize: 8,
+                  color: C.mutedLight,
+                  margin: '6px 0 0',
+                  fontFamily: 'monospace',
+                  textAlign: 'center',
+                }}
+              >
+                {C.danger}
+              </p>
             </div>
           </div>
-          <p style={{ fontSize: 9, color: C.muted, margin: '8px 0 0', lineHeight: 1.45, fontWeight: 500 }}>
+          <p
+            style={{
+              fontSize: 9,
+              color: C.muted,
+              margin: '8px 0 0',
+              lineHeight: 1.45,
+              fontWeight: 500,
+            }}
+          >
             Danger pure-red (#F94141) — G/B lebih rendah dari coral (#FF6B6B), jelas state hapus.
           </p>
         </div>
 
         <div style={{ padding: '14px 20px 0' }}>
           <SectionLabel>Tipografi</SectionLabel>
-          <div style={{ backgroundColor: C.white, borderRadius: 16, overflow: 'hidden', boxShadow: `0 2px 10px ${C.shadow}`, border: `1px solid ${C.border}` }}>
+          <div
+            style={{
+              backgroundColor: C.white,
+              borderRadius: 16,
+              overflow: 'hidden',
+              boxShadow: `0 2px 10px ${C.shadow}`,
+              border: `1px solid ${C.border}`,
+            }}
+          >
             {typeScale.map((t, idx) => (
               <div
                 key={t.label}
@@ -208,7 +371,16 @@ export function Screen125DesignTokens() {
                   <p
                     style={{
                       fontSize: t.size,
-                      fontWeight: t.label === 'H1' ? 800 : t.label === 'H2' ? 700 : t.label === 'H3' ? 600 : t.label === 'Body' ? 400 : 500,
+                      fontWeight:
+                        t.label === 'H1'
+                          ? 800
+                          : t.label === 'H2'
+                            ? 700
+                            : t.label === 'H3'
+                              ? 600
+                              : t.label === 'Body'
+                                ? 400
+                                : 500,
                       color: C.charcoal,
                       margin: 0,
                       lineHeight: 1.25,
@@ -221,8 +393,12 @@ export function Screen125DesignTokens() {
                   </p>
                 </div>
                 <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                  <p style={{ fontSize: 9, fontWeight: 700, color: C.coral, margin: 0 }}>{t.label}</p>
-                  <p style={{ fontSize: 8, color: C.muted, margin: 0, fontFamily: 'monospace' }}>{t.muted}</p>
+                  <p style={{ fontSize: 9, fontWeight: 700, color: C.coral, margin: 0 }}>
+                    {t.label}
+                  </p>
+                  <p style={{ fontSize: 8, color: C.muted, margin: 0, fontFamily: 'monospace' }}>
+                    {t.muted}
+                  </p>
                 </div>
               </div>
             ))}
@@ -233,7 +409,16 @@ export function Screen125DesignTokens() {
           <SectionLabel>Border Radius</SectionLabel>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             {radii.map((r) => (
-              <div key={r.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              <div
+                key={r.label}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 5,
+                }}
+              >
                 <div
                   style={{
                     width: '100%',
@@ -245,7 +430,9 @@ export function Screen125DesignTokens() {
                   }}
                 />
                 <p style={{ fontSize: 9, fontWeight: 700, color: C.muted, margin: 0 }}>{r.label}</p>
-                <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontFamily: 'monospace' }}>{r.value}</p>
+                <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontFamily: 'monospace' }}>
+                  {r.value}
+                </p>
               </div>
             ))}
           </div>

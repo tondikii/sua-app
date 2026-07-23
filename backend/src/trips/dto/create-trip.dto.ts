@@ -1,4 +1,13 @@
-import { IsString, IsArray, IsOptional, MaxLength, IsDateString, IsBoolean, ValidateNested, Matches } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsOptional,
+  MaxLength,
+  IsDateString,
+  IsBoolean,
+  ValidateNested,
+  Matches,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 /** Matches a 24-hour wall-clock time, "HH:MM" (e.g. "09:00", "23:30"). */

@@ -1,7 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import { ThumbsUp, MapPin, ChevronDown } from 'lucide-react';
 import { C, FONT, AVATAR_COLORS } from '../colors';
-import { TRIP_DATE_PENDING, VOTING_DATE_CANDIDATES, TRIP_LOCKED_DATES } from '../trip/CreateTripParts';
+import {
+  TRIP_DATE_PENDING,
+  VOTING_DATE_CANDIDATES,
+  TRIP_LOCKED_DATES,
+} from '../trip/CreateTripParts';
 import {
   ITINERARY_VOTING_TITLE,
   buildItineraryTimeline,
@@ -19,10 +23,13 @@ import { TRIP_IMAGES } from '../tripImages';
 const DEMO_TRIP_TITLE = 'Trip Akhir Pekan';
 
 const IMAGES = {
-  intro: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=700&fit=crop&auto=format',
-  voting: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&h=700&fit=crop&auto=format',
+  intro:
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&h=700&fit=crop&auto=format',
+  voting:
+    'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=800&h=700&fit=crop&auto=format',
   itinerary: TRIP_IMAGES.giliBeach,
-  collaboration: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=700&fit=crop&auto=format',
+  collaboration:
+    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=700&fit=crop&auto=format',
 };
 
 type TripTabId = 'itinerary' | 'voting' | 'chat' | 'media';
@@ -106,14 +113,70 @@ const ONBOARDING_ITINERARY_DAYS: ItineraryDay[] = [
     windowStart: '07:00',
     windowEnd: '24:00',
     items: [
-      { id: 1, startTime: '07:00', endTime: '08:30', title: 'Titik kumpul — Terminal travel', location: 'Pool van · area keberangkatan', kind: 'gather' },
-      { id: 2, startTime: '08:30', endTime: '10:30', title: 'Perjalanan ke penginapan', description: 'Van sewa · 5 orang', kind: 'transport', coverIcon: 'bus' },
-      { id: 3, startTime: '10:30', endTime: '11:30', title: 'Check-in & istirahat', kind: 'activity' },
-      { id: 4, startTime: '12:00', endTime: '13:00', title: 'Makan siang — warung lokal', kind: 'meal' },
-      { id: 5, startTime: '14:00', endTime: '16:30', title: 'Pantai Tiga Warna', location: 'Kawasan pantai timur', kind: 'destination', gmapsThumbUrl: TRIP_IMAGES.giliBeach },
-      { id: 6, startTime: '17:00', endTime: '18:30', title: 'Bukit Merese — sunset', location: 'Puncak bukit', kind: 'destination' },
-      { id: 7, startTime: '19:00', endTime: '20:30', title: 'Makan malam bareng', description: 'Seafood · booking 6 orang', kind: 'meal' },
-      { id: 8, startTime: '21:00', endTime: '22:30', title: 'Kembali ke penginapan', kind: 'transport', coverIcon: 'bus' },
+      {
+        id: 1,
+        startTime: '07:00',
+        endTime: '08:30',
+        title: 'Titik kumpul — Terminal travel',
+        location: 'Pool van · area keberangkatan',
+        kind: 'gather',
+      },
+      {
+        id: 2,
+        startTime: '08:30',
+        endTime: '10:30',
+        title: 'Perjalanan ke penginapan',
+        description: 'Van sewa · 5 orang',
+        kind: 'transport',
+        coverIcon: 'bus',
+      },
+      {
+        id: 3,
+        startTime: '10:30',
+        endTime: '11:30',
+        title: 'Check-in & istirahat',
+        kind: 'activity',
+      },
+      {
+        id: 4,
+        startTime: '12:00',
+        endTime: '13:00',
+        title: 'Makan siang — warung lokal',
+        kind: 'meal',
+      },
+      {
+        id: 5,
+        startTime: '14:00',
+        endTime: '16:30',
+        title: 'Pantai Tiga Warna',
+        location: 'Kawasan pantai timur',
+        kind: 'destination',
+        gmapsThumbUrl: TRIP_IMAGES.giliBeach,
+      },
+      {
+        id: 6,
+        startTime: '17:00',
+        endTime: '18:30',
+        title: 'Bukit Merese — sunset',
+        location: 'Puncak bukit',
+        kind: 'destination',
+      },
+      {
+        id: 7,
+        startTime: '19:00',
+        endTime: '20:30',
+        title: 'Makan malam bareng',
+        description: 'Seafood · booking 6 orang',
+        kind: 'meal',
+      },
+      {
+        id: 8,
+        startTime: '21:00',
+        endTime: '22:30',
+        title: 'Kembali ke penginapan',
+        kind: 'transport',
+        coverIcon: 'bus',
+      },
     ],
   },
   {
@@ -124,10 +187,36 @@ const ONBOARDING_ITINERARY_DAYS: ItineraryDay[] = [
     windowEnd: '24:00',
     items: [
       { id: 9, startTime: '08:00', endTime: '09:00', title: 'Sarapan di penginapan', kind: 'meal' },
-      { id: 10, startTime: '09:30', endTime: '12:00', title: 'Snorkeling & island hopping', location: 'Gili terdekat', kind: 'activity', gmapsThumbUrl: TRIP_IMAGES.giliBeach },
-      { id: 11, startTime: '12:30', endTime: '13:30', title: 'Makan siang di warung pantai', kind: 'meal' },
-      { id: 12, startTime: '14:00', endTime: '17:00', title: 'Eksplor desa & pasar lokal', kind: 'destination' },
-      { id: 13, startTime: '19:00', endTime: '21:00', title: 'Makan malam & foto grup', kind: 'meal' },
+      {
+        id: 10,
+        startTime: '09:30',
+        endTime: '12:00',
+        title: 'Snorkeling & island hopping',
+        location: 'Gili terdekat',
+        kind: 'activity',
+        gmapsThumbUrl: TRIP_IMAGES.giliBeach,
+      },
+      {
+        id: 11,
+        startTime: '12:30',
+        endTime: '13:30',
+        title: 'Makan siang di warung pantai',
+        kind: 'meal',
+      },
+      {
+        id: 12,
+        startTime: '14:00',
+        endTime: '17:00',
+        title: 'Eksplor desa & pasar lokal',
+        kind: 'destination',
+      },
+      {
+        id: 13,
+        startTime: '19:00',
+        endTime: '21:00',
+        title: 'Makan malam & foto grup',
+        kind: 'meal',
+      },
     ],
   },
   {
@@ -138,10 +227,30 @@ const ONBOARDING_ITINERARY_DAYS: ItineraryDay[] = [
     windowEnd: '24:00',
     items: [
       { id: 14, startTime: '08:30', endTime: '09:30', title: 'Sarapan & persiapan', kind: 'meal' },
-      { id: 15, startTime: '10:00', endTime: '13:30', title: 'Trekking air terjun', location: 'Hutan & sungai', kind: 'destination', gmapsThumbUrl: TRIP_IMAGES.tumpakSewu },
+      {
+        id: 15,
+        startTime: '10:00',
+        endTime: '13:30',
+        title: 'Trekking air terjun',
+        location: 'Hutan & sungai',
+        kind: 'destination',
+        gmapsThumbUrl: TRIP_IMAGES.tumpakSewu,
+      },
       { id: 16, startTime: '14:00', endTime: '15:00', title: 'Makan siang', kind: 'meal' },
-      { id: 17, startTime: '15:30', endTime: '17:30', title: 'Belanja oleh-oleh', kind: 'activity' },
-      { id: 18, startTime: '19:30', endTime: '21:00', title: 'Makan malam terakhir bareng', kind: 'meal' },
+      {
+        id: 17,
+        startTime: '15:30',
+        endTime: '17:30',
+        title: 'Belanja oleh-oleh',
+        kind: 'activity',
+      },
+      {
+        id: 18,
+        startTime: '19:30',
+        endTime: '21:00',
+        title: 'Makan malam terakhir bareng',
+        kind: 'meal',
+      },
     ],
   },
   {
@@ -152,13 +261,31 @@ const ONBOARDING_ITINERARY_DAYS: ItineraryDay[] = [
     windowEnd: '17:00',
     items: [
       { id: 19, startTime: '08:00', endTime: '09:00', title: 'Check-out & sarapan', kind: 'meal' },
-      { id: 20, startTime: '09:30', endTime: '11:30', title: 'Perjalanan pulang', description: 'Van sewa · titik drop-off', kind: 'transport', coverIcon: 'bus' },
-      { id: 21, startTime: '12:00', endTime: '14:00', title: 'Belanja oleh-oleh', location: 'Rest area perjalanan', kind: 'activity' },
+      {
+        id: 20,
+        startTime: '09:30',
+        endTime: '11:30',
+        title: 'Perjalanan pulang',
+        description: 'Van sewa · titik drop-off',
+        kind: 'transport',
+        coverIcon: 'bus',
+      },
+      {
+        id: 21,
+        startTime: '12:00',
+        endTime: '14:00',
+        title: 'Belanja oleh-oleh',
+        location: 'Rest area perjalanan',
+        kind: 'activity',
+      },
     ],
   },
 ];
 
-const ONBOARDING_ITINERARY_ACTIVITY_COUNT = ONBOARDING_ITINERARY_DAYS.reduce((sum, d) => sum + d.items.length, 0);
+const ONBOARDING_ITINERARY_ACTIVITY_COUNT = ONBOARDING_ITINERARY_DAYS.reduce(
+  (sum, d) => sum + d.items.length,
+  0,
+);
 
 const TAB_LABELS_VOTING: { id: TripTabId; label: string; count?: number }[] = [
   { id: 'itinerary', label: 'Itinerary', count: 4 },
@@ -198,10 +325,29 @@ function MiniTripDetailFrame({
       }}
     >
       <div style={{ padding: '10px 12px 8px', borderBottom: `1px solid ${C.border}` }}>
-        <p style={{ fontSize: 12, fontWeight: 800, color: C.charcoal, margin: 0, textAlign: 'center', letterSpacing: -0.2 }}>
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: 0,
+            textAlign: 'center',
+            letterSpacing: -0.2,
+          }}
+        >
           {DEMO_TRIP_TITLE}
         </p>
-        <p style={{ fontSize: 9, color: C.muted, margin: '2px 0 0', textAlign: 'center', fontWeight: 500 }}>{subtitle}</p>
+        <p
+          style={{
+            fontSize: 9,
+            color: C.muted,
+            margin: '2px 0 0',
+            textAlign: 'center',
+            fontWeight: 500,
+          }}
+        >
+          {subtitle}
+        </p>
       </div>
 
       <div style={{ display: 'flex', borderBottom: `1.5px solid ${C.border}`, padding: '0 8px' }}>
@@ -223,7 +369,13 @@ function MiniTripDetailFrame({
                 marginBottom: -1.5,
               }}
             >
-              <span style={{ fontSize: 9, fontWeight: active ? 700 : 500, color: active ? C.coral : C.muted }}>
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: active ? 700 : 500,
+                  color: active ? C.coral : C.muted,
+                }}
+              >
                 {tab.label}
               </span>
               {tab.count !== undefined && !isChat && (
@@ -263,7 +415,14 @@ function MiniTripDetailFrame({
         })}
       </div>
 
-      <div style={{ padding: contentPadding, backgroundColor: activeTab === 'chat' ? C.light : C.white }}>{children}</div>
+      <div
+        style={{
+          padding: contentPadding,
+          backgroundColor: activeTab === 'chat' ? C.light : C.white,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -318,9 +477,26 @@ function MiniVotingCandidateRow({
         border: voted ? `1.5px solid ${C.coral}` : '1px solid transparent',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 4,
+        }}
+      >
         <div style={{ minWidth: 0, flex: 1, paddingRight: 6 }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: 0, lineHeight: 1.25 }}>{range}</p>
+          <p
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: 0,
+              lineHeight: 1.25,
+            }}
+          >
+            {range}
+          </p>
           <p style={{ fontSize: 8, color: C.muted, margin: '1px 0 0', lineHeight: 1.3 }}>{days}</p>
         </div>
         <span
@@ -346,7 +522,17 @@ function MiniVotingCandidateRow({
         {voted ? (
           <span style={{ fontSize: 8, fontWeight: 700, color: C.teal }}>✓ Voted</span>
         ) : (
-          <span style={{ fontSize: 8, fontWeight: 700, color: C.muted, backgroundColor: C.white, padding: '2px 6px', borderRadius: 6, border: `1px solid ${C.border}` }}>
+          <span
+            style={{
+              fontSize: 8,
+              fontWeight: 700,
+              color: C.muted,
+              backgroundColor: C.white,
+              padding: '2px 6px',
+              borderRadius: 6,
+              border: `1px solid ${C.border}`,
+            }}
+          >
             Vote
           </span>
         )}
@@ -370,7 +556,9 @@ function MiniVotingPreview() {
           overflow: 'hidden',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px 8px 12px' }}>
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px 8px 12px' }}
+        >
           <div
             style={{
               width: 28,
@@ -386,13 +574,31 @@ function MiniVotingPreview() {
             <TanggalIcon size={14} color={tanggalMeta.color} strokeWidth={2.5} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: C.charcoal, margin: 0 }}>Tanggal Perjalanan</p>
-            <p style={{ fontSize: 9, color: C.muted, margin: '1px 0 0', fontWeight: 500 }}>3 kandidat · tenggat 18 Jun</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: C.charcoal, margin: 0 }}>
+              Tanggal Perjalanan
+            </p>
+            <p style={{ fontSize: 9, color: C.muted, margin: '1px 0 0', fontWeight: 500 }}>
+              3 kandidat · tenggat 18 Jun
+            </p>
           </div>
-          <ChevronDown size={14} color={C.muted} strokeWidth={2.5} style={{ transform: 'rotate(180deg)', flexShrink: 0 }} />
+          <ChevronDown
+            size={14}
+            color={C.muted}
+            strokeWidth={2.5}
+            style={{ transform: 'rotate(180deg)', flexShrink: 0 }}
+          />
         </div>
 
-        <div style={{ padding: '0 8px 8px', borderTop: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 8 }}>
+        <div
+          style={{
+            padding: '0 8px 8px',
+            borderTop: `1px solid ${C.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            paddingTop: 8,
+          }}
+        >
           {VOTING_DATE_CANDIDATES.map((cand) => (
             <MiniVotingCandidateRow
               key={cand.id}
@@ -434,8 +640,12 @@ function MiniVotingPreview() {
           <MapPin size={14} color={VOTING_TYPE_META.destinasi.color} strokeWidth={2.5} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: C.charcoal, margin: 0 }}>{ITINERARY_VOTING_TITLE}</p>
-          <p style={{ fontSize: 9, color: C.muted, margin: '1px 0 0', fontWeight: 500 }}>3 opsi · slot 11:30–13:00</p>
+          <p style={{ fontSize: 11, fontWeight: 800, color: C.charcoal, margin: 0 }}>
+            {ITINERARY_VOTING_TITLE}
+          </p>
+          <p style={{ fontSize: 9, color: C.muted, margin: '1px 0 0', fontWeight: 500 }}>
+            3 opsi · slot 11:30–13:00
+          </p>
         </div>
         <ChevronDown size={14} color={C.muted} strokeWidth={2.5} />
       </div>
@@ -458,7 +668,9 @@ function MiniItineraryGapRow({ startTime, endTime }: { startTime: string; endTim
         />
       </div>
       <p style={{ fontSize: 8, color: C.mutedLight, margin: 0, fontWeight: 500, lineHeight: 1.35 }}>
-        <span style={{ fontWeight: 700, color: C.muted }}>{startTime} – {endTime}</span>
+        <span style={{ fontWeight: 700, color: C.muted }}>
+          {startTime} – {endTime}
+        </span>
         {' · '}Kosong
       </p>
     </div>
@@ -478,8 +690,23 @@ function MiniItineraryItemRow({
   const isPresent = timeState === 'present';
 
   return (
-    <div style={{ display: 'flex', gap: 6, opacity: stateMeta.cardOpacity, marginBottom: showConnector ? 4 : 0 }}>
-      <div style={{ width: 22, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 6,
+        opacity: stateMeta.cardOpacity,
+        marginBottom: showConnector ? 4 : 0,
+      }}
+    >
+      <div
+        style={{
+          width: 22,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <div
           style={{
             width: isPresent ? 10 : 8,
@@ -490,7 +717,11 @@ function MiniItineraryItemRow({
             flexShrink: 0,
           }}
         />
-        {showConnector && <div style={{ flex: 1, width: 1.5, backgroundColor: C.border, marginTop: 2, minHeight: 8 }} />}
+        {showConnector && (
+          <div
+            style={{ flex: 1, width: 1.5, backgroundColor: C.border, marginTop: 2, minHeight: 8 }}
+          />
+        )}
       </div>
 
       <div
@@ -512,7 +743,15 @@ function MiniItineraryItemRow({
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginBottom: 1 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              flexWrap: 'wrap',
+              marginBottom: 1,
+            }}
+          >
             <p style={{ fontSize: 8, fontWeight: 700, color: stateMeta.timeColor, margin: 0 }}>
               {item.startTime} – {item.endTime}
             </p>
@@ -532,9 +771,27 @@ function MiniItineraryItemRow({
               </span>
             )}
           </div>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: 0, lineHeight: 1.25 }}>{item.title}</p>
+          <p
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: 0,
+              lineHeight: 1.25,
+            }}
+          >
+            {item.title}
+          </p>
           {(item.description || item.location) && (
-            <p style={{ fontSize: 8, color: C.muted, margin: '1px 0 0', fontWeight: 500, lineHeight: 1.3 }}>
+            <p
+              style={{
+                fontSize: 8,
+                color: C.muted,
+                margin: '1px 0 0',
+                fontWeight: 500,
+                lineHeight: 1.3,
+              }}
+            >
               {item.description ?? item.location}
             </p>
           )}
@@ -547,7 +804,8 @@ function MiniItineraryItemRow({
 /** Selaras TRIP_LOCKED_DATES — hari 1 penuh (07:00–24:00), jam 14:00 = Pantai Tiga Warna */
 function MiniItineraryPreview() {
   const activeDayId = 1;
-  const day = ONBOARDING_ITINERARY_DAYS.find((d) => d.id === activeDayId) ?? ONBOARDING_ITINERARY_DAYS[0];
+  const day =
+    ONBOARDING_ITINERARY_DAYS.find((d) => d.id === activeDayId) ?? ONBOARDING_ITINERARY_DAYS[0];
   const referenceNow = { dayId: activeDayId, time: '14:00' };
   const segments = buildItineraryTimeline(day);
 
@@ -562,7 +820,15 @@ function MiniItineraryPreview() {
         {ONBOARDING_ITINERARY_ACTIVITY_COUNT} aktivitas · {ONBOARDING_ITINERARY_DAYS.length} hari
       </p>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 4,
+          marginBottom: 6,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}
+      >
         {ONBOARDING_ITINERARY_DAYS.map((d) => {
           const active = d.id === activeDayId;
           return (
@@ -576,7 +842,14 @@ function MiniItineraryPreview() {
                 flexShrink: 0,
               }}
             >
-              <p style={{ fontSize: 8, fontWeight: active ? 800 : 600, color: active ? C.coral : C.muted, margin: 0 }}>
+              <p
+                style={{
+                  fontSize: 8,
+                  fontWeight: active ? 800 : 600,
+                  color: active ? C.coral : C.muted,
+                  margin: 0,
+                }}
+              >
                 {d.dayLabel}
               </p>
             </div>
@@ -585,11 +858,24 @@ function MiniItineraryPreview() {
       </div>
 
       <div style={{ marginBottom: 5 }}>
-        <p style={{ fontSize: 8, fontWeight: 700, color: C.coral, margin: '0 0 1px', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+        <p
+          style={{
+            fontSize: 8,
+            fontWeight: 700,
+            color: C.coral,
+            margin: '0 0 1px',
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+          }}
+        >
           {day.dayLabel}
         </p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-          <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: 0 }}>{day.dateLabel}</p>
+        <div
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}
+        >
+          <p style={{ fontSize: 10, fontWeight: 800, color: C.charcoal, margin: 0 }}>
+            {day.dateLabel}
+          </p>
           <span
             style={{
               fontSize: 8,
@@ -662,13 +948,23 @@ function MiniChatPreview() {
               boxShadow: `0 2px 8px ${C.shadow}`,
             }}
           >
-            <p style={{ margin: 0, fontSize: 10, color: C.charcoal, fontWeight: 500, lineHeight: 1.45 }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 10,
+                color: C.charcoal,
+                fontWeight: 500,
+                lineHeight: 1.45,
+              }}
+            >
               Besok kita berangkat jam 7 ya? Jangan lupa check itinerary 📋
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 6 }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', gap: 6 }}
+        >
           <div
             style={{
               maxWidth: '72%',
@@ -678,7 +974,9 @@ function MiniChatPreview() {
               boxShadow: `0 2px 10px ${C.coral}40`,
             }}
           >
-            <p style={{ margin: 0, fontSize: 10, color: 'white', fontWeight: 500, lineHeight: 1.45 }}>
+            <p
+              style={{ margin: 0, fontSize: 10, color: 'white', fontWeight: 500, lineHeight: 1.45 }}
+            >
               Siap! Undangan udah aku kirim ke yang belum join ✉️
             </p>
           </div>
@@ -710,8 +1008,22 @@ function MiniChatPreview() {
               boxShadow: `0 2px 8px ${C.shadow}`,
             }}
           >
-            <img src={TRIP_IMAGES.giliBeach} alt="" style={{ width: '100%', height: 52, objectFit: 'cover', display: 'block' }} />
-            <p style={{ margin: 0, fontSize: 10, color: C.charcoal, fontWeight: 500, padding: '6px 10px', backgroundColor: C.white, lineHeight: 1.4 }}>
+            <img
+              src={TRIP_IMAGES.giliBeach}
+              alt=""
+              style={{ width: '100%', height: 52, objectFit: 'cover', display: 'block' }}
+            />
+            <p
+              style={{
+                margin: 0,
+                fontSize: 10,
+                color: C.charcoal,
+                fontWeight: 500,
+                padding: '6px 10px',
+                backgroundColor: C.white,
+                lineHeight: 1.4,
+              }}
+            >
               Referensi buat besok 📸
             </p>
           </div>
@@ -736,9 +1048,22 @@ function AppBadge() {
           boxShadow: `0 6px 18px ${C.coral}55`,
         }}
       >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
-          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="white" stroke="none" />
+          <polygon
+            points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"
+            fill="white"
+            stroke="none"
+          />
         </svg>
       </div>
       <span style={{ fontSize: 15, fontWeight: 800, color: C.charcoal }}>Atur Perjalanan</span>
@@ -749,8 +1074,19 @@ function AppBadge() {
 function IntroSlide({ slide }: { slide: Extract<Slide, { kind: 'intro' }> }) {
   return (
     <>
-      <p style={{ fontSize: 12, fontWeight: 700, color: C.coral, margin: '0 0 6px' }}>Selamat datang</p>
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: C.charcoal, margin: '0 0 8px', letterSpacing: -0.4, lineHeight: 1.3 }}>
+      <p style={{ fontSize: 12, fontWeight: 700, color: C.coral, margin: '0 0 6px' }}>
+        Selamat datang
+      </p>
+      <h2
+        style={{
+          fontSize: 20,
+          fontWeight: 800,
+          color: C.charcoal,
+          margin: '0 0 8px',
+          letterSpacing: -0.4,
+          lineHeight: 1.3,
+        }}
+      >
         {slide.title}
       </h2>
       <p style={{ fontSize: 14, color: C.muted, margin: 0, lineHeight: 1.55, fontWeight: 500 }}>
@@ -764,10 +1100,26 @@ function PairSlide({ slide }: { slide: Extract<Slide, { kind: 'pair' }> }) {
   return (
     <>
       <div style={{ marginBottom: 14 }}>
-        <span style={{ fontSize: 10, fontWeight: 800, color: C.coral, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            color: C.coral,
+            letterSpacing: 0.6,
+            textTransform: 'uppercase',
+          }}
+        >
           {slide.problem.label}
         </span>
-        <h3 style={{ fontSize: 13, fontWeight: 800, color: C.charcoal, margin: '4px 0 3px', lineHeight: 1.35 }}>
+        <h3
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '4px 0 3px',
+            lineHeight: 1.35,
+          }}
+        >
           {slide.problem.title}
         </h3>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.45, fontWeight: 500 }}>
@@ -784,13 +1136,37 @@ function PairSlide({ slide }: { slide: Extract<Slide, { kind: 'pair' }> }) {
       />
 
       <div>
-        <span style={{ fontSize: 10, fontWeight: 800, color: C.teal, letterSpacing: 0.6, textTransform: 'uppercase' }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            color: C.teal,
+            letterSpacing: 0.6,
+            textTransform: 'uppercase',
+          }}
+        >
           {slide.solution.label}
         </span>
-        <h3 style={{ fontSize: 13, fontWeight: 800, color: C.charcoal, margin: '4px 0 3px', lineHeight: 1.35 }}>
+        <h3
+          style={{
+            fontSize: 13,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '4px 0 3px',
+            lineHeight: 1.35,
+          }}
+        >
           {slide.solution.title}
         </h3>
-        <p style={{ fontSize: 12, color: C.muted, margin: '0 0 12px', lineHeight: 1.45, fontWeight: 500 }}>
+        <p
+          style={{
+            fontSize: 12,
+            color: C.muted,
+            margin: '0 0 12px',
+            lineHeight: 1.45,
+            fontWeight: 500,
+          }}
+        >
           {slide.solution.body}
         </p>
         {slide.preview}
@@ -829,7 +1205,15 @@ export function Screen2EduOnboarding() {
           scrollbarWidth: 'none',
         }}
       >
-        <div style={{ position: 'relative', height: 280, overflow: 'hidden', backgroundColor: '#C9E8E6', flexShrink: 0 }}>
+        <div
+          style={{
+            position: 'relative',
+            height: 280,
+            overflow: 'hidden',
+            backgroundColor: '#C9E8E6',
+            flexShrink: 0,
+          }}
+        >
           <img
             key={slide.image}
             src={slide.image}

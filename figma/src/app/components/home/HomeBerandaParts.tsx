@@ -127,7 +127,16 @@ export function HomeHeader({ unreadCount }: { unreadCount: number }) {
         flexShrink: 0,
       }}
     >
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.5, flex: 1 }}>
+      <h2
+        style={{
+          fontSize: 22,
+          fontWeight: 800,
+          color: C.charcoal,
+          margin: 0,
+          letterSpacing: -0.5,
+          flex: 1,
+        }}
+      >
         Perjalananku
       </h2>
       <NotificationBell unreadCount={unreadCount} />
@@ -163,7 +172,13 @@ export function HomeTabs({ activeTab, counts }: { activeTab: HomeTabId; counts: 
               gap: 6,
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: active ? 700 : 500, color: active ? C.coral : C.muted }}>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: active ? 700 : 500,
+                color: active ? C.coral : C.muted,
+              }}
+            >
               {tab.label}
             </span>
             <span
@@ -204,11 +219,24 @@ export function TripCard({ trip, dimmed = false }: { trip: TripItem; dimmed?: bo
         <img
           src={trip.image}
           alt={trip.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', filter: dimmed ? 'grayscale(20%)' : 'none' }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            filter: dimmed ? 'grayscale(20%)' : 'none',
+          }}
         />
       </div>
       <div style={{ padding: '14px 16px 16px' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: C.charcoal, margin: '0 0 9px', letterSpacing: -0.3 }}>
+        <h3
+          style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '0 0 9px',
+            letterSpacing: -0.3,
+          }}
+        >
           {trip.title}
         </h3>
         <TripTags tags={trip.tags} variant="card" />
@@ -268,7 +296,11 @@ export function InvitationCard({ item }: { item: InvitationItem }) {
       }}
     >
       <div style={{ position: 'relative', height: 120, backgroundColor: '#D8D4CC' }}>
-        <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img
+          src={item.image}
+          alt={item.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
         <div
           style={{
             position: 'absolute',
@@ -283,7 +315,15 @@ export function InvitationCard({ item }: { item: InvitationItem }) {
         </div>
       </div>
       <div style={{ padding: '14px 16px 16px' }}>
-        <h3 style={{ fontSize: 15, fontWeight: 800, color: C.charcoal, margin: '0 0 6px', letterSpacing: -0.3 }}>
+        <h3
+          style={{
+            fontSize: 15,
+            fontWeight: 800,
+            color: C.charcoal,
+            margin: '0 0 6px',
+            letterSpacing: -0.3,
+          }}
+        >
           {item.title}
         </h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 14 }}>

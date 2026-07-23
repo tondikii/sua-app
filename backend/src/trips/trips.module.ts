@@ -6,7 +6,7 @@ import { VotingService } from './voting.service';
 import { VotingController } from './voting.controller';
 import { ActivityService } from './activity.service';
 import { ActivityController } from './activity.controller';
-import { ChatService } from "./chat.service";
+import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { MediaService } from './media.service';
 import { MediaController } from './media.controller';
@@ -18,9 +18,29 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [PrismaModule, GoogleMapsModule, R2Module, NotificationsModule],
-  controllers: [TripsController, VotingController, ActivityController, ChatController, MediaController, UploadsController],
-  providers: [TripsService, InvitationsService, VotingService, ActivityService, ChatService, MediaService],
-  exports: [TripsService, InvitationsService, VotingService, ActivityService, ChatService, MediaService],
+  controllers: [
+    TripsController,
+    VotingController,
+    ActivityController,
+    ChatController,
+    MediaController,
+    UploadsController,
+  ],
+  providers: [
+    TripsService,
+    InvitationsService,
+    VotingService,
+    ActivityService,
+    ChatService,
+    MediaService,
+  ],
+  exports: [
+    TripsService,
+    InvitationsService,
+    VotingService,
+    ActivityService,
+    ChatService,
+    MediaService,
+  ],
 })
 export class TripsModule {}
-

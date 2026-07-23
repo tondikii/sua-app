@@ -1,8 +1,20 @@
 import type { ReactNode } from 'react';
-import { Plus, Users, Train, UtensilsCrossed, MapPin, Navigation, MoreHorizontal } from 'lucide-react';
+import {
+  Plus,
+  Users,
+  Train,
+  UtensilsCrossed,
+  MapPin,
+  Navigation,
+  MoreHorizontal,
+} from 'lucide-react';
 import { C, FONT } from '../colors';
 import { DestinationThumbnail } from './DestinationParts';
-import { ActivityTimelineThumb, ActivityItemMenuSheet, type ActivityCoverIcon } from './ActivityParts';
+import {
+  ActivityTimelineThumb,
+  ActivityItemMenuSheet,
+  type ActivityCoverIcon,
+} from './ActivityParts';
 import { TRIP_IMAGES } from '../tripImages';
 
 export type ItineraryItemKind = 'gather' | 'transport' | 'meal' | 'activity' | 'destination';
@@ -50,7 +62,14 @@ const KIND_META: Record<ItineraryItemKind, { icon: typeof MapPin }> = {
 
 export const ITINERARY_TIME_STATE_META: Record<
   ItineraryTimeState,
-  { label: string; dotColor: string; dotRing: string; timeColor: string; cardBorder: string; cardOpacity: number }
+  {
+    label: string;
+    dotColor: string;
+    dotRing: string;
+    timeColor: string;
+    cardBorder: string;
+    cardOpacity: number;
+  }
 > = {
   past: {
     label: 'Selesai',
@@ -124,31 +143,39 @@ function minutesToTime(minutes: number): string {
 }
 
 export type ItineraryTimelineSegment =
-  | { kind: 'gap'; startTime: string; endTime: string }
-  | { kind: 'item'; item: ItineraryItem };
+  { kind: 'gap'; startTime: string; endTime: string } | { kind: 'item'; item: ItineraryItem };
 
 export function buildItineraryTimeline(day: ItineraryDay): ItineraryTimelineSegment[] {
   const segments: ItineraryTimelineSegment[] = [];
   const windowStart = timeToMinutes(day.windowStart);
   const windowEnd = timeToMinutes(day.windowEnd);
-  const sorted = [...day.items].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+  const sorted = [...day.items].sort(
+    (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
+  );
 
   let cursor = windowStart;
   for (const item of sorted) {
     const itemStart = timeToMinutes(item.startTime);
     const itemEnd = timeToMinutes(item.endTime);
     if (itemStart > cursor) {
-      segments.push({ kind: 'gap', startTime: minutesToTime(cursor), endTime: minutesToTime(itemStart) });
+      segments.push({
+        kind: 'gap',
+        startTime: minutesToTime(cursor),
+        endTime: minutesToTime(itemStart),
+      });
     }
     segments.push({ kind: 'item', item });
     cursor = Math.max(cursor, itemEnd);
   }
   if (cursor < windowEnd) {
-    segments.push({ kind: 'gap', startTime: minutesToTime(cursor), endTime: minutesToTime(windowEnd) });
+    segments.push({
+      kind: 'gap',
+      startTime: minutesToTime(cursor),
+      endTime: minutesToTime(windowEnd),
+    });
   }
   return segments;
 }
-
 
 /** Itinerary Lombok — tanggal belum ditentukan (voting berjalan) */
 export const LOMBOK_ITINERARY_PENDING_DAY: ItineraryDay = {
@@ -158,10 +185,40 @@ export const LOMBOK_ITINERARY_PENDING_DAY: ItineraryDay = {
   windowStart: '07:00',
   windowEnd: '20:00',
   items: [
-    { id: 1, startTime: '07:00', endTime: '08:30', title: 'Berkumpul di Bandara Lombok', location: 'Praya, NTB', kind: 'gather' },
-    { id: 2, startTime: '09:00', endTime: '11:00', title: 'Perjalanan ke penginapan', description: 'Van sewa', kind: 'transport', coverIcon: 'bus' },
-    { id: 3, startTime: '13:00', endTime: '16:00', title: 'Pantai Tiga Warna', location: 'Lombok Timur, NTB', kind: 'destination', gmapsThumbUrl: TRIP_IMAGES.giliBeach },
-    { id: 4, startTime: '16:30', endTime: '18:30', title: 'Bukit Merese', location: 'Lombok Tengah, NTB', kind: 'destination' },
+    {
+      id: 1,
+      startTime: '07:00',
+      endTime: '08:30',
+      title: 'Berkumpul di Bandara Lombok',
+      location: 'Praya, NTB',
+      kind: 'gather',
+    },
+    {
+      id: 2,
+      startTime: '09:00',
+      endTime: '11:00',
+      title: 'Perjalanan ke penginapan',
+      description: 'Van sewa',
+      kind: 'transport',
+      coverIcon: 'bus',
+    },
+    {
+      id: 3,
+      startTime: '13:00',
+      endTime: '16:00',
+      title: 'Pantai Tiga Warna',
+      location: 'Lombok Timur, NTB',
+      kind: 'destination',
+      gmapsThumbUrl: TRIP_IMAGES.giliBeach,
+    },
+    {
+      id: 4,
+      startTime: '16:30',
+      endTime: '18:30',
+      title: 'Bukit Merese',
+      location: 'Lombok Tengah, NTB',
+      kind: 'destination',
+    },
   ],
 };
 
@@ -173,10 +230,40 @@ export const LOMBOK_ITINERARY_DAY_1: ItineraryDay = {
   windowStart: '07:00',
   windowEnd: '20:00',
   items: [
-    { id: 1, startTime: '07:00', endTime: '08:30', title: 'Berkumpul di Bandara Lombok', location: 'Praya, NTB', kind: 'gather' },
-    { id: 2, startTime: '09:00', endTime: '11:00', title: 'Perjalanan ke penginapan', description: 'Van sewa', kind: 'transport', coverIcon: 'bus' },
-    { id: 3, startTime: '13:00', endTime: '16:00', title: 'Pantai Tiga Warna', location: 'Malang / alternatif: Pink Beach', kind: 'destination', gmapsThumbUrl: TRIP_IMAGES.giliBeach },
-    { id: 4, startTime: '16:30', endTime: '18:30', title: 'Bukit Merese', location: 'Lombok Tengah', kind: 'destination' },
+    {
+      id: 1,
+      startTime: '07:00',
+      endTime: '08:30',
+      title: 'Berkumpul di Bandara Lombok',
+      location: 'Praya, NTB',
+      kind: 'gather',
+    },
+    {
+      id: 2,
+      startTime: '09:00',
+      endTime: '11:00',
+      title: 'Perjalanan ke penginapan',
+      description: 'Van sewa',
+      kind: 'transport',
+      coverIcon: 'bus',
+    },
+    {
+      id: 3,
+      startTime: '13:00',
+      endTime: '16:00',
+      title: 'Pantai Tiga Warna',
+      location: 'Malang / alternatif: Pink Beach',
+      kind: 'destination',
+      gmapsThumbUrl: TRIP_IMAGES.giliBeach,
+    },
+    {
+      id: 4,
+      startTime: '16:30',
+      endTime: '18:30',
+      title: 'Bukit Merese',
+      location: 'Lombok Tengah',
+      kind: 'destination',
+    },
   ],
 };
 
@@ -188,7 +275,14 @@ export const LOMBOK_ITINERARY_DAY_2: ItineraryDay = {
   windowEnd: '18:00',
   items: [
     { id: 5, startTime: '08:30', endTime: '10:00', title: 'Sarapan & check-out', kind: 'meal' },
-    { id: 6, startTime: '10:30', endTime: '14:00', title: 'Air Terjun Benang Stokel', location: 'Lombok Tengah', kind: 'destination' },
+    {
+      id: 6,
+      startTime: '10:30',
+      endTime: '14:00',
+      title: 'Air Terjun Benang Stokel',
+      location: 'Lombok Tengah',
+      kind: 'destination',
+    },
   ],
 };
 
@@ -216,7 +310,9 @@ function ItineraryGapRow({ startTime, endTime }: { startTime: string; endTime: s
         />
       </div>
       <p style={{ fontSize: 11, color: C.mutedLight, margin: 0, fontWeight: 500, lineHeight: 1.4 }}>
-        <span style={{ fontWeight: 700, color: C.muted }}>{startTime} – {endTime}</span>
+        <span style={{ fontWeight: 700, color: C.muted }}>
+          {startTime} – {endTime}
+        </span>
         {' · '}
         Tidak ada aktivitas
       </p>
@@ -233,7 +329,14 @@ function ItineraryTimeStateLegend() {
         return (
           <span
             key={state}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 600, color: C.muted }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 10,
+              fontWeight: 600,
+              color: C.muted,
+            }}
           >
             <span
               style={{
@@ -268,7 +371,15 @@ function ItineraryItemRow({
 
   return (
     <div style={{ display: 'flex', gap: 12, opacity: stateMeta.cardOpacity }}>
-      <div style={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div
+        style={{
+          width: 44,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
         <div
           style={{
             width: isPresent ? 14 : 12,
@@ -297,7 +408,15 @@ function ItineraryItemRow({
           <ActivityTimelineThumb item={item} />
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 3,
+                flexWrap: 'wrap',
+              }}
+            >
               <p style={{ fontSize: 11, fontWeight: 700, color: stateMeta.timeColor, margin: 0 }}>
                 {item.startTime} – {item.endTime}
               </p>
@@ -318,14 +437,26 @@ function ItineraryItemRow({
                 </span>
               )}
             </div>
-            <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0, letterSpacing: -0.2 }}>
+            <p
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: C.charcoal,
+                margin: 0,
+                letterSpacing: -0.2,
+              }}
+            >
               {item.title}
             </p>
             {item.description && (
-              <p style={{ fontSize: 11, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>{item.description}</p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>
+                {item.description}
+              </p>
             )}
             {item.location && (
-              <p style={{ fontSize: 11, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>{item.location}</p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '3px 0 0', fontWeight: 500 }}>
+                {item.location}
+              </p>
             )}
           </div>
 
@@ -400,7 +531,16 @@ export function ItineraryDayTimeline({
       >
         <div>
           {day.dayLabel && (
-            <p style={{ fontSize: 10, fontWeight: 700, color: C.coral, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: C.coral,
+                margin: '0 0 2px',
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
               {day.dayLabel}
             </p>
           )}
@@ -437,12 +577,19 @@ export function ItineraryDayTimeline({
       <div>
         {segments.map((segment, idx) =>
           segment.kind === 'gap' ? (
-            <ItineraryGapRow key={`gap-${segment.startTime}-${idx}`} startTime={segment.startTime} endTime={segment.endTime} />
+            <ItineraryGapRow
+              key={`gap-${segment.startTime}-${idx}`}
+              startTime={segment.startTime}
+              endTime={segment.endTime}
+            />
           ) : (
             <ItineraryItemRow
               key={segment.item.id}
               item={segment.item}
-              timeState={resolveItineraryTimeState(segment.item, day.id, { datePending, referenceNow })}
+              timeState={resolveItineraryTimeState(segment.item, day.id, {
+                datePending,
+                referenceNow,
+              })}
               menuOpen={segment.item.id === menuOpenItemId}
             />
           ),
@@ -459,7 +606,15 @@ type ItineraryDayTabsProps = {
 
 export function ItineraryDayTabs({ days, activeDayId }: ItineraryDayTabsProps) {
   return (
-    <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 8,
+        marginBottom: 16,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+      }}
+    >
       {days.map((day) => {
         const active = day.id === activeDayId;
         return (
@@ -474,7 +629,14 @@ export function ItineraryDayTabs({ days, activeDayId }: ItineraryDayTabsProps) {
               cursor: 'pointer',
             }}
           >
-            <p style={{ fontSize: 12, fontWeight: active ? 700 : 600, color: active ? C.coral : C.muted, margin: 0 }}>
+            <p
+              style={{
+                fontSize: 12,
+                fontWeight: active ? 700 : 600,
+                color: active ? C.coral : C.muted,
+                margin: 0,
+              }}
+            >
               {day.dayLabel ?? day.dateLabel}
             </p>
           </div>
@@ -547,7 +709,9 @@ export function ItineraryTabBody({
         overflow: 'hidden',
       }}
     >
-      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 12px', fontWeight: 600, flexShrink: 0 }}>
+      <p
+        style={{ fontSize: 12, color: C.muted, margin: '0 0 12px', fontWeight: 600, flexShrink: 0 }}
+      >
         {itemCount} aktivitas · {days.length} hari
       </p>
 
@@ -595,9 +759,12 @@ export function ItineraryEmptyState() {
       >
         <MapPin size={32} color={C.coral} strokeWidth={2.5} />
       </div>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, margin: '0 0 8px' }}>Belum ada aktivitas</h3>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, margin: '0 0 8px' }}>
+        Belum ada aktivitas
+      </h3>
       <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
-        Susun aktivitas per hari — titik kumpul, transport, kuliner, dan destinasi. Warna timeline mengikuti status waktu, bukan jenis aktivitas.
+        Susun aktivitas per hari — titik kumpul, transport, kuliner, dan destinasi. Warna timeline
+        mengikuti status waktu, bukan jenis aktivitas.
       </p>
     </div>
   );

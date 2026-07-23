@@ -43,13 +43,21 @@ export function Screen69VotingCardMenu() {
           <VotingCandidateList items={VOTING_DATE_CANDIDATES} labelKey="range" />
         </VotingCollapseSection>
 
-        <VotingCollapseSection type="destinasi" title={ITINERARY_VOTING_TITLE} subtitle="3 opsi kuliner · slot 11:30–13:00" canManage>
+        <VotingCollapseSection
+          type="destinasi"
+          title={ITINERARY_VOTING_TITLE}
+          subtitle="3 opsi kuliner · slot 11:30–13:00"
+          canManage
+        >
           <VotingCandidateList
             items={ITINERARY_VOTING_CANDIDATES.slice(0, 2).map((name, i) => ({
               id: i + 1,
               name,
               votes: [3, 2][i],
-              avatars: [['R', 'B', 'A'], ['S', 'M']][i],
+              avatars: [
+                ['R', 'B', 'A'],
+                ['S', 'M'],
+              ][i],
               voted: i === 1,
             }))}
             labelKey="name"

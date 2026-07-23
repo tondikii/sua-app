@@ -25,12 +25,15 @@ export function Screen75VotingLockedLainnya() {
         <div style={{ height: 80, backgroundColor: C.light, borderRadius: 16 }} />
       </div>
 
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(26,26,46,0.45)', zIndex: 10 }} />
-      <VotingLockedModal
-        type="lainnya"
-        title="Transportasi ke Lombok"
-        resultValue="Sewa mobil"
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(26,26,46,0.45)',
+          zIndex: 10,
+        }}
       />
+      <VotingLockedModal type="lainnya" title="Transportasi ke Lombok" resultValue="Sewa mobil" />
     </div>
   );
 }

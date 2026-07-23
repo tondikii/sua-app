@@ -16,7 +16,12 @@ const WEBSITE = 'instagram.com/budi_santoso';
 
 const TRIPS: ProfileTrip[] = [
   { id: 1, title: 'Raja Ampat', image: TRIP_IMAGES.rajaAmpat, tags: ['#Pantai', '#Snorkeling'] },
-  { id: 2, title: 'Bromo Tengger', image: TRIP_IMAGES.bromo, tags: ['#Alam', '#Sunrise', '#Gunung'] },
+  {
+    id: 2,
+    title: 'Bromo Tengger',
+    image: TRIP_IMAGES.bromo,
+    tags: ['#Alam', '#Sunrise', '#Gunung'],
+  },
   { id: 3, title: 'Gili Trawangan', image: TRIP_IMAGES.giliBeach, tags: ['#Pantai', '#Alam'] },
   { id: 4, title: 'Borobudur', image: TRIP_IMAGES.borobudur, tags: ['#Budaya', '#Sejarah'] },
 ];

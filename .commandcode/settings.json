@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(pnpm:*)",
+      "Shell(ls:*)",
+      "Shell(yes:*)",
+      "Shell(npx turbo run build 2 >& 1)",
+      "Shell(npx nest build 2 >& 1)",
+      "Shell(npx pnpm run build 2 >& 1)",
+      "Shell(grep:*)",
+      "Shell(NODE_ENV=development npx nest build 2 >& 1)",
+      "Shell(mkdir:*)",
+      "Shell(NODE_ENV=development npx jest src/contract/__tests__/serializer-contract.spec.ts --no-cache 2 >& 1)",
+      "Shell(NODE_ENV=development npx jest --no-cache --maxWorkers=1 2 >& 1)",
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"EXIT CODE: $?\")",
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"EXIT: $?\")",
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"BUILD EXIT: $?\")"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

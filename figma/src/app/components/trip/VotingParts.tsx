@@ -1,14 +1,19 @@
 import type { ReactNode } from 'react';
-import { Calendar, MapPin, ListChecks, ThumbsUp, Plus, ChevronDown, MoreHorizontal } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  ListChecks,
+  ThumbsUp,
+  Plus,
+  ChevronDown,
+  MoreHorizontal,
+} from 'lucide-react';
 import { C, AVATAR_COLORS, FONT } from '../colors';
 import { VotingCardMenuSheet } from './VotingCardMenuSheet';
 
 export type VotingStatus = 'active' | 'ended' | 'expired';
 
-const VOTING_STATUS_META: Record<
-  VotingStatus,
-  { label: string; color: string; bg: string }
-> = {
+const VOTING_STATUS_META: Record<VotingStatus, { label: string; color: string; bg: string }> = {
   active: { label: 'Aktif', color: C.teal, bg: C.tealLight },
   ended: { label: 'Selesai', color: C.muted, bg: C.light },
   expired: { label: 'Berakhir', color: C.muted, bg: C.light },
@@ -119,8 +124,12 @@ export function ActiveVotingCard({ voting }: { voting: ActiveVotingSummary }) {
               <span style={{ fontSize: 10, fontWeight: 700, color: C.teal }}>Dikunci</span>
             )}
           </div>
-          <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: '0 0 2px' }}>{voting.title}</p>
-          <p style={{ fontSize: 11, color: C.muted, margin: 0, fontWeight: 500 }}>{voting.subtitle}</p>
+          <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: '0 0 2px' }}>
+            {voting.title}
+          </p>
+          <p style={{ fontSize: 11, color: C.muted, margin: 0, fontWeight: 500 }}>
+            {voting.subtitle}
+          </p>
         </div>
         <div
           style={{
@@ -202,7 +211,9 @@ export function VotingEmptyState() {
       >
         <ListChecks size={32} color={C.teal} strokeWidth={2.5} />
       </div>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, margin: '0 0 8px' }}>Belum ada voting</h3>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, margin: '0 0 8px' }}>
+        Belum ada voting
+      </h3>
       <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
         Buat voting aktivitas, transportasi, atau keputusan lain untuk anggota trip.
       </p>
@@ -311,7 +322,9 @@ export function VotingCollapseSection({
               {status === 'ended' && <VotingStatusBadge status="ended" />}
               {status === 'expired' && <VotingStatusBadge status="expired" />}
             </div>
-            <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>{subtitle}</p>
+            <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>
+              {subtitle}
+            </p>
           </div>
         </button>
 
@@ -333,7 +346,11 @@ export function VotingCollapseSection({
                 boxShadow: showMenuOpen ? `0 2px 8px ${C.coral}25` : 'none',
               }}
             >
-              <MoreHorizontal size={15} color={showMenuOpen ? C.coral : C.muted} strokeWidth={2.5} />
+              <MoreHorizontal
+                size={15}
+                color={showMenuOpen ? C.coral : C.muted}
+                strokeWidth={2.5}
+              />
             </button>
             {showMenuOpen && <VotingCardMenuSheet variant={resolvedMenuVariant} />}
           </div>
@@ -454,12 +471,21 @@ export function VotingCandidateList({
               opacity: readOnly && !isWinner ? 0.75 : 1,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 8,
+              }}
+            >
               <div>
                 <p style={{ fontSize: 13, fontWeight: 800, color: C.charcoal, margin: 0 }}>
                   {labelKey === 'range' ? cand.range : cand.name}
                 </p>
-                {cand.days && <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{cand.days}</p>}
+                {cand.days && (
+                  <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{cand.days}</p>
+                )}
               </div>
               <span
                 style={{

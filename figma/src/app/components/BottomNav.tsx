@@ -41,10 +41,23 @@ export function BottomNav({ active = 'home' }: BottomNavProps) {
         return (
           <div
             key={tab.id}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
+            }}
           >
             <Icon size={22} color={isActive ? C.coral : C.muted} strokeWidth={isActive ? 2.5 : 2} />
-            <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color: isActive ? C.coral : C.muted }}>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? C.coral : C.muted,
+              }}
+            >
               {tab.label}
             </span>
           </div>
@@ -78,10 +91,23 @@ export function BottomNav({ active = 'home' }: BottomNavProps) {
         return (
           <div
             key={tab.id}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'pointer',
+            }}
           >
             <Icon size={22} color={isActive ? C.coral : C.muted} strokeWidth={isActive ? 2.5 : 2} />
-            <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color: isActive ? C.coral : C.muted }}>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? C.coral : C.muted,
+              }}
+            >
               {tab.label}
             </span>
           </div>

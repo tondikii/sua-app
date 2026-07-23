@@ -8,8 +8,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service';
-import { GoogleAuthDto } from './dto/google-auth.dto';
-import { CompleteRegistrationDto } from './dto/complete-registration.dto';
+import type {
+  GoogleAuthInput,
+  CompleteRegistrationInput,
+} from '@atur-perjalanan/shared-validation';
 import { UserSummarySerializer } from '../users/serializers/user.serializer';
 import { RealtimeTokenService } from '../integrations/supabase/realtime-token.service';
 
@@ -26,7 +28,7 @@ export class AuthService {
     this.googleClient = new OAuth2Client(config.get<string>('google.clientId'));
   }
 
-  async googleLogin(dto: GoogleAuthDto) {
+  async googleLogin(dto: GoogleAuthInput) {
     // Verify the Google ID token
     let ticket;
     try {
@@ -75,12 +77,10 @@ export class AuthService {
         })();
 
     // Check if user still has placeholder username (starts with "user_" and no real username set)
-    const needsRegistration =
-      isNewUser || /^user_\d+$/.test(user.username);
+    const needsRegistration = isNewUser || /^user_\d+$/.test(user.username);
 
     const accessToken = this.signAppJwt(user.id);
     const realtimeToken = this.realtimeToken.mint(user.id);
-
 
     return {
       access_token: accessToken,
@@ -90,7 +90,7 @@ export class AuthService {
     };
   }
 
-  async completeRegistration(userId: string, dto: CompleteRegistrationDto) {
+  async completeRegistration(userId: string, dto: CompleteRegistrationInput) {
     const username = dto.username.toLowerCase();
 
     // Check uniqueness

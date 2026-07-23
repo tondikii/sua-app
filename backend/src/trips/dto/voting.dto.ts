@@ -1,4 +1,13 @@
-import { IsString, IsOptional, IsArray, MaxLength, IsDateString, IsUUID, Matches, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  MaxLength,
+  IsDateString,
+  IsUUID,
+  Matches,
+  IsEnum,
+} from 'class-validator';
 
 /** Matches a 24-hour wall-clock time, "HH:MM" (e.g. "09:00", "23:30"). */
 const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;

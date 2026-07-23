@@ -8,7 +8,9 @@ type CalendarEventModalProps = {
 };
 
 /** Modal tambah event ke Google Calendar — hanya kalender pengguna sendiri */
-export function CalendarEventModal({ dateLabel = TRIP_LOCKED_DATES.subtitle }: CalendarEventModalProps) {
+export function CalendarEventModal({
+  dateLabel = TRIP_LOCKED_DATES.subtitle,
+}: CalendarEventModalProps) {
   return (
     <ConfirmDialogModal
       title="Tambah ke Google Calendar?"

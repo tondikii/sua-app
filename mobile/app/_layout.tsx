@@ -75,10 +75,7 @@ export default function RootLayout() {
   const fontsReady = fontsLoaded || !!fontError;
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, buster: 'm11' }}
-    >
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: 'm11' }}>
       <AuthProvider>
         <SafeAreaProvider>
           <StatusBar style="dark" />

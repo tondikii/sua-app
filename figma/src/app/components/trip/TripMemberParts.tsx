@@ -14,9 +14,30 @@ export type TripMember = {
 };
 
 export const SAMPLE_TRIP_MEMBERS: TripMember[] = [
-  { id: 0, name: 'Kamu (Budi)', username: '@budi_santoso', initial: 'B', color: AVATAR_COLORS[0], role: 'creator' },
-  { id: 2, name: 'Rudi Hermawan', username: '@rudi_travel', initial: 'R', color: AVATAR_COLORS[2], role: 'member' },
-  { id: 3, name: 'Fitra Kusuma', username: '@fitrakusuma', initial: 'F', color: AVATAR_COLORS[3], role: 'member' },
+  {
+    id: 0,
+    name: 'Kamu (Budi)',
+    username: '@budi_santoso',
+    initial: 'B',
+    color: AVATAR_COLORS[0],
+    role: 'creator',
+  },
+  {
+    id: 2,
+    name: 'Rudi Hermawan',
+    username: '@rudi_travel',
+    initial: 'R',
+    color: AVATAR_COLORS[2],
+    role: 'member',
+  },
+  {
+    id: 3,
+    name: 'Fitra Kusuma',
+    username: '@fitrakusuma',
+    initial: 'F',
+    color: AVATAR_COLORS[3],
+    role: 'member',
+  },
 ];
 
 const ROLE_LABEL: Record<TripMember['role'], string> = {
@@ -65,7 +86,9 @@ export function TripMemberRow({ member, canRemove = false }: TripMemberRowProps)
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: C.charcoal, margin: 0 }}>{member.name}</p>
-        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>{member.username}</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', fontWeight: 500 }}>
+          {member.username}
+        </p>
       </div>
       {showRemove ? (
         <button
@@ -107,9 +130,7 @@ export function TripMemberRow({ member, canRemove = false }: TripMemberRowProps)
 
 function PanelCountLabel({ children }: { children: string }) {
   return (
-    <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>
-      {children}
-    </p>
+    <p style={{ fontSize: 12, color: C.muted, margin: '0 0 8px', fontWeight: 600 }}>{children}</p>
   );
 }
 
@@ -141,14 +162,19 @@ export function TripMembersPanel({
 }: TripMembersPanelProps) {
   const hasInviteResults = Boolean(inviteResults && inviteResults.length > 0);
   const hasPendingInvites = Boolean(pendingInvites && pendingInvites.length > 0);
-  const hasInviteBlock = showInviteSearch || hasInviteResults || hasPendingInvites || Boolean(inviteExtra);
+  const hasInviteBlock =
+    showInviteSearch || hasInviteResults || hasPendingInvites || Boolean(inviteExtra);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', fontFamily: FONT }}>
       {hasInviteBlock && (
         <div style={{ flexShrink: 0 }}>
           {showInviteSearch && (
-            <div style={{ marginBottom: hasInviteResults || hasPendingInvites || inviteExtra ? 16 : 0 }}>
+            <div
+              style={{
+                marginBottom: hasInviteResults || hasPendingInvites || inviteExtra ? 16 : 0,
+              }}
+            >
               <SearchInput value={searchValue} placeholder="Cari username atau email..." />
             </div>
           )}
@@ -197,7 +223,11 @@ export function TripMembersPanel({
 }
 
 /** Halaman daftar anggota trip — shell shared */
-export function TripMembersScreen({ panelProps }: { panelProps: React.ComponentProps<typeof TripMembersPanel> }) {
+export function TripMembersScreen({
+  panelProps,
+}: {
+  panelProps: React.ComponentProps<typeof TripMembersPanel>;
+}) {
   return (
     <div
       style={{

@@ -30,7 +30,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const resp = exceptionResponse as Record<string, unknown>;
         message = Array.isArray(resp['message'])
           ? (resp['message'] as string[]).join('; ')
-          : (resp['message'] as string) ?? message;
+          : ((resp['message'] as string) ?? message);
         code = (resp['code'] as string) ?? this.statusToCode(status);
       } else if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;

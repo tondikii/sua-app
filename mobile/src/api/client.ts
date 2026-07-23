@@ -87,8 +87,8 @@ async function request<T>(
       'error' in v &&
       typeof (v as ErrorResponse).error === 'object';
 
-    const code = isEnvelope(data) ? data.error.code ?? 'UNKNOWN' : 'UNKNOWN';
-    const message = isEnvelope(data) ? data.error.message ?? 'Request failed' : 'Request failed';
+    const code = isEnvelope(data) ? (data.error.code ?? 'UNKNOWN') : 'UNKNOWN';
+    const message = isEnvelope(data) ? (data.error.message ?? 'Request failed') : 'Request failed';
 
     if (response.status === 401) onUnauthorized();
     throw new ApiError(response.status, code, message, requestId);

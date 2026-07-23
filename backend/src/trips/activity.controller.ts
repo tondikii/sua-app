@@ -13,15 +13,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import {
-  CurrentUser,
-  CurrentUserPayload,
-} from '../common/decorators/current-user.decorator';
+import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { ActivityService } from './activity.service';
-import {
-  CreateActivityDto,
-  UpdateActivityDto,
-} from './dto/activity.dto';
+import { CreateActivitySchema, UpdateActivitySchema } from '@atur-perjalanan/shared-validation';
+import type { CreateActivityInput, UpdateActivityInput } from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('activities')
 @ApiBearerAuth()
@@ -65,7 +61,7 @@ export class ActivityController {
   @HttpCode(HttpStatus.CREATED)
   async createActivity(
     @Param('tripId', ParseUUIDPipe) tripId: string,
-    @Body() dto: CreateActivityDto,
+    @Body(new ZodValidationPipe(CreateActivitySchema)) dto: CreateActivityInput,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.activityService.createActivity(tripId, user.userId, dto);
@@ -80,15 +76,10 @@ export class ActivityController {
   async updateActivity(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('activityId', ParseUUIDPipe) activityId: string,
-    @Body() dto: UpdateActivityDto,
+    @Body(new ZodValidationPipe(UpdateActivitySchema)) dto: UpdateActivityInput,
     @CurrentUser() user: CurrentUserPayload,
   ) {
-    return this.activityService.updateActivity(
-      tripId,
-      activityId,
-      user.userId,
-      dto,
-    );
+    return this.activityService.updateActivity(tripId, activityId, user.userId, dto);
   }
 
   /**

@@ -91,10 +91,7 @@ describe('Auth & Users (e2e)', () => {
 
   describe('PUT /v1/users/me (requires JWT)', () => {
     it('should return 401 when no token provided', () => {
-      return request(app.getHttpServer())
-        .put('/v1/users/me')
-        .send({ bio: 'Hello' })
-        .expect(401);
+      return request(app.getHttpServer()).put('/v1/users/me').send({ bio: 'Hello' }).expect(401);
     });
   });
 });

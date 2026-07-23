@@ -46,7 +46,15 @@ export function Screen20SettingsDeleteAccount() {
           >
             <UserX size={28} color={C.muted} strokeWidth={2} />
           </div>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: C.charcoal, margin: '0 0 8px', letterSpacing: -0.3 }}>
+          <h2
+            style={{
+              fontSize: 17,
+              fontWeight: 800,
+              color: C.charcoal,
+              margin: '0 0 8px',
+              letterSpacing: -0.3,
+            }}
+          >
             Hapus akun permanen?
           </h2>
           <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
@@ -55,7 +63,15 @@ export function Screen20SettingsDeleteAccount() {
         </div>
 
         <div style={{ marginTop: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 700, color: C.charcoal, display: 'block', marginBottom: 8 }}>
+          <label
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.charcoal,
+              display: 'block',
+              marginBottom: 8,
+            }}
+          >
             Ketik username untuk konfirmasi
           </label>
           <div

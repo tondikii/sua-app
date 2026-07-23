@@ -14,8 +14,7 @@ export function normalizeWishlistTag(raw: string): string {
   if (!trimmed) return trimmed;
   const withoutHash = trimmed.startsWith('#') ? trimmed.slice(1) : trimmed;
   if (!withoutHash) return '#';
-  const body =
-    withoutHash.charAt(0).toUpperCase() + withoutHash.slice(1).toLowerCase();
+  const body = withoutHash.charAt(0).toUpperCase() + withoutHash.slice(1).toLowerCase();
   return `#${body}`;
 }
 

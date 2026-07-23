@@ -6,7 +6,6 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateInvitationDto } from './dto';
 import { InvitationSerializer } from './serializers/invitation.serializer';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -22,7 +21,7 @@ export class InvitationsService {
    * Only existing participants may invite. Duplicate/pending/already-member
    * invites are rejected. (WORKFLOW §6, §11)
    */
-  async createInvitation(tripId: string, inviterId: string, dto: CreateInvitationDto) {
+  async createInvitation(tripId: string, inviterId: string, dto: any) {
     if ((!!dto.username && !!dto.email) || (!dto.username && !dto.email)) {
       throw new BadRequestException({
         code: 'INVALID_INVITATION_TARGET',
@@ -271,7 +270,7 @@ export class InvitationsService {
 
     return {
       data: results.map((inv) => InvitationSerializer.toEnriched(inv)),
-      next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
+      next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 
@@ -327,11 +326,7 @@ export class InvitationsService {
   }
 
   /** Cancel a pending invitation — inviter only. */
-  async cancelInvitation(
-    tripId: string,
-    invitationId: string,
-    userId: string,
-  ): Promise<void> {
+  async cancelInvitation(tripId: string, invitationId: string, userId: string): Promise<void> {
     const invitation = await this.prisma.tripInvitation.findUnique({
       where: { id: invitationId },
     });

@@ -15,7 +15,13 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { WishlistService } from './wishlist.service';
-import { CreateWishlistDto, UpdateWishlistDto, ConvertToTripDto } from './dto';
+import {
+  CreateWishlistSchema,
+  UpdateWishlistSchema,
+  ConvertToTripSchema,
+} from '@atur-perjalanan/shared-validation';
+import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('wishlists')
 @ApiBearerAuth()
@@ -26,7 +32,10 @@ export class WishlistController {
 
   // POST /v1/wishlists
   @Post()
-  createWishlist(@CurrentUser() user: CurrentUserPayload, @Body() dto: CreateWishlistDto) {
+  createWishlist(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body(new ZodValidationPipe(CreateWishlistSchema)) dto: CreateWishlistInput,
+  ) {
     return this.wishlistService.createWishlist(user.userId, dto);
   }
 
@@ -58,7 +67,7 @@ export class WishlistController {
   updateWishlist(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
-    @Body() dto: UpdateWishlistDto,
+    @Body(new ZodValidationPipe(UpdateWishlistSchema)) dto: UpdateWishlistInput,
   ) {
     return this.wishlistService.updateWishlist(id, user.userId, dto);
   }
@@ -75,7 +84,7 @@ export class WishlistController {
   convertToTrip(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
-    @Body() dto: ConvertToTripDto,
+    @Body(new ZodValidationPipe(ConvertToTripSchema)) dto: any,
   ) {
     return this.wishlistService.convertToTrip(id, user.userId, dto);
   }

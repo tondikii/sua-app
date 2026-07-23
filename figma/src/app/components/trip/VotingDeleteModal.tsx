@@ -7,7 +7,9 @@ type VotingDeleteModalProps = {
   votingTitle?: string;
 };
 
-export function VotingDeleteModal({ votingTitle = ITINERARY_VOTING_TITLE }: VotingDeleteModalProps) {
+export function VotingDeleteModal({
+  votingTitle = ITINERARY_VOTING_TITLE,
+}: VotingDeleteModalProps) {
   return (
     <ConfirmDialogModal
       variant="destructive"

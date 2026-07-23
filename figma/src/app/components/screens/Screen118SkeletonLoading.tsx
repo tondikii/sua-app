@@ -73,7 +73,10 @@ export function Screen118SkeletonLoading() {
           {/* Content skeleton */}
           <div style={{ padding: '14px 16px 16px', backgroundColor: C.white }}>
             {/* Title */}
-            <div className="ap-sk" style={{ width: '72%', height: 15, borderRadius: 7, marginBottom: 12 }} />
+            <div
+              className="ap-sk"
+              style={{ width: '72%', height: 15, borderRadius: 7, marginBottom: 12 }}
+            />
 
             {/* Tag chips */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -90,7 +93,8 @@ export function Screen118SkeletonLoading() {
                     key={j}
                     className="ap-sk"
                     style={{
-                      width: 26, height: 26,
+                      width: 26,
+                      height: 26,
                       borderRadius: '50%',
                       marginLeft: j > 1 ? -9 : 0,
                       border: '2px solid white',
@@ -115,13 +119,16 @@ export function Screen118SkeletonLoading() {
       >
         <div
           style={{
-            width: 16, height: 16,
+            width: 16,
+            height: 16,
             border: `2.5px solid ${C.coral}`,
             borderTopColor: 'transparent',
             borderRadius: '50%',
           }}
         />
-        <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Memuat perjalananmu...</span>
+        <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>
+          Memuat perjalananmu...
+        </span>
       </div>
 
       <BottomNav active="home" />

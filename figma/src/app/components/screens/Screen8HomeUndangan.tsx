@@ -11,7 +11,8 @@ const INVITATIONS: InvitationItem[] = [
   {
     id: 1,
     title: 'Raja Ampat Diving Trip',
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=280&fit=crop&auto=format',
+    image:
+      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=280&fit=crop&auto=format',
     inviter: 'rina_travel',
     inviterInitial: 'R',
     dateRange: '20–24 Agu 2026 · 08:00 – 17:00',
@@ -19,7 +20,8 @@ const INVITATIONS: InvitationItem[] = [
   {
     id: 2,
     title: 'Bandung Food Hunt',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=280&fit=crop&auto=format',
+    image:
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=280&fit=crop&auto=format',
     inviter: 'budi_santoso',
     inviterInitial: 'B',
     dateRange: '5–6 Sep 2026 · Sepanjang hari',

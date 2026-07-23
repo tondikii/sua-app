@@ -51,7 +51,9 @@ export function TripDetailMenuSheet({ highlightId }: TripDetailMenuSheetProps) {
             }}
           >
             <Icon size={16} color={item.color} strokeWidth={2.5} />
-            <span style={{ fontSize: 13, fontWeight: highlighted ? 700 : 600, color: item.color }}>{item.label}</span>
+            <span style={{ fontSize: 13, fontWeight: highlighted ? 700 : 600, color: item.color }}>
+              {item.label}
+            </span>
           </button>
         );
       })}

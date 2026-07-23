@@ -252,9 +252,7 @@ describe('NotificationsService', () => {
     it('should throw NotFoundException when notification not found', async () => {
       mockPrismaService.notification.findUnique.mockResolvedValue(null);
 
-      await expect(service.markAsRead('notif-1', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.markAsRead('notif-1', 'user-1')).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when user does not own notification', async () => {
@@ -266,9 +264,7 @@ describe('NotificationsService', () => {
 
       mockPrismaService.notification.findUnique.mockResolvedValue(mockNotification);
 
-      await expect(service.markAsRead('notif-1', 'user-1')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.markAsRead('notif-1', 'user-1')).rejects.toThrow(ForbiddenException);
     });
   });
 

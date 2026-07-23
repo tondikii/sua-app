@@ -1,6 +1,10 @@
 import { TRIP_DATE_PENDING, TRIP_LOCKED_DATES } from './CreateTripParts';
 import { TRIP_COUNTS_DATE_FIXED, TRIP_COUNTS_DATE_PENDING } from './TripDetailParts';
-import { LOMBOK_ITINERARY_DAY_1, LOMBOK_ITINERARY_DAY_2, LOMBOK_ITINERARY_PENDING_DAY } from './ItineraryParts';
+import {
+  LOMBOK_ITINERARY_DAY_1,
+  LOMBOK_ITINERARY_DAY_2,
+  LOMBOK_ITINERARY_PENDING_DAY,
+} from './ItineraryParts';
 
 /** Backdrop sheet aktivitas — konteks tanggal masih divoting */
 export const ACTIVITY_BACKDROP_PENDING = {

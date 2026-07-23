@@ -4,7 +4,7 @@
 >
 > **Purpose**: This document is the canonical **target-state** technical reference for AI coding assistants, developers, and automated tooling. It defines the authoritative structure, patterns, and contracts that all generated code, migrations, and scaffolding must conform to. Deviation from this document requires explicit justification.
 >
-> **This document does NOT track build progress.** It describes what the system *should* look like when fully built, not what has been implemented so far. For current implementation status, what's done, what's next, and in what order — see **[`docs/MILESTONES.md`](MILESTONES.md)**.
+> **This document does NOT track build progress.** It describes what the system _should_ look like when fully built, not what has been implemented so far. For current implementation status, what's done, what's next, and in what order — see **[`docs/MILESTONES.md`](MILESTONES.md)**.
 >
 > **Changelog**: v2.0 migrates the backend from Go/Gin to **NestJS**, mobile from Kotlin Multiplatform to **Expo (React Native)**, adopts **Supabase** as the managed Postgres + Realtime provider, and **Cloudflare R2** for object storage. v1.0 (Go/Gin/KMP) is superseded in full; no v1.0 code patterns should be reused.
 
@@ -78,7 +78,7 @@ graph TD
 Mobile Client (Expo)
   └─ HTTPS Request (Bearer JWT)
        └─ Nest Router  →  JWT Guard (validate token, attach req.user)
-            └─ Controller  (DTO validation via class-validator pipe)
+             └─ Controller  (DTO validation via ZodValidationPipe)
                  └─ Service  (enforce business rules, orchestrate transactions)
                       └─ Prisma Client  (execute parameterized SQL)
                            └─ Supabase PostgreSQL
@@ -140,7 +140,9 @@ atur-perjalanan/
 │   │   │   ├── decorators/
 │   │   │   │   └── current-user.decorator.ts
 │   │   │   └── pipes/
-│   │   │       └── validation.pipe.ts
+│   │   │       └── zod-validation.pipe.ts  # Zod-based request validation
+│   │   │   └── helpers/
+│   │   │       └── date.helpers.ts         # Shared date formatting (toDateOnly, toTime, …)
 │   │   ├── auth/
 │   │   │   ├── auth.module.ts
 │   │   │   ├── auth.controller.ts
@@ -195,8 +197,10 @@ atur-perjalanan/
 │   │   │   │   └── google-calendar.service.ts # Calendar API v3 client (M16)
 │   │   │   └── r2/
 │   │   │       └── r2.service.ts              # Presigned PUT/GET URL issuance
-│   │   └── prisma/
-│   │       └── prisma.service.ts              # Prisma Client provider (injectable)
+│   │   ├── prisma/
+│   │   │   └── prisma.service.ts              # Prisma Client provider (injectable)
+│   │   └── contract/              # Contract tests for serializer ↔ shared-types alignment
+│   │       └── __tests__/
 │   ├── prisma/
 │   │   ├── schema.prisma         # Single source of truth for DB schema
 │   │   └── migrations/           # Prisma Migrate — sequential, versioned SQL
@@ -229,7 +233,10 @@ atur-perjalanan/
 │   └── tsconfig.json
 │
 ├── packages/
-│   └── shared-types/              # Shared TS types/DTOs consumed by both backend and mobile
+│   ├── shared-types/              # Shared TS interfaces (response shapes) — consumed by both backend and mobile
+│   │   ├── src/index.ts
+│   │   └── package.json
+│   └── shared-validation/         # Shared zod validation schemas — consumed by both backend and mobile
 │       ├── src/index.ts
 │       └── package.json
 │
@@ -248,7 +255,9 @@ atur-perjalanan/
 │
 ├── .env.example                  # Template for required env vars (no secrets)
 ├── supabase/                     # Supabase CLI project (local Postgres, config.toml)
-├── turbo.json                    # Turborepo pipeline (build, lint, test, dev)
+├── tsconfig.base.json            # Root TS config — backend extends this
+├── .prettierrc                    # Prettier config (semi, singleQuote, trailingComma all)
+├── eslint.config.js               # Root ESLint flat config (backend + shared packages)                    # Turborepo pipeline (build, lint, test, dev)
 ├── pnpm-workspace.yaml
 └── README.md
 ```
@@ -261,15 +270,15 @@ PostgreSQL is provisioned and managed by **Supabase** (either the hosted cloud p
 
 ### 3.1 General Rules
 
-| Rule | Specification |
-|---|---|
-| **Primary Keys** | `UUID v4` (`gen_random_uuid()` at the database layer, mirrored in Prisma as `@default(uuid())`). Avoids sequential ID enumeration attacks. |
-| **Timestamps** | All tables include `created_at TIMESTAMPTZ DEFAULT NOW()`. Mutable records also include `updated_at TIMESTAMPTZ DEFAULT NOW()` (Prisma `@updatedAt`). |
-| **Soft Deletes** | `trips`, `wishlists`, and `trip_messages` use `deleted_at TIMESTAMPTZ NULL`. All queries **must** filter `WHERE deleted_at IS NULL` (Prisma middleware enforces this globally for these models). Hard delete is used for join/vote rows. |
-| **Migrations** | Managed by `prisma migrate dev` (local) / `prisma migrate deploy` (CI/CD). All schema changes are versioned, sequential migration folders. Direct DDL on production is forbidden. |
-| **Character Encoding** | `UTF-8` (PostgreSQL `ENCODING 'UTF8'`, Supabase default). |
-| **Text Search** | Tag-based filtering uses a `GIN` index on `jsonb` columns. Username/name search uses `pg_trgm` with a `GIN` index (`CREATE EXTENSION pg_trgm;` — enabled in the first migration). |
-| **Realtime** | Tables that mobile clients subscribe to directly (`trip_messages`, `notifications`) are added to the `supabase_realtime` publication, and have **Row Level Security (RLS)** policies restricting `SELECT` to trip participants / the notification's own user. See §6. |
+| Rule                   | Specification                                                                                                                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Primary Keys**       | `UUID v4` (`gen_random_uuid()` at the database layer, mirrored in Prisma as `@default(uuid())`). Avoids sequential ID enumeration attacks.                                                                                                                            |
+| **Timestamps**         | All tables include `created_at TIMESTAMPTZ DEFAULT NOW()`. Mutable records also include `updated_at TIMESTAMPTZ DEFAULT NOW()` (Prisma `@updatedAt`).                                                                                                                 |
+| **Soft Deletes**       | `trips`, `wishlists`, and `trip_messages` use `deleted_at TIMESTAMPTZ NULL`. All queries **must** filter `WHERE deleted_at IS NULL` (Prisma middleware enforces this globally for these models). Hard delete is used for join/vote rows.                              |
+| **Migrations**         | Managed by `prisma migrate dev` (local) / `prisma migrate deploy` (CI/CD). All schema changes are versioned, sequential migration folders. Direct DDL on production is forbidden.                                                                                     |
+| **Character Encoding** | `UTF-8` (PostgreSQL `ENCODING 'UTF8'`, Supabase default).                                                                                                                                                                                                             |
+| **Text Search**        | Tag-based filtering uses a `GIN` index on `jsonb` columns. Username/name search uses `pg_trgm` with a `GIN` index (`CREATE EXTENSION pg_trgm;` — enabled in the first migration).                                                                                     |
+| **Realtime**           | Tables that mobile clients subscribe to directly (`trip_messages`, `notifications`) are added to the `supabase_realtime` publication, and have **Row Level Security (RLS)** policies restricting `SELECT` to trip participants / the notification's own user. See §6. |
 
 ### 3.2 Entity-Relationship Overview
 
@@ -472,6 +481,7 @@ erDiagram
 ### 3.3 Table Definitions
 
 #### `users`
+
 ```sql
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -497,7 +507,8 @@ CREATE INDEX idx_users_name_trgm     ON users USING GIN (name gin_trgm_ops);
 
 ---
 
-#### `follows` *(schema present, feature post-MVP)*
+#### `follows` _(schema present, feature post-MVP)_
+
 ```sql
 CREATE TABLE follows (
     follower_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -524,6 +535,7 @@ GROUP BY u.id;
 ---
 
 #### `trips`
+
 ```sql
 CREATE TABLE trips (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -558,6 +570,7 @@ CREATE INDEX idx_trips_creator_id ON trips (creator_id) WHERE deleted_at IS NULL
 ---
 
 #### `trip_participants`
+
 ```sql
 CREATE TABLE trip_participants (
     trip_id   UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -574,6 +587,7 @@ CREATE INDEX idx_trip_participants_user_id ON trip_participants (user_id);
 ---
 
 #### `trip_invitations`
+
 ```sql
 CREATE TABLE trip_invitations (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -602,6 +616,7 @@ CREATE INDEX idx_trip_invitations_trip_id      ON trip_invitations (trip_id);
 ---
 
 #### `trip_date_candidates`
+
 ```sql
 CREATE TABLE trip_date_candidates (
     id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -618,6 +633,7 @@ CREATE INDEX idx_trip_date_candidates_trip_id ON trip_date_candidates (trip_id);
 ---
 
 #### `trip_date_votes`
+
 ```sql
 CREATE TABLE trip_date_votes (
     candidate_id UUID NOT NULL REFERENCES trip_date_candidates(id) ON DELETE CASCADE,
@@ -633,7 +649,8 @@ CREATE INDEX idx_trip_date_votes_user_id ON trip_date_votes (user_id);
 
 ---
 
-#### `trip_polls`, `trip_poll_options`, `trip_poll_votes` *(WORKFLOW §8 — Voting tab, multi-poll)*
+#### `trip_polls`, `trip_poll_options`, `trip_poll_votes` _(WORKFLOW §8 — Voting tab, multi-poll)_
+
 ```sql
 CREATE TABLE trip_polls (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -672,7 +689,8 @@ CREATE TABLE trip_poll_votes (
 
 ---
 
-#### `trip_activities` *(WORKFLOW §7 — Itinerary tab; superseded name for what earlier drafts called `trip_destinations`)*
+#### `trip_activities` _(WORKFLOW §7 — Itinerary tab; superseded name for what earlier drafts called `trip_destinations`)_
+
 ```sql
 CREATE TABLE trip_activities (
     id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -701,20 +719,21 @@ CREATE TABLE trip_activities (
 CREATE INDEX idx_trip_activities_trip_day ON trip_activities (trip_id, activity_date, start_time);
 ```
 
-| Figma field (`ActivityDraft`) | Column |
-|-------------------------------|--------|
-| `title` | `place_name` |
-| `startTime` / `endTime` | `start_time` / `end_time` |
-| `kind` | `kind` |
-| `location` / `mapsPlaceName` | `location_label` |
-| `description` | `description` |
-| `maps_link` (form) | `maps_link` |
-| `refLinks[]` | `ref_links` JSONB |
+| Figma field (`ActivityDraft`)            | Column                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------ |
+| `title`                                  | `place_name`                                                       |
+| `startTime` / `endTime`                  | `start_time` / `end_time`                                          |
+| `kind`                                   | `kind`                                                             |
+| `location` / `mapsPlaceName`             | `location_label`                                                   |
+| `description`                            | `description`                                                      |
+| `maps_link` (form)                       | `maps_link`                                                        |
+| `refLinks[]`                             | `ref_links` JSONB                                                  |
 | `coverSource` / `coverIcon` / `coverUrl` | `cover_source`, `cover_icon`, `thumbnail_url`, `cover_document_id` |
 
 ---
 
-#### `trip_messages` *(WORKFLOW §9 — Chat tab; text + media + reply)*
+#### `trip_messages` _(WORKFLOW §9 — Chat tab; text + media + reply)_
+
 ```sql
 CREATE TABLE trip_messages (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -743,7 +762,8 @@ CREATE INDEX idx_trip_messages_trip_active
 
 ---
 
-#### `trip_message_reads` *(WORKFLOW §9 — unread badge on Chat tab)*
+#### `trip_message_reads` _(WORKFLOW §9 — unread badge on Chat tab)_
+
 ```sql
 CREATE TABLE trip_message_reads (
     trip_id      UUID NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -757,7 +777,8 @@ CREATE TABLE trip_message_reads (
 
 ---
 
-#### `trip_documents` *(WORKFLOW §10 — Media tab; also chat media and activity/trip covers)*
+#### `trip_documents` _(WORKFLOW §10 — Media tab; also chat media and activity/trip covers)_
+
 ```sql
 CREATE TABLE trip_documents (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -778,6 +799,7 @@ CREATE INDEX idx_trip_documents_trip_id ON trip_documents (trip_id, created_at D
 ---
 
 #### `notifications`
+
 ```sql
 CREATE TYPE notification_type AS ENUM (
     'invite', 'follow', 'voting_deadline', 'activity_update'
@@ -801,18 +823,19 @@ CREATE INDEX idx_notifications_user_unread
 
 **Mapping `notification_type` → UI copy (`Screen9Notifikasi`)**:
 
-| `notification_type` | Copy template | Inline action | `payload` shape |
-|---|---|---|---|
-| `invite` | `{actor} mengundangmu ke {trip}` | Terima · Tolak | `{ "invitation_id": "uuid" }` |
-| `voting_deadline` | `Voting Tanggal {trip} segera berakhir.` | Vote Sekarang → | `{ "poll_type": "tanggal" \| "aktivitas" \| "lainnya" }` |
-| `activity_update` | `{actor} menambahkan aktivitas {activity_name} di {trip}.` | Tap → itinerary | `{ "activity_name": "..." }` |
-| `follow` | — | — | post-MVP; enum reserved |
+| `notification_type` | Copy template                                              | Inline action   | `payload` shape                                          |
+| ------------------- | ---------------------------------------------------------- | --------------- | -------------------------------------------------------- |
+| `invite`            | `{actor} mengundangmu ke {trip}`                           | Terima · Tolak  | `{ "invitation_id": "uuid" }`                            |
+| `voting_deadline`   | `Voting Tanggal {trip} segera berakhir.`                   | Vote Sekarang → | `{ "poll_type": "tanggal" \| "aktivitas" \| "lainnya" }` |
+| `activity_update`   | `{actor} menambahkan aktivitas {activity_name} di {trip}.` | Tap → itinerary | `{ "activity_name": "..." }`                             |
+| `follow`            | —                                                          | —               | post-MVP; enum reserved                                  |
 
 This table is also added to the `supabase_realtime` publication (§6) so the notification bell updates live.
 
 ---
 
 #### `wishlists`
+
 ```sql
 CREATE TABLE wishlists (
     id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -833,29 +856,29 @@ CREATE TABLE wishlists (
 );
 ```
 
-| Figma field | Column | Enum |
-|-------------|--------|------|
-| `name` | `place_name` | — |
-| `startTime` / `endTime` | `start_time` / `end_time` | — |
-| `priority` Tinggi/Menengah/Rendah | `priority_level` | `high` / `medium` / `low` |
-| `location` | `location_label` | — |
-| `link` | `link` | — |
-| `notes` | `notes` | — |
-| `image` | `thumbnail_url` | resolved or default asset |
+| Figma field                       | Column                    | Enum                      |
+| --------------------------------- | ------------------------- | ------------------------- |
+| `name`                            | `place_name`              | —                         |
+| `startTime` / `endTime`           | `start_time` / `end_time` | —                         |
+| `priority` Tinggi/Menengah/Rendah | `priority_level`          | `high` / `medium` / `low` |
+| `location`                        | `location_label`          | —                         |
+| `link`                            | `link`                    | —                         |
+| `notes`                           | `notes`                   | —                         |
+| `image`                           | `thumbnail_url`           | resolved or default asset |
 
 ### 3.4 Transaction Safety Rules
 
 All operations that mutate more than one table **must** execute inside a Prisma interactive transaction (`prisma.$transaction(async (tx) => { ... })`). Primary examples:
 
-| Operation | Tables mutated in transaction |
-|---|---|
-| Accept trip invitation (username) | `trip_invitations` (status → `accepted`), `trip_participants` (INSERT) |
-| Lock a poll (`tanggal`) | `trips` (dates, `status → fixed`, clear `voting_deadline`), `trip_polls` (`status → locked`, `locked_at`) |
-| Create trip with date candidates | `trips` (INSERT), `trip_date_candidates` (bulk INSERT), `trip_polls` + `trip_poll_options` (auto-created `tanggal` poll), set `voting_deadline` |
-| Lock a poll (`aktivitas` / `lainnya`) | `trip_polls` (`status → locked`), downstream effects per `poll_type` (e.g. winning option copied into a new `trip_activities` row) |
-| Wishlist → trip convert ("Jadikan Perjalanan") | `trips` (INSERT), `trip_activities` (seed day-1 activity), `wishlists` (soft DELETE) — **atomic**, all-or-nothing |
-| Set trip/activity cover from media | `trips.cover_document_id` or `trip_activities.cover_document_id` update |
-| Calendar event (post-lock) | User-confirmed modal → create event for invitees (M16). Executed as a background job **after** the DB transaction commits — never inline with the HTTP response. |
+| Operation                                      | Tables mutated in transaction                                                                                                                                    |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Accept trip invitation (username)              | `trip_invitations` (status → `accepted`), `trip_participants` (INSERT)                                                                                           |
+| Lock a poll (`tanggal`)                        | `trips` (dates, `status → fixed`, clear `voting_deadline`), `trip_polls` (`status → locked`, `locked_at`)                                                        |
+| Create trip with date candidates               | `trips` (INSERT), `trip_date_candidates` (bulk INSERT), `trip_polls` + `trip_poll_options` (auto-created `tanggal` poll), set `voting_deadline`                  |
+| Lock a poll (`aktivitas` / `lainnya`)          | `trip_polls` (`status → locked`), downstream effects per `poll_type` (e.g. winning option copied into a new `trip_activities` row)                               |
+| Wishlist → trip convert ("Jadikan Perjalanan") | `trips` (INSERT), `trip_activities` (seed day-1 activity), `wishlists` (soft DELETE) — **atomic**, all-or-nothing                                                |
+| Set trip/activity cover from media             | `trips.cover_document_id` or `trip_activities.cover_document_id` update                                                                                          |
+| Calendar event (post-lock)                     | User-confirmed modal → create event for invitees (M16). Executed as a background job **after** the DB transaction commits — never inline with the HTTP response. |
 
 ---
 
@@ -863,12 +886,12 @@ All operations that mutate more than one table **must** execute inside a Prisma 
 
 ### 4.1 Layered (Modular) Architecture
 
-NestJS's module system enforces separation by feature domain, with each module internally layered **Controller → Service → Prisma**. Dependencies flow inward only: controllers depend on services; services depend on `PrismaService` and other services (never the reverse).
+NestJS's module system enforces separation by feature domain, with each module internally layered **Controller → Service → Prisma**. Dependencies flow inward only: controllers depend on services; services depend on `PrismaService` and other services (never the reverse). Global `ZodValidationPipe` is applied per-controller via `@Body(new ZodValidationPipe(Schema))`.
 
 ```
 src/main.ts                 — Composition root: bootstrap, global pipes/filters, CORS, Swagger
     │
-    ├── *.controller.ts     — HTTP concerns ONLY (route, DTO validation via class-validator, call service)
+    ├── *.controller.ts     — HTTP concerns ONLY (route, ZodValidationPipe, call service)
     │       └── depends on → *.service.ts
     │
     ├── *.service.ts        — Business rules, orchestration, transactions, external API calls
@@ -879,30 +902,42 @@ src/main.ts                 — Composition root: bootstrap, global pipes/filter
 
 ### 4.2 DTO & Validation
 
-Every controller method accepts a typed DTO class decorated with `class-validator` decorators; a global `ValidationPipe` (`whitelist: true, forbidNonWhitelisted: true, transform: true`) strips unknown fields and rejects invalid payloads before the controller body runs.
+Every controller method accepts a typed input validated by a `ZodValidationPipe` referencing a shared zod schema from `@atur-perjalanan/shared-validation`. Unknown fields are stripped, and invalid payloads are rejected with a structured error envelope before the controller body runs.
 
 ```typescript
-// src/trips/dto/create-trip.dto.ts
-import { IsArray, IsBoolean, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class DateCandidateDto {
-  @IsDateString() start_date: string;
-  @IsDateString() end_date: string;
-}
-
-export class CreateTripDto {
-  @IsString() @MaxLength(255) name: string;
-  @IsArray() @IsString({ each: true }) tags: string[];
-  @IsOptional() @IsDateString() start_date?: string;
-  @IsOptional() @IsDateString() end_date?: string;
-  @IsOptional() @IsBoolean() is_all_day?: boolean;
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => DateCandidateDto)
-  candidates?: DateCandidateDto[];
+// Controller
+@Post()
+createTrip(
+  @CurrentUser() user: CurrentUserPayload,
+  @Body(new ZodValidationPipe(CreateTripSchema)) dto: CreateTripInput,
+) {
+  return this.tripsService.createTrip(user.userId, dto);
 }
 ```
 
-DTOs shared verbatim between backend and mobile (response shapes) live in `packages/shared-types` and are imported by both, avoiding drift between what the API returns and what the client expects.
+Schemas live in `packages/shared-validation/src/index.ts` and are consumed by **both** backend and mobile:
+
+```typescript
+// packages/shared-validation/src/index.ts
+import { z } from 'zod';
+
+const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export const CreateTripSchema = z.object({
+  name: z.string().max(255),
+  tags: z.array(z.string()).optional(),
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().optional(),
+  is_all_day: z.boolean().optional(),
+  start_time: z.string().regex(TIME_HHMM).optional(),
+  end_time: z.string().regex(TIME_HHMM).optional(),
+  candidates: z.array(DateCandidateSchema).optional(),
+  voting_deadline: z.string().datetime().optional(),
+});
+export type CreateTripInput = z.infer<typeof CreateTripSchema>;
+```
+
+Response shapes (serializer output) are typed via `@atur-perjalanan/shared-types` interfaces, ensuring the API contract between backend and mobile stays in sync. A contract test in `backend/src/contract/__tests__/` verifies that serializer output is compatible with the shared interfaces at compile time.
 
 ### 4.3 API Versioning & Routing
 
@@ -976,6 +1011,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 #### 4.3.2 Representative Request/Response Contracts
 
 **`POST /v1/auth/google`**
+
 ```json
 // Request
 { "id_token": "<Google ID token>" }
@@ -988,6 +1024,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 ```
 
 **`POST /v1/trips`**
+
 ```json
 {
   "name": "Lombok Weekend Escape",
@@ -999,12 +1036,13 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 }
 ```
 
-| Mode | Body | DB effect |
-|------|------|-----------|
-| Tanggal pasti | `start_date` + `end_date`, `candidates` empty | `status = fixed` |
+| Mode             | Body                                                   | DB effect                                                                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tanggal pasti    | `start_date` + `end_date`, `candidates` empty          | `status = fixed`                                                                                                                                                                                                                |
 | Kandidat tanggal | `candidates[{start_date, end_date}]` (1–3), dates null | `status = voting_pending`; rows inserted into `trip_date_candidates`; a `tanggal` poll auto-created in `trip_polls`; `voting_deadline = LEAST(created_at + 14d, MIN(candidate.start_date) - 3d)` clamped to `≥ created_at + 7d` |
 
 **`GET /v1/trips?tab=upcoming|completed`** — enriched list response:
+
 ```json
 [
   {
@@ -1017,12 +1055,15 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
     "cover_image_url": "https://<account>.r2.cloudflarestorage.com/trips/.../uuid.jpg?X-Amz-Signature=...",
     "voting_deadline": "2026-06-18T00:00:00Z",
     "participant_count": 4,
-    "participants_preview": [{ "id": "uuid", "name": "Rina", "username": "rina_travel", "avatar_url": null }]
+    "participants_preview": [
+      { "id": "uuid", "name": "Rina", "username": "rina_travel", "avatar_url": null }
+    ]
   }
 ]
 ```
 
 **`GET /v1/notifications`** — embeds `actor` and `trip` summaries (no client-side N+1 fetch):
+
 ```json
 [
   {
@@ -1038,6 +1079,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 ```
 
 **`POST /v1/uploads/presign`** — issues a short-lived R2 presigned PUT URL (see §7):
+
 ```json
 // Request
 { "trip_id": "uuid", "media_type": "photo", "content_type": "image/jpeg" }
@@ -1051,6 +1093,7 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 ```
 
 **`GET /v1/trips/:tripId/documents`** — each item includes a presigned GET URL (see §7):
+
 ```json
 {
   "data": [
@@ -1103,8 +1146,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 // src/prisma/prisma.service.ts
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  async onModuleInit() { await this.$connect(); }
-  async onModuleDestroy() { await this.$disconnect(); }
+  async onModuleInit() {
+    await this.$connect();
+  }
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
 }
 ```
 
@@ -1114,14 +1161,14 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
 ### 4.6 Performance Rules
 
-| Concern | Rule |
-|---|---|
-| **N+1 Queries** | Strictly forbidden. Use Prisma `include`/`select` with relations, or batched `findMany({ where: { id: { in: [...] } } })`. Never query inside a loop. |
-| **Pagination** | All list endpoints use keyset (cursor-based) pagination, not `OFFSET`/`skip`. Default page size: 20. Maximum: 100. |
+| Concern              | Rule                                                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **N+1 Queries**      | Strictly forbidden. Use Prisma `include`/`select` with relations, or batched `findMany({ where: { id: { in: [...] } } })`. Never query inside a loop.                                                  |
+| **Pagination**       | All list endpoints use keyset (cursor-based) pagination, not `OFFSET`/`skip`. Default page size: 20. Maximum: 100.                                                                                     |
 | **Google API Calls** | Never synchronously block an HTTP response on a Google API call. Dispatch via a queued job (`@nestjs/bull` + Redis, or a simple in-process async task for MVP scale) after the DB transaction commits. |
-| **Rate Limiting** | `@nestjs/throttler` applied globally to `/v1/*`. |
-| **Error Responses** | A global `HttpExceptionFilter` always returns `{ "error": { "code": "TRIP_NOT_FOUND", "message": "..." } }`. Never leak stack traces or Prisma error internals to clients. |
-| **File uploads** | Never proxy binary upload/download bytes through NestJS. Always issue a presigned R2 URL and let the client talk to R2 directly (§7). |
+| **Rate Limiting**    | `@nestjs/throttler` applied globally to `/v1/*`.                                                                                                                                                       |
+| **Error Responses**  | A global `HttpExceptionFilter` always returns `{ "error": { "code": "TRIP_NOT_FOUND", "message": "..." } }`. Never leak stack traces or Prisma error internals to clients.                             |
+| **File uploads**     | Never proxy binary upload/download bytes through NestJS. Always issue a presigned R2 URL and let the client talk to R2 directly (§7).                                                                  |
 
 ---
 
@@ -1199,13 +1246,25 @@ export function useTripChatSubscription(tripId: string) {
   useEffect(() => {
     const channel = supabase
       .channel(`trip-messages-${tripId}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trip_messages', filter: `trip_id=eq.${tripId}` },
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'trip_messages',
+          filter: `trip_id=eq.${tripId}`,
+        },
         (payload) => {
-          queryClient.setQueryData(['messages', tripId], (old: Message[] = []) => [...old, payload.new]);
-        })
+          queryClient.setQueryData(['messages', tripId], (old: Message[] = []) => [
+            ...old,
+            payload.new,
+          ]);
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tripId]);
 }
 ```
@@ -1285,20 +1344,20 @@ sequenceDiagram
 
 The following environment variables are required by the backend. They must **never** be committed to the repository. Use `.env.example` as a reference template.
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | Supabase Postgres connection string via connection pooler (`postgres://...:6543/postgres?pgbouncer=true`) |
-| `DIRECT_URL` | Supabase Postgres direct connection, used by `prisma migrate` (`postgres://...:5432/postgres`) |
-| `SUPABASE_URL` | Supabase project URL (`https://<project>.supabase.co`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side service role key (bypasses RLS — backend only, never shipped to mobile) |
-| `SUPABASE_JWT_SECRET` | Used to mint the short-lived Realtime-auth JWT described in §6 |
-| `SUPABASE_ANON_KEY` | Public anon key — shipped to the mobile client for Realtime subscriptions |
-| `JWT_SECRET` | Random 256-bit secret for signing the app's own auth JWTs |
-| `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID from Google Cloud Console |
-| `GOOGLE_CALENDAR_SA_KEY` | Path to Google service account JSON key file |
-| `R2_ACCOUNT_ID` | Cloudflare account ID |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 API token credentials (scoped to the media bucket only) |
-| `R2_BUCKET_NAME` | e.g. `atur-perjalanan-media` |
-| `R2_PUBLIC_URL` | *(Optional)* Internal canonical base URL stored in `trip_documents.storage_url`. **Not** used for client-facing media access — clients receive presigned GET URLs instead (§7). |
-| `PORT` | HTTP server port (default: `8080`) |
-| `APP_ENV` | `development` \| `staging` \| `production` |
+| Variable                                    | Description                                                                                                                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Supabase Postgres connection string via connection pooler (`postgres://...:6543/postgres?pgbouncer=true`)                                                                       |
+| `DIRECT_URL`                                | Supabase Postgres direct connection, used by `prisma migrate` (`postgres://...:5432/postgres`)                                                                                  |
+| `SUPABASE_URL`                              | Supabase project URL (`https://<project>.supabase.co`)                                                                                                                          |
+| `SUPABASE_SERVICE_ROLE_KEY`                 | Server-side service role key (bypasses RLS — backend only, never shipped to mobile)                                                                                             |
+| `SUPABASE_JWT_SECRET`                       | Used to mint the short-lived Realtime-auth JWT described in §6                                                                                                                  |
+| `SUPABASE_ANON_KEY`                         | Public anon key — shipped to the mobile client for Realtime subscriptions                                                                                                       |
+| `JWT_SECRET`                                | Random 256-bit secret for signing the app's own auth JWTs                                                                                                                       |
+| `GOOGLE_CLIENT_ID`                          | OAuth 2.0 Client ID from Google Cloud Console                                                                                                                                   |
+| `GOOGLE_CALENDAR_SA_KEY`                    | Path to Google service account JSON key file                                                                                                                                    |
+| `R2_ACCOUNT_ID`                             | Cloudflare account ID                                                                                                                                                           |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2 API token credentials (scoped to the media bucket only)                                                                                                                      |
+| `R2_BUCKET_NAME`                            | e.g. `atur-perjalanan-media`                                                                                                                                                    |
+| `R2_PUBLIC_URL`                             | _(Optional)_ Internal canonical base URL stored in `trip_documents.storage_url`. **Not** used for client-facing media access — clients receive presigned GET URLs instead (§7). |
+| `PORT`                                      | HTTP server port (default: `8080`)                                                                                                                                              |
+| `APP_ENV`                                   | `development` \| `staging` \| `production`                                                                                                                                      |

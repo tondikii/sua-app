@@ -1,12 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TripsService } from '../trips/trips.service';
-import { CreateWishlistDto, UpdateWishlistDto, ConvertToTripDto } from './dto';
+import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/shared-validation';
 import { WishlistSerializer } from './serializers/wishlist.serializer';
+import { toTimeDate } from '../common/helpers/date.helpers';
 import { TripStatus } from '@prisma/client';
-
-const toTimeDate = (time?: string): Date | null =>
-  time ? new Date(`2000-01-01T${time}:00`) : null;
 
 @Injectable()
 export class WishlistService {
@@ -16,7 +19,7 @@ export class WishlistService {
   ) {}
 
   /** Create a wishlist item for the current user (WORKFLOW §12, `WishlistFormSheet`). */
-  async createWishlist(userId: string, dto: CreateWishlistDto) {
+  async createWishlist(userId: string, dto: CreateWishlistInput) {
     const wishlist = await this.prisma.wishlist.create({
       data: {
         userId,
@@ -62,12 +65,12 @@ export class WishlistService {
 
     return {
       data: results.map((w) => WishlistSerializer.toItem(w)),
-      next_cursor: hasMore ? results[results.length - 1]?.id ?? null : null,
+      next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 
   /** Update a wishlist item — owner only. */
-  async updateWishlist(wishlistId: string, userId: string, dto: UpdateWishlistDto) {
+  async updateWishlist(wishlistId: string, userId: string, dto: UpdateWishlistInput) {
     await this.assertOwner(wishlistId, userId);
 
     const wishlist = await this.prisma.wishlist.update({
@@ -104,7 +107,7 @@ export class WishlistService {
    * wishlist's fields, and soft-delete the `wishlists` row — all inside one
    * Prisma transaction (ARCHITECTURE §3.4). Rolls back entirely on failure.
    */
-  async convertToTrip(wishlistId: string, userId: string, dto: ConvertToTripDto) {
+  async convertToTrip(wishlistId: string, userId: string, dto: any) {
     const wishlist = await this.assertOwner(wishlistId, userId);
 
     const startDate = new Date(dto.start_date);

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
-import { CreateActivityDto, UpdateActivityDto } from './dto/activity.dto';
 import { ActivitySerializer } from './serializers/activity.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -59,7 +58,7 @@ export class ActivityService {
           a.coverDocument,
           a.thumbnailUrl ||
             (a.coverDocument?.storageKey
-              ? signedCoverUrls.get(a.coverDocument.storageKey) ?? null
+              ? (signedCoverUrls.get(a.coverDocument.storageKey) ?? null)
               : null),
         ),
       ),
@@ -105,11 +104,7 @@ export class ActivityService {
    * - start_time <= end_time
    * - activity_date must fall within trip date range if trip.status='fixed'
    */
-  async createActivity(
-    tripId: string,
-    userId: string,
-    dto: CreateActivityDto,
-  ) {
+  async createActivity(tripId: string, userId: string, dto: any) {
     // Verify participant access
     const trip = await this.prisma.trip.findFirst({
       where: {
@@ -132,8 +127,7 @@ export class ActivityService {
       throw new BadRequestException('Invalid time format (HH:MM required)');
     }
 
-    const startMinutes =
-      parseInt(startMatch[1]) * 60 + parseInt(startMatch[2]);
+    const startMinutes = parseInt(startMatch[1]) * 60 + parseInt(startMatch[2]);
     const endMinutes = parseInt(endMatch[1]) * 60 + parseInt(endMatch[2]);
 
     if (startMinutes > endMinutes) {
@@ -143,9 +137,7 @@ export class ActivityService {
     // Validate activity_date falls within trip range (if fixed)
     if (trip.status === 'fixed') {
       if (!dto.activity_date) {
-        throw new BadRequestException(
-          'activity_date required when trip status is fixed',
-        );
+        throw new BadRequestException('activity_date required when trip status is fixed');
       }
 
       const actDate = new Date(dto.activity_date);
@@ -153,9 +145,7 @@ export class ActivityService {
       const endDate = new Date(trip.endDate!);
 
       if (actDate < startDate || actDate > endDate) {
-        throw new BadRequestException(
-          'activity_date must fall within trip date range',
-        );
+        throw new BadRequestException('activity_date must fall within trip date range');
       }
     }
 
@@ -215,12 +205,7 @@ export class ActivityService {
    * Update an existing activity.
    * Participants can edit. Same validations as create.
    */
-  async updateActivity(
-    tripId: string,
-    activityId: string,
-    userId: string,
-    dto: UpdateActivityDto,
-  ) {
+  async updateActivity(tripId: string, activityId: string, userId: string, dto: any) {
     // Verify participant access
     const trip = await this.prisma.trip.findFirst({
       where: {
@@ -244,8 +229,8 @@ export class ActivityService {
     }
 
     // Validate time ordering (if either time is provided)
-    const startTime = dto.start_time || existing.startTime.toISOString().slice(11, 16) as any;
-    const endTime = dto.end_time || existing.endTime.toISOString().slice(11, 16) as any;
+    const startTime = dto.start_time || (existing.startTime.toISOString().slice(11, 16) as any);
+    const endTime = dto.end_time || (existing.endTime.toISOString().slice(11, 16) as any);
 
     if (dto.start_time || dto.end_time) {
       const timeRegex = /^(\d{2}):(\d{2})$/;
@@ -256,8 +241,7 @@ export class ActivityService {
         throw new BadRequestException('Invalid time format (HH:MM required)');
       }
 
-      const startMinutes =
-        parseInt(startMatch[1]) * 60 + parseInt(startMatch[2]);
+      const startMinutes = parseInt(startMatch[1]) * 60 + parseInt(startMatch[2]);
       const endMinutes = parseInt(endMatch[1]) * 60 + parseInt(endMatch[2]);
 
       if (startMinutes > endMinutes) {
@@ -274,16 +258,12 @@ export class ActivityService {
         const endDate = new Date(trip.endDate!);
 
         if (actDate < startDate || actDate > endDate) {
-          throw new BadRequestException(
-            'activity_date must fall within trip date range',
-          );
+          throw new BadRequestException('activity_date must fall within trip date range');
         }
       }
       activityDate = new Date(dto.activity_date);
     } else if (trip.status === 'fixed' && !existing.activityDate) {
-      throw new BadRequestException(
-        'activity_date required when trip status is fixed',
-      );
+      throw new BadRequestException('activity_date required when trip status is fixed');
     }
 
     // Update activity
@@ -292,29 +272,18 @@ export class ActivityService {
       data: {
         placeName: dto.place_name !== undefined ? dto.place_name : undefined,
         activityDate: activityDate,
-        startTime:
-          dto.start_time !== undefined
-            ? this.parseTimeToDate(dto.start_time)
-            : undefined,
-        endTime:
-          dto.end_time !== undefined
-            ? this.parseTimeToDate(dto.end_time)
-            : undefined,
+        startTime: dto.start_time !== undefined ? this.parseTimeToDate(dto.start_time) : undefined,
+        endTime: dto.end_time !== undefined ? this.parseTimeToDate(dto.end_time) : undefined,
         kind: dto.kind !== undefined ? (dto.kind as any) : undefined,
         description: dto.description !== undefined ? dto.description : undefined,
-        locationLabel:
-          dto.location_label !== undefined ? dto.location_label : undefined,
+        locationLabel: dto.location_label !== undefined ? dto.location_label : undefined,
         mapsLink: dto.maps_link !== undefined ? dto.maps_link : undefined,
         refLinks: dto.ref_links !== undefined ? (dto.ref_links as any) : undefined,
-        coverSource:
-          dto.cover_source !== undefined ? (dto.cover_source as any) : undefined,
+        coverSource: dto.cover_source !== undefined ? (dto.cover_source as any) : undefined,
         coverIcon: dto.cover_icon !== undefined ? dto.cover_icon : undefined,
-        coverDocumentId:
-          dto.cover_document_id !== undefined ? dto.cover_document_id : undefined,
-        thumbnailUrl:
-          dto.thumbnail_url !== undefined ? dto.thumbnail_url : undefined,
-        sortOrder:
-          dto.sort_order !== undefined ? dto.sort_order : undefined,
+        coverDocumentId: dto.cover_document_id !== undefined ? dto.cover_document_id : undefined,
+        thumbnailUrl: dto.thumbnail_url !== undefined ? dto.thumbnail_url : undefined,
+        sortOrder: dto.sort_order !== undefined ? dto.sort_order : undefined,
       },
       include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
     });
@@ -340,12 +309,9 @@ export class ActivityService {
       ),
     );
 
-    const mapsLink =
-      dto.maps_link !== undefined ? dto.maps_link : existing.mapsLink;
+    const mapsLink = dto.maps_link !== undefined ? dto.maps_link : existing.mapsLink;
     const hasThumbnail =
-      dto.thumbnail_url !== undefined
-        ? !!dto.thumbnail_url
-        : !!existing.thumbnailUrl;
+      dto.thumbnail_url !== undefined ? !!dto.thumbnail_url : !!existing.thumbnailUrl;
     if (mapsLink && !hasThumbnail) {
       this.scheduleThumbnailResolve(activityId, mapsLink);
     }
@@ -361,11 +327,7 @@ export class ActivityService {
    * Delete an activity.
    * Participants can delete.
    */
-  async deleteActivity(
-    tripId: string,
-    activityId: string,
-    userId: string,
-  ): Promise<void> {
+  async deleteActivity(tripId: string, activityId: string, userId: string): Promise<void> {
     // Verify participant access
     const trip = await this.prisma.trip.findFirst({
       where: {
@@ -396,27 +358,18 @@ export class ActivityService {
    * Fire-and-forget: resolve thumbnail_url from maps_link in the background.
    * Does not block the HTTP response (ARCHITECTURE.md §3.3).
    */
-  private scheduleThumbnailResolve(
-    activityId: string,
-    mapsLink: string | null | undefined,
-  ): void {
+  private scheduleThumbnailResolve(activityId: string, mapsLink: string | null | undefined): void {
     if (!mapsLink) return;
 
     setImmediate(() => {
       this.resolveThumbnailInBackground(activityId, mapsLink).catch((err) => {
-        this.logger.warn(
-          `Thumbnail resolve failed for activity ${activityId}: ${err}`,
-        );
+        this.logger.warn(`Thumbnail resolve failed for activity ${activityId}: ${err}`);
       });
     });
   }
 
-  private async resolveThumbnailInBackground(
-    activityId: string,
-    mapsLink: string,
-  ): Promise<void> {
-    const thumbnailUrl =
-      await this.googleMaps.resolveThumbnailFromMapsLink(mapsLink);
+  private async resolveThumbnailInBackground(activityId: string, mapsLink: string): Promise<void> {
+    const thumbnailUrl = await this.googleMaps.resolveThumbnailFromMapsLink(mapsLink);
     if (!thumbnailUrl) return;
 
     await this.prisma.tripActivity.update({

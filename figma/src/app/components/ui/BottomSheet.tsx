@@ -7,7 +7,15 @@ export const SHEET_FOOTER_PADDING = '16px 20px 32px';
 
 export function SheetHandle() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 14, paddingBottom: 6, flexShrink: 0 }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        paddingTop: 14,
+        paddingBottom: 6,
+        flexShrink: 0,
+      }}
+    >
       <div style={{ width: 40, height: 5, backgroundColor: C.border, borderRadius: 20 }} />
     </div>
   );
@@ -127,7 +135,9 @@ export function BottomSheet({
           )}
           <h2 style={{ fontSize: 18, fontWeight: 800, color: C.charcoal, margin: 0 }}>{title}</h2>
           {subtitle && (
-            <p style={{ fontSize: 12, color: C.muted, margin: '4px 0 0', lineHeight: 1.45 }}>{subtitle}</p>
+            <p style={{ fontSize: 12, color: C.muted, margin: '4px 0 0', lineHeight: 1.45 }}>
+              {subtitle}
+            </p>
           )}
         </div>
 

@@ -65,16 +65,16 @@ describe('InvitationsService', () => {
 
     it('throws NotFound when trip is missing', async () => {
       prisma.trip.findFirst.mockResolvedValue(null);
-      await expect(
-        service.createInvitation(TRIP, INVITER, { username: 'x' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.createInvitation(TRIP, INVITER, { username: 'x' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws Forbidden when inviter is not a participant', async () => {
       prisma.trip.findFirst.mockResolvedValue({ id: TRIP, participants: [{ userId: 'someone' }] });
-      await expect(
-        service.createInvitation(TRIP, INVITER, { username: 'x' }),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.createInvitation(TRIP, INVITER, { username: 'x' })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -108,16 +108,16 @@ describe('InvitationsService', () => {
 
     it('throws NotFound when username does not exist', async () => {
       prisma.user.findFirst.mockResolvedValue(null);
-      await expect(
-        service.createInvitation(TRIP, INVITER, { username: 'ghost' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.createInvitation(TRIP, INVITER, { username: 'ghost' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('rejects inviting yourself', async () => {
       prisma.user.findFirst.mockResolvedValue({ id: INVITER });
-      await expect(
-        service.createInvitation(TRIP, INVITER, { username: 'me' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createInvitation(TRIP, INVITER, { username: 'me' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('rejects when user is already a participant', async () => {
@@ -263,23 +263,23 @@ describe('InvitationsService', () => {
 
     it('throws Forbidden when responder is not the invitee', async () => {
       prisma.tripInvitation.findUnique.mockResolvedValue(invRow());
-      await expect(
-        service.respondToInvitation(TRIP, 'inv-1', 'stranger', true),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.respondToInvitation(TRIP, 'inv-1', 'stranger', true)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('throws BadRequest when invitation is not pending', async () => {
       prisma.tripInvitation.findUnique.mockResolvedValue(invRow({ status: 'accepted' }));
-      await expect(
-        service.respondToInvitation(TRIP, 'inv-1', 'invitee-1', true),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.respondToInvitation(TRIP, 'inv-1', 'invitee-1', true)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws NotFound when invitation belongs to another trip', async () => {
       prisma.tripInvitation.findUnique.mockResolvedValue(invRow({ tripId: 'other' }));
-      await expect(
-        service.respondToInvitation(TRIP, 'inv-1', 'invitee-1', true),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.respondToInvitation(TRIP, 'inv-1', 'invitee-1', true)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

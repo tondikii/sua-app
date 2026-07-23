@@ -47,10 +47,7 @@ function CompassIcon() {
   return (
     <Svg width={26} height={26} viewBox="0 0 24 24" fill="none">
       <Circle cx={12} cy={12} r={10} stroke="white" strokeWidth={2} />
-      <Polygon
-        points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"
-        fill="white"
-      />
+      <Polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="white" />
     </Svg>
   );
 }
@@ -89,7 +86,7 @@ export default function SignIn() {
     if (!configured) {
       Alert.alert(
         'Belum Dikonfigurasi',
-        'Google Sign-In belum dikonfigurasi. Tambahkan EXPO_PUBLIC_GOOGLE_CLIENT_ID ke .env.',
+        'Google Sign-In belum dikonfigurasi. Tambahkan EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID / EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ke .env.',
       );
       return;
     }

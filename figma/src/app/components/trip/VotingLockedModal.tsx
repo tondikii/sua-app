@@ -11,12 +11,7 @@ type VotingLockedModalProps = {
 };
 
 /** Modal — voting selesai / dikunci (minimal) */
-export function VotingLockedModal({
-  type,
-  title,
-  resultValue,
-  hint = '',
-}: VotingLockedModalProps) {
+export function VotingLockedModal({ type, title, resultValue, hint = '' }: VotingLockedModalProps) {
   const meta = VOTING_TYPE_META[type];
   const Icon = meta.icon;
 
@@ -57,7 +52,15 @@ export function VotingLockedModal({
         <X size={13} color={C.muted} strokeWidth={2.5} />
       </button>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, paddingRight: 28 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 10,
+          paddingRight: 28,
+        }}
+      >
         <span
           style={{
             display: 'inline-flex',
@@ -99,15 +102,33 @@ export function VotingLockedModal({
           marginBottom: 10,
         }}
       >
-        <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, margin: '0 0 3px', letterSpacing: 0.4 }}>
+        <p
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: C.muted,
+            margin: '0 0 3px',
+            letterSpacing: 0.4,
+          }}
+        >
           Hasil dipilih
         </p>
-        <p style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0, lineHeight: 1.35 }}>
+        <p
+          style={{ fontSize: 14, fontWeight: 800, color: C.charcoal, margin: 0, lineHeight: 1.35 }}
+        >
           {resultValue}
         </p>
       </div>
 
-      <p style={{ fontSize: 11, color: C.muted, margin: '0 0 14px', lineHeight: 1.5, fontWeight: 500 }}>
+      <p
+        style={{
+          fontSize: 11,
+          color: C.muted,
+          margin: '0 0 14px',
+          lineHeight: 1.5,
+          fontWeight: 500,
+        }}
+      >
         {hint}
       </p>
 

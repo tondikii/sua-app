@@ -7,9 +7,19 @@ const USERNAME = 'rinadwi_travel';
 
 const TRIPS: ProfileTrip[] = [
   { id: 1, title: 'Borobudur', image: TRIP_IMAGES.borobudur, tags: ['#Budaya', '#Sejarah'] },
-  { id: 2, title: 'Gunung Merapi', image: TRIP_IMAGES.merapi, tags: ['#Alam', '#Gunung', '#Sunrise'] },
+  {
+    id: 2,
+    title: 'Gunung Merapi',
+    image: TRIP_IMAGES.merapi,
+    tags: ['#Alam', '#Gunung', '#Sunrise'],
+  },
   { id: 3, title: 'Tumpak Sewu', image: TRIP_IMAGES.tumpakSewu, tags: ['#Alam', '#Air Terjun'] },
-  { id: 4, title: 'Bali Rice Terraces', image: TRIP_IMAGES.baliTerraces, tags: ['#Alam', '#Budaya', '#Foto'] },
+  {
+    id: 4,
+    title: 'Bali Rice Terraces',
+    image: TRIP_IMAGES.baliTerraces,
+    tags: ['#Alam', '#Budaya', '#Foto'],
+  },
 ];
 
 /** Profil pengguna lain — username di header kiri, kartu tanpa username */
