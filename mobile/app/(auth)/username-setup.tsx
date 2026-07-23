@@ -160,7 +160,7 @@ export default function UsernameSetup() {
     setSubmitting(true);
     try {
       await completeRegistration(username);
-      router.replace('/(tabs)/');
+      router.replace('/(tabs)');
     } catch {
       setSubmitting(false);
     }

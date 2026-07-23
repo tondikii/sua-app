@@ -26,6 +26,15 @@ export const colors = {
   dangerDark: '#E83030',
   dangerLight: '#FFEBEB',
   dangerBorder: '#F5A8A8',
+
+  // Amber — voting/notification highlights
+  amber: '#F59E0B',
+  amberLight: '#FFF8ED',
+
+  // Semantic
+  disabled: '#C8C8D4',
+  overlay: 'rgba(26,26,46,0.45)',
+  overlayDark: 'rgba(15,15,20,0.38)',
 } as const;
 
 export type Colors = typeof colors;

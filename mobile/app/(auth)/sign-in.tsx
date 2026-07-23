@@ -78,7 +78,7 @@ export default function SignIn() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(isNewUser ? '/(auth)/username-setup' : '/(tabs)/');
+      router.replace(isNewUser ? '/(auth)/username-setup' : '/(tabs)');
     }
   }, [isAuthenticated, isNewUser, router]);
 

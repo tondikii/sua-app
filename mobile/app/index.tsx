@@ -18,7 +18,7 @@ export default function Index() {
 
   if (!isHydrated || !onboardingChecked) return null;
 
-  if (isAuthenticated) return <Redirect href="/(tabs)/" />;
+  if (isAuthenticated) return <Redirect href="/(tabs)" />;
   if (!hasCompletedOnboarding) return <Redirect href="/(auth)/onboarding" />;
   return <Redirect href="/(auth)/sign-in" />;
 }

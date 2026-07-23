@@ -1,0 +1,1 @@
+- Delegates task prioritization to the agent — prefers open-ended prompts like "lanjutkan saja yang menurutmu paling tepat" (just continue with what you think is most appropriate), signaling trust in the agent's judgment to autonomously decide the next priority, rather than micromanaging step-by-step direction. Confidence: 0.8

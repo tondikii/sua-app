@@ -1,6 +1,815 @@
-import { ComingSoon } from '../../src/components/ComingSoon';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Switch,
+  Platform,
+} from 'react-native';
+import { useRouter, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCreateTrip } from '@/features/trips/hooks/useCreateTrip';
+import { X } from '@/components/icons/X';
+import { Plus } from '@/components/icons/Plus';
+import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { colors } from '@/theme/colors';
+import { typography } from '@/theme/typography';
+import { spacing } from '@/theme/spacing';
+import { radius } from '@/theme/radius';
 
-/** Modal — Buat Perjalanan. Implemented in M13 (Create Trip §6). */
-export default function CreateTripScreen() {
-  return <ComingSoon label="Buat Perjalanan — implemented in M13" />;
+const WEEK_DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const MONTH_NAMES = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+];
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
 }
+
+function getFirstDayOfWeek(year: number, month: number) {
+  return new Date(year, month, 1).getDay();
+}
+
+function formatDateISO(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function parseDateISO(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return { year: y, month: m - 1, day: d };
+}
+
+interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
+interface Candidate extends DateRange {
+  id: string;
+}
+
+export default function CreateTripScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const createTrip = useCreateTrip();
+
+  const [name, setName] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [allDay, setAllDay] = useState(true);
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('17:00');
+
+  // Calendar state
+  const today = new Date();
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [calYear, setCalYear] = useState(today.getFullYear());
+
+  // Mode A: direct date range
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [selectingEnd, setSelectingEnd] = useState(false);
+
+  // Mode B: candidates
+  const [candidateMode, setCandidateMode] = useState(false);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [activeCandidate, setActiveCandidate] = useState<DateRange | null>(null);
+  const [candidateSelectingEnd, setCandidateSelectingEnd] = useState(false);
+  const [votingDeadline, setVotingDeadline] = useState('');
+
+  // Validation
+  const [errors, setErrors] = useState<{ name?: string; date?: string }>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  // Calendar grid
+  const daysInMonth = getDaysInMonth(calYear, calMonth);
+  const firstDay = getFirstDayOfWeek(calYear, calMonth);
+  const calendarDays = useMemo(() => {
+    const days: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    return days;
+  }, [daysInMonth, firstDay]);
+
+  const prevMonth = useCallback(() => {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+    else setCalMonth(calMonth - 1);
+  }, [calMonth, calYear]);
+
+  const nextMonth = useCallback(() => {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+    else setCalMonth(calMonth + 1);
+  }, [calMonth, calYear]);
+
+  const handleDayPress = useCallback((day: number) => {
+    const iso = formatDateISO(calYear, calMonth, day);
+
+    if (candidateMode) {
+      if (!activeCandidate || candidateSelectingEnd) {
+        // Selecting end date for active candidate
+        if (activeCandidate) {
+          const newCandidate: Candidate = {
+            id: `c${Date.now()}`,
+            startDate: activeCandidate.startDate,
+            endDate: iso >= activeCandidate.startDate ? iso : activeCandidate.startDate,
+          };
+          setCandidates((prev) => [...prev, newCandidate]);
+          setActiveCandidate(null);
+          setCandidateSelectingEnd(false);
+        }
+      } else {
+        // Start selecting a new candidate
+        setActiveCandidate({ startDate: iso, endDate: iso });
+        setCandidateSelectingEnd(true);
+      }
+    } else {
+      // Mode A: direct range
+      if (!dateRange || selectingEnd) {
+        if (dateRange && selectingEnd) {
+          const start = dateRange.startDate;
+          setDateRange({
+            startDate: start,
+            endDate: iso >= start ? iso : start,
+          });
+          setSelectingEnd(false);
+        }
+      } else {
+        setDateRange({ startDate: iso, endDate: iso });
+        setSelectingEnd(true);
+      }
+    }
+  }, [calYear, calMonth, candidateMode, activeCandidate, candidateSelectingEnd, dateRange, selectingEnd]);
+
+  const switchToCandidateMode = useCallback(() => {
+    if (!candidateMode) {
+      setCandidateMode(true);
+      setDateRange(null);
+      setSelectingEnd(false);
+    }
+  }, [candidateMode]);
+
+  const removeCandidate = useCallback((id: string) => {
+    setCandidates((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  const addTag = useCallback(() => {
+    const trimmed = tagInput.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      const tag = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+      setTags((prev) => [...prev, tag]);
+      setTagInput('');
+    }
+  }, [tagInput, tags]);
+
+  const removeTag = useCallback((tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag));
+  }, []);
+
+  const validate = useCallback(() => {
+    const newErrors: typeof errors = {};
+    if (!name.trim()) newErrors.name = 'Nama perjalanan tidak boleh kosong.';
+    if (candidateMode) {
+      if (candidates.length === 0) newErrors.date = 'Pilih minimal 1 kandidat tanggal';
+    } else {
+      if (!dateRange) newErrors.date = 'Pilih rentang tanggal perjalanan.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [name, candidateMode, candidates, dateRange]);
+
+  const handleSubmit = useCallback(async () => {
+    setSubmitted(true);
+    if (!validate()) return;
+
+    try {
+      let payload;
+
+      if (candidateMode && candidates.length > 0) {
+        payload = {
+          name: name.trim(),
+          tags: tags.length > 0 ? tags : undefined,
+          candidates: candidates.map((c) => ({
+            start_date: c.startDate,
+            end_date: c.endDate,
+          })),
+          voting_deadline: votingDeadline || undefined,
+        };
+      } else if (dateRange) {
+        payload = {
+          name: name.trim(),
+          tags: tags.length > 0 ? tags : undefined,
+          start_date: dateRange.startDate,
+          end_date: dateRange.endDate,
+          is_all_day: allDay,
+          start_time: allDay ? undefined : startTime,
+          end_time: allDay ? undefined : endTime,
+        };
+      } else {
+        return;
+      }
+
+      const trip = await createTrip.mutateAsync(payload);
+      router.replace(`/trip/${trip.id}`);
+    } catch (err) {
+      Alert.alert('Gagal', 'Terjadi kesalahan saat membuat perjalanan.');
+    }
+  }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, router]);
+
+  const isDayInRange = useCallback((day: number, start: string, end: string) => {
+    const iso = formatDateISO(calYear, calMonth, day);
+    return iso >= start && iso <= end;
+  }, [calYear, calMonth]);
+
+  const isDaySelected = useCallback((day: number) => {
+    const iso = formatDateISO(calYear, calMonth, day);
+    if (candidateMode) {
+      if (activeCandidate && (iso === activeCandidate.startDate || iso === activeCandidate.endDate)) return true;
+      return candidates.some((c) => iso === c.startDate || iso === c.endDate);
+    }
+    if (dateRange) {
+      return iso === dateRange.startDate || iso === dateRange.endDate;
+    }
+    return false;
+  }, [calYear, calMonth, candidateMode, activeCandidate, candidates, dateRange]);
+
+  const isDayInRangeHighlight = useCallback((day: number) => {
+    const iso = formatDateISO(calYear, calMonth, day);
+    if (candidateMode) {
+      if (activeCandidate && iso > activeCandidate.startDate && iso < activeCandidate.endDate) return true;
+      return candidates.some((c) => iso > c.startDate && iso < c.endDate);
+    }
+    if (dateRange && iso > dateRange.startDate && iso < dateRange.endDate) return true;
+    return false;
+  }, [calYear, calMonth, candidateMode, activeCandidate, candidates, dateRange]);
+
+  const submitDisabled = createTrip.isPending || (submitted && Object.keys(errors).length > 0);
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+          <X size={18} color={colors.charcoal} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Buat Perjalanan</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={styles.bodyContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Trip Name */}
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Nama Perjalanan <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, submitted && errors.name && styles.inputError]}
+            placeholder="Masukkan nama perjalanan..."
+            placeholderTextColor={colors.mutedLight}
+            value={name}
+            onChangeText={setName}
+          />
+          {submitted && errors.name && (
+            <Text style={styles.errorText}>{errors.name}</Text>
+          )}
+        </View>
+
+        {/* Tags */}
+        <View style={styles.field}>
+          <Text style={styles.label}>Tag</Text>
+          <View style={styles.tagsContainer}>
+            {tags.map((tag) => (
+              <TouchableOpacity key={tag} style={styles.tagChip} onPress={() => removeTag(tag)}>
+                <Text style={styles.tagText}>{tag}</Text>
+                <Text style={styles.tagRemove}>×</Text>
+              </TouchableOpacity>
+            ))}
+            <TextInput
+              style={styles.tagInput}
+              placeholder="+ Tambah tag..."
+              placeholderTextColor={colors.mutedLight}
+              value={tagInput}
+              onChangeText={setTagInput}
+              onSubmitEditing={addTag}
+              returnKeyType="done"
+            />
+          </View>
+        </View>
+
+        {/* Calendar */}
+        <View style={styles.calendarCard}>
+          <View style={styles.calHeader}>
+            <TouchableOpacity onPress={prevMonth} style={styles.calNavBtn}>
+              <ChevronLeft size={16} color={colors.charcoal} />
+            </TouchableOpacity>
+            <Text style={styles.calMonthLabel}>
+              {MONTH_NAMES[calMonth]} {calYear}
+            </Text>
+            <TouchableOpacity onPress={nextMonth} style={styles.calNavBtn}>
+              <View style={{ transform: [{ scaleX: -1 }] }}>
+                <ChevronLeft size={16} color={colors.charcoal} />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.calWeekDays}>
+            {WEEK_DAYS.map((d) => (
+              <Text key={d} style={styles.calWeekDay}>{d}</Text>
+            ))}
+          </View>
+
+          <View style={styles.calGrid}>
+            {calendarDays.map((day, i) => {
+              if (day === null) return <View key={`empty-${i}`} style={styles.calDayCell} />;
+
+              const selected = isDaySelected(day);
+              const inRange = isDayInRangeHighlight(day);
+
+              return (
+                <TouchableOpacity
+                  key={day}
+                  style={styles.calDayCell}
+                  onPress={() => handleDayPress(day)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[
+                    styles.calDay,
+                    selected && styles.calDaySelected,
+                    inRange && styles.calDayInRange,
+                  ]}>
+                    <Text style={[
+                      styles.calDayText,
+                      selected && styles.calDayTextSelected,
+                    ]}>
+                      {day}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {submitted && errors.date && (
+            <Text style={[styles.errorText, { marginTop: 8 }]}>{errors.date}</Text>
+          )}
+        </View>
+
+        {/* Time Fields (Mode A only) */}
+        {!candidateMode && (
+          <View style={styles.field}>
+            <View style={styles.toggleRow}>
+              <Text style={styles.label}>Sepanjang hari</Text>
+              <Switch
+                value={allDay}
+                onValueChange={setAllDay}
+                trackColor={{ false: colors.border, true: colors.coralLight }}
+                thumbColor={allDay ? colors.coral : colors.muted}
+              />
+            </View>
+            {!allDay && (
+              <View style={styles.timeRow}>
+                <View style={styles.timeField}>
+                  <Text style={styles.timeLabel}>Mulai</Text>
+                  <TextInput
+                    style={styles.timeInput}
+                    placeholder="08:00"
+                    placeholderTextColor={colors.mutedLight}
+                    value={startTime}
+                    onChangeText={setStartTime}
+                  />
+                </View>
+                <View style={styles.timeField}>
+                  <Text style={styles.timeLabel}>Selesai</Text>
+                  <TextInput
+                    style={styles.timeInput}
+                    placeholder="17:00"
+                    placeholderTextColor={colors.mutedLight}
+                    value={endTime}
+                    onChangeText={setEndTime}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Candidate Mode Toggle */}
+        {!candidateMode && candidates.length === 0 && (
+          <TouchableOpacity
+            style={styles.addCandidateButton}
+            onPress={switchToCandidateMode}
+            activeOpacity={0.7}
+          >
+            <Plus size={16} color={colors.coral} />
+            <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Candidate List */}
+        {candidateMode && (
+          <View style={styles.field}>
+            <Text style={styles.label}>Kandidat Tanggal</Text>
+            {candidates.map((c, i) => {
+              const startParsed = parseDateISO(c.startDate);
+              const endParsed = parseDateISO(c.endDate);
+              return (
+                <View key={c.id} style={styles.candidateRow}>
+                  <View style={styles.candidateBadge}>
+                    <Text style={styles.candidateBadgeText}>{i + 1}</Text>
+                  </View>
+                  <Text style={styles.candidateDate}>
+                    {startParsed.day}–{endParsed.day} {MONTH_NAMES[startParsed.month]} {startParsed.year}
+                  </Text>
+                  <TouchableOpacity onPress={() => removeCandidate(c.id)}>
+                    <X size={14} color={colors.muted} />
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+
+            {activeCandidate && (
+              <View style={[styles.candidateRow, styles.candidateRowActive]}>
+                <View style={[styles.candidateBadge, styles.candidateBadgeActive]}>
+                  <Text style={[styles.candidateBadgeText, styles.candidateBadgeTextActive]}>
+                    {candidates.length + 1}
+                  </Text>
+                </View>
+                <Text style={styles.candidateDateActive}>
+                  {parseDateISO(activeCandidate.startDate).day} {MONTH_NAMES[parseDateISO(activeCandidate.startDate).month]} — Pilih akhir
+                </Text>
+              </View>
+            )}
+
+            {candidates.length < 3 && !activeCandidate && (
+              <TouchableOpacity
+                style={[styles.addCandidateButton, styles.addCandidateHighlighted]}
+                onPress={() => {
+                  setActiveCandidate(null);
+                  setCandidateSelectingEnd(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Plus size={16} color={colors.coral} />
+                <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Voting Deadline (Mode B) */}
+        {candidateMode && candidates.length > 0 && (
+          <View style={styles.field}>
+            <Text style={styles.label}>Tenggat Voting Tanggal</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Pilih tanggal & waktu... (opsional)"
+              placeholderTextColor={colors.mutedLight}
+              value={votingDeadline}
+              onChangeText={setVotingDeadline}
+            />
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Footer */}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        {submitted && Object.keys(errors).length > 1 && (
+          <Text style={styles.footerError}>
+            {Object.keys(errors).length} hal wajib belum lengkap
+          </Text>
+        )}
+        <TouchableOpacity
+          style={[styles.submitButton, submitDisabled && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={submitDisabled}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.submitText}>
+            {createTrip.isPending ? 'Membuat...' : 'Buat Perjalanan'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.charcoal,
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 36,
+  },
+  body: {
+    flex: 1,
+  },
+  bodyContent: {
+    padding: 16,
+    paddingBottom: 40,
+    gap: 14,
+  },
+  field: {
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.charcoal,
+  },
+  required: {
+    color: colors.coral,
+  },
+  input: {
+    backgroundColor: colors.light,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.charcoal,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  inputError: {
+    borderColor: colors.danger,
+    borderWidth: 2,
+    backgroundColor: colors.dangerLight,
+  },
+  errorText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.danger,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    alignItems: 'center',
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.tealLight,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  tagText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.teal,
+  },
+  tagRemove: {
+    fontSize: 14,
+    color: colors.teal,
+    fontWeight: '700',
+  },
+  tagInput: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.charcoal,
+    minWidth: 100,
+    paddingVertical: 4,
+  },
+  calendarCard: {
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  calHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  calNavBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calMonthLabel: {
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.charcoal,
+  },
+  calWeekDays: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  calWeekDay: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+  },
+  calGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calDayCell: {
+    width: '14.28%',
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  calDay: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calDaySelected: {
+    backgroundColor: colors.coral,
+    shadowColor: colors.coral,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  calDayInRange: {
+    backgroundColor: colors.coralLight,
+  },
+  calDayText: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+  },
+  calDayTextSelected: {
+    color: colors.white,
+    fontFamily: 'PlusJakartaSans_700Bold',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  timeField: {
+    flex: 1,
+    gap: 4,
+  },
+  timeLabel: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+  },
+  timeInput: {
+    backgroundColor: colors.light,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  addCandidateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 46,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.border,
+  },
+  addCandidateHighlighted: {
+    borderColor: colors.coral,
+    backgroundColor: `${colors.coral}08`,
+  },
+  addCandidateText: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.coral,
+  },
+  candidateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    padding: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  candidateRowActive: {
+    borderColor: colors.coral,
+    backgroundColor: colors.coralLight,
+  },
+  candidateBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: colors.coralLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  candidateBadgeActive: {
+    backgroundColor: colors.coral,
+  },
+  candidateBadgeText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.coral,
+  },
+  candidateBadgeTextActive: {
+    color: colors.white,
+  },
+  candidateDate: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+  },
+  candidateDateActive: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.coral,
+  },
+  footer: {
+    padding: 16,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  footerError: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.danger,
+    marginBottom: 8,
+  },
+  submitButton: {
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: colors.coral,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.coral,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+  submitButtonDisabled: {
+    backgroundColor: colors.disabled,
+    shadowOpacity: 0,
+  },
+  submitText: {
+    fontSize: 16,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.white,
+  },
+});

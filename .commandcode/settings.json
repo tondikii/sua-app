@@ -14,7 +14,10 @@
       "Shell(NODE_ENV=development npx jest --no-cache --maxWorkers=1 2 >& 1)",
       "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"EXIT CODE: $?\")",
       "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"EXIT: $?\")",
-      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"BUILD EXIT: $?\")"
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/backend && NODE_ENV=development npx nest build 2>&1; echo \"BUILD EXIT: $?\")",
+      "Shell(npx expo customize types/router.d.ts 2 >& 1)",
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/mobile && sed -i '' 's|`/notifications${`?${string}` | `#${string}` | ''}` | `/trip/create|`/notifications${`?${string}` | `#${string}` | ''}` | `/settings${`?${string}` | `#${string}` | ''}` | `/profile/${Router.SingleRoutePart<T>}${`?${string}` | `#${string}` | ''}` | `/trip/create|g' .expo/types/router.d.ts && sed -i '' 's|{ pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/trip/create|{ pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/settings`; params?: Router.UnknownInputParams; } | { pathname: `/profile/[username]`, params: Router.UnknownInputParams \\& { username: string; } } | { pathname: `/trip/create|g' .expo/types/router.d.ts && echo \"Done\")",
+      "Shell(find:*)"
     ],
     "deny": [],
     "defaultMode": "default"

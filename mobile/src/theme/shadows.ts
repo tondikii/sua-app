@@ -33,6 +33,46 @@ export const shadows = {
     shadowRadius: 18,
     elevation: 4,
   },
+  /** Large CTA button — `0 10px 28px rgba(255,107,107,0.28)` */
+  buttonLarge: {
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 28,
+    elevation: 8,
+  },
+  /** Compact card — `0 3px 14px rgba(26,26,46,0.08)` */
+  cardCompact: {
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  /** Bottom sheet — `0 -10px 40px rgba(26,26,46,0.14)` */
+  bottomSheet: {
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.14,
+    shadowRadius: 40,
+    elevation: 10,
+  },
+  /** Menu / dropdown — `0 10px 32px rgba(26,26,46,0.08)` */
+  menu: {
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 32,
+    elevation: 10,
+  },
+  /** Modal / dialog — `0 20px 56px rgba(0,0,0,0.28)` */
+  modal: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.28,
+    shadowRadius: 56,
+    elevation: 20,
+  },
 } as const satisfies Record<string, ShadowPreset>;
 
 export type Shadows = typeof shadows;

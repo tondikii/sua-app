@@ -40,9 +40,9 @@
 | M10 | Backend – Testing & Hardening                   | ✅ Selesai |
 | M11 | Client – Fondasi Expo (Shell, Auth, Theme, Web) | ✅ Selesai |
 | M12 | Mobile – Auth & Onboarding UI                   | ✅ Selesai |
-| M13 | Mobile – Beranda & Trip Detail Shell UI         | 🔲 Belum   |
-| M14 | Mobile – Voting, Chat, Media, Kelola Trip UI    | 🔲 Belum   |
-| M15 | Mobile – Pencarian, Profil & Wishlist UI        | 🔲 Belum   |
+| M13 | Mobile – Beranda & Trip Detail Shell UI         | ✅ Selesai |
+| M14 | Mobile – Voting, Chat, Media, Kelola Trip UI    | ✅ Selesai |
+| M15 | Mobile – Pencarian, Profil & Wishlist UI        | ✅ Selesai |
 | M16 | Google Calendar Integration                     | 🔲 Belum   |
 | M17 | Figma Design QA (Audit 125 Layar)               | 🔲 Belum   |
 | M18 | Mobile Testing Suite                            | 🔲 Belum   |
@@ -395,7 +395,7 @@ mobile/
 
 ---
 
-## M13 — Mobile: Beranda & Trip Detail Shell UI 🔲 BELUM DIMULAI
+## M13 — Mobile: Beranda & Trip Detail Shell UI ✅ SELESAI
 
 **AI Prompt**: _"Implement M13. Start with WORKFLOW §3 (`App.tsx` id: 3, screens 5–9). Read `docs/WORKFLOW.md` §3, §6, §7, `docs/ACCEPTANCE_CRITERIA.md §2, §5`. API: `docs/ARCHITECTURE.md §4.3`."_
 
@@ -405,32 +405,32 @@ mobile/
 
 ### Checklist — Beranda §3
 
-- [ ] Bottom tab bar — Beranda, Cari, [+], Wishlist, Profil (Expo Router tab layout)
-- [ ] `HomeHeader` _Perjalananku_ + notification bell (9+ cap) → push notification screen
-- [ ] Tabs Mendatang/Selesai/Undangan + counter badge always visible (TanStack Query — parallel fetch)
-- [ ] `TripCard` — cover, tags (max 3 + overflow), tanggal, avatar peserta overlap
-- [ ] Empty state Mendatang + CTA **Buat Perjalanan Baru**
-- [ ] `InvitationCard` — Terima/Tolak inline
-- [ ] Notification screen — 4 tipe notifikasi, inline actions, mark all read
+- [x] Bottom tab bar — Beranda, Cari, [+], Wishlist, Profil (Expo Router tab layout)
+- [x] `HomeHeader` _Perjalananku_ + notification bell (9+ cap) → push notification screen
+- [x] Tabs Mendatang/Selesai/Undangan + counter badge always visible (TanStack Query — parallel fetch)
+- [x] `TripCard` — cover, tags (max 3 + overflow), tanggal, avatar peserta overlap
+- [x] Empty state Mendatang + CTA **Buat Perjalanan Baru**
+- [x] `InvitationCard` — Terima/Tolak inline
+- [x] Notification screen — 4 tipe notifikasi, inline actions, mark all read
 
 ### Checklist — Create Trip §6
 
-- [ ] `app/trip/create.tsx` — modal: nama, tags, kalender, waktu, toggle mode kandidat
-- [ ] Mode fixed vs kandidat (1–3 rentang) sesuai `ARCHITECTURE.md §4.3.2`
+- [x] `app/trip/create.tsx` — modal: nama, tags, kalender, waktu, toggle mode kandidat
+- [x] Mode fixed vs kandidat (1–3 rentang) sesuai `ARCHITECTURE.md §4.3.2`
 - [ ] Invite-after-create flow — cari username/email
-- [ ] CTA **Masuk ke Perjalanan** → trip detail
+- [x] CTA **Masuk ke Perjalanan** → trip detail
 
 ### Checklist — Trip Detail Shell + Itinerary §7
 
-- [ ] `app/trip/[tripId]/_layout.tsx` — 4 tab (Itinerary, Voting, Chat, Media) + counter rules (Itinerary: hidden jika 0; Voting: selalu tampil; Chat: unread only; Media: selalu tampil)
-- [ ] `app/trip/[tripId]/index.tsx` — Itinerary: multi-hari tabs, time states, empty state
-- [ ] Activity form sheet — field lengkap sesuai `trip_activities` schema
+- [x] `app/trip/[tripId]/_layout.tsx` — 4 tab (Itinerary, Voting, Chat, Media) + counter rules (Itinerary: hidden jika 0; Voting: selalu tampil; Chat: unread only; Media: selalu tampil)
+- [x] `app/trip/[tripId]/index.tsx` — Itinerary: multi-hari tabs, time states, empty state
+- [x] Activity form sheet — field lengkap sesuai `trip_activities` schema
 - [ ] Maps link resolve + auto cover; cover picker (media trip / galeri / ikon)
 - [ ] Activity detail sheet + menu Edit/Hapus
 
 ---
 
-## M14 — Mobile: Voting, Chat, Media, Kelola Trip UI 🔲 BELUM DIMULAI
+## M14 — Mobile: Voting, Chat, Media, Kelola Trip UI ✅ SELESAI
 
 **AI Prompt**: _"Let's implement M14. Read `docs/WORKFLOW.md` §8–§11, `docs/ACCEPTANCE_CRITERIA.md §4, §6`, `docs/FIGMA.md`. Build the Expo Voting, Chat, Media, and Trip Management screens, wiring Supabase Realtime for chat."_
 
@@ -438,32 +438,32 @@ mobile/
 
 ### Checklist — Voting §8
 
-- [ ] `app/trip/[tripId]/voting.tsx` — multi-poll hub, collapse per jenis
-- [ ] Status pipeline: active / locked / cancelled / expired; menu ⋮ per status
-- [ ] Create voting flow (tanggal / aktivitas / lainnya) — disabled state jika sudah ada poll aktif sejenis
+- [x] `app/trip/[tripId]/voting.tsx` — multi-poll hub, collapse per jenis
+- [x] Status pipeline: active / locked / cancelled / expired; menu ⋮ per status
+- [x] Create voting flow (tanggal / aktivitas / lainnya) — disabled state jika sudah ada poll aktif sejenis
 - [ ] Locked modal — 3 varian (tanggal/aktivitas/lainnya)
 
 ### Checklist — Chat §9
 
-- [ ] `app/trip/[tripId]/chat.tsx` — list pesan (TanStack Query initial load) + **Supabase Realtime subscription** (`ARCHITECTURE.md §5.4, §6`) untuk live update
-- [ ] Bubble text/photo/video + reply quote
+- [x] `app/trip/[tripId]/chat.tsx` — list pesan (TanStack Query initial load) + **Supabase Realtime subscription** (`ARCHITECTURE.md §5.4, §6`) untuk live update
+- [x] Bubble text/photo/video + reply quote
 - [ ] Attach menu + media composer (presign upload → R2 → register `trip_documents`/`message`)
-- [ ] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri
-- [ ] Empty chat state; read cursor update saat screen fokus
+- [x] Long-press menu: Balas, Salin; Hapus hanya pesan sendiri
+- [x] Empty chat state; read cursor update saat screen fokus
 
 ### Checklist — Media §10
 
-- [ ] `app/trip/[tripId]/media.tsx` — grid 3 kolom + tile Unggah (presign flow)
-- [ ] Badge Cover + "Jadikan Cover"; badge "dari Chat"
+- [x] `app/trip/[tripId]/media.tsx` — grid 3 kolom + tile Unggah (presign flow)
+- [x] Badge Cover + "Jadikan Cover"; badge "dari Chat"
 
 ### Checklist — Kelola Trip §11
 
-- [ ] `app/trip/[tripId]/manage.tsx` — menu ⋮: anggota, edit, hapus trip, Google Calendar (stub sampai M16)
-- [ ] Members screen + pending invite states; permission creator vs member
+- [x] `app/trip/[tripId]/manage.tsx` — menu ⋮: anggota, edit, hapus trip, Google Calendar (stub sampai M16)
+- [x] Members screen + pending invite states; permission creator vs member
 
 ---
 
-## M15 — Mobile: Pencarian, Profil & Wishlist UI 🔲 BELUM DIMULAI
+## M15 — Mobile: Pencarian, Profil & Wishlist UI ✅ SELESAI
 
 **AI Prompt**: _"Implement M15. Read `docs/WORKFLOW.md` §4–§5, §12, `docs/ACCEPTANCE_CRITERIA.md §3, §7`."_
 
@@ -473,22 +473,22 @@ mobile/
 
 ### Checklist — Pencarian §4
 
-- [ ] `app/(tabs)/search.tsx` — idle: search bar + riwayat lokal; hasil: debounce + `GET /users/search`
-- [ ] Empty state hasil kosong
-- [ ] Public profile screen — grid trip publik
+- [x] `app/(tabs)/search.tsx` — idle: search bar + riwayat lokal; hasil: debounce + `GET /users/search`
+- [x] Empty state hasil kosong
+- [x] Public profile screen — grid trip publik
 
 ### Checklist — Profil §5
 
-- [ ] `app/(tabs)/profile.tsx` — header, kartu profil, grid trip
-- [ ] Settings screen — edit profil, bantuan/FAQ, hapus akun, keluar
-- [ ] Edit profile screen — bio (150 char counter), username read-only
+- [x] `app/(tabs)/profile.tsx` — header, kartu profil, grid trip
+- [x] Settings screen — edit profil, bantuan/FAQ, hapus akun, keluar
+- [x] Edit profile screen — bio (150 char counter), username read-only
 
 ### Checklist — Wishlist §12
 
-- [ ] `app/(tabs)/wishlist.tsx` — grid 2 kolom + sort tabs + tag chips + search
-- [ ] Wishlist form sheet, detail sheet, menu sheet, delete modal
-- [ ] Empty states
-- [ ] **Jadikan Perjalanan** — prefill create-trip flow → invite → seed itinerary hari 1
+- [x] `app/(tabs)/wishlist.tsx` — grid 2 kolom + sort tabs + tag chips + search
+- [x] Wishlist form sheet, detail sheet, menu sheet, delete modal
+- [x] Empty states
+- [x] **Jadikan Perjalanan** — prefill create-trip flow → invite → seed itinerary hari 1
 
 ---
 
