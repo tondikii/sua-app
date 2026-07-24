@@ -18,7 +18,13 @@
       "Shell(npx expo customize types/router.d.ts 2 >& 1)",
       "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/mobile && sed -i '' 's|`/notifications${`?${string}` | `#${string}` | ''}` | `/trip/create|`/notifications${`?${string}` | `#${string}` | ''}` | `/settings${`?${string}` | `#${string}` | ''}` | `/profile/${Router.SingleRoutePart<T>}${`?${string}` | `#${string}` | ''}` | `/trip/create|g' .expo/types/router.d.ts && sed -i '' 's|{ pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/trip/create|{ pathname: `/notifications`; params?: Router.UnknownInputParams; } | { pathname: `/settings`; params?: Router.UnknownInputParams; } | { pathname: `/profile/[username]`, params: Router.UnknownInputParams \\& { username: string; } } | { pathname: `/trip/create|g' .expo/types/router.d.ts && echo \"Done\")",
       "Shell(find:*)",
-      "Shell(npx eslint mobile/app/notifications.tsx 2 >& 1)"
+      "Shell(npx eslint mobile/app/notifications.tsx 2 >& 1)",
+      "Shell(development:*)",
+      "Shell(cat:*)",
+      "Shell(npx eas whoami 2 >& 1)",
+      "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/mobile && grep -i \"owner\" app.json 2>/dev/null; echo \"---\"; cat app.json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('owner','NOT SET'))\" 2>/dev/null)",
+      "Shell(npx eas-cli whoami 2>&1)",
+      "Shell(node -e const p = require('expo-auth-session/package.json'); console.log(p.version))"
     ],
     "deny": [],
     "defaultMode": "default"

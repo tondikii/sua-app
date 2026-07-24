@@ -1,0 +1,7 @@
+# workflow
+- Prefers agent to first read project documentation (README, docs/) to understand context before proposing next steps or architecture decisions — "read first, propose later" approach, not jumping into suggestions without context. Confidence: 0.7
+- Prefers continuous forward momentum — proceeding to the next milestone/task even when the current milestone hasn't been fully tested or verified (e.g., EAS build still pending), rather than waiting for full verification before moving on. Confidence: 0.8
+- Uses EAS development builds for mobile testing rather than Expo Go — agent should assume standalone dev builds when diagnosing platform-specific issues (e.g., OAuth, deep linking), not Expo Go web-proxy behavior. Confidence: 0.85
+- When debugging configuration issues, compares against known-working existing projects (e.g., referencing another Expo RN app's OAuth config) to determine what's actually required — uses "this works without X on my other project" as evidence to push back on unnecessary additions. Confidence: 0.8
+- Uses standalone test files (e.g., `google-login-test.html`) to isolate and verify subsystem behavior before debugging within the full app — methodical isolation-first debugging. Confidence: 0.75
+- Prefers minimal, lean configuration — pushes back on adding unnecessary scopes, APIs, or settings ("scope belum perlu kali", "People API kenya gaperlu deh") and only adds what is strictly required. Confidence: 0.8

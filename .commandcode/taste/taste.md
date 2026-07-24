@@ -13,10 +13,7 @@
 - Prefers working "correctly and accurately to the design" — implementation must match Figma design specs exactly (dimensions, colors, spacing, font weights, component structure, shadows), not just functionally. Design fidelity is a first-class requirement. Confidence: 0.8
 
 # workflow
-
-- Prefers agent to first read project documentation (README, docs/) to understand context before proposing next steps or architecture decisions — "read first, propose later" approach, not jumping into suggestions without context. Confidence: 0.7
-- Prefers continuous forward momentum — proceeding to the next milestone/task even when the current milestone hasn't been fully tested or verified (e.g., EAS build still pending), rather than waiting for full verification before moving on. Confidence: 0.8
-
+See [workflow/taste.md](workflow/taste.md)
 # communication
 
 - Communication is a mix of Indonesian and English; agent may respond in Indonesian, but all code must be written in English (variable names, comments, strings, file content). Confidence: 0.9
