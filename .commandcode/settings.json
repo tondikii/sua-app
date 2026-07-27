@@ -24,7 +24,12 @@
       "Shell(npx eas whoami 2 >& 1)",
       "Shell(cd /Users/tondikiandika/Documents/projects/sudutkode/atur-perjalanan/mobile && grep -i \"owner\" app.json 2>/dev/null; echo \"---\"; cat app.json | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('owner','NOT SET'))\" 2>/dev/null)",
       "Shell(npx eas-cli whoami 2>&1)",
-      "Shell(node -e const p = require('expo-auth-session/package.json'); console.log(p.version))"
+      "Shell(node -e const p = require('expo-auth-session/package.json'); console.log(p.version))",
+      "Shell(kill:*)",
+      "Shell(node dist/main)",
+      "Shell(node -e \"require('./dist/main')\" 2>&1)",
+      "Shell(node distmain 2 >& 1)",
+      "powershell"
     ],
     "deny": [],
     "defaultMode": "default"

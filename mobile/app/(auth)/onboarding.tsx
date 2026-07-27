@@ -3,8 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -297,7 +296,8 @@ function PairSlide({ slide }: { slide: SlideData }) {
   );
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: rawWidth, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SCREEN_WIDTH = Platform.OS === 'web' ? Math.min(rawWidth, 430) : rawWidth;
 const HERO_HEIGHT = 280;
 
 export default function Onboarding() {

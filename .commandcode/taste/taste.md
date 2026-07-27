@@ -10,7 +10,11 @@
 
 - Constrain web layout to mobile phone max-width (e.g., 390-430px) so the web design mirrors the mobile app design exactly. Confidence: 0.75
 
+- The Expo/React Native application must also target the web platform (Expo web) — mobile and web are built from the same codebase, not separate projects. Confidence: 0.8
+
 - Prefers working "correctly and accurately to the design" — implementation must match Figma design specs exactly (dimensions, colors, spacing, font weights, component structure, shadows), not just functionally. Design fidelity is a first-class requirement. Confidence: 0.8
+
+- Prefers reusing existing Figma source code directly (the `.tsx` component files under `figma/src/app/components/`) rather than recreating design assets from scratch — the agent should extract and adapt the existing Figma components, not author new ones. Confidence: 0.85
 
 # workflow
 See [workflow/taste.md](workflow/taste.md)
@@ -20,9 +24,4 @@ See [workflow/taste.md](workflow/taste.md)
 - Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.7
 
 # architecture
-
-- Prefers to audit and fix monorepo architecture fundamentals (package boundaries, shared code, tooling) before building features on top — takes a "foundations first" approach rather than deferring structural debt. Confidence: 0.9
-- Prefers shared packages across backend and mobile (shared types, shared validation schemas) instead of duplicating type definitions or validation logic in each package. Confidence: 0.85
-- Prefers standardized root-level tooling configs (ESLint flat config, Prettier, tsconfig.base.json) applied uniformly across all packages in the monorepo rather than per-package bespoke configurations. Confidence: 0.8
-- Prefers making architectural decisions via structured options with clear recommendations, and tends to choose the comprehensive option when presented. Confidence: 0.7
-- Expects documentation (README, env examples, architecture docs) to be updated alongside code changes — does not tolerate stale docs after refactoring. Confidence: 0.8
+See [architecture/taste.md](architecture/taste.md)

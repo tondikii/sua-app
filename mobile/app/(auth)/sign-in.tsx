@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
@@ -57,7 +56,7 @@ const HERO_IMAGE =
 
 export default function SignIn() {
   const { signInGoogle, isNewUser, isAuthenticated } = useAuth();
-  const { promptAsync, idToken, configured } = useGoogleAuth();
+  const { promptAsync, idToken, error, configured } = useGoogleAuth();
   const router = useRouter();
   const signingInRef = useRef(false);
 
@@ -75,6 +74,12 @@ export default function SignIn() {
       })();
     }
   }, [idToken, signInGoogle]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Gagal Masuk', 'Autentikasi Google gagal. Coba lagi.');
+    }
+  }, [error]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -129,6 +134,8 @@ export default function SignIn() {
           <Text style={styles.description}>
             Bergabung dan rencanakan perjalanan seru bersama orang-orang tersayang.
           </Text>
+
+          <View style={{ flex: 1 }} />
 
           <TouchableOpacity
             style={styles.googleButton}
