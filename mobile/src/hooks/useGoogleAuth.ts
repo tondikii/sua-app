@@ -7,9 +7,9 @@ import { useAuthRequest } from 'expo-auth-session/providers/google';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const clientId = (() => {
-  const isExpoGo = Constants.appOwnership === 'expo';
+const isExpoGo = Constants.appOwnership === 'expo';
 
+const clientId = (() => {
   if (isExpoGo || Platform.OS === 'web') {
     return process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
   }
@@ -21,7 +21,9 @@ const clientId = (() => {
 
 const redirectUri = Platform.OS === 'web'
   ? (process.env.EXPO_PUBLIC_WEB_ORIGIN ?? window.location.origin)
-  : makeRedirectUri({ scheme: 'aturperjalanan' });
+  : isExpoGo
+    ? 'https://auth.expo.io/@sudutkode/atur-perjalanan'
+    : makeRedirectUri({ scheme: 'aturperjalanan' });
 
 /**
  * Capture the id_token from the URL hash at MODULE LOAD TIME — before Expo
