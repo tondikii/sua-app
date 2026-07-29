@@ -17,5 +17,6 @@ export function useTrips(tab: 'upcoming' | 'completed') {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor,
     staleTime: 30_000,
+    refetchOnMount: 'always',
   });
 }

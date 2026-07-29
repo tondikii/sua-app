@@ -13,5 +13,6 @@ export function useUserTrips(username: string) {
     queryFn: () => apiClient.get<TripsResponse>(`/users/${username}/trips`),
     enabled: !!username,
     staleTime: 30_000,
+    refetchOnMount: 'always',
   });
 }

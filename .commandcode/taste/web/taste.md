@@ -1,0 +1,7 @@
+# web
+- Constrain web layout to mobile phone max-width (e.g., 390-430px) so the web design mirrors the mobile app design exactly. Confidence: 0.75
+- The Expo/React Native application must also target the web platform (Expo web) — mobile and web are built from the same codebase, not separate projects. Confidence: 0.8
+- Prefers working "correctly and accurately to the design" — implementation must match Figma design specs exactly (dimensions, colors, spacing, font weights, component structure, shadows), not just functionally. Design fidelity is a first-class requirement. Confidence: 0.8
+- Design fidelity and functional e2e correctness are co-equal requirements — the user expects the implementation to match the Figma design pixel-perfectly AND to actually work end-to-end (API integration, data flow, all user interactions). "Pastikan fungsionalnya berfungsi, pastikan berhasil e2e seperti di workflow dan design" — both are non-negotiable and equally important. Confidence: 0.85
+- Every UI element on screen must have a clear design justification — unexplained/unauthorized buttons, icons, or components that don't appear in the Figma design are bugs that must be removed or corrected. "Button gajelas" (unclear/unnecessary buttons) are specifically called out as unacceptable. Confidence: 0.7
+- Prefers reusing existing Figma source code directly (the `.tsx` component files under `figma/src/app/components/`) rather than recreating design assets from scratch — the agent should extract and adapt the existing Figma components, not author new ones. Confidence: 0.85

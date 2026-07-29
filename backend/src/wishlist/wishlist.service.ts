@@ -52,6 +52,7 @@ export class WishlistService {
     const wishlists = await this.prisma.wishlist.findMany({
       where: {
         userId,
+        deletedAt: null,
         ...(priority ? { priorityLevel: priority as any } : {}),
         ...(tag ? { tags: { array_contains: [tag] } } : {}),
         ...(cursor ? { id: { lt: cursor } } : {}),
@@ -177,7 +178,7 @@ export class WishlistService {
     const allTags = wishlists.flatMap((w) => (w.tags as string[]) ?? []);
     const uniqueTags = [...new Set(allTags)].sort(); // Sort alphabetically
 
-    return { tags: uniqueTags };
+    return { data: uniqueTags };
   }
 
   /** Load a wishlist item and assert `userId` owns it. Returns the row. */

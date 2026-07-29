@@ -13,15 +13,15 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateTrip } from '@/features/trips/hooks/useCreateTrip';
+import { InviteBottomSheet } from '@/features/invitations/components/InviteBottomSheet';
 import { X } from '@/components/icons/X';
 import { Plus } from '@/components/icons/Plus';
+import { Info } from '@/components/icons/Info';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
-import { spacing } from '@/theme/spacing';
-import { radius } from '@/theme/radius';
 
-const WEEK_DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+const WEEK_DAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 const MONTH_NAMES = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
@@ -32,7 +32,7 @@ function getDaysInMonth(year: number, month: number) {
 }
 
 function getFirstDayOfWeek(year: number, month: number) {
-  return new Date(year, month, 1).getDay();
+  return (new Date(year, month, 1).getDay() + 6) % 7;
 }
 
 function formatDateISO(year: number, month: number, day: number) {
@@ -53,10 +53,65 @@ interface Candidate extends DateRange {
   id: string;
 }
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = ['00', '15', '30', '45'];
+
+function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t: string) => void; onClose: () => void }) {
+  const [h, m] = value.split(':');
+  const [selHour, setSelHour] = useState(h);
+  const [selMin, setSelMin] = useState(m);
+
+  return (
+    <View style={styles.timePickerContainer}>
+      <View style={styles.timePickerColumns}>
+        <View style={styles.timePickerCol}>
+          <Text style={styles.timePickerColLabel}>Jam</Text>
+          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
+            {HOURS.map((hour) => (
+              <TouchableOpacity
+                key={hour}
+                style={[styles.timePickerItem, selHour === hour && styles.timePickerItemActive]}
+                onPress={() => setSelHour(hour)}
+              >
+                <Text style={[styles.timePickerItemText, selHour === hour && styles.timePickerItemTextActive]}>{hour}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+        <View style={styles.timePickerCol}>
+          <Text style={styles.timePickerColLabel}>Menit</Text>
+          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
+            {MINUTES.map((min) => (
+              <TouchableOpacity
+                key={min}
+                style={[styles.timePickerItem, selMin === min && styles.timePickerItemActive]}
+                onPress={() => setSelMin(min)}
+              >
+                <Text style={[styles.timePickerItemText, selMin === min && styles.timePickerItemTextActive]}>{min}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+      <View style={styles.timePickerActions}>
+        <TouchableOpacity onPress={onClose} style={styles.timePickerCancel}>
+          <Text style={styles.timePickerCancelText}>Batal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => onChange(`${selHour}:${selMin}`)} style={styles.timePickerConfirm}>
+          <Text style={styles.timePickerConfirmText}>Pilih</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function CreateTripScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const createTrip = useCreateTrip();
+
+  const [createdTripId, setCreatedTripId] = useState<string | null>(null);
+  const [showInvite, setShowInvite] = useState(false);
 
   const [name, setName] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -64,6 +119,8 @@ export default function CreateTripScreen() {
   const [allDay, setAllDay] = useState(true);
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('17:00');
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   // Calendar state
   const today = new Date();
@@ -107,42 +164,50 @@ export default function CreateTripScreen() {
 
   const handleDayPress = useCallback((day: number) => {
     const iso = formatDateISO(calYear, calMonth, day);
+    // Clear date error on new selection
+    if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
 
     if (candidateMode) {
-      if (!activeCandidate || candidateSelectingEnd) {
-        // Selecting end date for active candidate
-        if (activeCandidate) {
-          const newCandidate: Candidate = {
-            id: `c${Date.now()}`,
-            startDate: activeCandidate.startDate,
-            endDate: iso >= activeCandidate.startDate ? iso : activeCandidate.startDate,
-          };
-          setCandidates((prev) => [...prev, newCandidate]);
-          setActiveCandidate(null);
-          setCandidateSelectingEnd(false);
-        }
-      } else {
+      if (!activeCandidate) {
         // Start selecting a new candidate
+        setActiveCandidate({ startDate: iso, endDate: iso });
+        setCandidateSelectingEnd(true);
+      } else if (candidateSelectingEnd) {
+        // Save candidate with end date
+        const newCandidate: Candidate = {
+          id: `c${Date.now()}`,
+          startDate: activeCandidate.startDate,
+          endDate: iso >= activeCandidate.startDate ? iso : activeCandidate.startDate,
+        };
+        setCandidates((prev) => [...prev, newCandidate]);
+        setActiveCandidate(null);
+        setCandidateSelectingEnd(false);
+      } else {
+        // Restart: tap again to pick new start
         setActiveCandidate({ startDate: iso, endDate: iso });
         setCandidateSelectingEnd(true);
       }
     } else {
       // Mode A: direct range
-      if (!dateRange || selectingEnd) {
-        if (dateRange && selectingEnd) {
-          const start = dateRange.startDate;
-          setDateRange({
-            startDate: start,
-            endDate: iso >= start ? iso : start,
-          });
-          setSelectingEnd(false);
-        }
+      if (!dateRange) {
+        // First selection — set start date
+        setDateRange({ startDate: iso, endDate: iso });
+        setSelectingEnd(true);
+      } else if (selectingEnd) {
+        // Second selection — set end date
+        const start = dateRange.startDate;
+        setDateRange({
+          startDate: start,
+          endDate: iso >= start ? iso : start,
+        });
+        setSelectingEnd(false);
       } else {
+        // Restart selection
         setDateRange({ startDate: iso, endDate: iso });
         setSelectingEnd(true);
       }
     }
-  }, [calYear, calMonth, candidateMode, activeCandidate, candidateSelectingEnd, dateRange, selectingEnd]);
+  }, [calYear, calMonth, candidateMode, activeCandidate, candidateSelectingEnd, dateRange, selectingEnd, errors.date]);
 
   const switchToCandidateMode = useCallback(() => {
     if (!candidateMode) {
@@ -193,8 +258,8 @@ export default function CreateTripScreen() {
           name: name.trim(),
           tags: tags.length > 0 ? tags : undefined,
           candidates: candidates.map((c) => ({
-            start_date: c.startDate,
-            end_date: c.endDate,
+            start_date: c.startDate + 'T00:00:00.000Z',
+            end_date: c.endDate + 'T00:00:00.000Z',
           })),
           voting_deadline: votingDeadline || undefined,
         };
@@ -202,8 +267,8 @@ export default function CreateTripScreen() {
         payload = {
           name: name.trim(),
           tags: tags.length > 0 ? tags : undefined,
-          start_date: dateRange.startDate,
-          end_date: dateRange.endDate,
+          start_date: dateRange.startDate + 'T00:00:00.000Z',
+          end_date: dateRange.endDate + 'T00:00:00.000Z',
           is_all_day: allDay,
           start_time: allDay ? undefined : startTime,
           end_time: allDay ? undefined : endTime,
@@ -213,16 +278,12 @@ export default function CreateTripScreen() {
       }
 
       const trip = await createTrip.mutateAsync(payload);
-      router.replace(`/trip/${trip.id}`);
+      setCreatedTripId(trip.id);
+      setShowInvite(true);
     } catch (err) {
       Alert.alert('Gagal', 'Terjadi kesalahan saat membuat perjalanan.');
     }
   }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, router]);
-
-  const isDayInRange = useCallback((day: number, start: string, end: string) => {
-    const iso = formatDateISO(calYear, calMonth, day);
-    return iso >= start && iso <= end;
-  }, [calYear, calMonth]);
 
   const isDaySelected = useCallback((day: number) => {
     const iso = formatDateISO(calYear, calMonth, day);
@@ -246,7 +307,14 @@ export default function CreateTripScreen() {
     return false;
   }, [calYear, calMonth, candidateMode, activeCandidate, candidates, dateRange]);
 
-  const submitDisabled = createTrip.isPending || (submitted && Object.keys(errors).length > 0);
+  const hasValidationErrors = useMemo(() => {
+    if (!name.trim()) return true;
+    if (candidateMode && candidates.length === 0) return true;
+    if (!candidateMode && !dateRange) return true;
+    return false;
+  }, [name, candidateMode, candidates, dateRange]);
+
+  const submitDisabled = createTrip.isPending || (submitted && hasValidationErrors);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -277,7 +345,7 @@ export default function CreateTripScreen() {
             placeholder="Masukkan nama perjalanan..."
             placeholderTextColor={colors.mutedLight}
             value={name}
-            onChangeText={setName}
+            onChangeText={(t) => { setName(t); if (errors.name) setErrors((prev) => ({ ...prev, name: undefined })); }}
           />
           {submitted && errors.name && (
             <Text style={styles.errorText}>{errors.name}</Text>
@@ -287,11 +355,11 @@ export default function CreateTripScreen() {
         {/* Tags */}
         <View style={styles.field}>
           <Text style={styles.label}>Tag</Text>
-          <View style={styles.tagsContainer}>
+          <View style={[styles.tagsContainer, (submitted && errors.date) && styles.inputError]}>
             {tags.map((tag) => (
               <TouchableOpacity key={tag} style={styles.tagChip} onPress={() => removeTag(tag)}>
                 <Text style={styles.tagText}>{tag}</Text>
-                <Text style={styles.tagRemove}>×</Text>
+                <X size={11} color={colors.teal} />
               </TouchableOpacity>
             ))}
             <TextInput
@@ -350,6 +418,8 @@ export default function CreateTripScreen() {
                     <Text style={[
                       styles.calDayText,
                       selected && styles.calDayTextSelected,
+                      inRange && styles.calDayTextInRange,
+                      day === 7 && { color: colors.muted },
                     ]}>
                       {day}
                     </Text>
@@ -368,37 +438,46 @@ export default function CreateTripScreen() {
         {!candidateMode && (
           <View style={styles.field}>
             <View style={styles.toggleRow}>
-              <Text style={styles.label}>Sepanjang hari</Text>
-              <Switch
-                value={allDay}
-                onValueChange={setAllDay}
-                trackColor={{ false: colors.border, true: colors.coralLight }}
-                thumbColor={allDay ? colors.coral : colors.muted}
-              />
+              <Text style={styles.label}>Waktu</Text>
+              <View style={styles.toggleRight}>
+                <Text style={[styles.allDayLabel, allDay && styles.allDayLabelActive]}>Sepanjang hari</Text>
+                <Switch
+                  value={allDay}
+                  onValueChange={(v) => { setAllDay(v); if (!v) setShowStartPicker(false); }}
+                  trackColor={{ false: colors.border, true: colors.coralLight }}
+                  thumbColor={allDay ? colors.coral : colors.muted}
+                />
+              </View>
             </View>
             {!allDay && (
               <View style={styles.timeRow}>
                 <View style={styles.timeField}>
                   <Text style={styles.timeLabel}>Mulai</Text>
-                  <TextInput
-                    style={styles.timeInput}
-                    placeholder="08:00"
-                    placeholderTextColor={colors.mutedLight}
-                    value={startTime}
-                    onChangeText={setStartTime}
-                  />
+                  <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowStartPicker(true); setShowEndPicker(false); }} activeOpacity={0.7}>
+                    <Text style={styles.timeValue}>{startTime}</Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.timeField}>
                   <Text style={styles.timeLabel}>Selesai</Text>
-                  <TextInput
-                    style={styles.timeInput}
-                    placeholder="17:00"
-                    placeholderTextColor={colors.mutedLight}
-                    value={endTime}
-                    onChangeText={setEndTime}
-                  />
+                  <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowEndPicker(true); setShowStartPicker(false); }} activeOpacity={0.7}>
+                    <Text style={styles.timeValue}>{endTime}</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
+            )}
+            {showStartPicker && (
+              <TimePicker
+                value={startTime}
+                onChange={(t) => { setStartTime(t); setShowStartPicker(false); }}
+                onClose={() => setShowStartPicker(false)}
+              />
+            )}
+            {showEndPicker && (
+              <TimePicker
+                value={endTime}
+                onChange={(t) => { setEndTime(t); setShowEndPicker(false); }}
+                onClose={() => setShowEndPicker(false)}
+              />
             )}
           </View>
         )}
@@ -412,6 +491,7 @@ export default function CreateTripScreen() {
           >
             <Plus size={16} color={colors.coral} />
             <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+            <Info size={15} color={colors.coral} />
           </TouchableOpacity>
         )}
 
@@ -461,6 +541,7 @@ export default function CreateTripScreen() {
               >
                 <Plus size={16} color={colors.coral} />
                 <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+                <Info size={15} color={colors.coral} />
               </TouchableOpacity>
             )}
           </View>
@@ -483,10 +564,19 @@ export default function CreateTripScreen() {
 
       {/* Footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        {submitted && Object.keys(errors).length > 1 && (
-          <Text style={styles.footerError}>
-            {Object.keys(errors).length} hal wajib belum lengkap
-          </Text>
+        {submitted && Object.keys(errors).length > 0 && (
+          <View style={styles.footerError}>
+            <View style={styles.footerErrorIcon}>
+              <Text style={styles.footerErrorIconText}>!</Text>
+            </View>
+            <View style={styles.footerErrorContent}>
+              <Text style={styles.footerErrorSummary}>
+                {Object.keys(errors).length} hal wajib belum lengkap
+              </Text>
+              {errors.name && <Text style={styles.footerErrorItem}>{errors.name}</Text>}
+              {errors.date && <Text style={styles.footerErrorItem}>{errors.date}</Text>}
+            </View>
+          </View>
         )}
         <TouchableOpacity
           style={[styles.submitButton, submitDisabled && styles.submitButtonDisabled]}
@@ -499,6 +589,21 @@ export default function CreateTripScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {showInvite && createdTripId && (
+        <InviteBottomSheet
+          visible={showInvite}
+          tripId={createdTripId}
+          onClose={() => {
+            setShowInvite(false);
+            router.replace(`/trip/${createdTripId}`);
+          }}
+          onEnterTrip={() => {
+            setShowInvite(false);
+            router.replace(`/trip/${createdTripId}`);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -577,6 +682,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     alignItems: 'center',
+    backgroundColor: colors.light,
+    borderRadius: 14,
+    padding: 12,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    minHeight: 50,
   },
   tagChip: {
     flexDirection: 'row',
@@ -592,11 +704,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.teal,
   },
-  tagRemove: {
-    fontSize: 14,
-    color: colors.teal,
-    fontWeight: '700',
-  },
   tagInput: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_400Regular',
@@ -610,9 +717,9 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1.5,
     borderColor: colors.border,
-    shadowColor: colors.shadow,
+    shadowColor: '#1A1A2E',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
+    shadowOpacity: 0.08,
     shadowRadius: 14,
     elevation: 3,
   },
@@ -632,7 +739,7 @@ const styles = StyleSheet.create({
   },
   calMonthLabel: {
     fontSize: 15,
-    fontFamily: 'PlusJakartaSans_700Bold',
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: colors.charcoal,
   },
   calWeekDays: {
@@ -682,35 +789,133 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: 'PlusJakartaSans_700Bold',
   },
+  calDayTextInRange: {
+    color: colors.coral,
+    fontFamily: 'PlusJakartaSans_700Bold',
+  },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  timeRow: {
+  toggleRight: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    alignItems: 'center',
+    gap: 8,
   },
-  timeField: {
-    flex: 1,
-    gap: 4,
-  },
-  timeLabel: {
+  allDayLabel: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.muted,
   },
-  timeInput: {
+  allDayLabelActive: {
+    color: colors.coral,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 10,
+  },
+  timeField: {
+    flex: 1,
+    gap: 6,
+  },
+  timeLabel: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+  },
+  timeInputBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: colors.light,
     borderRadius: 12,
+    padding: 11,
     paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.charcoal,
     borderWidth: 1.5,
     borderColor: colors.border,
+  },
+  timeValue: {
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.charcoal,
+  },
+  timePickerContainer: {
+    marginTop: 10,
+    padding: 12,
+    paddingHorizontal: 10,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  timePickerColumns: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  timePickerCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  timePickerColLabel: {
+    fontSize: 10,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.muted,
+    marginBottom: 6,
+  },
+  timePickerList: {
+    maxHeight: 140,
+    borderRadius: 10,
+    backgroundColor: colors.light,
+  },
+  timePickerItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+  },
+  timePickerItemActive: {
+    backgroundColor: colors.coralLight,
+  },
+  timePickerItemText: {
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+  },
+  timePickerItemTextActive: {
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.coral,
+  },
+  timePickerActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 10,
+  },
+  timePickerCancel: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  timePickerCancelText: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+  },
+  timePickerConfirm: {
+    backgroundColor: colors.coral,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  timePickerConfirmText: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.white,
   },
   addCandidateButton: {
     flexDirection: 'row',
@@ -725,7 +930,7 @@ const styles = StyleSheet.create({
   },
   addCandidateHighlighted: {
     borderColor: colors.coral,
-    backgroundColor: `${colors.coral}08`,
+    backgroundColor: '#FFF5F0',
   },
   addCandidateText: {
     fontSize: 13,
@@ -786,10 +991,45 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   footerError: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: colors.dangerLight,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    borderRadius: 12,
+    padding: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  footerErrorContent: {
+    flex: 1,
+  },
+  footerErrorIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  footerErrorIconText: {
     fontSize: 12,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.white,
+  },
+  footerErrorSummary: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.danger,
+    marginBottom: 4,
+  },
+  footerErrorItem: {
+    fontSize: 11,
     fontFamily: 'PlusJakartaSans_500Medium',
     color: colors.danger,
-    marginBottom: 8,
+    lineHeight: 16,
   },
   submitButton: {
     height: 54,

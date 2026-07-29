@@ -17,6 +17,9 @@ import { useRespondInvitation } from '@/features/invitations/hooks/useRespondInv
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { Bell } from '@/components/icons/Bell';
 import { Calendar } from '@/components/icons/Calendar';
+import { Send } from '@/components/icons/Send';
+import { Check } from '@/components/icons/Check';
+import { ListChecks } from '@/components/icons/ListChecks';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
@@ -24,16 +27,18 @@ import { avatarColorFor } from '@/theme/colors';
 import { formatNotificationTime } from '@/features/trips/components/TripDateUtils';
 import type { AppNotification, NotificationType } from '@atur-perjalanan/shared-types';
 
-function getNotificationIcon(type: NotificationType): { emoji: string; bg: string } {
+type NotifIconInfo = { icon: React.ReactNode; bg: string };
+
+function getNotificationIcon(type: NotificationType): NotifIconInfo {
   switch (type) {
     case 'invite':
-      return { emoji: '✈️', bg: colors.coralLight };
+      return { icon: <Send size={10} color={colors.coral} />, bg: colors.coralLight };
     case 'voting_deadline':
-      return { emoji: '🗳️', bg: colors.amberLight };
+      return { icon: <Check size={10} color={colors.amber} />, bg: colors.amberLight };
     case 'activity_update':
-      return { emoji: '📋', bg: colors.tealLight };
+      return { icon: <ListChecks size={10} color={colors.teal} />, bg: colors.tealLight };
     default:
-      return { emoji: '🔔', bg: colors.light };
+      return { icon: <Bell size={10} color={colors.muted} />, bg: colors.light };
   }
 }
 
@@ -66,7 +71,7 @@ function NotificationCard({
   onAccept?: () => void;
   onDecline?: () => void;
 }) {
-  const { emoji, bg } = getNotificationIcon(notification.type);
+  const { icon, bg } = getNotificationIcon(notification.type);
   const actor = notification.actor;
   const timeText = formatNotificationTime(notification.created_at);
   const text = getNotificationText(notification);
@@ -94,7 +99,7 @@ function NotificationCard({
             </View>
           )}
           <View style={[styles.iconBadge, { backgroundColor: bg }]}>
-            <Text style={styles.iconEmoji}>{emoji}</Text>
+            {icon}
           </View>
         </View>
 
@@ -252,9 +257,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.white,
+    paddingHorizontal: 22,
+    paddingTop: 12,
+    paddingBottom: 14,
+    backgroundColor: colors.light,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -262,9 +268,10 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: colors.light,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.cardCompact,
   },
   headerTitle: {
     flex: 1,
@@ -278,8 +285,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   markAllText: {
-    fontSize: 12,
-    fontFamily: 'PlusJakartaSans_600SemiBold',
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.coral,
   },
   listContent: {
@@ -355,9 +362,6 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconEmoji: {
-    fontSize: 10,
   },
   textContent: {
     flex: 1,

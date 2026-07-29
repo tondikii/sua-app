@@ -155,28 +155,16 @@ export class UsersService {
 
     const isOwner = user.id === viewerUserId;
 
-    // Non-owner: only public trips
+    // Fetch trips using the same approach as listTrips (include not select)
     const trips = await this.prisma.trip.findMany({
       where: {
         creatorId: user.id,
+        deletedAt: null,
         ...(isOwner ? {} : { isPublic: true }),
         ...(cursor ? { id: { lt: cursor } } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      take: take + 1,
-      select: {
-        id: true,
-        name: true,
-        tags: true,
-        status: true,
-        startDate: true,
-        endDate: true,
-        isAllDay: true,
-        startTime: true,
-        endTime: true,
-        isPublic: true,
-        votingDeadline: true,
-        createdAt: true,
+      include: {
         coverDocument: { select: { storageUrl: true } },
         _count: { select: { participants: true } },
         participants: {
@@ -191,6 +179,7 @@ export class UsersService {
       },
     });
 
+    // Manual pagination since Prisma 5.22 + Node 24 has a bug with `take` + `_count`
     const hasMore = trips.length > take;
     const results = hasMore ? trips.slice(0, take) : trips;
 
@@ -198,7 +187,7 @@ export class UsersService {
       data: results.map((t) => ({
         id: t.id,
         name: t.name,
-        tags: t.tags as string[],
+        tags: (t.tags as string[]) ?? [],
         status: t.status,
         start_date: toDateOnly(t.startDate),
         end_date: toDateOnly(t.endDate),

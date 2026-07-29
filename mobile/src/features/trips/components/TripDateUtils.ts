@@ -17,9 +17,9 @@ function parseDate(dateStr: string): Date {
 
 function formatTime12(time: string): string {
   const [h, m] = time.split(':').map(Number);
-  const period = h >= 12 ? '' : '';
+  const period = h >= 12 ? 'PM' : 'AM';
   const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${hour}:${String(m).padStart(2, '0')}`;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
 export function formatDateRange(

@@ -17,3 +17,19 @@
 - Expects the agent to proactively manage backend infrastructure (starting dev servers, killing zombie processes on occupied ports, verifying service health) when connection errors arise — treats "backend not running" as an agent responsibility, not a user task. Confidence: 0.7
 
 - Reports infrastructure issues (connection refused, port conflicts) the same way as code bugs — expects the agent to autonomously distinguish between actual code problems and missing/stale services, and fix accordingly. Confidence: 0.65
+
+- Prefers a structured "audit-first, fix-later" workflow when addressing UI/design discrepancies — first comprehensively audit and list all differences between Figma design and implementation in a detailed plan, then fix them systematically one by one, rather than making ad-hoc fixes without a prior comparison. Confidence: 0.75
+
+- Form validation errors must clear reactively when the user edits the corresponding field — error indicators should not persist after the user begins correcting the input, even if the form hasn't been re-submitted. "When edited, the error should disappear" is the expected behavior. Confidence: 0.85
+
+- For runtime/API debugging, expects fast diagnosis and immediate fixes — gets frustrated when the agent spends excessive time (15-20+ minutes) exploring/reading files without producing code changes. Prefers the agent to quickly form a hypothesis, apply the fix, and verify, rather than exhaustive exploration. "Audit-first" applies to design tasks, not runtime bug fixing. Confidence: 0.85
+
+- When implementing a new feature that is a variant of an existing one (e.g., "same API as trips but filtered by user"), expects the agent to immediately recognize the pattern similarity and reuse the existing implementation rather than reinventing or experimenting with alternative approaches (e.g., raw SQL workarounds). "kan simple tinggal apinya sama dengan yang trips hanya saja di filter by user" — the agent should diagnose which part (BE/FE) needs the change, then make a targeted, pattern-consistent fix. Confidence: 0.9
+
+- When stuck in a debugging loop (repeated failed fixes on a live server), prefers stepping back to run existing e2e tests first to verify environment health and isolate the problem, rather than continuing to try ad-hoc fixes against the running server. "Pelan-pelan mungkin bisa coba mulai dari run e2e testnya" — slow down, use tests as the systematic starting point. Confidence: 0.8
+
+- Shares full curl commands (copied from browser DevTools / mobile webview network tab) to help the agent reproduce and debug API issues — expects the agent to run them directly rather than asking for simplified reproduction steps. Confidence: 0.75
+
+- When repeatedly restarting backend processes, the agent must verify port is actually free (confirm no stale process owns it) before starting a new one — EADDRINUSE from zombie processes causes confusing false negatives where old code handles requests while new code appears to fail. Agent should use `lsof -i :PORT` after killing to confirm PID ownership. Confidence: 0.8
+
+- Prefers full-stack feature ownership — when implementing a feature, the agent must fix ALL necessary layers (mobile UI, mobile hooks, backend services, shared packages, tests) proactively, not just the layer mentioned in the request. The user explicitly expects "perbaiki semua sisi yang diperlukan entah dari mobile ataupun be" (fix all necessary sides whether mobile or backend). The agent should autonomously diagnose which layers need changes across the entire stack. Confidence: 0.85

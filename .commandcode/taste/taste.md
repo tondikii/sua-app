@@ -6,22 +6,32 @@
 
 - `.env.example` and environment variables must accurately reflect platform/service requirements — e.g., iOS and Android use separate client IDs from Google Cloud Console and must not be conflated into a single misleading variable. Confidence: 0.8
 
+- When updating an environment variable's value in `.env`, must also update the same value in `.env.example` simultaneously to keep both files in sync. Confidence: 0.85
+
 # web
+See [web/taste.md](web/taste.md)
+# ui/form
 
-- Constrain web layout to mobile phone max-width (e.g., 390-430px) so the web design mirrors the mobile app design exactly. Confidence: 0.75
+- Time inputs should use a structured picker component (scrollable hour/minute columns with confirm/cancel), not a free-form TextInput — the user explicitly wants a proper "time selector" that feels nicer than a raw text field for entering structured data like time. Confidence: 0.8
 
-- The Expo/React Native application must also target the web platform (Expo web) — mobile and web are built from the same codebase, not separate projects. Confidence: 0.8
+# ui/navigation
 
-- Prefers working "correctly and accurately to the design" — implementation must match Figma design specs exactly (dimensions, colors, spacing, font weights, component structure, shadows), not just functionally. Design fidelity is a first-class requirement. Confidence: 0.8
+- Nested `<Tabs>` layouts that exist only for route/screen organization (not actual bottom navigation) must hide the tab bar via `tabBarStyle: { display: 'none' }` — sub-screens like trip detail use custom header tabs for navigation, and the bottom tab bar should not appear there. The main app-level `(tabs)` group is the only place the bottom tab bar should be visible. Confidence: 0.8
 
-- Prefers reusing existing Figma source code directly (the `.tsx` component files under `figma/src/app/components/`) rather than recreating design assets from scratch — the agent should extract and adapt the existing Figma components, not author new ones. Confidence: 0.85
+# ui/icons
+
+- **Zero tolerance for emoji in UI** — SVG icon components must be used for ALL UI elements; emoji must never appear in production UI as icons or decorative elements (e.g., `🔍` → `Search` SVG, `🕐` → `Clock` SVG, `✈️🗳️📋🔔` → dedicated notification-type SVG icons, `›` → `ChevronRight`, `×` → `X`). This is a hard requirement, not a preference. Confidence: 0.92
+
+- When a needed icon component does not exist, creates it following the project's existing icon patterns (same file structure, same `{size, color}` props interface, same react-native-svg approach) rather than using text/emoji workarounds or inline SVGs. Confidence: 0.8
+
+- On web, `<TextInput>` elements show a browser-default focus outline that must be explicitly removed via `outlineStyle: 'none'` (web-only, `Platform.OS === 'web'`) on every TextInput style — the user considers this a visual bug if not handled. Apply consistently across all screens with inputs (search, forms, edit profile, wishlist sheets). Confidence: 0.7
 
 # workflow
 See [workflow/taste.md](workflow/taste.md)
 # communication
 
 - Communication is a mix of Indonesian and English; agent may respond in Indonesian, but all code must be written in English (variable names, comments, strings, file content). Confidence: 0.9
-- Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.7
+- Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.8
 
 # architecture
 See [architecture/taste.md](architecture/taste.md)

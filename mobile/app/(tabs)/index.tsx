@@ -5,7 +5,6 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
-  Text,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTrips } from '@/features/trips/hooks/useTrips';
@@ -152,7 +151,6 @@ export default function HomeScreen() {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.coral} />
-          <Text style={styles.loadingText}>Memuat perjalananmu...</Text>
         </View>
       );
     }
@@ -163,16 +161,18 @@ export default function HomeScreen() {
 
     if (activeTab === 'selesai') {
       return (
-        <View style={styles.emptyGeneric}>
-          <Text style={styles.emptyText}>Belum ada perjalanan selesai</Text>
-        </View>
+        <EmptyTripsState
+          title="Belum ada perjalanan selesai"
+          description="Perjalanan yang sudah selesai akan muncul di sini."
+        />
       );
     }
 
     return (
-      <View style={styles.emptyGeneric}>
-        <Text style={styles.emptyText}>Tidak ada undangan</Text>
-      </View>
+      <EmptyTripsState
+        title="Tidak ada undangan"
+        description="Undangan perjalanan dari teman akan muncul di sini."
+      />
     );
   }, [activeTab, isLoading, handleCreateTrip]);
 
@@ -236,22 +236,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 80,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
-  },
-  emptyGeneric: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
   },
 });

@@ -248,7 +248,7 @@ describe('WishlistService', () => {
 
       const result = await service.getWishlistTags(OWNER);
 
-      expect(result.tags).toEqual([]);
+      expect(result.data).toEqual([]);
     });
 
     it('returns sorted unique tags from user wishlists', async () => {
@@ -260,7 +260,7 @@ describe('WishlistService', () => {
 
       const result = await service.getWishlistTags(OWNER);
 
-      expect(result.tags).toEqual(['#kuliner', '#pantai', '#snorkeling', '#sunset']);
+      expect(result.data).toEqual(['#kuliner', '#pantai', '#snorkeling', '#sunset']);
     });
 
     it('excludes soft-deleted wishlist tags', async () => {
@@ -271,7 +271,7 @@ describe('WishlistService', () => {
 
       const result = await service.getWishlistTags(OWNER);
 
-      expect(result.tags).toEqual(['#pantai']);
+      expect(result.data).toEqual(['#pantai']);
       expect(prisma.wishlist.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ deletedAt: null }),
@@ -288,7 +288,7 @@ describe('WishlistService', () => {
 
       const result = await service.getWishlistTags(OWNER);
 
-      expect(result.tags).toEqual(['#alam']);
+      expect(result.data).toEqual(['#alam']);
     });
   });
 });
