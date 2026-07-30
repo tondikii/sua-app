@@ -13,6 +13,9 @@ See [web/taste.md](web/taste.md)
 # ui/form
 
 - Time inputs should use a structured picker component (scrollable hour/minute columns with confirm/cancel), not a free-form TextInput — the user explicitly wants a proper "time selector" that feels nicer than a raw text field for entering structured data like time. Confidence: 0.8
+- TimePicker component must be extracted as a shared reusable component (e.g., `components/TimePicker.tsx`) and used across all screens that need time input (CreateTrip, ActivityFormSheet, etc.) — never duplicated inline per screen. Confidence: 0.85
+- When a time picker input box is focused/active, it must show a visible focus indicator (dark/black border) on the input box itself, not just when the picker dropdown is open. Confidence: 0.8
+- Tag input should fill the full width of its container (use `flex: 1`), not be constrained to a fixed minimum width — the tag trigger/input should span the entire available space. Confidence: 0.85
 
 # ui/navigation
 
@@ -25,6 +28,8 @@ See [web/taste.md](web/taste.md)
 - When a needed icon component does not exist, creates it following the project's existing icon patterns (same file structure, same `{size, color}` props interface, same react-native-svg approach) rather than using text/emoji workarounds or inline SVGs. Confidence: 0.8
 
 - On web, `<TextInput>` elements show a browser-default focus outline that must be explicitly removed via `outlineStyle: 'none'` (web-only, `Platform.OS === 'web'`) on every TextInput style — the user considers this a visual bug if not handled. Apply consistently across all screens with inputs (search, forms, edit profile, wishlist sheets). Confidence: 0.7
+
+- On web, focused TextInput elements should show a custom visible focus border (e.g., black/dark border) in addition to removing the browser default outline — the focus indicator should be a deliberate design choice, not just outline removal. Confidence: 0.75
 
 # workflow
 See [workflow/taste.md](workflow/taste.md)

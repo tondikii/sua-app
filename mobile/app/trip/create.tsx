@@ -18,6 +18,7 @@ import { X } from '@/components/icons/X';
 import { Plus } from '@/components/icons/Plus';
 import { Info } from '@/components/icons/Info';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { TimePicker } from '@/components/TimePicker';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 
@@ -53,58 +54,6 @@ interface Candidate extends DateRange {
   id: string;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MINUTES = ['00', '15', '30', '45'];
-
-function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t: string) => void; onClose: () => void }) {
-  const [h, m] = value.split(':');
-  const [selHour, setSelHour] = useState(h);
-  const [selMin, setSelMin] = useState(m);
-
-  return (
-    <View style={styles.timePickerContainer}>
-      <View style={styles.timePickerColumns}>
-        <View style={styles.timePickerCol}>
-          <Text style={styles.timePickerColLabel}>Jam</Text>
-          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
-            {HOURS.map((hour) => (
-              <TouchableOpacity
-                key={hour}
-                style={[styles.timePickerItem, selHour === hour && styles.timePickerItemActive]}
-                onPress={() => setSelHour(hour)}
-              >
-                <Text style={[styles.timePickerItemText, selHour === hour && styles.timePickerItemTextActive]}>{hour}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        <View style={styles.timePickerCol}>
-          <Text style={styles.timePickerColLabel}>Menit</Text>
-          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
-            {MINUTES.map((min) => (
-              <TouchableOpacity
-                key={min}
-                style={[styles.timePickerItem, selMin === min && styles.timePickerItemActive]}
-                onPress={() => setSelMin(min)}
-              >
-                <Text style={[styles.timePickerItemText, selMin === min && styles.timePickerItemTextActive]}>{min}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-      <View style={styles.timePickerActions}>
-        <TouchableOpacity onPress={onClose} style={styles.timePickerCancel}>
-          <Text style={styles.timePickerCancelText}>Batal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onChange(`${selHour}:${selMin}`)} style={styles.timePickerConfirm}>
-          <Text style={styles.timePickerConfirmText}>Pilih</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
 export default function CreateTripScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -121,14 +70,20 @@ export default function CreateTripScreen() {
   const [endTime, setEndTime] = useState('17:00');
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  // Calendar state
+  // Calendar state — initial selected = today
   const today = new Date();
+  const initialStartDate = formatDateISO(today.getFullYear(), today.getMonth(), today.getDate());
+  const initialEndDate = formatDateISO(today.getFullYear(), today.getMonth(), today.getDate());
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [calYear, setCalYear] = useState(today.getFullYear());
 
   // Mode A: direct date range
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | null>({
+    startDate: initialStartDate,
+    endDate: initialEndDate,
+  });
   const [selectingEnd, setSelectingEnd] = useState(false);
 
   // Mode B: candidates
@@ -453,31 +408,41 @@ export default function CreateTripScreen() {
               <View style={styles.timeRow}>
                 <View style={styles.timeField}>
                   <Text style={styles.timeLabel}>Mulai</Text>
-                  <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowStartPicker(true); setShowEndPicker(false); }} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    style={[styles.timeInputBox, focusedField === 'startTime' && styles.timeInputBoxFocused]}
+                    onPress={() => { setShowStartPicker(true); setShowEndPicker(false); setFocusedField('startTime'); }}
+                    activeOpacity={0.7}
+                  >
                     <Text style={styles.timeValue}>{startTime}</Text>
                   </TouchableOpacity>
+                  {showStartPicker && (
+                    <TimePicker
+                      value={startTime}
+                      onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
+                      onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
+                      focused={focusedField === 'startTime'}
+                    />
+                  )}
                 </View>
                 <View style={styles.timeField}>
                   <Text style={styles.timeLabel}>Selesai</Text>
-                  <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowEndPicker(true); setShowStartPicker(false); }} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    style={[styles.timeInputBox, focusedField === 'endTime' && styles.timeInputBoxFocused]}
+                    onPress={() => { setShowEndPicker(true); setShowStartPicker(false); setFocusedField('endTime'); }}
+                    activeOpacity={0.7}
+                  >
                     <Text style={styles.timeValue}>{endTime}</Text>
                   </TouchableOpacity>
+                  {showEndPicker && (
+                    <TimePicker
+                      value={endTime}
+                      onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
+                      onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
+                      focused={focusedField === 'endTime'}
+                    />
+                  )}
                 </View>
               </View>
-            )}
-            {showStartPicker && (
-              <TimePicker
-                value={startTime}
-                onChange={(t) => { setStartTime(t); setShowStartPicker(false); }}
-                onClose={() => setShowStartPicker(false)}
-              />
-            )}
-            {showEndPicker && (
-              <TimePicker
-                value={endTime}
-                onChange={(t) => { setEndTime(t); setShowEndPicker(false); }}
-                onClose={() => setShowEndPicker(false)}
-              />
             )}
           </View>
         )}
@@ -835,6 +800,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1.5,
     borderColor: colors.border,
+  },
+  timeInputBoxFocused: {
+    borderColor: colors.charcoal,
+    borderWidth: 2,
   },
   timeValue: {
     fontSize: 14,

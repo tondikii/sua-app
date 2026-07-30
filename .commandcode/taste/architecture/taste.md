@@ -15,3 +15,15 @@
 - Proactively cleans up unused imports and merges duplicate imports from the same module (e.g., `import { colors } from '@/theme/colors'` + `import { avatarColorFor } from '@/theme/colors'` → single import) when editing a file. Confidence: 0.7
 
 - When Prisma has version-specific bugs (e.g., 5.22 + Node 24 `take` validator regression), prefers falling back to `$queryRawUnsafe` with hand-written SQL rather than endlessly trying different ORM syntax permutations — pragmatic "bypass the bug" approach over "work around within the ORM." Confidence: 0.7
+
+- Prefer popup/dropdown menus over full-screen navigation for secondary management actions (e.g., Kelola Trip should be a popup menu from the header, not a separate routed screen). Confidence: 0.85
+
+- Edit screens should reuse the create screen component with an edit state flag (e.g., EditTrip reuses CreateTrip screen with pre-filled data and "Edit Perjalanan" title) rather than building a separate screen. Confidence: 0.85
+
+- Activity creation form should not include a "Jenis" (kind/type) selector field — the kind is determined by context or defaults per the design spec; extra fields not in the design are bugs. Confidence: 0.85
+
+- Backend API validation should defensively trim whitespace from time inputs before applying strict format validation (e.g., `.trim()` on start_time and end_time before Zod regex check) to handle client-side formatting inconsistencies. Confidence: 0.8
+
+- Calendar date picker should default to today's date as the initial selected date when first opened. Confidence: 0.85
+
+- Navigation back actions should gracefully handle an empty navigation stack (e.g., after browser refresh) by falling back to a default route instead of throwing an error. Confidence: 0.85

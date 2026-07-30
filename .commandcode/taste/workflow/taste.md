@@ -33,3 +33,5 @@
 - When repeatedly restarting backend processes, the agent must verify port is actually free (confirm no stale process owns it) before starting a new one — EADDRINUSE from zombie processes causes confusing false negatives where old code handles requests while new code appears to fail. Agent should use `lsof -i :PORT` after killing to confirm PID ownership. Confidence: 0.8
 
 - Prefers full-stack feature ownership — when implementing a feature, the agent must fix ALL necessary layers (mobile UI, mobile hooks, backend services, shared packages, tests) proactively, not just the layer mentioned in the request. The user explicitly expects "perbaiki semua sisi yang diperlukan entah dari mobile ataupun be" (fix all necessary sides whether mobile or backend). The agent should autonomously diagnose which layers need changes across the entire stack. Confidence: 0.85
+
+- When a user refreshes the browser and presses back, the app should handle the empty navigation stack gracefully by redirecting to the home/default route instead of showing an error. Confidence: 0.85
