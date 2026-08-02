@@ -6,6 +6,7 @@ export function useMarkChatRead(tripId: string) {
   return useMutation<void>({
     mutationFn: () => apiClient.put<void>(`/trips/${tripId}/messages/read`),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['messages', tripId] });
       qc.invalidateQueries({ queryKey: ['trip', tripId] });
     },
   });

@@ -4,9 +4,9 @@ import { getDaysInRange, getDayLabel } from '@/features/trips/components/TripDat
 export type TimeState = 'past' | 'present' | 'future' | 'scheduled';
 
 export interface ItineraryDay {
+  dayNumber: number;
   date: string;
   dayLabel: string;
-  dayIndex: number;
   windowStart: string;
   windowEnd: string;
   items: TripActivity[];
@@ -55,36 +55,73 @@ export function buildItineraryDays(
   activities: TripActivity[],
   startDate: string | null,
   endDate: string | null,
-  _tripStatus: string,
+  tripStatus: string,
 ): ItineraryDay[] {
-  if (!startDate || !endDate) {
-    // No dates (voting pending) — group all activities as a single day
-    const sorted = [...activities].sort((a, b) => a.start_time.localeCompare(b.start_time));
-    return [{
-      date: '',
-      dayLabel: 'Tanggal sedang divoting',
-      dayIndex: 0,
-      windowStart: DEFAULT_WINDOW_START,
-      windowEnd: DEFAULT_WINDOW_END,
-      items: sorted,
-    }];
+  // Group activities by day_number
+  const dayMap = new Map<number, TripActivity[]>();
+  for (const activity of activities) {
+    const dn = activity.day_number ?? 1;
+    if (!dayMap.has(dn)) dayMap.set(dn, []);
+    dayMap.get(dn)!.push(activity);
   }
 
-  const days = getDaysInRange(startDate, endDate);
-  return days.map((date, i) => {
-    const dayActivities = activities
-      .filter((a) => a.activity_date === date)
-      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  // Compute total trip days from date range (for fixed trips)
+  let tripDays = 1;
+  if (startDate && endDate) {
+    const days = getDaysInRange(startDate, endDate);
+    tripDays = days.length;
+  }
 
-    return {
+  // Max day_number from activities (at least 1)
+  const maxActivityDay = dayMap.size > 0 ? Math.max(...dayMap.keys()) : 1;
+
+  // Total days = max of trip duration or highest activity day_number
+  const totalDays = Math.max(tripDays, maxActivityDay);
+
+  // Build day entries
+  const result: ItineraryDay[] = [];
+  const daysRange = startDate ? getDaysInRange(startDate, endDate ?? startDate) : null;
+
+  for (let i = 0; i < totalDays; i++) {
+    const dayNumber = i + 1;
+    const items = (dayMap.get(dayNumber) ?? []).sort((a, b) =>
+      a.start_time.localeCompare(b.start_time),
+    );
+
+    const date = daysRange?.[i] ?? '';
+    const dayLabel = tripStatus === 'voting_pending' || !date
+      ? `Hari ${dayNumber}`
+      : getDayLabel(date, i);
+
+    // Window: extend to 24:00 when a next day exists, start at 00:00 when a previous day exists.
+    const hasNextDay = dayNumber < totalDays;
+    const hasPrevDay = dayNumber > 1;
+    const windowStart = hasPrevDay ? '00:00' : DEFAULT_WINDOW_START;
+    const windowEnd = hasNextDay ? '24:00' : DEFAULT_WINDOW_END;
+
+    result.push({
+      dayNumber,
       date,
-      dayLabel: getDayLabel(date, i),
-      dayIndex: i,
+      dayLabel,
+      windowStart,
+      windowEnd,
+      items,
+    });
+  }
+
+  // If no activities and no dates, show a single day
+  if (result.length === 0) {
+    result.push({
+      dayNumber: 1,
+      date: '',
+      dayLabel: tripStatus === 'voting_pending' ? 'Hari 1' : 'Hari 1',
       windowStart: DEFAULT_WINDOW_START,
       windowEnd: DEFAULT_WINDOW_END,
-      items: dayActivities,
-    };
-  });
+      items: [],
+    });
+  }
+
+  return result;
 }
 
 export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
@@ -119,6 +156,16 @@ export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
       startTime: item.start_time,
       endTime: item.end_time,
       activity: item,
+    });
+  }
+
+  // Trailing gap: after the last activity until the day window ends.
+  const lastItem = items[items.length - 1];
+  if (lastItem.end_time < day.windowEnd) {
+    segments.push({
+      type: 'gap',
+      startTime: lastItem.end_time,
+      endTime: day.windowEnd,
     });
   }
 
@@ -157,7 +204,7 @@ export const TIME_STATE_META: Record<TimeState, {
   future: {
     dotColor: '#4ECDC4',
     ringColor: '#EDF9F8',
-    timeColor: '#4ECDC4',
+    timeColor: '#1A1A2E',
     cardBorderColor: 'rgba(78,205,196,0.22)',
     opacity: 1,
   },

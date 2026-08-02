@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -37,6 +38,23 @@ export class ActivityController {
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.activityService.listActivities(tripId, user.userId);
+  }
+
+  /**
+   * POST /v1/trips/:tripId/activities/sync-maps-thumbnail
+   * Resolve the Google Maps thumbnail for a pasted maps link ("Sinkron Maps").
+   */
+  @Post(':tripId/activities/sync-maps-thumbnail')
+  @HttpCode(HttpStatus.OK)
+  async syncMapsThumbnail(
+    @Param('tripId', ParseUUIDPipe) tripId: string,
+    @Body() body: { maps_link: string },
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    if (!body.maps_link || !/^https?:\/\//.test(body.maps_link)) {
+      throw new BadRequestException('maps_link must be a valid URL');
+    }
+    return this.activityService.syncMapsThumbnail(tripId, user.userId, body.maps_link);
   }
 
   /**

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { VotingService } from './voting.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 describe('VotingService', () => {
   let service: VotingService;
@@ -22,6 +23,10 @@ describe('VotingService', () => {
     username,
     avatarUrl: null,
   });
+
+  const mockR2 = {
+    presignDownload: jest.fn().mockResolvedValue('https://cdn.example/signed/abc.jpg'),
+  };
 
   beforeEach(async () => {
     prisma = {
@@ -55,7 +60,11 @@ describe('VotingService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [VotingService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        VotingService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: R2Service, useValue: mockR2 },
+      ],
     }).compile();
 
     service = module.get<VotingService>(VotingService);
@@ -345,7 +354,7 @@ describe('VotingService', () => {
           pollId: 'poll-1',
           label: 'June 19-22',
           sortOrder: 0,
-          candidateId: 'cand-1',
+          candidateId: '550e8400-e29b-41d4-a716-446655440000',
           votes: [{ userId: PARTICIPANT }],
         },
         {
@@ -353,12 +362,12 @@ describe('VotingService', () => {
           pollId: 'poll-1',
           label: 'July 1-5',
           sortOrder: 1,
-          candidateId: 'cand-2',
+          candidateId: '550e8400-e29b-41d4-a716-446655440001',
           votes: [],
         },
       ]);
       prisma.tripDateCandidate.findUnique.mockResolvedValue({
-        id: 'cand-1',
+        id: '550e8400-e29b-41d4-a716-446655440000',
         startDate: new Date('2027-06-19'),
         endDate: new Date('2027-06-22'),
       });
@@ -496,7 +505,7 @@ describe('VotingService', () => {
       expect(prisma.tripPoll.delete).toHaveBeenCalledWith({ where: { id: 'poll-1' } });
     });
 
-    it('rejects delete of non-active poll', async () => {
+    it('allows deleting a locked poll', async () => {
       prisma.tripPoll.findFirst.mockResolvedValue({
         id: 'poll-1',
         tripId: TRIP,
@@ -504,9 +513,9 @@ describe('VotingService', () => {
       });
       prisma.trip.findUnique.mockResolvedValue({ id: TRIP, creatorId: CREATOR });
 
-      await expect(service.deletePoll(TRIP, 'poll-1', CREATOR)).rejects.toThrow(
-        BadRequestException,
-      );
+      await service.deletePoll(TRIP, 'poll-1', CREATOR);
+
+      expect(prisma.tripPoll.delete).toHaveBeenCalledWith({ where: { id: 'poll-1' } });
     });
   });
 });

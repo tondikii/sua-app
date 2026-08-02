@@ -41,6 +41,7 @@ export const SearchUsersSchema = z.object({
 });
 
 export const UpdateUserSchema = z.object({
+  name: z.string().trim().min(1).max(255).optional(),
   bio: z.string().max(150).optional(),
   website_url: z.string().url().max(255).optional(),
   location_label: z.string().max(100).optional(),
@@ -50,6 +51,16 @@ export const UpdateUserSchema = z.object({
     .optional(),
 });
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+
+export const PresignAvatarSchema = z.object({
+  content_type: z.string(),
+});
+export type PresignAvatarInput = z.infer<typeof PresignAvatarSchema>;
+
+export const UpdateAvatarSchema = z.object({
+  storage_key: z.string(),
+});
+export type UpdateAvatarInput = z.infer<typeof UpdateAvatarSchema>;
 
 // ── Trips ────────────────────────────────────────────────────
 
@@ -85,7 +96,7 @@ export type UpdateTripInput = z.infer<typeof UpdateTripSchema>;
 
 const RefLinkSchema = z.object({
   url: z.string().url(),
-  label: z.string().max(255),
+  label: z.string().max(255).optional(),
 });
 
 const ActivityKindEnum = z.enum(['gather', 'transport', 'meal', 'activity', 'destination']);
@@ -94,6 +105,7 @@ const CoverSourceEnum = z.enum(['none', 'maps', 'trip_media', 'device', 'icon'])
 export const CreateActivitySchema = z.object({
   place_name: z.string().max(255),
   activity_date: z.string().datetime().optional(),
+  day_number: z.number().int().min(1).optional(),
   start_time: z.string().regex(TIME_HHMM),
   end_time: z.string().regex(TIME_HHMM),
   kind: ActivityKindEnum.optional(),
@@ -116,6 +128,7 @@ export const CreateMessageSchema = z.object({
   message_kind: z.enum(['text', 'photo', 'video']),
   message_text: z.string().max(2000).optional(),
   media_url: z.string().optional(),
+  media_duration_seconds: z.number().int().min(0).optional(),
   reply_to_id: z.string().uuid().optional(),
 });
 export type CreateMessageInput = z.infer<typeof CreateMessageSchema>;
@@ -147,11 +160,20 @@ export const CreateDocumentSchema = z.object({
 
 // ── Voting ────────────────────────────────────────────────────
 
+const PollRefLinkSchema = z.object({
+  url: z.string().url('ref link url must be a valid URL'),
+  label: z.string().max(255).optional(),
+});
+
 const PollOptionSchema = z.union([
   z.string(),
   z.object({
     label: z.string(),
-    candidate_id: z.string().uuid().optional(),
+    candidate_id: z.string().optional(),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'start_date must be a date in YYYY-MM-DD format'),
+    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'end_date must be a date in YYYY-MM-DD format'),
+    maps_link: z.string().url('maps_link must be a valid URL').optional(),
+    ref_links: z.array(PollRefLinkSchema).optional(),
   }),
 ]);
 
@@ -187,6 +209,12 @@ export const CreateNotificationSchema = z.object({
 export const MarkAsReadSchema = z.object({
   is_read: z.boolean().optional(),
 });
+
+export const RegisterPushTokenSchema = z.object({
+  token: z.string().min(1),
+  platform: z.enum(['ios', 'android']),
+});
+export type RegisterPushTokenInput = z.infer<typeof RegisterPushTokenSchema>;
 
 // ── Wishlist ──────────────────────────────────────────────────
 

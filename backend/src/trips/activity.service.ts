@@ -10,6 +10,7 @@ import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 import { ActivitySerializer } from './serializers/activity.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { timeToHHMM } from '../common/helpers/date.helpers';
 
 @Injectable()
 export class ActivityService {
@@ -43,7 +44,7 @@ export class ActivityService {
     const activities = await this.prisma.tripActivity.findMany({
       where: { tripId },
       include: { coverDocument: { select: { id: true, storageKey: true, storageUrl: true } } },
-      orderBy: [{ activityDate: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ dayNumber: 'asc' }, { startTime: 'asc' }],
     });
 
     const coverKeys = activities
@@ -134,18 +135,18 @@ export class ActivityService {
       throw new BadRequestException('start_time must be <= end_time');
     }
 
-    // Validate activity_date falls within trip range (if fixed)
-    if (trip.status === 'fixed') {
-      if (!dto.activity_date) {
-        throw new BadRequestException('activity_date required when trip status is fixed');
-      }
+    // Validate day_number for fixed trips
+    const dayNumber = dto.day_number || 1;
+    if (dayNumber < 1) {
+      throw new BadRequestException('day_number must be >= 1');
+    }
 
-      const actDate = new Date(dto.activity_date);
-      const startDate = new Date(trip.startDate!);
-      const endDate = new Date(trip.endDate!);
-
-      if (actDate < startDate || actDate > endDate) {
-        throw new BadRequestException('activity_date must fall within trip date range');
+    if (trip.status === 'fixed' && trip.startDate && trip.endDate) {
+      const totalDays = Math.ceil(
+        (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / 86_400_000,
+      ) + 1;
+      if (dayNumber > totalDays) {
+        throw new BadRequestException(`day_number must be <= ${totalDays} (trip duration)`);
       }
     }
 
@@ -155,6 +156,7 @@ export class ActivityService {
         tripId,
         placeName: dto.place_name,
         activityDate: dto.activity_date ? new Date(dto.activity_date) : null,
+        dayNumber,
         startTime: this.parseTimeToDate(dto.start_time),
         endTime: this.parseTimeToDate(dto.end_time),
         kind: (dto.kind || 'activity') as any,
@@ -176,20 +178,18 @@ export class ActivityService {
       .filter((p) => p.userId !== userId)
       .map((p) => p.userId);
 
-    await Promise.all(
-      participantsToNotify.map((participantId) =>
-        this.notifications.createNotification({
-          userId: participantId,
-          type: 'activity_update',
-          actorId: userId,
-          tripId,
-          payload: {
-            activity_id: activity.id,
-            activity_name: activity.placeName,
-            action: 'created',
-          },
-        }),
-      ),
+    await this.notifications.createManyNotifications(
+      participantsToNotify.map((participantId) => ({
+        userId: participantId,
+        type: 'activity_update',
+        actorId: userId,
+        tripId,
+        payload: {
+          activity_id: activity.id,
+          activity_name: activity.placeName,
+          action: 'created',
+        },
+      })),
     );
 
     this.scheduleThumbnailResolve(activity.id, dto.maps_link);
@@ -229,10 +229,10 @@ export class ActivityService {
     }
 
     // Validate time ordering (if either time is provided)
-    const startTime = dto.start_time || (existing.startTime.toISOString().slice(11, 16) as any);
-    const endTime = dto.end_time || (existing.endTime.toISOString().slice(11, 16) as any);
+    const startTime = dto.start_time || (existing.startTime ? timeToHHMM(existing.startTime) : undefined);
+    const endTime = dto.end_time || (existing.endTime ? timeToHHMM(existing.endTime) : undefined);
 
-    if (dto.start_time || dto.end_time) {
+    if ((dto.start_time || dto.end_time) && startTime && endTime) {
       const timeRegex = /^(\d{2}):(\d{2})$/;
       const startMatch = startTime.match(timeRegex);
       const endMatch = endTime.match(timeRegex);
@@ -249,21 +249,18 @@ export class ActivityService {
       }
     }
 
-    // Validate activity_date (if trip is fixed)
-    let activityDate: Date | null = existing.activityDate;
-    if (dto.activity_date) {
-      if (trip.status === 'fixed') {
-        const actDate = new Date(dto.activity_date);
-        const startDate = new Date(trip.startDate!);
-        const endDate = new Date(trip.endDate!);
-
-        if (actDate < startDate || actDate > endDate) {
-          throw new BadRequestException('activity_date must fall within trip date range');
-        }
+    // Validate day_number (if provided)
+    const dayNumber = dto.day_number ?? existing.dayNumber;
+    if (dayNumber < 1) {
+      throw new BadRequestException('day_number must be >= 1');
+    }
+    if (trip.status === 'fixed' && trip.startDate && trip.endDate) {
+      const totalDays = Math.ceil(
+        (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / 86_400_000,
+      ) + 1;
+      if (dayNumber > totalDays) {
+        throw new BadRequestException(`day_number must be <= ${totalDays} (trip duration)`);
       }
-      activityDate = new Date(dto.activity_date);
-    } else if (trip.status === 'fixed' && !existing.activityDate) {
-      throw new BadRequestException('activity_date required when trip status is fixed');
     }
 
     // Update activity
@@ -271,7 +268,8 @@ export class ActivityService {
       where: { id: activityId },
       data: {
         placeName: dto.place_name !== undefined ? dto.place_name : undefined,
-        activityDate: activityDate,
+        activityDate: dto.activity_date ? new Date(dto.activity_date) : undefined,
+        dayNumber,
         startTime: dto.start_time !== undefined ? this.parseTimeToDate(dto.start_time) : undefined,
         endTime: dto.end_time !== undefined ? this.parseTimeToDate(dto.end_time) : undefined,
         kind: dto.kind !== undefined ? (dto.kind as any) : undefined,
@@ -293,20 +291,18 @@ export class ActivityService {
       .filter((p) => p.userId !== userId)
       .map((p) => p.userId);
 
-    await Promise.all(
-      participantsToNotify.map((participantId) =>
-        this.notifications.createNotification({
-          userId: participantId,
-          type: 'activity_update',
-          actorId: userId,
-          tripId,
-          payload: {
-            activity_id: updated.id,
-            activity_name: updated.placeName,
-            action: 'updated',
-          },
-        }),
-      ),
+    await this.notifications.createManyNotifications(
+      participantsToNotify.map((participantId) => ({
+        userId: participantId,
+        type: 'activity_update',
+        actorId: userId,
+        tripId,
+        payload: {
+          activity_id: updated.id,
+          activity_name: updated.placeName,
+          action: 'updated',
+        },
+      })),
     );
 
     const mapsLink = dto.maps_link !== undefined ? dto.maps_link : existing.mapsLink;
@@ -368,6 +364,32 @@ export class ActivityService {
     });
   }
 
+  /**
+   * Resolve the Google Maps thumbnail for a pasted maps_link ("Sinkron Maps").
+   * Works for unsaved activities (no activity row yet): returns the resolved
+   * URL and imports it into trip media so it can also become the trip cover.
+   */
+  async syncMapsThumbnail(tripId: string, userId: string, mapsLink: string) {
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: tripId, participants: { some: { userId } } },
+      select: { id: true, creatorId: true },
+    });
+    if (!trip) {
+      throw new NotFoundException('Trip not found or access denied');
+    }
+
+    const thumbnailUrl = await this.googleMaps.resolveThumbnailFromMapsLink(mapsLink);
+    if (!thumbnailUrl) return { thumbnail_url: null };
+
+    await this.importRemoteThumbnailToTripMedia(tripId, trip.creatorId, thumbnailUrl).catch(
+      (err) => {
+        this.logger.warn(`Import maps thumbnail to trip media failed: ${err}`);
+      },
+    );
+
+    return { thumbnail_url: thumbnailUrl };
+  }
+
   private async resolveThumbnailInBackground(activityId: string, mapsLink: string): Promise<void> {
     const thumbnailUrl = await this.googleMaps.resolveThumbnailFromMapsLink(mapsLink);
     if (!thumbnailUrl) return;
@@ -375,6 +397,68 @@ export class ActivityService {
     await this.prisma.tripActivity.update({
       where: { id: activityId },
       data: { thumbnailUrl, coverSource: 'maps' },
+    });
+
+    const activity = await this.prisma.tripActivity.findFirst({
+      where: { id: activityId },
+      select: { tripId: true },
+    });
+    if (!activity) return;
+
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: activity.tripId },
+      select: { creatorId: true },
+    });
+
+    // Persist the remote maps thumbnail into trip media so it can double as
+    // the trip cover / Media-tab item (same behaviour as wishlist thumbnails).
+    if (trip?.creatorId) {
+      await this.importRemoteThumbnailToTripMedia(
+        activity.tripId,
+        trip.creatorId,
+        thumbnailUrl,
+      ).catch((err) => {
+        this.logger.warn(`Import maps thumbnail to trip media failed for activity ${activityId}: ${err}`);
+      });
+    }
+  }
+
+  /**
+   * Downloads a remote thumbnail (e.g. Google Maps og:image) and stores it in
+   * the trip's R2 bucket, registering a `trip_documents` row so it appears in
+   * the Media tab and can be set as the trip cover. No-op when already imported.
+   */
+  private async importRemoteThumbnailToTripMedia(
+    tripId: string,
+    uploaderId: string | undefined,
+    thumbnailUrl: string,
+  ): Promise<void> {
+    // Skip if this exact URL was already imported for this trip.
+    const existing = await this.prisma.tripDocument.findFirst({
+      where: { tripId, storageUrl: thumbnailUrl },
+    });
+    if (existing) return;
+
+    const res = await fetch(thumbnailUrl);
+    if (!res.ok) return;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg';
+
+    const { storageKey, storageUrl } = await this.r2.putObject(
+      tripId,
+      contentType,
+      buffer,
+    );
+
+    await this.prisma.tripDocument.create({
+      data: {
+        tripId,
+        uploadedBy: uploaderId!,
+        mediaType: 'photo',
+        storageKey,
+        storageUrl,
+        fromChat: false,
+      },
     });
   }
 
@@ -392,8 +476,8 @@ export class ActivityService {
 
   private parseTimeToDate(timeStr: string): Date {
     const [h, m] = timeStr.split(':').map(Number);
-    const d = new Date('1970-01-01');
-    d.setHours(h, m, 0, 0);
+    // Build a UTC date so the HH:MM survives Prisma's `@db.Time` UTC round-trip.
+    const d = new Date(Date.UTC(1970, 0, 1, h, m, 0, 0));
     return d;
   }
 }

@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../integrations/r2/r2.service';
+import { PushNotificationsService } from './push-notifications.service';
 import { NotificationType } from '@prisma/client';
 
 interface CreateNotificationParams {
@@ -10,9 +12,21 @@ interface CreateNotificationParams {
   payload?: Record<string, any>;
 }
 
+interface CreateManyNotificationParams {
+  userId: string;
+  type: NotificationType;
+  actorId?: string;
+  tripId?: string;
+  payload?: Record<string, any>;
+}
+
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly r2: R2Service,
+    private readonly push: PushNotificationsService,
+  ) {}
 
   /**
    * Create a notification for a user.
@@ -21,7 +35,7 @@ export class NotificationsService {
   async createNotification(params: CreateNotificationParams) {
     const { userId, type, actorId, tripId, payload = {} } = params;
 
-    return this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId,
         type,
@@ -30,6 +44,43 @@ export class NotificationsService {
         payload,
       },
     });
+
+    // Mirror the in-app notification as a push notification (fire-and-forget).
+    this.push.sendAsync([userId], { type, actorId, tripId, payload });
+
+    return notification;
+  }
+
+  /**
+   * Bulk-create notifications for a single event (same type/actor/trip/payload
+   * for every recipient). Mirrors each as a push notification.
+   */
+  async createManyNotifications(items: CreateManyNotificationParams[]) {
+    if (items.length === 0) return { count: 0 };
+
+    const result = await this.prisma.notification.createMany({
+      data: items.map((item) => ({
+        userId: item.userId,
+        type: item.type,
+        actorId: item.actorId,
+        tripId: item.tripId,
+        payload: item.payload ?? {},
+      })),
+      skipDuplicates: true,
+    });
+
+    const first = items[0];
+    this.push.sendAsync(
+      items.map((i) => i.userId),
+      {
+        type: first.type,
+        actorId: first.actorId,
+        tripId: first.tripId,
+        payload: first.payload,
+      },
+    );
+
+    return result;
   }
 
   /**
@@ -82,16 +133,49 @@ export class NotificationsService {
     const actorMap = new Map(actors.map((a) => [a.id, a]));
     const tripMap = new Map(trips.map((t) => [t.id, t]));
 
+    // Resolve actor avatars in one batch (R2 bucket is private, so raw
+    // storage keys must be presigned to render).
+    const avatarKeys = actors
+      .map((a) => a.avatarUrl)
+      .filter((url): url is string => !!url && !url.includes('://'));
+    const signedAvatars = await this.r2.presignDownloads(avatarKeys);
+    const resolveAvatar = async (url: string | null) => {
+      if (!url) return null;
+      if (url.includes('://')) return url;
+      return signedAvatars.get(url) ?? url;
+    };
+
     // Enrich notifications with actor and trip data
-    const enrichedData = data.map((notification) => ({
-      id: notification.id,
-      type: notification.type,
-      actor: notification.actorId ? actorMap.get(notification.actorId) || null : null,
-      trip: notification.tripId ? tripMap.get(notification.tripId) || null : null,
-      payload: notification.payload,
-      is_read: notification.isRead,
-      created_at: notification.createdAt,
-    }));
+    const enrichedData = await Promise.all(
+      data.map(async (notification) => {
+        const actor = notification.actorId ? actorMap.get(notification.actorId) || null : null;
+        const trip = notification.tripId ? tripMap.get(notification.tripId) || null : null;
+        return {
+          id: notification.id,
+          type: notification.type,
+          actor: actor
+            ? {
+                id: actor.id,
+                name: actor.name,
+                username: actor.username,
+                avatar_url: await resolveAvatar(actor.avatarUrl),
+              }
+            : null,
+          trip: trip
+            ? {
+                id: trip.id,
+                name: trip.name,
+                status: trip.status,
+                start_date: trip.startDate,
+                end_date: trip.endDate,
+              }
+            : null,
+          payload: notification.payload,
+          is_read: notification.isRead,
+          created_at: notification.createdAt,
+        };
+      }),
+    );
 
     return {
       data: enrichedData,

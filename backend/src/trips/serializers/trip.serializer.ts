@@ -1,5 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { toDateOnly, toTime } from '../../common/helpers/date.helpers';
+import { UserSummarySerializer } from '../../users/serializers/user.serializer';
+import type { R2Service } from '../../integrations/r2/r2.service';
 import type {
   UserSummary,
   TripSummary,
@@ -39,21 +41,25 @@ type TripLike = {
 };
 
 export class TripSerializer {
-  static userSummary(user: UserLike): UserSummary {
+  static async userSummary(
+    user: UserLike,
+    r2: R2Service,
+  ): Promise<UserSummary> {
     return {
       id: user.id,
       name: user.name,
       username: user.username,
-      avatar_url: user.avatarUrl,
+      avatar_url: await UserSummarySerializer.resolveAvatar(user.avatarUrl, r2),
     };
   }
 
-  static toCard(
+  static async toCard(
     trip: TripLike & {
       participants: ParticipantLike[];
       _count?: { participants: number };
     },
     coverUrl: string | null,
+    r2: R2Service,
   ) {
     return {
       id: trip.id,
@@ -69,14 +75,16 @@ export class TripSerializer {
       cover_image_url: coverUrl,
       voting_deadline: trip.votingDeadline?.toISOString() ?? null,
       participant_count: trip._count?.participants ?? trip.participants.length,
-      participants_preview: trip.participants
-        .slice(0, 5)
-        .map((p) => TripSerializer.userSummary(p.user)),
+      participants_preview: await Promise.all(
+        trip.participants
+          .slice(0, 5)
+          .map((p) => TripSerializer.userSummary(p.user, r2)),
+      ),
       created_at: trip.createdAt.toISOString(),
     };
   }
 
-  static toDetail(
+  static async toDetail(
     trip: TripLike & {
       creator: UserLike;
       participants: ParticipantLike[];
@@ -89,6 +97,7 @@ export class TripSerializer {
       }>;
     },
     coverImageUrl: string | null = null,
+    r2: R2Service,
   ) {
     return {
       id: trip.id,
@@ -103,13 +112,15 @@ export class TripSerializer {
       is_public: trip.isPublic,
       cover_image_url: coverImageUrl,
       voting_deadline: trip.votingDeadline?.toISOString() ?? null,
-      creator: TripSerializer.userSummary(trip.creator),
+      creator: await TripSerializer.userSummary(trip.creator, r2),
       participant_count: trip.participants.length,
-      participants: trip.participants.map((p) => ({
-        ...TripSerializer.userSummary(p.user),
-        joined_at: p.joinedAt.toISOString(),
-        role: p.userId === trip.creatorId ? 'creator' : 'member',
-      })),
+      participants: await Promise.all(
+        trip.participants.map(async (p) => ({
+          ...(await TripSerializer.userSummary(p.user, r2)),
+          joined_at: p.joinedAt.toISOString(),
+          role: p.userId === trip.creatorId ? 'creator' : 'member',
+        })),
+      ),
       date_candidates:
         trip.dateCandidates?.map((c) => ({
           id: c.id,
@@ -122,9 +133,12 @@ export class TripSerializer {
     };
   }
 
-  static toMember(participant: ParticipantLike & { creatorId: string }) {
+  static async toMember(
+    participant: ParticipantLike & { creatorId: string },
+    r2: R2Service,
+  ) {
     return {
-      ...TripSerializer.userSummary(participant.user),
+      ...(await TripSerializer.userSummary(participant.user, r2)),
       joined_at: participant.joinedAt.toISOString(),
       role: participant.userId === participant.creatorId ? 'creator' : 'member',
     };

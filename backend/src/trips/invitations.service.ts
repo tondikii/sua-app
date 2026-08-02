@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { InvitationSerializer } from './serializers/invitation.serializer';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 @Injectable()
 export class InvitationsService {
@@ -16,6 +17,7 @@ export class InvitationsService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
     private readonly mail: MailService,
+    private readonly r2: R2Service,
   ) {}
 
   /**
@@ -274,7 +276,9 @@ export class InvitationsService {
     const results = hasMore ? invitations.slice(0, take) : invitations;
 
     return {
-      data: results.map((inv) => InvitationSerializer.toEnriched(inv)),
+      data: await Promise.all(
+        results.map((inv) => InvitationSerializer.toEnriched(inv, this.r2)),
+      ),
       next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
@@ -330,12 +334,12 @@ export class InvitationsService {
 
       // Resolve the matching invite notification so the UI stops showing
       // Terima/Tolak buttons for an already-answered invitation.
+      // (No isRead filter — the client marks the notification read before responding.)
       const inviteNotifs = await tx.notification.findMany({
         where: {
           userId,
           tripId: invitation.tripId,
           type: 'invite',
-          isRead: false,
         },
       });
       for (const notif of inviteNotifs) {

@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeTokenService } from '../integrations/supabase/realtime-token.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 // Mock google-auth-library
 const mockVerifyIdToken = jest.fn();
@@ -51,6 +52,15 @@ describe('AuthService', () => {
         RealtimeTokenService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: jwtService },
+        {
+          provide: R2Service,
+          useValue: {
+            presignDownload: jest.fn().mockResolvedValue('https://cdn.example/signed/abc.jpg'),
+            headObject: jest.fn(),
+            resolvePublicUrl: jest.fn(),
+            presignAvatarUpload: jest.fn(),
+          },
+        },
         {
           provide: ConfigService,
           useValue: {

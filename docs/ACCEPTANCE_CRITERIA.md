@@ -80,12 +80,15 @@
 - [ ] Registry label: _Profil & Eksplorasi_ (15) … _Hapus Akun_ (20); accent coral.
 - [ ] `ProfileHeader` username center + ⚙ Pengaturan (`Screen15`, `Screen16`).
 - [ ] `ProfileCard` horizontal: avatar 64, nama, bio, website `Globe`, `ProfileStats` Perjalanan.
-- [ ] Grid 2 kolom trip; empty owner → CTA **Buat Perjalanan Baru** compact.
+- [ ] Website di profil bisa diklik (buka URL, prefix `https://` otomatis).
+- [ ] Grid 2 kolom trip; setiap kartu menampilkan cover, tag, nama, dan rentang tanggal (`Calendar` + `formatDateRange`); empty owner → CTA **Buat Perjalanan Baru** compact.
 - [ ] Settings: kartu profil → Edit; Bantuan & Legal; Akun (Hapus Akun); kartu **Keluar** terpisah (`Screen17`).
-- [ ] Edit: bio max 150 + counter; username read-only; Simpan (`Screen18`).
-- [ ] FAQ 5 item + `bantuan@aturperjalanan.id` (`Screen19`).
+- [ ] Keluar memakai `ConfirmModal` (bukan `Alert`/`window.confirm`).
+- [ ] Edit: nama lengkap bisa diedit (`FocusedTextInput`); foto profil bisa diubah (galeri → presigned R2 → `PUT /users/me/avatar`); bio max 150 + counter; username read-only; Simpan (`Screen18`).
+- [ ] Versi app ditampilkan dari `Constants.expoConfig.version` (bukan hardcoded).
+- [ ] FAQ 12 item + `bantuan@aturperjalanan.id` (email tappable `mailto:`) (`Screen19`).
 - [ ] Hapus akun: ketik username + destructive button (`Screen20`).
-- [ ] `GET /v1/users/me`, `PUT /v1/users/me` `{bio}`, grid via `GET /v1/users/{username}/trips`.
+- [ ] `GET /v1/users/me`, `PUT /v1/users/me` `{name,bio,website_url}`, `POST /users/me/avatar/presign` + `PUT /users/me/avatar`, grid via `GET /v1/users/{username}/trips`.
 
 ## 5. Manajemen Perjalanan & Itinerary
 
@@ -231,8 +234,8 @@
 > Registry: WORKFLOW §11 / `App.tsx` id: 11 (layar 95–103). Shared: `TripDetailMenuSheet`, `TripMemberParts`, `InviteParts`.
 
 - [ ] Menu ⋮ (`TripDetailMenuSheet`): Daftar Anggota · Google Calendar · Edit Info · Hapus.
-- [ ] `Screen95`: modal _Hapus perjalanan?_ — destructive · soft delete API.
-- [ ] `Screen96`: modal _Tambah ke Google Calendar?_ — `{tanggal} · kalender kamu` (M16).
+- [x] `Screen95`: modal _Hapus perjalanan?_ — destructive · soft delete API.
+- [x] `Screen96`: modal _Tambah ke Google Calendar?_ — `{tanggal} · kalender kamu` (M16) — item menu disabled saat trip masih `voting_pending` (subtitle "Tanggal belum dikunci"); event dibuat di kalender user sendiri via OAuth per-user.
 - [ ] `Screen97`: pembuat — search + undang username; badge **Pembuat** / **Anggota**.
 - [ ] `Screen98`: `EmailInviteSearchResult` — **Undang lewat Email**.
 - [ ] `Screen99`: pending `email_sent` — **Batalkan**.

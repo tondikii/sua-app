@@ -495,6 +495,9 @@ CREATE TABLE users (
     website_url     TEXT,             -- Screen18EditProfil — social link on profile card
     location_label  TEXT,             -- Screen18EditProfil — pinned location on profile card
     is_public       BOOLEAN NOT NULL DEFAULT TRUE,   -- post-MVP account privacy; MVP: profil publik
+    google_access_token   TEXT,       -- M16 Google Calendar — per-user OAuth (never serialized)
+    google_refresh_token  TEXT,       -- M16 Google Calendar — refresh token (never serialized)
+    google_token_expires_at TIMESTAMPTZ, -- M16 Google Calendar — access token expiry
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -1005,7 +1008,9 @@ Base URL: `/v1`. Auth: `Authorization: Bearer <JWT>` unless marked **Public**. R
 │   └── POST   /:id/convert-to-trip       # atomic wishlist → trip conversion
 └── integrations/
     └── google-calendar/
-        └── POST /events                  # add a confirmed trip to the user's own Google Calendar (M16)
+        ├── GET  /auth-url               # OAuth consent URL (JWT) — M16
+        ├── GET  /callback               # OAuth token exchange (public)
+        └── POST /events                 # add a confirmed trip to the user's own Google Calendar (M16)
 ```
 
 #### 4.3.2 Representative Request/Response Contracts

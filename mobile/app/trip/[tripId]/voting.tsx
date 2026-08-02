@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Modal,
   Platform,
+  Image,
+  Linking,
 } from 'react-native';
 import { usePolls } from '@/features/voting/hooks/usePolls';
 import { useCreatePoll } from '@/features/voting/hooks/useCreatePoll';
@@ -17,6 +18,7 @@ import { useVote } from '@/features/voting/hooks/useVote';
 import { useLockPoll } from '@/features/voting/hooks/useLockPoll';
 import { useDeletePoll } from '@/features/voting/hooks/useDeletePoll';
 import { useTripDetail } from '@/features/trips/hooks/useTripDetail';
+import { useToast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { Calendar } from '@/components/icons/Calendar';
@@ -29,12 +31,14 @@ import { Pencil } from '@/components/icons/Pencil';
 import { CircleStop } from '@/components/icons/CircleStop';
 import { ChevronDown } from '@/components/icons/ChevronDown';
 import { X } from '@/components/icons/X';
+import { Navigation } from '@/components/icons/Navigation';
+import { Link2 } from '@/components/icons/Link2';
 import { TimePicker } from '@/components/TimePicker';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
 import { bottomSheetFrame } from '@/theme/layout';
-import type { TripPoll, PollOption, PollType } from '@atur-perjalanan/shared-types';
+import type { TripPoll, PollOption, PollType, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {};
 
@@ -274,6 +278,112 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
   );
 }
 
+/**
+ * Input untuk maps_link + ref_links sebuah kandidat voting — mengikuti pola
+ * form aktivitas (maps link + link referensi dengan judul opsional).
+ */
+function OptionLinkFields({
+  mapsLink,
+  refLinks,
+  onChangeMapsLink,
+  onChangeRefLinks,
+}: {
+  mapsLink: string;
+  refLinks: RefLink[];
+  onChangeMapsLink: (url: string) => void;
+  onChangeRefLinks: (links: RefLink[]) => void;
+}) {
+  const updateRef = useCallback(
+    (index: number, patch: Partial<RefLink>) => {
+      onChangeRefLinks(refLinks.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+    },
+    [refLinks, onChangeRefLinks],
+  );
+
+  const addRef = useCallback(() => {
+    onChangeRefLinks([...refLinks, { url: '', label: '' }]);
+  }, [refLinks, onChangeRefLinks]);
+
+  const removeRef = useCallback(
+    (index: number) => {
+      if (refLinks.length === 1) return;
+      onChangeRefLinks(refLinks.filter((_, i) => i !== index));
+    },
+    [refLinks, onChangeRefLinks],
+  );
+
+  return (
+    <>
+      {/* Google Maps */}
+      <View style={styles.optionLinkField}>
+        <Text style={styles.optionLinkLabel}>Google Maps</Text>
+        <View style={styles.optionLinkInputRow}>
+          <Navigation size={14} color={mapsLink ? colors.teal : colors.mutedLight} />
+          <FocusedTextInput
+            style={styles.optionLinkInput}
+            placeholder="Tempel link Google Maps (opsional)"
+            placeholderTextColor={colors.mutedLight}
+            value={mapsLink}
+            onChangeText={onChangeMapsLink}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+          />
+        </View>
+      </View>
+
+      {/* Link lainnya */}
+      <View style={styles.optionLinkField}>
+        <Text style={styles.optionLinkLabel}>Link Referensi</Text>
+        {refLinks.map((ref, index) => (
+          <View key={index} style={styles.optionRefGroup}>
+            {refLinks.length > 1 && (
+              <Text style={styles.optionRefIndex}>Link {index + 1}</Text>
+            )}
+            <Text style={styles.optionRefSubLabel}>URL</Text>
+            <View style={styles.optionLinkInputRow}>
+              <Link2 size={14} color={colors.mutedLight} />
+              <FocusedTextInput
+                style={styles.optionLinkInput}
+                placeholder="Tempel link referensi..."
+                placeholderTextColor={colors.mutedLight}
+                value={ref.url}
+                onChangeText={(t) => updateRef(index, { url: t })}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+              {refLinks.length > 1 && (
+                <TouchableOpacity
+                  onPress={() => removeRef(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <X size={14} color={colors.muted} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {ref.url.trim().length > 0 && (
+              <>
+                <Text style={styles.optionRefSubLabel}>Judul tampilan</Text>
+                <FocusedTextInput
+                  style={styles.optionLinkInput}
+                  placeholder="Kosongkan untuk tampilkan URL"
+                  placeholderTextColor={colors.mutedLight}
+                  value={ref.label}
+                  onChangeText={(t) => updateRef(index, { label: t })}
+                />
+              </>
+            )}
+          </View>
+        ))}
+        <TouchableOpacity style={styles.optionAddLinkBtn} onPress={addRef} activeOpacity={0.7}>
+          <Text style={styles.optionAddLinkBtnText}>+ Tambah link</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+}
+
 function VoterAvatars({ voters, max = 4 }: { voters: PollOption['voters']; max?: number }) {
   const shown = voters.slice(0, max);
   return (
@@ -287,10 +397,15 @@ function VoterAvatars({ voters, max = 4 }: { voters: PollOption['voters']; max?:
               backgroundColor: avatarColorFor(v.username),
               marginLeft: i > 0 ? -8 : 0,
               zIndex: shown.length - i,
+              overflow: 'hidden',
             },
           ]}
         >
-          <Text style={styles.voterAvatarLetter}>{v.name.charAt(0).toUpperCase()}</Text>
+          {v.avatar_url ? (
+            <Image source={{ uri: v.avatar_url }} style={styles.voterAvatarImage} />
+          ) : (
+            <Text style={styles.voterAvatarLetter}>{v.name.charAt(0).toUpperCase()}</Text>
+          )}
         </View>
       ))}
       {voters.length > max && (
@@ -348,6 +463,35 @@ function VotingCandidateRow({
           {isWinner && <Text style={styles.winnerText}>Pemenang</Text>}
           {isVoted && !isWinner && <Text style={styles.votedText}>✓ Voted</Text>}
         </View>
+        {(option.maps_link || option.ref_links.length > 0) && (
+          <View style={styles.candidateLinks}>
+            {option.maps_link && (
+              <TouchableOpacity
+                style={styles.candidateLinkPill}
+                onPress={() => Linking.openURL(option.maps_link!).catch(() => {})}
+                activeOpacity={0.7}
+              >
+                <Navigation size={11} color={colors.teal} />
+                <Text style={styles.candidateLinkText} numberOfLines={1}>
+                  Google Maps
+                </Text>
+              </TouchableOpacity>
+            )}
+            {option.ref_links.map((ref, i) => (
+              <TouchableOpacity
+                key={`${ref.url}-${i}`}
+                style={styles.candidateLinkPill}
+                onPress={() => Linking.openURL(ref.url).catch(() => {})}
+                activeOpacity={0.7}
+              >
+                <Link2 size={11} color={colors.muted} />
+                <Text style={styles.candidateLinkText} numberOfLines={1}>
+                  {ref.label || ref.url}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
       {!isReadOnly &&
         (isVoted ? (
@@ -398,6 +542,7 @@ function VotingCollapseSection({
   const { vote, retractVote } = useVote(tripId);
   const lockPoll = useLockPoll(tripId);
   const deletePoll = useDeletePoll(tripId);
+  const { showToast } = useToast();
 
   const meta = POLL_TYPE_META[poll.poll_type];
   const IconComponent = meta.icon;
@@ -410,7 +555,7 @@ function VotingCollapseSection({
     if (poll.status === 'active') parts.push(`${totalVotes} vote`);
     else if (poll.status === 'locked') parts.push('Selesai');
     else if (poll.status === 'expired') parts.push('Berakhir');
-    if (poll.deadline) parts.push(`tenggat ${formatDeadline(poll.deadline)}`);
+    if (poll.status === 'active' && poll.deadline) parts.push(`tenggat ${formatDeadline(poll.deadline)}`);
     return parts.join(' · ');
   }, [poll, totalVotes]);
 
@@ -435,17 +580,17 @@ function VotingCollapseSection({
         );
         onLocked(poll, winner?.label ?? '');
       },
-      onError: () => Alert.alert('Gagal', 'Tidak dapat mengakhiri voting'),
+      onError: () => showToast('Tidak dapat mengakhiri voting'),
     });
-  }, [lockPoll, poll, onLocked]);
+  }, [lockPoll, poll, onLocked, showToast]);
 
   const handleConfirmDelete = useCallback(() => {
     setShowMenu(false);
     setConfirmAction(null);
     deletePoll.mutate(poll.id, {
-      onError: () => Alert.alert('Gagal', 'Tidak dapat menghapus voting'),
+      onError: () => showToast('Tidak dapat menghapus voting'),
     });
-  }, [deletePoll, poll.id]);
+  }, [deletePoll, poll.id, showToast]);
 
   return (
     <View
@@ -751,6 +896,12 @@ interface DateCandidateOption {
   end_date: string;
 }
 
+interface PollOptionDraft {
+  label: string;
+  maps_link: string;
+  ref_links: RefLink[];
+}
+
 function CreateVotingSheet({
   visible,
   tripId,
@@ -765,11 +916,12 @@ function CreateVotingSheet({
 }) {
   const createPoll = useCreatePoll(tripId);
   const { data: trip } = useTripDetail(tripId);
+  const { showToast } = useToast();
   const [mode, setMode] = useState<SheetMode>('type');
   const [pollType, setPollType] = useState<PollType>('aktivitas');
   const [title, setTitle] = useState('');
   const [optionText, setOptionText] = useState('');
-  const [options, setOptions] = useState<string[]>([]);
+  const [options, setOptions] = useState<PollOptionDraft[]>([]);
   const [deadline, setDeadline] = useState('');
 
   // Tanggal poll candidates
@@ -814,14 +966,18 @@ function CreateVotingSheet({
 
   const addOption = useCallback(() => {
     const trimmed = optionText.trim();
-    if (trimmed && !options.includes(trimmed)) {
-      setOptions((prev) => [...prev, trimmed]);
+    if (trimmed && !options.some((o) => o.label === trimmed)) {
+      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }] }]);
       setOptionText('');
     }
   }, [optionText, options]);
 
-  const removeOption = useCallback((opt: string) => {
-    setOptions((prev) => prev.filter((o) => o !== opt));
+  const removeOption = useCallback((label: string) => {
+    setOptions((prev) => prev.filter((o) => o.label !== label));
+  }, []);
+
+  const patchOption = useCallback((label: string, patch: Partial<PollOptionDraft>) => {
+    setOptions((prev) => prev.map((o) => (o.label === label ? { ...o, ...patch } : o)));
   }, []);
 
   const handleNext = useCallback(() => {
@@ -833,7 +989,7 @@ function CreateVotingSheet({
       console.log('SUBMIT', activeType);
       if (activeType === 'tanggal') {
         if (dateCandidates.length === 0) {
-          Alert.alert('Validasi', 'Minimal 1 kandidat tanggal wajib diisi');
+          showToast('Minimal 1 kandidat tanggal wajib diisi');
           return;
         }
         await createPoll.mutateAsync({
@@ -842,18 +998,30 @@ function CreateVotingSheet({
           options: dateCandidates.map((c) => ({
             label: formatDateRangeShort(c.start_date, c.end_date),
             candidate_id: c.id,
+            start_date: c.start_date,
+            end_date: c.end_date,
           })),
           deadline: deadline || undefined,
         });
       } else {
         if (!title.trim() || options.length < 2) {
-          Alert.alert('Validasi', 'Judul dan minimal 2 kandidat wajib diisi');
+          showToast('Judul dan minimal 2 kandidat wajib diisi');
           return;
         }
         await createPoll.mutateAsync({
           title: title.trim(),
           poll_type: activeType,
-          options,
+          options: options.map((o) => ({
+            label: o.label,
+            maps_link: o.maps_link.trim() || undefined,
+            ref_links: o.ref_links
+              .map((r) => {
+                const url = r.url.trim();
+                const label = r.label.trim();
+                return label ? { url, label } : { url };
+              })
+              .filter((r) => r.url.length > 0),
+          })),
           deadline: deadline || undefined,
         });
       }
@@ -861,9 +1029,9 @@ function CreateVotingSheet({
       onClose();
     } catch (err: any) {
       const msg = err?.message ?? 'Terjadi kesalahan saat membuat voting';
-      Alert.alert('Gagal', msg);
+      showToast(msg);
     }
-  }, [activeType, dateCandidates, title, options, deadline, createPoll, reset, onClose]);
+  }, [activeType, dateCandidates, title, options, deadline, createPoll, reset, onClose, showToast]);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -1065,12 +1233,20 @@ function CreateVotingSheet({
                   Kandidat <Text style={{ color: colors.coral }}>*</Text>
                 </Text>
                 {options.map((opt) => (
-                  <View key={opt} style={styles.optionRow}>
-                    <View style={styles.optionCheck} />
-                    <Text style={styles.optionText}>{opt}</Text>
-                    <TouchableOpacity onPress={() => removeOption(opt)}>
-                      <X size={14} color={colors.muted} />
-                    </TouchableOpacity>
+                  <View key={opt.label} style={styles.optionCard}>
+                    <View style={styles.optionCardHeader}>
+                      <View style={styles.optionCheck} />
+                      <Text style={styles.optionText}>{opt.label}</Text>
+                      <TouchableOpacity onPress={() => removeOption(opt.label)}>
+                        <X size={14} color={colors.muted} />
+                      </TouchableOpacity>
+                    </View>
+                    <OptionLinkFields
+                      mapsLink={opt.maps_link}
+                      refLinks={opt.ref_links}
+                      onChangeMapsLink={(url) => patchOption(opt.label, { maps_link: url })}
+                      onChangeRefLinks={(links) => patchOption(opt.label, { ref_links: links })}
+                    />
                   </View>
                 ))}
                 <View style={styles.optionInputRow}>
@@ -1130,9 +1306,10 @@ function EditVotingSheet({
   onClose: () => void;
 }) {
   const updatePoll = useUpdatePoll(tripId);
+  const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [optionText, setOptionText] = useState('');
-  const [options, setOptions] = useState<string[]>([]);
+  const [options, setOptions] = useState<PollOptionDraft[]>([]);
   const [deadline, setDeadline] = useState('');
   const [editShowDatePicker, setEditShowDatePicker] = useState(false);
   const [editDpYear, setEditDpYear] = useState(new Date().getFullYear());
@@ -1143,7 +1320,16 @@ function EditVotingSheet({
   const [hydrated, setHydrated] = useState(false);
   if (visible && poll && !hydrated) {
     setTitle(poll.title);
-    setOptions(poll.options.map((o) => o.label));
+    setOptions(
+      poll.options.map((o) => ({
+        label: o.label,
+        maps_link: o.maps_link ?? '',
+        ref_links:
+          o.ref_links.length > 0
+            ? o.ref_links.map((r) => ({ url: r.url, label: r.label ?? '' }))
+            : [{ url: '', label: '' }],
+      })),
+    );
     setDeadline(poll.deadline ?? '');
     setHydrated(true);
   }
@@ -1151,14 +1337,18 @@ function EditVotingSheet({
 
   const addOption = useCallback(() => {
     const trimmed = optionText.trim();
-    if (trimmed && !options.includes(trimmed)) {
-      setOptions((prev) => [...prev, trimmed]);
+    if (trimmed && !options.some((o) => o.label === trimmed)) {
+      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }] }]);
       setOptionText('');
     }
   }, [optionText, options]);
 
-  const removeOption = useCallback((opt: string) => {
-    setOptions((prev) => prev.filter((o) => o !== opt));
+  const removeOption = useCallback((label: string) => {
+    setOptions((prev) => prev.filter((o) => o.label !== label));
+  }, []);
+
+  const patchOption = useCallback((label: string, patch: Partial<PollOptionDraft>) => {
+    setOptions((prev) => prev.map((o) => (o.label === label ? { ...o, ...patch } : o)));
   }, []);
 
   const handleSubmit = useCallback(async () => {
@@ -1168,15 +1358,25 @@ function EditVotingSheet({
         pollId: poll.id,
         payload: {
           title: poll.poll_type === 'tanggal' ? undefined : title.trim(),
-          options,
+          options: options.map((o) => ({
+            label: o.label,
+            maps_link: o.maps_link.trim() || undefined,
+            ref_links: o.ref_links
+              .map((r) => {
+                const url = r.url.trim();
+                const label = r.label.trim();
+                return label ? { url, label } : { url };
+              })
+              .filter((r) => r.url.length > 0),
+          })),
           deadline: deadline || null,
         },
       });
       onClose();
     } catch {
-      Alert.alert('Gagal', 'Tidak dapat menyimpan perubahan');
+      showToast('Tidak dapat menyimpan perubahan');
     }
-  }, [poll, title, options, deadline, updatePoll, onClose]);
+  }, [poll, title, options, deadline, updatePoll, onClose, showToast]);
 
   const meta = poll ? POLL_TYPE_META[poll.poll_type] : null;
 
@@ -1226,11 +1426,21 @@ function EditVotingSheet({
               Kandidat <Text style={{ color: colors.coral }}>*</Text>
             </Text>
             {options.map((opt) => (
-              <View key={opt} style={styles.optionRow}>
-                <Text style={styles.optionText}>{opt}</Text>
-                <TouchableOpacity onPress={() => removeOption(opt)}>
-                  <X size={14} color={colors.muted} />
-                </TouchableOpacity>
+              <View key={opt.label} style={styles.optionCard}>
+                <View style={styles.optionCardHeader}>
+                  <Text style={styles.optionText}>{opt.label}</Text>
+                  <TouchableOpacity onPress={() => removeOption(opt.label)}>
+                    <X size={14} color={colors.muted} />
+                  </TouchableOpacity>
+                </View>
+                {poll?.poll_type !== 'tanggal' && (
+                  <OptionLinkFields
+                    mapsLink={opt.maps_link}
+                    refLinks={opt.ref_links}
+                    onChangeMapsLink={(url) => patchOption(opt.label, { maps_link: url })}
+                    onChangeRefLinks={(links) => patchOption(opt.label, { ref_links: links })}
+                  />
+                )}
               </View>
             ))}
             {poll?.poll_type === 'tanggal' ? (
@@ -1278,7 +1488,11 @@ function EditVotingSheet({
                         setEditDpSelectingEnd(false);
                         setOptions((prev) => [
                           ...prev,
-                          formatDateRangeShort(range.start, range.end),
+                          {
+                            label: formatDateRangeShort(range.start, range.end),
+                            maps_link: '',
+                            ref_links: [{ url: '', label: '' }],
+                          },
                         ]);
                         setEditShowDatePicker(false);
                       } else {
@@ -1392,16 +1606,16 @@ export function VotingTabContent({ tripId, isCreator }: { tripId: string; isCrea
             ))}
           </View>
         )}
-
-        <TouchableOpacity
-          style={styles.createFab}
-          onPress={() => setShowCreate(true)}
-          activeOpacity={0.8}
-        >
-          <Plus size={16} color={colors.white} />
-          <Text style={styles.createFabText}>Buat Voting Baru</Text>
-        </TouchableOpacity>
       </ScrollView>
+
+      <TouchableOpacity
+        style={styles.createFab}
+        onPress={() => setShowCreate(true)}
+        activeOpacity={0.8}
+      >
+        <Plus size={16} color={colors.white} />
+        <Text style={styles.createFabText}>Buat Voting Baru</Text>
+      </TouchableOpacity>
 
       <CreateVotingSheet
         visible={showCreate}
@@ -1441,7 +1655,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { flex: 1 },
-  contentContainer: { padding: 16, paddingBottom: 40, gap: 10, flexGrow: 1 },
+  contentContainer: { padding: 16, paddingBottom: 80, gap: 10, flexGrow: 1 },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -1579,6 +1793,30 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
   },
   candidateMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  candidateLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  candidateLinkPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    maxWidth: '100%',
+  },
+  candidateLinkText: {
+    fontSize: 10,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.charcoal,
+    flexShrink: 1,
+  },
   votePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1612,12 +1850,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  voterAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
   voterAvatarLetter: {
     fontSize: 8,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: colors.white,
   },
-  createFab: {
+   createFab: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1630,7 +1876,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.28,
     shadowRadius: 22,
     elevation: 6,
-    marginTop: 8,
   },
   createFabText: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.white },
   // Locked result modal
@@ -1874,6 +2119,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.charcoal,
+  },
+  optionCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    padding: 12,
+    gap: 10,
+  },
+  optionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  optionLinkField: {
+    gap: 5,
+  },
+  optionLinkLabel: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.muted,
+  },
+  optionLinkInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.light,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    minWidth: 0,
+  },
+  optionLinkInput: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: 'transparent',
+    paddingVertical: 11,
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.charcoal,
+  },
+  optionRefGroup: {
+    gap: 4,
+    marginTop: 2,
+  },
+  optionRefIndex: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.muted,
+  },
+  optionRefSubLabel: {
+    fontSize: 10,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.mutedLight,
+  },
+  optionAddLinkBtn: {
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  optionAddLinkBtnText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.coral,
   },
   optionInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center', minWidth: 0 },
   addOptionBtn: {

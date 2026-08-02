@@ -11,6 +11,7 @@ export interface TripDocumentItem {
   url_expires_in: number;
   is_cover: boolean;
   from_chat: boolean;
+  media_duration_seconds: number | null;
   created_at: string;
 }
 

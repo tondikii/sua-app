@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PollSerializer } from './serializers/poll.serializer';
+import { R2Service } from '../integrations/r2/r2.service';
 import type { PollType } from '@atur-perjalanan/shared-types';
 
 const USER_SUMMARY_SELECT = {
@@ -18,7 +19,10 @@ const USER_SUMMARY_SELECT = {
 
 @Injectable()
 export class VotingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly r2: R2Service,
+  ) {}
 
   /**
    * List all polls for a trip (tanggal/aktivitas/lainnya) with tallies.
@@ -74,7 +78,7 @@ export class VotingService {
           where: { pollId: poll.id, userId },
         });
 
-        return PollSerializer.toList(poll, poll.options, poll.creator, viewerVote);
+        return PollSerializer.toList(poll, poll.options, poll.creator, viewerVote, this.r2);
       }),
     );
 
@@ -95,12 +99,12 @@ export class VotingService {
     }
 
     // Normalize options: plain string -> { label }
-    const normalizedOptions: Array<{ label: string; candidate_id?: string }> = dto.options.map(
-      (opt: string | { label: string; candidate_id?: string }) =>
+    const rawOptions: Array<{ label: string; candidate_id?: string; start_date?: string; end_date?: string; maps_link?: string; ref_links?: Array<{ url: string; label?: string }> }> = dto.options.map(
+      (opt: string | { label: string; candidate_id?: string; start_date?: string; end_date?: string; maps_link?: string; ref_links?: Array<{ url: string; label?: string }> }) =>
         typeof opt === 'string' ? { label: opt } : opt,
     );
 
-    if (normalizedOptions.length < 1 || normalizedOptions.length > 10) {
+    if (rawOptions.length < 1 || rawOptions.length > 10) {
       throw new BadRequestException({
         code: 'INVALID_OPTIONS_COUNT',
         message: 'Must provide 1–10 options',
@@ -149,16 +153,47 @@ export class VotingService {
       });
 
       await Promise.all(
-        normalizedOptions.map((opt, idx) =>
-          tx.tripPollOption.create({
+        rawOptions.map(async (opt, idx) => {
+          let candidateId = opt.candidate_id ?? null;
+
+          // For tanggal polls, ensure each option with dates has a TripDateCandidate
+          // so that locking the poll can update the trip dates.
+          if (dto.poll_type === 'tanggal' && opt.start_date && opt.end_date) {
+            // If candidate_id is not a valid UUID or doesn't exist, create a new TripDateCandidate
+            const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opt.candidate_id || '');
+            let tripDateCandidate: { id: string } | null = null;
+
+            if (isValidUuid && opt.candidate_id) {
+              tripDateCandidate = await tx.tripDateCandidate.findUnique({
+                where: { id: opt.candidate_id },
+              });
+            }
+
+            if (!tripDateCandidate) {
+              const newCandidate = await tx.tripDateCandidate.create({
+                data: {
+                  tripId,
+                  startDate: new Date(opt.start_date),
+                  endDate: new Date(opt.end_date),
+                },
+              });
+              candidateId = newCandidate.id;
+            } else {
+              candidateId = tripDateCandidate.id;
+            }
+          }
+
+          return tx.tripPollOption.create({
             data: {
               pollId: created.id,
               label: opt.label,
-              candidateId: opt.candidate_id ?? null,
+              candidateId,
               sortOrder: idx,
+              mapsLink: opt.maps_link?.trim() || null,
+              refLinks: opt.ref_links ?? [],
             },
-          }),
-        ),
+          });
+        }),
       );
 
       return created;
@@ -178,7 +213,7 @@ export class VotingService {
       },
     });
 
-    return PollSerializer.toList(full!, full!.options, full!.creator, null);
+    return PollSerializer.toList(full!, full!.options, full!.creator, null, this.r2);
   }
 
   /**
@@ -222,8 +257,8 @@ export class VotingService {
 
     await this.prisma.$transaction(async (tx) => {
       if (dto.options) {
-        const normalizedOptions: Array<{ label: string; candidate_id?: string }> = dto.options.map(
-          (opt: string | { label: string; candidate_id?: string }) =>
+        const rawOptions: Array<{ label: string; candidate_id?: string; start_date?: string; end_date?: string; maps_link?: string; ref_links?: Array<{ url: string; label?: string }> }> = dto.options.map(
+          (opt: string | { label: string; candidate_id?: string; start_date?: string; end_date?: string; maps_link?: string; ref_links?: Array<{ url: string; label?: string }> }) =>
             typeof opt === 'string' ? { label: opt } : opt,
         );
         // Replace options: drop votes + old options, create fresh ones.
@@ -233,16 +268,44 @@ export class VotingService {
         });
         await tx.tripPollOption.deleteMany({ where: { pollId } });
         await Promise.all(
-          normalizedOptions.map((opt, idx) =>
-            tx.tripPollOption.create({
+          rawOptions.map(async (opt, idx) => {
+            let candidateId = opt.candidate_id ?? null;
+
+            if (poll.pollType === 'tanggal' && opt.start_date && opt.end_date) {
+              const isValidUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(opt.candidate_id || '');
+              let tripDateCandidate: { id: string } | null = null;
+
+              if (isValidUuid && opt.candidate_id) {
+                tripDateCandidate = await tx.tripDateCandidate.findUnique({
+                  where: { id: opt.candidate_id },
+                });
+              }
+
+              if (!tripDateCandidate) {
+                const newCandidate = await tx.tripDateCandidate.create({
+                  data: {
+                    tripId,
+                    startDate: new Date(opt.start_date),
+                    endDate: new Date(opt.end_date),
+                  },
+                });
+                candidateId = newCandidate.id;
+              } else {
+                candidateId = tripDateCandidate.id;
+              }
+            }
+
+            return tx.tripPollOption.create({
               data: {
                 pollId,
                 label: opt.label,
-                candidateId: opt.candidate_id ?? null,
+                candidateId,
                 sortOrder: idx,
+                mapsLink: opt.maps_link?.trim() || null,
+                refLinks: opt.ref_links ?? [],
               },
-            }),
-          ),
+            });
+          }),
         );
       }
 
@@ -272,7 +335,7 @@ export class VotingService {
       where: { pollId, userId },
     });
 
-    return PollSerializer.toList(full!, full!.options, full!.creator, viewerVote);
+    return PollSerializer.toList(full!, full!.options, full!.creator, viewerVote, this.r2);
   }
 
   /**
@@ -484,9 +547,12 @@ export class VotingService {
       });
 
       const winningOption = this.pickWinningOption(options);
-      const winningCandidate = await this.prisma.tripDateCandidate.findUnique({
-        where: { id: winningOption?.candidateId || '' },
-      });
+      const winningCandidate =
+        winningOption?.candidateId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(winningOption.candidateId)
+          ? await this.prisma.tripDateCandidate.findUnique({
+              where: { id: winningOption.candidateId },
+            })
+          : null;
 
       await this.prisma.$transaction(async (tx) => {
         await tx.tripPoll.update({
@@ -592,10 +658,10 @@ export class VotingService {
       });
     }
 
-    if (poll.status !== 'active' && poll.status !== 'expired') {
+    if (poll.status !== 'active' && poll.status !== 'expired' && poll.status !== 'locked') {
       throw new BadRequestException({
         code: 'POLL_NOT_ACTIVE',
-        message: 'Can only delete active or expired polls',
+        message: 'Can only delete active, expired, or locked polls',
       });
     }
 

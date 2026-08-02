@@ -17,7 +17,7 @@ describe('ChatService', () => {
 
   beforeEach(async () => {
     prisma = {
-      trip: { findFirst: jest.fn() },
+      trip: { findFirst: jest.fn(), updateMany: jest.fn() },
       tripMessage: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
@@ -25,7 +25,12 @@ describe('ChatService', () => {
         update: jest.fn(),
         count: jest.fn().mockResolvedValue(0),
       },
-      tripDocument: { create: jest.fn() },
+      tripDocument: {
+        create: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        deleteMany: jest.fn(),
+      },
+      tripActivity: { updateMany: jest.fn() },
       tripMessageRead: { upsert: jest.fn(), findUnique: jest.fn().mockResolvedValue(null) },
       $transaction: jest.fn((cb: any) => cb(prisma)),
     };
@@ -41,6 +46,7 @@ describe('ChatService', () => {
             extractStorageKey: jest.fn((url: string) =>
               url.replace('https://cdn.example.com/', ''),
             ),
+            resolvePublicUrl: jest.fn((key: string) => `https://cdn.example.com/${key}`),
           },
         },
       ],
@@ -183,6 +189,34 @@ describe('ChatService', () => {
       expect(prisma.tripMessage.update).toHaveBeenCalledWith({
         where: { id: MESSAGE },
         data: { deletedAt: expect.any(Date) },
+      });
+    });
+
+    it('hard-deletes linked chat media documents when the message is deleted', async () => {
+      prisma.tripMessage.findFirst.mockResolvedValue({
+        id: MESSAGE,
+        tripId: TRIP,
+        senderId: USER,
+        deletedAt: null,
+      });
+      prisma.tripDocument.findMany.mockResolvedValue([
+        { id: 'doc-1', tripId: TRIP },
+        { id: 'doc-2', tripId: TRIP },
+      ]);
+
+      await service.deleteMessage(TRIP, MESSAGE, USER);
+
+      expect(prisma.tripDocument.deleteMany).toHaveBeenCalledWith({
+        where: { messageId: MESSAGE },
+      });
+      // Cover references pointing at the deleted media must be cleared first.
+      expect(prisma.trip.updateMany).toHaveBeenCalledWith({
+        where: { id: TRIP, coverDocumentId: 'doc-1' },
+        data: { coverDocumentId: null },
+      });
+      expect(prisma.tripActivity.updateMany).toHaveBeenCalledWith({
+        where: { tripId: TRIP, coverDocumentId: 'doc-1' },
+        data: { coverDocumentId: null, coverSource: 'none' },
       });
     });
 

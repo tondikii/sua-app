@@ -14,7 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePublicProfile } from '@/features/users/hooks/usePublicProfile';
 import { useUserTrips } from '@/features/users/hooks/useUserTrips';
 import { goBackSmart } from '@/lib/navigation';
+import { openExternalLink } from '@/lib/externalLink';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { Globe } from '@/components/icons/Globe';
 import { TripCard } from '@/features/trips/components/TripCard';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
@@ -62,7 +64,14 @@ export default function PublicProfileScreen() {
               <Text style={styles.profileName}>{profile.name}</Text>
               {profile.bio && <Text style={styles.profileBio}>{profile.bio}</Text>}
               {profile.website_url && (
-                <Text style={styles.profileWebsite}>🌐 {profile.website_url}</Text>
+                <TouchableOpacity
+                  style={styles.profileWebsiteRow}
+                  onPress={() => openExternalLink(profile.website_url!)}
+                  activeOpacity={0.7}
+                >
+                  <Globe size={11} color={colors.teal} />
+                  <Text style={styles.profileWebsite} numberOfLines={1}>{profile.website_url}</Text>
+                </TouchableOpacity>
               )}
               <View style={styles.profileStats}>
                 <Text style={styles.profileStatNumber}>{profile.trip_count}</Text>
@@ -105,7 +114,8 @@ const styles = StyleSheet.create({
   profileInfo: { flex: 1, justifyContent: 'center' },
   profileName: { fontSize: 16, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
   profileBio: { ...typography.body, color: colors.muted, marginTop: 4 },
-  profileWebsite: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.teal, marginTop: 4 },
+  profileWebsiteRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  profileWebsite: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.teal, flex: 1 },
   profileStats: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 },
   profileStatNumber: { fontSize: 18, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
   profileStatLabel: { fontSize: 10, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },

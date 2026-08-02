@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Platform,
   ActivityIndicator,
@@ -14,6 +13,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTripDetail } from '@/features/trips/hooks/useTripDetail';
 import { useUpdateTrip } from '@/features/trips/hooks/useUpdateTrip';
+import { useToast } from '@/components/Toast';
 import { TagInput } from '@/components/TagInput';
 import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { TimePicker } from '@/components/TimePicker';
@@ -53,6 +53,7 @@ export default function EditTripScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { showToast } = useToast();
   const { data: trip, isLoading } = useTripDetail(tripId);
   const updateTrip = useUpdateTrip(tripId);
 
@@ -128,11 +129,11 @@ export default function EditTripScreen() {
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      Alert.alert('Validasi', 'Nama perjalanan wajib diisi');
+      showToast('Nama perjalanan wajib diisi');
       return;
     }
     if (!dateRange) {
-      Alert.alert('Validasi', 'Pilih rentang tanggal perjalanan.');
+      showToast('Pilih rentang tanggal perjalanan.');
       return;
     }
     setSaving(true);
@@ -148,11 +149,11 @@ export default function EditTripScreen() {
       });
       goBack();
     } catch {
-      Alert.alert('Gagal', 'Tidak dapat menyimpan perubahan');
+      showToast('Tidak dapat menyimpan perubahan');
     } finally {
       setSaving(false);
     }
-  }, [name, tags, dateRange, allDay, startTime, endTime, updateTrip]);
+  }, [name, tags, dateRange, allDay, startTime, endTime, updateTrip, showToast]);
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) {

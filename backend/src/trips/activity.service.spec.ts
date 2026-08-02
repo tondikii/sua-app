@@ -4,11 +4,13 @@ import { ActivityService } from './activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 import { R2Service } from '../integrations/r2/r2.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('ActivityService', () => {
   let service: ActivityService;
   let prisma: any;
   let googleMaps: any;
+  let notifications: any;
 
   const TRIP = 'trip-1';
   const USER = 'user-1';
@@ -30,6 +32,10 @@ describe('ActivityService', () => {
       resolveThumbnailFromMapsLink: jest.fn().mockResolvedValue(null),
     };
 
+    notifications = {
+      createManyNotifications: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActivityService,
@@ -45,6 +51,7 @@ describe('ActivityService', () => {
             ),
           },
         },
+        { provide: NotificationsService, useValue: notifications },
       ],
     }).compile();
 
@@ -60,8 +67,8 @@ describe('ActivityService', () => {
           tripId: TRIP,
           placeName: 'Beach',
           activityDate: new Date('2027-06-20'),
-          startTime: new Date('1970-01-01T09:00:00'),
-          endTime: new Date('1970-01-01T12:00:00'),
+          startTime: new Date('1970-01-01T09:00:00Z'),
+          endTime: new Date('1970-01-01T12:00:00Z'),
           kind: 'activity',
           description: 'Swimming',
           locationLabel: 'Pantai Tiga Warna',
@@ -97,6 +104,10 @@ describe('ActivityService', () => {
         status: 'fixed',
         startDate: new Date('2027-06-19'),
         endDate: new Date('2027-06-22'),
+        participants: [
+          { userId: USER },
+          { userId: 'user-2' },
+        ],
       });
     });
 
@@ -106,8 +117,8 @@ describe('ActivityService', () => {
         tripId: TRIP,
         placeName: 'Breakfast',
         activityDate: new Date('2027-06-20'),
-        startTime: new Date('1970-01-01T09:00:00'),
-        endTime: new Date('1970-01-01T10:00:00'),
+        startTime: new Date('1970-01-01T09:00:00Z'),
+        endTime: new Date('1970-01-01T10:00:00Z'),
         kind: 'meal',
         description: null,
         locationLabel: null,
@@ -133,6 +144,19 @@ describe('ActivityService', () => {
 
       expect(result.place_name).toBe('Breakfast');
       expect(result.kind).toBe('meal');
+      expect(notifications.createManyNotifications).toHaveBeenCalledWith([
+        {
+          userId: 'user-2',
+          type: 'activity_update',
+          actorId: USER,
+          tripId: TRIP,
+          payload: {
+            activity_id: ACTIVITY,
+            activity_name: 'Breakfast',
+            action: 'created',
+          },
+        },
+      ]);
     });
 
     it('rejects start_time > end_time', async () => {
@@ -146,13 +170,13 @@ describe('ActivityService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('rejects activity_date outside trip range', async () => {
+    it('rejects day_number outside trip range', async () => {
       await expect(
         service.createActivity(TRIP, USER, {
           place_name: 'Out of Range',
           start_time: '09:00',
           end_time: '10:00',
-          activity_date: '2027-07-01', // outside 06-19 to 06-22
+          day_number: 99, // outside 06-19 to 06-22 (4 days)
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -161,6 +185,7 @@ describe('ActivityService', () => {
       prisma.trip.findFirst.mockResolvedValue({
         id: TRIP,
         status: 'voting_pending',
+        participants: [{ userId: USER }, { userId: 'user-2' }],
       });
 
       // activity_date optional when voting_pending
@@ -169,8 +194,8 @@ describe('ActivityService', () => {
         tripId: TRIP,
         placeName: 'Flexible Activity',
         activityDate: null,
-        startTime: new Date('1970-01-01T09:00:00'),
-        endTime: new Date('1970-01-01T10:00:00'),
+        startTime: new Date('1970-01-01T09:00:00Z'),
+        endTime: new Date('1970-01-01T10:00:00Z'),
         kind: 'activity',
         description: null,
         locationLabel: null,
@@ -204,8 +229,8 @@ describe('ActivityService', () => {
         tripId: TRIP,
         placeName: 'Beach',
         activityDate: new Date('2027-06-20'),
-        startTime: new Date('1970-01-01T09:00:00'),
-        endTime: new Date('1970-01-01T10:00:00'),
+        startTime: new Date('1970-01-01T09:00:00Z'),
+        endTime: new Date('1970-01-01T10:00:00Z'),
         kind: 'destination',
         description: null,
         locationLabel: null,
@@ -240,14 +265,18 @@ describe('ActivityService', () => {
         status: 'fixed',
         startDate: new Date('2027-06-19'),
         endDate: new Date('2027-06-22'),
+        participants: [
+          { userId: USER },
+          { userId: 'user-2' },
+        ],
       });
       prisma.tripActivity.findFirst.mockResolvedValue({
         id: ACTIVITY,
         tripId: TRIP,
         placeName: 'Old Name',
         activityDate: new Date('2027-06-20'),
-        startTime: new Date('1970-01-01T09:00:00'),
-        endTime: new Date('1970-01-01T10:00:00'),
+        startTime: new Date('1970-01-01T09:00:00Z'),
+        endTime: new Date('1970-01-01T10:00:00Z'),
         kind: 'activity',
         description: null,
         locationLabel: null,
@@ -269,8 +298,8 @@ describe('ActivityService', () => {
         tripId: TRIP,
         placeName: 'New Name',
         activityDate: new Date('2027-06-20'),
-        startTime: new Date('1970-01-01T09:00:00'),
-        endTime: new Date('1970-01-01T10:00:00'),
+        startTime: new Date('1970-01-01T09:00:00Z'),
+        endTime: new Date('1970-01-01T10:00:00Z'),
         kind: 'activity',
         description: null,
         locationLabel: null,
@@ -289,6 +318,19 @@ describe('ActivityService', () => {
       const result = await service.updateActivity(TRIP, ACTIVITY, USER, { place_name: 'New Name' });
 
       expect(result.place_name).toBe('New Name');
+      expect(notifications.createManyNotifications).toHaveBeenCalledWith([
+        {
+          userId: 'user-2',
+          type: 'activity_update',
+          actorId: USER,
+          tripId: TRIP,
+          payload: {
+            activity_id: ACTIVITY,
+            activity_name: 'New Name',
+            action: 'updated',
+          },
+        },
+      ]);
     });
   });
 

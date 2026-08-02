@@ -25,6 +25,8 @@ export default () => ({
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
     mapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+    calendarClientId: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+    calendarClientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
   },
 
   r2: {
@@ -42,5 +44,9 @@ export default () => ({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
     from: process.env.MAIL_FROM,
+  },
+
+  expo: {
+    accessToken: process.env.EXPO_ACCESS_TOKEN,
   },
 });

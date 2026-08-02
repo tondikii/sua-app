@@ -19,6 +19,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { queryClient } from '../src/api/queryClient';
 import { MOBILE_MAX_WIDTH } from '../src/theme/layout';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
+import { ToastProvider } from '../src/components/Toast';
+import { useNotificationsSubscription } from '../src/realtime/useNotificationsSubscription';
+import { usePushNotifications } from '../src/features/notifications/push/usePushNotifications';
 import { SplashScreen } from '../src/components/SplashScreen';
 
 ExpoSplashScreen.preventAutoHideAsync();
@@ -37,7 +40,12 @@ function MobileContainer({ children }: { children: ReactNode }) {
 
 /** Shows the branded splash until fonts are ready AND the session has hydrated. */
 function RootGate({ children }: { children: ReactNode }) {
-  const { isHydrated } = useAuth();
+  const { isHydrated, user } = useAuth();
+
+  // Subscribe to real-time notifications when authenticated
+  useNotificationsSubscription(user?.id);
+  // Register the device for push notifications (native only)
+  usePushNotifications(user?.id);
 
   useEffect(() => {
     ExpoSplashScreen.hideAsync();
@@ -80,18 +88,20 @@ export default function RootLayout() {
           <StatusBar style="dark" />
           {fontsReady && (
             <RootGate>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="trip" />
-                <Stack.Screen name="notifications" />
-                <Stack.Screen name="settings" />
-                <Stack.Screen name="profile" />
-                <Stack.Screen
-                  name="trip/create"
-                  options={{ presentation: 'modal' }}
-                />
-              </Stack>
+              <ToastProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(auth)" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="trip" />
+                  <Stack.Screen name="notifications" />
+                  <Stack.Screen name="settings" />
+                  <Stack.Screen name="profile" />
+                  <Stack.Screen
+                    name="trip/create"
+                    options={{ presentation: 'modal' }}
+                  />
+                </Stack>
+              </ToastProvider>
             </RootGate>
           )}
         </SafeAreaProvider>

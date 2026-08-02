@@ -1,16 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { R2Service } from '../integrations/r2/r2.service';
+import { PushNotificationsService } from './push-notifications.service';
 import { NotificationType } from '@prisma/client';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
   let prismaService: PrismaService;
+  let pushService: PushNotificationsService;
 
   const mockPrismaService = {
     notification: {
       create: jest.fn(),
+      createMany: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -25,6 +29,14 @@ describe('NotificationsService', () => {
     },
   };
 
+  const mockR2Service = {
+    presignDownloads: jest.fn().mockResolvedValue(new Map()),
+  };
+
+  const mockPushService = {
+    sendAsync: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -33,11 +45,20 @@ describe('NotificationsService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: R2Service,
+          useValue: mockR2Service,
+        },
+        {
+          provide: PushNotificationsService,
+          useValue: mockPushService,
+        },
       ],
     }).compile();
 
     service = module.get<NotificationsService>(NotificationsService);
     prismaService = module.get<PrismaService>(PrismaService);
+    pushService = module.get<PushNotificationsService>(PushNotificationsService);
   });
 
   afterEach(() => {
@@ -76,6 +97,12 @@ describe('NotificationsService', () => {
           tripId: 'trip-1',
           payload: { invitation_id: 'inv-1' },
         },
+      });
+      expect(mockPushService.sendAsync).toHaveBeenCalledWith(['user-1'], {
+        type: NotificationType.invite,
+        actorId: 'user-2',
+        tripId: 'trip-1',
+        payload: { invitation_id: 'inv-1' },
       });
     });
 
@@ -160,8 +187,14 @@ describe('NotificationsService', () => {
         id: 'notif-0',
         type: NotificationType.invite,
         is_read: false,
-        actor: mockActors[0],
-        trip: mockTrips[0],
+        actor: { id: 'user-2', name: 'User 2', username: 'user2', avatar_url: null },
+        trip: {
+          id: 'trip-1',
+          name: 'Test Trip',
+          status: 'voting_pending',
+          start_date: null,
+          end_date: null,
+        },
       });
       expect(result.next_cursor).toBeTruthy();
     });
@@ -265,6 +298,64 @@ describe('NotificationsService', () => {
       mockPrismaService.notification.findUnique.mockResolvedValue(mockNotification);
 
       await expect(service.markAsRead('notif-1', 'user-1')).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('createManyNotifications', () => {
+    it('should bulk-create notifications and trigger push', async () => {
+      mockPrismaService.notification.createMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.createManyNotifications([
+        {
+          userId: 'user-1',
+          type: NotificationType.activity_update,
+          actorId: 'user-2',
+          tripId: 'trip-1',
+          payload: { activity_id: 'act-1', activity_name: 'Pantai', action: 'created' },
+        },
+        {
+          userId: 'user-3',
+          type: NotificationType.activity_update,
+          actorId: 'user-2',
+          tripId: 'trip-1',
+          payload: { activity_id: 'act-1', activity_name: 'Pantai', action: 'created' },
+        },
+      ]);
+
+      expect(mockPrismaService.notification.createMany).toHaveBeenCalledWith({
+        data: [
+          {
+            userId: 'user-1',
+            type: NotificationType.activity_update,
+            actorId: 'user-2',
+            tripId: 'trip-1',
+            payload: { activity_id: 'act-1', activity_name: 'Pantai', action: 'created' },
+          },
+          {
+            userId: 'user-3',
+            type: NotificationType.activity_update,
+            actorId: 'user-2',
+            tripId: 'trip-1',
+            payload: { activity_id: 'act-1', activity_name: 'Pantai', action: 'created' },
+          },
+        ],
+        skipDuplicates: true,
+      });
+      expect(result).toEqual({ count: 2 });
+      expect(mockPushService.sendAsync).toHaveBeenCalledWith(['user-1', 'user-3'], {
+        type: NotificationType.activity_update,
+        actorId: 'user-2',
+        tripId: 'trip-1',
+        payload: { activity_id: 'act-1', activity_name: 'Pantai', action: 'created' },
+      });
+    });
+
+    it('should return count 0 without calling anything for empty items', async () => {
+      const result = await service.createManyNotifications([]);
+
+      expect(result).toEqual({ count: 0 });
+      expect(mockPrismaService.notification.createMany).not.toHaveBeenCalled();
+      expect(mockPushService.sendAsync).not.toHaveBeenCalled();
     });
   });
 

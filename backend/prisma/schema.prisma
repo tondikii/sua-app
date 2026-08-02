@@ -16,35 +16,41 @@ datasource db {
 // ────────────────────────────────────────────────────────────
 
 model User {
-  id             String   @id @default(uuid()) @db.Uuid
-  googleId       String   @unique @map("google_id") @db.VarChar(255)
-  email          String   @unique @db.VarChar(320)
-  name           String   @db.VarChar(255)
-  username       String   @unique @db.VarChar(50)
-  avatarUrl      String?  @map("avatar_url") @db.Text
-  bio            String?  @db.Text
-  websiteUrl     String?  @map("website_url") @db.Text
-  locationLabel  String?  @map("location_label") @db.Text
-  isPublic       Boolean  @default(true) @map("is_public")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  id                   String    @id @default(uuid()) @db.Uuid
+  googleId             String    @unique @map("google_id") @db.VarChar(255)
+  email                String    @unique @db.VarChar(320)
+  name                 String    @db.VarChar(255)
+  username             String    @unique @db.VarChar(50)
+  avatarUrl            String?   @map("avatar_url") @db.Text
+  bio                  String?   @db.Text
+  websiteUrl           String?   @map("website_url") @db.Text
+  locationLabel        String?   @map("location_label") @db.Text
+  isPublic             Boolean   @default(true) @map("is_public")
+  // Google Calendar OAuth tokens (M16) — used to create events in the
+  // user's own calendar. Sensitive: never expose via serializers.
+  googleAccessToken    String?   @map("google_access_token") @db.Text
+  googleRefreshToken   String?   @map("google_refresh_token") @db.Text
+  googleTokenExpiresAt DateTime? @map("google_token_expires_at") @db.Timestamptz
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  tripsCreated     Trip[]             @relation("TripCreator")
-  tripParticipants TripParticipant[]
-  invitationsSent  TripInvitation[]   @relation("InvitedBy")
-  invitationsReceived TripInvitation[] @relation("InvitedUser")
-  messages         TripMessage[]      @relation("MessageSender")
-  documents        TripDocument[]     @relation("DocumentUploader")
-  notifications    Notification[]     @relation("NotificationUser")
-  notifActors      Notification[]     @relation("NotificationActor")
-  wishlists        Wishlist[]
-  pollsCreated     TripPoll[]         @relation("PollCreator")
-  dateVotes        TripDateVote[]
-  pollVotes        TripPollVote[]
-  messageReads     TripMessageRead[]
-  followers        Follow[]           @relation("Following")
-  following        Follow[]           @relation("Follower")
+  tripsCreated        Trip[]            @relation("TripCreator")
+  tripParticipants    TripParticipant[]
+  invitationsSent     TripInvitation[]  @relation("InvitedBy")
+  invitationsReceived TripInvitation[]  @relation("InvitedUser")
+  messages            TripMessage[]     @relation("MessageSender")
+  documents           TripDocument[]    @relation("DocumentUploader")
+  notifications       Notification[]    @relation("NotificationUser")
+  notifActors         Notification[]    @relation("NotificationActor")
+  pushTokens          PushToken[]       @relation("UserPushTokens")
+  wishlists           Wishlist[]
+  pollsCreated        TripPoll[]        @relation("PollCreator")
+  dateVotes           TripDateVote[]
+  pollVotes           TripPollVote[]
+  messageReads        TripMessageRead[]
+  followers           Follow[]          @relation("Following")
+  following           Follow[]          @relation("Follower")
 
   @@map("users")
 }
@@ -70,34 +76,34 @@ model Follow {
 // ────────────────────────────────────────────────────────────
 
 model Trip {
-  id               String    @id @default(uuid()) @db.Uuid
-  creatorId        String    @map("creator_id") @db.Uuid
-  name             String    @db.VarChar(255)
-  tags             Json      @default("[]")
-  status           TripStatus @default(voting_pending)
-  startDate        DateTime? @map("start_date") @db.Date
-  endDate          DateTime? @map("end_date") @db.Date
-  isAllDay         Boolean   @default(true) @map("is_all_day")
-  startTime        DateTime? @map("start_time") @db.Time
-  endTime          DateTime? @map("end_time") @db.Time
-  isPublic         Boolean   @default(false) @map("is_public")
-  coverDocumentId  String?   @map("cover_document_id") @db.Uuid
-  votingDeadline   DateTime? @map("voting_deadline") @db.Timestamptz
-  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id              String     @id @default(uuid()) @db.Uuid
+  creatorId       String     @map("creator_id") @db.Uuid
+  name            String     @db.VarChar(255)
+  tags            Json       @default("[]")
+  status          TripStatus @default(voting_pending)
+  startDate       DateTime?  @map("start_date") @db.Date
+  endDate         DateTime?  @map("end_date") @db.Date
+  isAllDay        Boolean    @default(true) @map("is_all_day")
+  startTime       DateTime?  @map("start_time") @db.Time
+  endTime         DateTime?  @map("end_time") @db.Time
+  isPublic        Boolean    @default(false) @map("is_public")
+  coverDocumentId String?    @map("cover_document_id") @db.Uuid
+  votingDeadline  DateTime?  @map("voting_deadline") @db.Timestamptz
+  deletedAt       DateTime?  @map("deleted_at") @db.Timestamptz
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
-  creator      User              @relation("TripCreator", fields: [creatorId], references: [id])
-  coverDocument TripDocument?    @relation("TripCover", fields: [coverDocumentId], references: [id])
-  participants TripParticipant[]
-  invitations  TripInvitation[]
+  creator        User                @relation("TripCreator", fields: [creatorId], references: [id])
+  coverDocument  TripDocument?       @relation("TripCover", fields: [coverDocumentId], references: [id])
+  participants   TripParticipant[]
+  invitations    TripInvitation[]
   dateCandidates TripDateCandidate[]
-  polls        TripPoll[]
-  activities   TripActivity[]
-  messages     TripMessage[]
-  messageReads TripMessageRead[]
-  documents    TripDocument[]    @relation("TripDocuments")
-  notifications Notification[]
+  polls          TripPoll[]
+  activities     TripActivity[]
+  messages       TripMessage[]
+  messageReads   TripMessageRead[]
+  documents      TripDocument[]      @relation("TripDocuments")
+  notifications  Notification[]
 
   @@map("trips")
 }
@@ -168,9 +174,8 @@ model TripDateCandidate {
   endDate   DateTime @map("end_date") @db.Date
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  votes       TripDateVote[]
-  pollOptions TripPollOption[]
+  trip  Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  votes TripDateVote[]
 
   @@map("trip_date_candidates")
 }
@@ -192,18 +197,18 @@ model TripDateVote {
 // ────────────────────────────────────────────────────────────
 
 model TripPoll {
-  id         String     @id @default(uuid()) @db.Uuid
-  tripId     String     @map("trip_id") @db.Uuid
-  pollType   PollType   @map("poll_type")
-  title      String     @db.VarChar(255)
-  status     PollStatus @default(active)
-  deadline   DateTime?  @db.Timestamptz
-  lockedAt   DateTime?  @map("locked_at") @db.Timestamptz
-  createdBy  String     @map("created_by") @db.Uuid
-  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  id        String     @id @default(uuid()) @db.Uuid
+  tripId    String     @map("trip_id") @db.Uuid
+  pollType  PollType   @map("poll_type")
+  title     String     @db.VarChar(255)
+  status    PollStatus @default(active)
+  deadline  DateTime?  @db.Timestamptz
+  lockedAt  DateTime?  @map("locked_at") @db.Timestamptz
+  createdBy String     @map("created_by") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
 
-  trip    Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  creator User            @relation("PollCreator", fields: [createdBy], references: [id])
+  trip    Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator User             @relation("PollCreator", fields: [createdBy], references: [id])
   options TripPollOption[]
   votes   TripPollVote[]
 
@@ -228,11 +233,12 @@ model TripPollOption {
   pollId      String  @map("poll_id") @db.Uuid
   label       String  @db.Text
   sortOrder   Int     @default(0) @map("sort_order")
-  candidateId String? @map("candidate_id") @db.Uuid
+  candidateId String? @map("candidate_id")
+  mapsLink    String? @map("maps_link")
+  refLinks    Json    @default("[]") @map("ref_links")
 
-  poll      TripPoll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  candidate TripDateCandidate? @relation(fields: [candidateId], references: [id])
-  votes     TripPollVote[]
+  poll  TripPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes TripPollVote[]
 
   @@map("trip_poll_options")
 }
@@ -272,6 +278,7 @@ model TripActivity {
   coverDocumentId String?      @map("cover_document_id") @db.Uuid
   thumbnailUrl    String?      @map("thumbnail_url") @db.Text
   sortOrder       Int          @default(0) @map("sort_order")
+  dayNumber       Int          @default(1) @map("day_number")
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -313,10 +320,11 @@ model TripMessage {
   deletedAt     DateTime?   @map("deleted_at") @db.Timestamptz
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
-  trip    Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  sender  User          @relation("MessageSender", fields: [senderId], references: [id])
-  replyTo TripMessage?  @relation("MessageReply", fields: [replyToId], references: [id])
-  replies TripMessage[] @relation("MessageReply")
+  trip      Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sender    User              @relation("MessageSender", fields: [senderId], references: [id])
+  replyTo   TripMessage?      @relation("MessageReply", fields: [replyToId], references: [id])
+  replies   TripMessage[]     @relation("MessageReply")
+  documents TripDocument[]    @relation("MessageDocument")
 
   @@map("trip_messages")
 }
@@ -344,19 +352,22 @@ model TripMessageRead {
 // ────────────────────────────────────────────────────────────
 
 model TripDocument {
-  id          String    @id @default(uuid()) @db.Uuid
-  tripId      String    @map("trip_id") @db.Uuid
-  uploadedBy  String    @map("uploaded_by") @db.Uuid
-  mediaType   MediaType @map("media_type")
-  storageKey  String    @map("storage_key") @db.Text
-  storageUrl  String    @map("storage_url") @db.Text
-  fromChat    Boolean   @default(false) @map("from_chat")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id            String    @id @default(uuid()) @db.Uuid
+  tripId        String    @map("trip_id") @db.Uuid
+  uploadedBy    String    @map("uploaded_by") @db.Uuid
+  mediaType     MediaType @map("media_type")
+  storageKey    String    @map("storage_key") @db.Text
+  storageUrl    String    @map("storage_url") @db.Text
+  mediaDuration String?   @map("media_duration") @db.Text // interval string (HH:MM:SS)
+  fromChat      Boolean   @default(false) @map("from_chat")
+  messageId     String?   @map("message_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  trip           Trip           @relation("TripDocuments", fields: [tripId], references: [id], onDelete: Cascade)
-  uploader       User           @relation("DocumentUploader", fields: [uploadedBy], references: [id])
-  tripsAsCover   Trip[]         @relation("TripCover")
+  trip              Trip           @relation("TripDocuments", fields: [tripId], references: [id], onDelete: Cascade)
+  uploader          User           @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+  tripsAsCover      Trip[]         @relation("TripCover")
   activitiesAsCover TripActivity[] @relation("ActivityCover")
+  message           TripMessage?   @relation("MessageDocument", fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("trip_documents")
 }
@@ -392,6 +403,25 @@ enum NotificationType {
   follow
   voting_deadline
   activity_update
+}
+
+// ────────────────────────────────────────────────────────────
+//  PUSH TOKENS (Expo push device registrations)
+// ────────────────────────────────────────────────────────────
+
+model PushToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @db.Text
+  platform  String   @db.VarChar(16) // 'ios' | 'android'
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation("UserPushTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("push_tokens")
 }
 
 // ────────────────────────────────────────────────────────────

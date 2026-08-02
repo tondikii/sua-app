@@ -13,15 +13,28 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUserTrips } from '@/features/users/hooks/useUserTrips';
 import { EmptyTripsState } from '@/features/home/components/EmptyTripsState';
+import { openExternalLink } from '@/lib/externalLink';
 import { Settings } from '@/components/icons/Settings';
 import { Globe } from '@/components/icons/Globe';
+import { Calendar } from '@/components/icons/Calendar';
+import { formatDateRange } from '@/features/trips/components/TripDateUtils';
 import { colors, avatarColorFor } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
+import type { TripSummary } from '@atur-perjalanan/shared-types';
 
 const GRID_GAP = 12;
 const GRID_COLUMNS = 2;
 
-function ProfileTripGridCard({ trip, onPress, cardWidth }: { trip: { id: string; name: string; cover_image_url: string | null; tags?: string[] }; onPress: () => void; cardWidth: number }) {
+function ProfileTripGridCard({ trip, onPress, cardWidth }: { trip: TripSummary; onPress: () => void; cardWidth: number }) {
+  const dateRange = formatDateRange(
+    trip.start_date,
+    trip.end_date,
+    trip.is_all_day,
+    trip.start_time,
+    trip.end_time,
+    trip.status,
+  );
+
   return (
     <TouchableOpacity style={[styles.gridCard, { width: cardWidth }]} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.gridCardImage}>
@@ -42,6 +55,10 @@ function ProfileTripGridCard({ trip, onPress, cardWidth }: { trip: { id: string;
       </View>
       <View style={styles.gridCardBody}>
         <Text style={styles.gridCardTitle} numberOfLines={1}>{trip.name}</Text>
+        <View style={styles.gridCardDateRow}>
+          <Calendar size={11} color={colors.muted} />
+          <Text style={styles.gridCardDate} numberOfLines={1}>{dateRange}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -95,10 +112,14 @@ export default function ProfileScreen() {
               <Text style={styles.profileName}>{user?.name ?? ''}</Text>
               {user?.bio && <Text style={styles.profileBio}>{user.bio}</Text>}
               {user?.website_url && (
-                <View style={styles.websiteRow}>
+                <TouchableOpacity
+                  style={styles.websiteRow}
+                  onPress={() => openExternalLink(user.website_url!)}
+                  activeOpacity={0.7}
+                >
                   <Globe size={11} color={colors.teal} />
-                  <Text style={styles.profileWebsite}>{user.website_url}</Text>
-                </View>
+                  <Text style={styles.profileWebsite} numberOfLines={1}>{user.website_url}</Text>
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -213,6 +234,8 @@ const styles = StyleSheet.create({
   gridTagText: { fontSize: 8, fontFamily: 'PlusJakartaSans_700Bold', color: colors.teal },
   gridCardBody: { padding: 9, paddingHorizontal: 10, paddingBottom: 10 },
   gridCardTitle: { fontSize: 12, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal, lineHeight: 15.6 },
+  gridCardDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  gridCardDate: { flex: 1, fontSize: 10, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, lineHeight: 13 },
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',

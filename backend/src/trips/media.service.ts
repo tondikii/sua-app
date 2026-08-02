@@ -141,6 +141,7 @@ export class MediaService {
       mediaType: string;
       storageKey: string;
       storageUrl: string;
+      mediaDuration: string | null;
       fromChat: boolean;
       createdAt: Date;
     },

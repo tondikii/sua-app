@@ -13,13 +13,15 @@ import { getCoverIconMeta } from '../utils/coverIcons';
 import { ActivityItemMenu } from './ActivityItemMenu';
 import { MapPin } from '@/components/icons/MapPin';
 import { MoreHorizontal } from '@/components/icons/MoreHorizontal';
-import { ExternalLink } from '@/components/icons/ExternalLink';
+import { Navigation } from '@/components/icons/Navigation';
 import { Users } from '@/components/icons/Users';
 import { Train } from '@/components/icons/Train';
 import { UtensilsCrossed } from '@/components/icons/UtensilsCrossed';
 import { Compass } from '@/components/icons/Compass';
 import { colors } from '@/theme/colors';
+import { shadows } from '@/theme/shadows';
 import { typography } from '@/theme/typography';
+import { MONTH_NAMES_FULL } from '@/features/trips/components/TripDateUtils';
 
 interface ItineraryTimelineProps {
   activities: TripActivity[];
@@ -35,17 +37,27 @@ interface ItineraryTimelineProps {
   onPressNav: (url: string) => void;
   onEditActivity: (activity: TripActivity) => void;
   onDeleteActivity: (activity: TripActivity) => void;
-  onPressAdd: () => void;
   referenceNow?: Date;
 }
 
-/** Format "HH:MM" in 24-hour wall-clock (e.g. "19:00" stays "19:00"). */
 function formatTime24(time: string): string {
   return time;
 }
 
+function parseDate(dateStr: string): Date {
+  const parts = dateStr.split('-');
+  return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+}
+
+function formatDateForHeader(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = parseDate(dateStr);
+  const dayName = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][d.getDay()];
+  return `${dayName}, ${d.getDate()} ${MONTH_NAMES_FULL[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 function DayTabs({ days, activeIndex, onChange }: {
-  days: { dayLabel: string; dayIndex: number }[];
+  days: { dayNumber: number; label: string }[];
   activeIndex: number;
   onChange: (i: number) => void;
 }) {
@@ -55,13 +67,13 @@ function DayTabs({ days, activeIndex, onChange }: {
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayTabs} contentContainerStyle={styles.dayTabsContent}>
       {days.map((day, i) => (
         <TouchableOpacity
-          key={day.dayIndex}
+          key={day.dayNumber}
           style={[styles.dayTab, i === activeIndex && styles.dayTabActive]}
           onPress={() => onChange(i)}
           activeOpacity={0.7}
         >
           <Text style={[styles.dayTabText, i === activeIndex && styles.dayTabTextActive]}>
-            Hari {day.dayIndex + 1}
+            Hari {day.dayNumber}
           </Text>
         </TouchableOpacity>
       ))}
@@ -94,21 +106,30 @@ function ActivityItemRow({
   const CoverIcon = iconMeta.icon;
   const hasThumb = Boolean(activity.thumbnail_url);
   const hasCoverIcon = Boolean(activity.cover_icon);
+  const isPresent = timeState === 'present';
 
   return (
     <View style={[styles.itemRow, { opacity: stateMeta.opacity }]}>
-      {/* Timeline dot */}
       <View style={styles.dotColumn}>
         <View style={[styles.dotRing, { backgroundColor: stateMeta.ringColor }]}>
-          <View style={[styles.dot, { backgroundColor: stateMeta.dotColor }]} />
+          <View
+            style={[
+              styles.dot,
+              isPresent && styles.dotPresent,
+              { backgroundColor: stateMeta.dotColor },
+            ]}
+          />
         </View>
         <View style={[styles.verticalLine, { backgroundColor: stateMeta.cardBorderColor }]} />
       </View>
 
-      {/* Card */}
       <View style={[styles.itemCardWrap, menuOpen && styles.itemCardWrapMenuOpen]}>
         <TouchableOpacity
-          style={[styles.itemCard, { borderColor: stateMeta.cardBorderColor }]}
+          style={[
+            styles.itemCard,
+            { borderColor: stateMeta.cardBorderColor },
+            isPresent && styles.itemCardPresent,
+          ]}
           onPress={onPress}
           activeOpacity={0.7}
         >
@@ -116,7 +137,7 @@ function ActivityItemRow({
             <Text style={[styles.itemTime, { color: stateMeta.timeColor }]}>
               {formatTime24(activity.start_time)} – {formatTime24(activity.end_time)}
             </Text>
-            {timeState === 'present' && (
+            {isPresent && (
               <View style={styles.nowBadge}>
                 <Text style={styles.nowBadgeText}>Sekarang</Text>
               </View>
@@ -127,7 +148,6 @@ function ActivityItemRow({
           </View>
 
           <View style={styles.itemContent}>
-            {/* Thumbnail */}
             {hasThumb ? (
               <Image source={{ uri: activity.thumbnail_url! }} style={styles.thumbnail} resizeMode="cover" />
             ) : hasCoverIcon ? (
@@ -152,11 +172,11 @@ function ActivityItemRow({
 
             {(activity.kind === 'destination' || activity.kind === 'activity') && activity.maps_link && (
               <TouchableOpacity
-                style={styles.navButton}
+                style={[styles.navButton, isPresent && styles.navButtonPresent]}
                 onPress={() => onPressNav(activity.maps_link!)}
                 activeOpacity={0.7}
               >
-                <ExternalLink size={14} color={colors.teal} />
+                <Navigation size={15} color={isPresent ? colors.coral : colors.teal} />
               </TouchableOpacity>
             )}
           </View>
@@ -208,62 +228,43 @@ export function ItineraryTimeline({
   onPressNav,
   onEditActivity,
   onDeleteActivity,
-  onPressAdd,
   referenceNow = new Date(),
 }: ItineraryTimelineProps) {
   const days = buildItineraryDays(activities, startDate, endDate, tripStatus);
   const currentDay = days[activeDayIndex] ?? days[0];
-
-  // True empty state — no activities at all (regardless of dates) → centered.
-  if (activities.length === 0) {
-    return (
-      <View style={styles.emptyWrap}>
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconBox}>
-            <MapPin size={32} color={colors.coral} />
-          </View>
-          <Text style={styles.emptyTitle}>Belum ada aktivitas</Text>
-          <Text style={styles.emptyDesc}>
-            Susun aktivitas per hari — titik kumpul, transport, kuliner, dan destinasi. Warna timeline
-            mengikuti status waktu, bukan jenis aktivitas.
-          </Text>
-        </View>
-        <View style={styles.emptyCtaWrap}>
-          <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
-            <Text style={styles.addButtonText}>Buat Aktivitas Pertama</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
 
   if (!currentDay) {
     return null;
   }
 
   const segments = buildTimelineSegments(currentDay);
-  const totalActivities = activities.length;
-  const totalDays = days.filter((d) => d.items.length > 0 || d.date).length;
   const hasItems = segments.length > 0;
 
+  // Date for the header (computed from startDate + dayNumber - 1)
+  const dateForHeader = currentDay.date ? formatDateForHeader(currentDay.date) : 'Tanggal belum ditentukan';
+
+  // Tab data
+  const tabData = days.map((d) => ({ dayNumber: d.dayNumber, label: `Hari ${d.dayNumber}` }));
+
   return (
-    <View style={[styles.container, hasItems ? styles.containerWithItems : styles.containerEmpty]}>
+    <View style={styles.container}>
       <View>
-        {/* Summary */}
-        <Text style={styles.summary}>
-          {totalActivities} aktivitas · {totalDays} hari
-        </Text>
-
         {/* Day tabs */}
-        <DayTabs days={days} activeIndex={activeDayIndex} onChange={onChangeDay} />
+        <DayTabs days={tabData} activeIndex={activeDayIndex} onChange={onChangeDay} />
 
-        {/* Day header */}
-        <Text style={styles.dayHeader}>{currentDay.dayLabel}</Text>
-        <Text style={styles.windowBadge}>
-          {formatTime24(currentDay.windowStart)} – {formatTime24(currentDay.windowEnd)}
-        </Text>
+        {/* Day header — date left, time badge right */}
+        <View style={styles.dayHeaderRow}>
+          <View style={styles.dayHeaderTexts}>
+            <Text style={styles.dayDate}>{dateForHeader}</Text>
+          </View>
+          <View style={styles.timeBadge}>
+            <Text style={styles.timeBadgeText}>
+              {formatTime24(currentDay.windowStart)} – {formatTime24(currentDay.windowEnd)}
+            </Text>
+          </View>
+        </View>
 
-        {/* Timeline */}
+        {/* Timeline or empty state */}
         {hasItems ? (
           <View style={styles.timeline}>
             {segments.map((seg, i) => {
@@ -275,7 +276,7 @@ export function ItineraryTimeline({
               const timeState = resolveItineraryTimeState(
                 activity.start_time,
                 activity.end_time,
-                activity.activity_date,
+                activity.activity_date ?? currentDay.date,
                 tripStatus,
                 referenceNow,
               );
@@ -301,17 +302,17 @@ export function ItineraryTimeline({
             })}
           </View>
         ) : (
-          <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayText}>Tidak ada aktivitas di hari ini</Text>
+          <View style={styles.emptyStateWrap}>
+            <View style={styles.emptyStateIconBox}>
+              <MapPin size={32} color={colors.coral} />
+            </View>
+            <Text style={styles.emptyStateTitle}>Belum ada aktivitas</Text>
+            <Text style={styles.emptyStateDesc}>
+              Susun aktivitas per hari — titik kumpul, transport, kuliner, dan destinasi. Warna timeline
+              mengikuti status waktu, bukan jenis aktivitas.
+            </Text>
           </View>
         )}
-
-        {/* Footer CTA — when empty, sits right after the empty text (pushed to center) */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
-            <Text style={styles.addButtonText}>Tambah Aktivitas</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );
@@ -321,27 +322,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  containerWithItems: {
-    justifyContent: 'space-between',
-  },
-  containerEmpty: {
-    justifyContent: 'center',
-  },
-  summary: {
-    ...typography.caption,
-    color: colors.muted,
-    marginBottom: 12,
-  },
   dayTabs: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   dayTabsContent: {
-    gap: 8,
+    gap: 6,
   },
   dayTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 10,
     backgroundColor: colors.light,
     borderWidth: 1,
     borderColor: colors.border,
@@ -351,24 +342,40 @@ const styles = StyleSheet.create({
     borderColor: colors.coral,
   },
   dayTabText: {
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.muted,
   },
   dayTabTextActive: {
     color: colors.coral,
+    fontFamily: 'PlusJakartaSans_700Bold',
   },
-  dayHeader: {
-    fontSize: 14,
+  // Day header — row with date left, time badge right
+  dayHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 8,
+  },
+  dayHeaderTexts: {
+    flex: 1,
+  },
+  dayDate: {
+    fontSize: 13,
     fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.charcoal,
-    marginBottom: 2,
   },
-  windowBadge: {
+  timeBadge: {
+    backgroundColor: colors.light,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  timeBadgeText: {
     fontSize: 11,
-    fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.mutedLight,
-    marginBottom: 16,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
   },
   timeline: {
     gap: 0,
@@ -404,6 +411,11 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
+  dotPresent: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
   verticalLine: {
     width: 2,
     flex: 1,
@@ -418,6 +430,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1.5,
     backgroundColor: colors.white,
+    ...shadows.card,
+  },
+  itemCardPresent: {
+    shadowColor: colors.coral,
+    shadowOpacity: 0.13,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 6 },
   },
   itemCardWrap: {
     flex: 1,
@@ -469,7 +488,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
     borderColor: colors.border,
   },
@@ -477,8 +496,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemTitle: {
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.charcoal,
     letterSpacing: -0.2,
   },
@@ -503,6 +522,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 8,
   },
+  navButtonPresent: {
+    backgroundColor: colors.coralLight,
+  },
   gapRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -526,21 +548,13 @@ const styles = StyleSheet.create({
     color: colors.mutedLight,
     marginBottom: 12,
   },
-  emptyWrap: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingTop: 24,
-  },
-  emptyContainer: {
-    flex: 1,
+  // Empty state (below day header)
+  emptyStateWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
+    paddingTop: 40,
+    paddingHorizontal: 32,
   },
-  emptyCtaWrap: {
-    paddingBottom: 8,
-  },
-  emptyIconBox: {
+  emptyStateIconBox: {
     width: 72,
     height: 72,
     borderRadius: 22,
@@ -549,46 +563,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  emptyTitle: {
+  emptyStateTitle: {
     fontSize: 18,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: colors.charcoal,
     marginBottom: 8,
   },
-  emptyDesc: {
+  emptyStateDesc: {
     ...typography.body,
     color: colors.muted,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 24,
-  },
-  emptyDay: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  emptyDayText: {
-    ...typography.body,
-    color: colors.muted,
-  },
-  footer: {
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  addButton: {
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: colors.coral,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.coral,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 22,
-    elevation: 6,
-  },
-  addButtonText: {
-    fontSize: 14,
-    fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.white,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Linking,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -16,11 +15,12 @@ import { useActivities } from '@/features/activities/hooks/useActivities';
 import { useMembers } from '@/features/trips/hooks/useMembers';
 import { useDeleteTrip } from '@/features/trips/hooks/useDeleteTrip';
 import { useDeleteActivity } from '@/features/activities/hooks/useDeleteActivity';
+import { useLeaveTrip } from '@/features/trips/hooks/useLeaveTrip';
 import { useAuth } from '@/auth/AuthProvider';
 import { ItineraryTimeline } from '@/features/itinerary/components/ItineraryTimeline';
 import { ActivityFormSheet } from '@/features/itinerary/components/ActivityFormSheet';
 import { ActivityDetailSheet } from '@/features/itinerary/components/ActivityDetailSheet';
-import { buildItineraryDays } from '@/features/itinerary/utils/itineraryUtils';
+import { Plus } from '@/components/icons/Plus';
 import { VotingTabContent } from './voting';
 import { ChatTabContent } from './chat';
 import { MediaTabContent } from './media';
@@ -28,11 +28,15 @@ import { usePolls } from '@/features/voting/hooks/usePolls';
 import { useDocuments } from '@/features/media/hooks/useDocuments';
 import { useMessages } from '@/features/chat/hooks/useMessages';
 import { goBackSmart } from '@/lib/navigation';
+import { useToast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { CalendarEventModal } from '@/features/calendar/components/CalendarEventModal';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { MoreHorizontal } from '@/components/icons/MoreHorizontal';
 import { Users } from '@/components/icons/Users';
+import { Calendar } from '@/components/icons/Calendar';
 import { Trash2 } from '@/components/icons/Trash2';
+import { LogOut } from '@/components/icons/LogOut';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { formatDateRange } from '@/features/trips/components/TripDateUtils';
@@ -52,6 +56,7 @@ export default function TripDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const { data: trip, isLoading: tripLoading } = useTripDetail(tripId);
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities(tripId);
@@ -61,6 +66,7 @@ export default function TripDetailScreen() {
   const { data: messagesData } = useMessages(tripId);
   const deleteTrip = useDeleteTrip(tripId);
   const deleteActivity = useDeleteActivity(tripId);
+  const leaveTrip = useLeaveTrip(tripId);
 
   const [activeTab, setActiveTab] = useState<TabKey>('itinerary');
   const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -68,6 +74,9 @@ export default function TripDetailScreen() {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [detailActivity, setDetailActivity] = useState<TripActivity | null>(null);
   const [editingActivity, setEditingActivity] = useState<TripActivity | null>(null);
@@ -77,14 +86,6 @@ export default function TripDetailScreen() {
   const activities = activitiesData?.data ?? [];
   const isLoading = tripLoading || activitiesLoading || membersLoading;
   const isCreator = membersData?.is_creator ?? trip?.creator?.id === user?.id;
-
-  // Active day's date for the add/edit form (day-aware instead of trip start).
-  const activeDayDate = useMemo(() => {
-    if (!trip) return undefined;
-    const days = buildItineraryDays(activities, trip.start_date, trip.end_date, trip.status);
-    const day = days[activeDayIndex] ?? days[0];
-    return day?.date || trip.start_date || undefined;
-  }, [trip, activities, activeDayIndex]);
 
   const dateRange = trip
     ? formatDateRange(
@@ -127,11 +128,11 @@ export default function TripDetailScreen() {
       await deleteActivity.mutateAsync(deleteActivityTarget.id);
       setDeleteActivityTarget(null);
     } catch {
-      Alert.alert('Gagal', 'Tidak dapat menghapus aktivitas');
+      showToast('Tidak dapat menghapus aktivitas');
     } finally {
       setDeletingActivity(false);
     }
-  }, [deleteActivity, deleteActivityTarget]);
+  }, [deleteActivity, deleteActivityTarget, showToast]);
 
   const handleFormSuccess = useCallback(() => {
     setShowForm(false);
@@ -152,9 +153,28 @@ export default function TripDetailScreen() {
     } catch {
       setDeleting(false);
       setShowDeleteConfirm(false);
-      Alert.alert('Gagal', 'Tidak dapat menghapus perjalanan');
+      showToast('Tidak dapat menghapus perjalanan');
     }
-  }, [deleteTrip, router]);
+  }, [deleteTrip, router, showToast]);
+
+  const handleLeaveTrip = useCallback(() => {
+    setShowMenu(false);
+    setShowLeaveConfirm(true);
+  }, []);
+
+  const handleConfirmLeave = useCallback(async () => {
+    setLeaving(true);
+    try {
+      await leaveTrip.mutateAsync();
+      setLeaving(false);
+      setShowLeaveConfirm(false);
+      router.replace('/(tabs)');
+    } catch {
+      setLeaving(false);
+      setShowLeaveConfirm(false);
+      showToast('Tidak dapat keluar dari perjalanan ini.');
+    }
+  }, [leaveTrip, router, showToast]);
 
   // Tab counters — itinerary/voting/media selalu tampil; chat hanya unread.
   const itineraryCount = activities.length;
@@ -221,6 +241,26 @@ export default function TripDetailScreen() {
               </View>
               <Text style={styles.menuItemText}>Daftar Anggota</Text>
             </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            {/* Tambah ke Google Calendar — hanya aktif saat tanggal sudah dikunci */}
+            <TouchableOpacity
+              style={[styles.menuItem, trip?.status !== 'fixed' && styles.menuItemDisabled]}
+              onPress={() => { setShowMenu(false); setShowCalendar(true); }}
+              disabled={trip?.status !== 'fixed'}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBox, { backgroundColor: colors.tealLight }]}>
+                <Calendar size={16} color={trip?.status === 'fixed' ? colors.teal : colors.mutedLight} />
+              </View>
+              <View style={styles.menuItemTextWrap}>
+                <Text style={[styles.menuItemText, trip?.status !== 'fixed' && { color: colors.mutedLight }]}>
+                  Tambah ke Google Calendar
+                </Text>
+                {trip?.status !== 'fixed' && (
+                  <Text style={styles.menuItemSub}>Tanggal belum dikunci</Text>
+                )}
+              </View>
+            </TouchableOpacity>
             {isCreator && (
               <>
                 <View style={styles.menuDivider} />
@@ -243,6 +283,17 @@ export default function TripDetailScreen() {
                 </TouchableOpacity>
               </>
             )}
+            {!isCreator && (
+              <>
+                <View style={styles.menuDivider} />
+                <TouchableOpacity style={styles.menuItem} onPress={handleLeaveTrip} activeOpacity={0.7}>
+                  <View style={[styles.menuIconBox, { backgroundColor: colors.dangerLight }]}>
+                    <LogOut size={16} color={colors.danger} />
+                  </View>
+                  <Text style={[styles.menuItemText, { color: colors.danger }]}>Keluar dari Perjalanan</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </>
       )}
@@ -255,8 +306,8 @@ export default function TripDetailScreen() {
             : tab.key === 'voting' ? votingCount
             : tab.key === 'chat' ? chatCount
             : mediaCount;
-          // Chat badge hanya unread; tab lain selalu tampil counternya (termasuk 0).
-          const showBadge = tab.key === 'chat' ? count > 0 : true;
+          // Chat badge hanya unread dan tab tidak aktif; tab lain selalu tampil counternya (termasuk 0).
+          const showBadge = tab.key === 'chat' ? count > 0 && !active : true;
           return (
             <TouchableOpacity
               key={tab.key}
@@ -280,28 +331,38 @@ export default function TripDetailScreen() {
 
       {/* Content — inline tab panels */}
       {activeTab === 'itinerary' && (
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          <ItineraryTimeline
-            activities={activities}
-            startDate={trip.start_date}
-            endDate={trip.end_date}
-            tripStatus={trip.status}
-            activeDayIndex={activeDayIndex}
-            onChangeDay={setActiveDayIndex}
-            onPressItem={handlePressItem}
-            onPressMenu={handlePressMenu}
-            onCloseMenu={() => setMenuOpenId(null)}
-            menuOpenId={menuOpenId}
-            onPressNav={handlePressNav}
-            onEditActivity={handleEditActivity}
-            onDeleteActivity={handleDeleteActivityPress}
-            onPressAdd={() => setShowForm(true)}
-          />
-        </ScrollView>
+        <View style={styles.itineraryWrap}>
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <ItineraryTimeline
+              activities={activities}
+              startDate={trip.start_date}
+              endDate={trip.end_date}
+              tripStatus={trip.status}
+              activeDayIndex={activeDayIndex}
+              onChangeDay={setActiveDayIndex}
+              onPressItem={handlePressItem}
+              onPressMenu={handlePressMenu}
+              onCloseMenu={() => setMenuOpenId(null)}
+              menuOpenId={menuOpenId}
+              onPressNav={handlePressNav}
+              onEditActivity={handleEditActivity}
+              onDeleteActivity={handleDeleteActivityPress}
+            />
+          </ScrollView>
+
+          <TouchableOpacity
+            style={styles.createFab}
+            onPress={() => setShowForm(true)}
+            activeOpacity={0.8}
+          >
+            <Plus size={16} color={colors.white} />
+            <Text style={styles.createFabText}>Buat Aktivitas</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {activeTab === 'voting' && (
@@ -320,7 +381,8 @@ export default function TripDetailScreen() {
       <ActivityFormSheet
         visible={showForm || !!editingActivity}
         tripId={tripId}
-        activityDate={editingActivity?.activity_date ?? activeDayDate ?? ''}
+        activityDate={editingActivity?.activity_date ?? ''}
+        dayNumber={activeDayIndex + 1}
         editActivity={editingActivity}
         onClose={() => { setShowForm(false); setEditingActivity(null); }}
         onSuccess={handleFormSuccess}
@@ -379,6 +441,40 @@ export default function TripDetailScreen() {
         loading={deleting}
         onConfirm={() => void handleConfirmDelete()}
         onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      {/* Leave trip confirmation modal */}
+      <ConfirmModal
+        visible={showLeaveConfirm}
+        title="Keluar dari perjalanan?"
+        description={
+          <>
+            Kamu akan keluar dari{' '}
+            <Text style={{ color: colors.charcoal, fontFamily: 'PlusJakartaSans_700Bold' }}>
+              {trip.name}
+            </Text>
+            . Kamu bisa diundang kembali oleh anggota lain.
+          </>
+        }
+        icon={
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <LogOut size={22} color={colors.danger} />
+          </View>
+        }
+        confirmLabel="Keluar"
+        destructive
+        loading={leaving}
+        onConfirm={() => void handleConfirmLeave()}
+        onCancel={() => setShowLeaveConfirm(false)}
+      />
+
+      {/* Tambah ke Google Calendar (Screen 96) */}
+      <CalendarEventModal
+        visible={showCalendar}
+        tripId={tripId}
+        dateLabel={dateRange}
+        onClose={() => setShowCalendar(false)}
+        onAdded={() => setShowCalendar(false)}
       />
     </View>
   );
@@ -466,6 +562,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
+  menuItemDisabled: {
+    opacity: 0.6,
+  },
+  menuItemTextWrap: {
+    flex: 1,
+  },
+  menuItemSub: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.mutedLight,
+    marginTop: 1,
+  },
   menuIconBox: {
     width: 34,
     height: 34,
@@ -492,10 +600,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
-    marginRight: 16,
     paddingBottom: 10,
   },
   tabActive: {
@@ -561,9 +670,33 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  itineraryWrap: {
+    flex: 1,
+  },
   contentContainer: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
     flexGrow: 1,
+  },
+  createFab: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    height: 50,
+    backgroundColor: colors.coral,
+    borderRadius: 14,
+    shadowColor: colors.coral,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 22,
+    elevation: 6,
+  },
+  createFabText: {
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.white,
   },
 });

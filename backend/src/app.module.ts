@@ -10,6 +10,7 @@ import { TripsModule } from './trips/trips.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MailModule } from './mail/mail.module';
+import { GoogleCalendarModule } from './integrations/google/google.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -32,6 +33,7 @@ import { HealthController } from './health.controller';
     TripsModule,
     WishlistModule,
     NotificationsModule,
+    GoogleCalendarModule,
   ],
   controllers: [HealthController],
 })

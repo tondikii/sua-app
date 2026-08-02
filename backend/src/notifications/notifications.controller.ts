@@ -27,11 +27,10 @@ export class NotificationsController {
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.notificationsService.listNotifications(
-      user.userId,
-      cursor,
-      limit ? parseInt(limit, 10) : 20,
-    );
+    const rawLimit = limit ? parseInt(limit, 10) : 20;
+    const safeLimit = Number.isNaN(rawLimit) ? 20 : Math.min(100, Math.max(1, rawLimit));
+
+    return this.notificationsService.listNotifications(user.userId, cursor, safeLimit);
   }
 
   // GET /v1/notifications/unread-count

@@ -115,27 +115,40 @@ export class ChatService {
     }
 
     const message = await this.prisma.$transaction(async (tx) => {
+      const storageKey =
+        dto.message_kind === 'photo' || dto.message_kind === 'video'
+          ? this.r2.extractStorageKey(dto.media_url!)
+          : null;
+
       const created = await tx.tripMessage.create({
         data: {
           tripId,
           senderId: userId,
           messageKind: dto.message_kind,
           messageText: dto.message_text ?? null,
-          mediaUrl: dto.media_url ?? null,
+          mediaUrl: storageKey ? this.r2.resolvePublicUrl(storageKey) : null,
+          mediaDuration: dto.media_duration_seconds
+            ? this.toIntervalString(dto.media_duration_seconds)
+            : null,
           replyToId: dto.reply_to_id ?? null,
         },
         include: MESSAGE_INCLUDE,
       });
 
-      if (dto.message_kind === 'photo' || dto.message_kind === 'video') {
+      if (storageKey) {
+        const mediaDuration = dto.media_duration_seconds
+          ? this.toIntervalString(dto.media_duration_seconds)
+          : null;
         await tx.tripDocument.create({
           data: {
             tripId,
             uploadedBy: userId,
             mediaType: dto.message_kind,
-            storageKey: this.r2.extractStorageKey(dto.media_url!),
-            storageUrl: dto.media_url!,
+            storageKey,
+            storageUrl: this.r2.resolvePublicUrl(storageKey),
+            mediaDuration,
             fromChat: true,
+            messageId: created.id,
           },
         });
       }
@@ -172,9 +185,33 @@ export class ChatService {
       return; // already deleted — idempotent
     }
 
-    await this.prisma.tripMessage.update({
-      where: { id: messageId },
-      data: { deletedAt: new Date() },
+    await this.prisma.$transaction(async (tx) => {
+      // Soft-delete the message (chat shows "Pesan dihapus").
+      await tx.tripMessage.update({
+        where: { id: messageId },
+        data: { deletedAt: new Date() },
+      });
+
+      // Media sent through chat should vanish from the Media tab too, since
+      // its origin (the message) no longer exists. Hard-delete the linked
+      // trip_documents row (the R2 object stays; only the DB reference dies).
+      const linkedDocs = await tx.tripDocument.findMany({
+        where: { messageId },
+      });
+      for (const doc of linkedDocs) {
+        // Clear cover references pointing at this document before deleting.
+        await tx.trip.updateMany({
+          where: { id: tripId, coverDocumentId: doc.id },
+          data: { coverDocumentId: null },
+        });
+        await tx.tripActivity.updateMany({
+          where: { tripId, coverDocumentId: doc.id },
+          data: { coverDocumentId: null, coverSource: 'none' },
+        });
+      }
+      await tx.tripDocument.deleteMany({
+        where: { messageId },
+      });
     });
   }
 
@@ -193,7 +230,15 @@ export class ChatService {
 
   private async toMessageResponse(message: Parameters<typeof MessageSerializer.toList>[0]) {
     const mediaUrl = await this.resolveMediaUrl(message);
-    return MessageSerializer.toList(message, mediaUrl);
+    return MessageSerializer.toList(message, mediaUrl, this.r2);
+  }
+
+  /** Convert seconds to a Postgres interval string (e.g. 84 -> "00:01:24"). */
+  private toIntervalString(totalSeconds: number): string {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
   }
 
   private async resolveMediaUrl(

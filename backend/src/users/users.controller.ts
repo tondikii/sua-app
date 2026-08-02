@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Put,
   Delete,
   Body,
@@ -18,8 +19,15 @@ import {
   CheckUsernameSchema,
   SearchUsersSchema,
   UpdateUserSchema,
+  PresignAvatarSchema,
+  UpdateAvatarSchema,
 } from '@atur-perjalanan/shared-validation';
-import type { CheckUsernameInput, UpdateUserInput } from '@atur-perjalanan/shared-validation';
+import type {
+  CheckUsernameInput,
+  UpdateUserInput,
+  PresignAvatarInput,
+  UpdateAvatarInput,
+} from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('users')
@@ -58,6 +66,28 @@ export class UsersController {
     @Body(new ZodValidationPipe(UpdateUserSchema)) dto: UpdateUserInput,
   ) {
     return this.usersService.updateMe(user.userId, dto);
+  }
+
+  // POST /v1/users/me/avatar/presign — issue a presigned R2 PUT for the avatar
+  @Post('me/avatar/presign')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  presignAvatar(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body(new ZodValidationPipe(PresignAvatarSchema)) dto: PresignAvatarInput,
+  ) {
+    return this.usersService.presignAvatarUpload(user.userId, dto.content_type);
+  }
+
+  // PUT /v1/users/me/avatar — register an uploaded avatar object
+  @Put('me/avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  updateAvatar(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body(new ZodValidationPipe(UpdateAvatarSchema)) dto: UpdateAvatarInput,
+  ) {
+    return this.usersService.updateAvatar(user.userId, dto.storage_key);
   }
 
   // DELETE /v1/users/me

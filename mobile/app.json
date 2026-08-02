@@ -28,6 +28,12 @@
       "expo-router",
       "expo-system-ui",
       [
+        "expo-notifications",
+        {
+          "color": "#FF6B6B"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",

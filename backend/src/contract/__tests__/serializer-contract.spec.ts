@@ -26,9 +26,17 @@ const mockUser = {
   _count: { tripsCreated: 0 },
 };
 
+const mockR2 = {
+  presignDownload: jest.fn().mockResolvedValue('https://cdn.example/signed/abc.jpg'),
+} as any;
+
 describe('UserSummarySerializer → shared-types contract', () => {
-  it('toSummary matches UserSummary shape', () => {
-    const result = UserSummarySerializer.toSummary(mockUser);
+  beforeEach(() => {
+    mockR2.presignDownload.mockClear();
+  });
+
+  it('toSummary matches UserSummary shape', async () => {
+    const result = await UserSummarySerializer.toSummary(mockUser, mockR2);
     // Compile-time assertion: if UserSummary changes incompatibly, this line errors
     const _check: { id: string; name: string; username: string; avatar_url: string | null } =
       result;
@@ -42,8 +50,8 @@ describe('UserSummarySerializer → shared-types contract', () => {
     `);
   });
 
-  it('toProfile matches UserProfile shape', () => {
-    const result = UserSummarySerializer.toProfile(mockUser);
+  it('toProfile matches UserProfile shape', async () => {
+    const result = await UserSummarySerializer.toProfile(mockUser, mockR2);
     expect(result).toMatchInlineSnapshot(`
       {
         "avatar_url": null,
@@ -58,5 +66,23 @@ describe('UserSummarySerializer → shared-types contract', () => {
         "website_url": null,
       }
     `);
+  });
+
+  it('resolves R2 storage keys to presigned URLs', async () => {
+    const result = await UserSummarySerializer.toProfile(
+      { ...mockUser, avatarUrl: 'avatars/u1/abc.jpg' },
+      mockR2,
+    );
+    expect(mockR2.presignDownload).toHaveBeenCalledWith('avatars/u1/abc.jpg');
+    expect(result.avatar_url).toBe('https://cdn.example/signed/abc.jpg');
+  });
+
+  it('leaves external avatar URLs untouched', async () => {
+    const result = await UserSummarySerializer.toProfile(
+      { ...mockUser, avatarUrl: 'https://lh3.googleusercontent.com/abc' },
+      mockR2,
+    );
+    expect(mockR2.presignDownload).not.toHaveBeenCalled();
+    expect(result.avatar_url).toBe('https://lh3.googleusercontent.com/abc');
   });
 });

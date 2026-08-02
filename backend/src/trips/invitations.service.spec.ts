@@ -9,11 +9,13 @@ import { InvitationsService } from './invitations.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 describe('InvitationsService', () => {
   let service: InvitationsService;
   let prisma: any;
   let mail: any;
+  let notifications: any;
 
   const INVITER = 'inviter-1';
   const TRIP = 'trip-1';
@@ -51,7 +53,7 @@ describe('InvitationsService', () => {
     };
 
     mail = { sendInvitationEmail: jest.fn().mockResolvedValue(true) };
-    const notifications = { createNotification: jest.fn() };
+    notifications = { createNotification: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,6 +61,7 @@ describe('InvitationsService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationsService, useValue: notifications },
         { provide: MailService, useValue: mail },
+        { provide: R2Service, useValue: { presignDownload: jest.fn() } },
       ],
     }).compile();
 
@@ -118,6 +121,13 @@ describe('InvitationsService', () => {
           method: 'username',
           status: 'pending',
         },
+      });
+      expect(notifications.createNotification).toHaveBeenCalledWith({
+        userId: 'invitee-1',
+        type: 'invite',
+        actorId: INVITER,
+        tripId: TRIP,
+        payload: { invitation_id: 'inv-1' },
       });
     });
 
@@ -224,6 +234,13 @@ describe('InvitationsService', () => {
           data: expect.objectContaining({ invitedUserId: 'invitee-2', invitedEmail: 'a@b.com' }),
         }),
       );
+      expect(notifications.createNotification).toHaveBeenCalledWith({
+        userId: 'invitee-2',
+        type: 'invite',
+        actorId: INVITER,
+        tripId: TRIP,
+        payload: { invitation_id: 'inv-1' },
+      });
     });
   });
 

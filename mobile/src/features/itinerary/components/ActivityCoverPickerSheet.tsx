@@ -7,22 +7,26 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { X } from '@/components/icons/X';
 import { Check } from '@/components/icons/Check';
-import { ListChecks } from '@/components/icons/ListChecks';
-import { Settings } from '@/components/icons/Settings';
+import { FolderOpen } from '@/components/icons/FolderOpen';
+import { Smartphone } from '@/components/icons/Smartphone';
+import { Shapes } from '@/components/icons/Shapes';
 import { useDocuments } from '@/features/media/hooks/useDocuments';
+import { useUploadDocument } from '@/features/media/hooks/useUploadDocument';
 import { COVER_ICON_OPTIONS } from '@/features/itinerary/utils/coverIcons';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { bottomSheetFrame } from '@/theme/layout';
 import type { TripActivity } from '@atur-perjalanan/shared-types';
 
-type Section = 'trip_media' | 'icon';
+type Section = 'trip_media' | 'device' | 'icon';
 
 export interface CoverSelection {
-  cover_source: 'trip_media' | 'icon';
+  cover_source: 'trip_media' | 'device' | 'icon';
   cover_icon?: string;
   thumbnail_url?: string;
   cover_document_id?: string;
@@ -36,20 +40,66 @@ interface Props {
   onSelect: (selection: CoverSelection) => void;
 }
 
-/** Pilih cover aktivitas — Media perjalanan atau Ilustrasi (Figma Screen 49-50). */
+const SECTIONS: { id: Section; label: string; hint: string }[] = [
+  { id: 'trip_media', label: 'Media perjalanan', hint: 'Foto di tab Media' },
+  { id: 'device', label: 'Galeri perangkat', hint: 'Pilih dari foto lokal' },
+  { id: 'icon', label: 'Ilustrasi', hint: 'Icon untuk aktivitas' },
+];
+
+/** Pilih cover aktivitas — Media perjalanan / Galeri / Ilustrasi (Figma Screen 49-50). */
 export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, onSelect }: Props) {
   const [section, setSection] = useState<Section>('trip_media');
   const { data: docsData, isLoading } = useDocuments(tripId);
+  const { uploadFile } = useUploadDocument(tripId);
   const docs = docsData?.data ?? [];
 
   const [selectedMediaId, setSelectedMediaId] = useState<string | null>(
     current?.cover_document_id ?? null,
   );
   const [selectedIcon, setSelectedIcon] = useState<string | null>(current?.cover_icon ?? null);
+  const [uploading, setUploading] = useState(false);
 
   if (!visible) return null;
 
   const photos = docs.filter((d) => d.media_type === 'photo');
+
+  const pickFromDevice = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      if (!asset) return;
+
+      setUploading(true);
+      // On web the asset exposes a File directly; on native we fetch the file://
+      // URI to get a Blob for the direct-to-R2 upload.
+      let blob: Blob;
+      if (Platform.OS === 'web' && asset.file) {
+        blob = asset.file;
+      } else {
+        const res = await fetch(asset.uri);
+        blob = await res.blob();
+      }
+
+      const contentType = asset.mimeType ?? 'image/jpeg';
+      const doc = await uploadFile(blob, 'photo', contentType);
+
+      onSelect({
+        cover_source: 'trip_media',
+        cover_document_id: doc.id,
+        thumbnail_url: doc.url,
+      });
+      onClose();
+    } catch {
+      // Upload failed — keep the sheet open.
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleUse = () => {
     if (section === 'trip_media') {
@@ -61,12 +111,21 @@ export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, on
           thumbnail_url: doc.url,
         });
       }
+    } else if (section === 'device') {
+      void pickFromDevice();
+      return;
     } else {
       if (selectedIcon) {
         onSelect({ cover_source: 'icon', cover_icon: selectedIcon });
       }
     }
     onClose();
+  };
+
+  const sectionIcon = (id: Section) => {
+    if (id === 'trip_media') return <FolderOpen size={15} color={section === id ? colors.coral : colors.muted} />;
+    if (id === 'device') return <Smartphone size={15} color={section === id ? colors.coral : colors.muted} />;
+    return <Shapes size={15} color={section === id ? colors.coral : colors.muted} />;
   };
 
   return (
@@ -81,37 +140,28 @@ export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, on
           </TouchableOpacity>
         </View>
 
-        {/* Source selector */}
+        {/* Source selector — matches Figma: Media / Galeri / Ilustrasi */}
         <View style={styles.sourceSelector}>
-          <TouchableOpacity
-            style={[styles.sourceRow, section === 'trip_media' && styles.sourceRowActive]}
-            onPress={() => setSection('trip_media')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.sourceIconBox, section === 'trip_media' && styles.sourceIconBoxActive]}>
-              <ListChecks size={15} color={section === 'trip_media' ? colors.coral : colors.muted} />
-            </View>
-            <View style={styles.sourceTextWrap}>
-              <Text style={styles.sourceLabel}>Media perjalanan</Text>
-              <Text style={styles.sourceHint}>Foto di tab Media</Text>
-            </View>
-            {section === 'trip_media' && <Check size={16} color={colors.coral} />}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.sourceRow, section === 'icon' && styles.sourceRowActive]}
-            onPress={() => setSection('icon')}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.sourceIconBox, section === 'icon' && styles.sourceIconBoxActive]}>
-              <Settings size={15} color={section === 'icon' ? colors.coral : colors.muted} />
-            </View>
-            <View style={styles.sourceTextWrap}>
-              <Text style={styles.sourceLabel}>Ilustrasi</Text>
-              <Text style={styles.sourceHint}>Icon untuk aktivitas</Text>
-            </View>
-            {section === 'icon' && <Check size={16} color={colors.coral} />}
-          </TouchableOpacity>
+          {SECTIONS.map((sec) => {
+            const active = section === sec.id;
+            return (
+              <TouchableOpacity
+                key={sec.id}
+                style={[styles.sourceRow, active && styles.sourceRowActive]}
+                onPress={() => setSection(sec.id)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.sourceIconBox, active && styles.sourceIconBoxActive]}>
+                  {sectionIcon(sec.id)}
+                </View>
+                <View style={styles.sourceTextWrap}>
+                  <Text style={styles.sourceLabel}>{sec.label}</Text>
+                  <Text style={styles.sourceHint}>{sec.hint}</Text>
+                </View>
+                {active && <Check size={16} color={colors.coral} />}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
@@ -146,6 +196,24 @@ export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, on
             </>
           )}
 
+          {section === 'device' && (
+            <TouchableOpacity
+              style={styles.devicePicker}
+              onPress={() => void pickFromDevice()}
+              disabled={uploading}
+              activeOpacity={0.7}
+            >
+              {uploading ? (
+                <ActivityIndicator size="small" color={colors.coral} />
+              ) : (
+                <Smartphone size={22} color={colors.muted} />
+              )}
+              <Text style={styles.devicePickerText}>
+                {uploading ? 'Mengunggah...' : 'Pilih dari galeri'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {section === 'icon' && (
             <View style={styles.iconGrid}>
               {COVER_ICON_OPTIONS.map((opt) => {
@@ -171,8 +239,15 @@ export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, on
 
         {/* Footer */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.useBtn} onPress={handleUse} activeOpacity={0.8}>
-            <Text style={styles.useBtnText}>Gunakan</Text>
+          <TouchableOpacity
+            style={[styles.useBtn, uploading && styles.useBtnDisabled]}
+            onPress={handleUse}
+            disabled={uploading}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.useBtnText}>
+              {uploading ? 'Mengunggah...' : 'Gunakan'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -308,6 +383,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  devicePicker: {
+    height: 88,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.border,
+    backgroundColor: colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  devicePickerText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.charcoal,
+  },
   iconGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -355,6 +446,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadows.button,
   },
+  useBtnDisabled: { backgroundColor: colors.disabled, shadowOpacity: 0 },
   useBtnText: {
     fontSize: 15,
     fontFamily: 'PlusJakartaSans_800ExtraBold',

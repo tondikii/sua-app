@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Platform,
   Image,
 } from 'react-native';
@@ -15,6 +14,7 @@ import { useCreateInvitation } from '@/features/invitations/hooks/useCreateInvit
 import { useCancelInvitation } from '@/features/invitations/hooks/useCancelInvitation';
 import { useUserSearch } from '@/features/users/hooks/useUserSearch';
 import { useMembers } from '@/features/trips/hooks/useMembers';
+import { useToast } from '@/components/Toast';
 import type { ManagedInvitation } from '@atur-perjalanan/shared-types';
 import { Search } from '@/components/icons/Search';
 import { X } from '@/components/icons/X';
@@ -52,6 +52,7 @@ interface EmailInvite {
 }
 
 export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: InviteBottomSheetProps) {
+  const { showToast } = useToast();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -146,26 +147,31 @@ export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: Inv
           setEmailInvites((prev) => prev.filter((e) => e.email !== invite.email));
         },
         onError: () => {
-          Alert.alert('Gagal', 'Tidak dapat membatalkan undangan email ini.');
+          showToast('Tidak dapat membatalkan undangan email ini.');
         },
       });
     } else {
       setEmailInvites((prev) => prev.filter((e) => e.email !== invite.email));
     }
-  }, [cancelInvitation]);
+  }, [cancelInvitation, showToast]);
 
   const handleCancelExisting = useCallback((invitationId: string) => {
     cancelInvitation.mutate(invitationId, {
-      onError: () => Alert.alert('Gagal', 'Tidak dapat membatalkan undangan ini.'),
+      onError: () => showToast('Tidak dapat membatalkan undangan ini.'),
     });
-  }, [cancelInvitation]);
+  }, [cancelInvitation, showToast]);
 
-  const isInvitedUser = useCallback((username: string) => {
-    if (invited.some((u) => u.username === username)) return true;
-    return existingInvitations.some(
-      (inv) => inv.state !== 'rejected' && inv.invited_user?.username === username,
-    );
-  }, [invited, existingInvitations]);
+  const isInvitedUser = useCallback(
+    (username: string) => {
+      if (invited.some((u) => u.username === username)) return true;
+      const memberUsernames = membersData?.members?.map((m) => m.username) ?? [];
+      if (memberUsernames.includes(username)) return true;
+      return existingInvitations.some(
+        (inv) => inv.state !== 'rejected' && inv.invited_user?.username === username,
+      );
+    },
+    [invited, existingInvitations, membersData],
+  );
 
   const showIdle = !debouncedQuery.trim();
   const showResults = debouncedQuery.trim().length >= 2 && !isEmailQuery;
@@ -246,6 +252,8 @@ export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: Inv
               <Text style={styles.countLabel}>{results.length} hasil</Text>
               {results.map((user, idx) => {
                 const already = isInvitedUser(user.username);
+                const isExistingMember =
+                  membersData?.members?.some((m) => m.username === user.username) ?? false;
                 return (
                   <InviteUserRow
                     key={user.id}
@@ -253,6 +261,7 @@ export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: Inv
                     username={user.username}
                     avatarUrl={user.avatar_url}
                     invited={already}
+                    member={isExistingMember}
                     sending={pendingUsername === user.username}
                     isLast={idx === results.length - 1}
                     onInvite={() => handleInvite(user.username, user.name)}
@@ -373,6 +382,7 @@ function InviteUserRow({
   username,
   avatarUrl,
   invited,
+  member,
   sending,
   isLast,
   onInvite,
@@ -381,6 +391,7 @@ function InviteUserRow({
   username: string;
   avatarUrl: string | null;
   invited: boolean;
+  member?: boolean;
   sending?: boolean;
   isLast?: boolean;
   onInvite?: () => void;
@@ -399,7 +410,7 @@ function InviteUserRow({
         <Text style={styles.rowSubtitle}>@{username}</Text>
       </View>
       {invited ? (
-        <Text style={styles.invitedBadgeText}>✓ Terundang</Text>
+        <Text style={styles.invitedBadgeText}>{member ? '✓ Anggota' : '✓ Terundang'}</Text>
       ) : (
         <TouchableOpacity
           style={[styles.primaryBtn, sending && styles.primaryBtnDisabled]}

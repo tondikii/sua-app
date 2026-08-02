@@ -43,7 +43,7 @@
 | M13 | Mobile – Beranda & Trip Detail Shell UI         | ✅ Selesai |
 | M14 | Mobile – Voting, Chat, Media, Kelola Trip UI    | ✅ Selesai |
 | M15 | Mobile – Pencarian, Profil & Wishlist UI        | ✅ Selesai |
-| M16 | Google Calendar Integration                     | 🔲 Belum   |
+| M16 | Google Calendar Integration                     | ✅ Selesai |
 | M17 | Figma Design QA (Audit 125 Layar)               | 🔲 Belum   |
 | M18 | Mobile Testing Suite                            | 🔲 Belum   |
 | M19 | CI/CD Pipelines                                 | 🔲 Belum   |
@@ -492,23 +492,29 @@ mobile/
 
 ---
 
-## M16 — Google Calendar Integration 🔲 BELUM DIMULAI
+## M16 — Google Calendar Integration ✅ SELESAI
 
 **AI Prompt**: _"Let's implement M16. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §1.1, §3.4`, `docs/ACCEPTANCE_CRITERIA.md`. Implement calendar event creation after date lock (user-confirmed), NestJS side + Expo modal."_
 
 **Referensi**: `docs/ARCHITECTURE.md §1.1, §3.4`
 
+### Keputusan implementasi
+- **OAuth per-user** (bukan service account): backend menyimpan `google_access_token` + `google_refresh_token` + `google_token_expires_at` di tabel `users` (migrasi `20260802_add_google_calendar_tokens`). Event dibuat di **kalender user sendiri** (`calendarId: 'primary'`) dengan scope `https://www.googleapis.com/auth/calendar.events`.
+- **Trigger**: aksi **"Tambah ke Google Calendar"** di kebab menu ⋮ trip detail (Screen 96) — item **disabled** saat `trip.status === 'voting_pending'` (subtitle "Tanggal belum dikunci").
+- **Waktu**: all-day trip → `start.date`/`end.date` (end eksklusif = end_date + 1); timed trip → `dateTime` gabungan date + HH:MM sebagai wall-clock lokal (tanpa konversi timezone).
+
 ### Checklist
 
-- [ ] `backend/src/integrations/google/google-calendar.service.ts` — Calendar API v3 client (service account or OAuth delegated)
-- [ ] `POST /v1/integrations/google-calendar/events` — create event (all-day atau timed per `trips.is_all_day`)
-- [ ] Event creation dipicu **hanya setelah user konfirmasi** modal post-lock — bukan saat invite
-- [ ] Perlakuan sama untuk invitee dengan akun Google maupun email-only
-- [ ] Job async setelah DB commit (tidak blocking response)
-- [ ] Error dari Google API di-log, tidak menggagalkan operasi DB
-- [ ] `GOOGLE_CALENDAR_SA_KEY` terdokumentasi di `.env.example`
-- [ ] Mobile: `CalendarEventModal` (`Screen96`) — tombol dari menu ⋮ trip detail
-- [ ] Postman — tambah folder `Integrations` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (endpoint Google Calendar M16)
+- [x] `backend/src/integrations/google/google-calendar.service.ts` — Calendar API v3 client (OAuth per-user: auth-url, callback token exchange, refresh token, create event)
+- [x] `backend/src/integrations/google/google-calendar.controller.ts` — `GET /auth-url`, `GET /callback`, `POST /events`
+- [x] `POST /v1/integrations/google-calendar/events` — create event (all-day atau timed per `trips.is_all_day`), hanya untuk trip `status=fixed` (voting → 400)
+- [x] Event creation dipicu **hanya setelah user konfirmasi** modal post-lock (menu ⋮ → Screen 96) — bukan saat invite
+- [x] Hanya kalender user sendiri (`calendarId: 'primary'`); bukan untuk invitee
+- [x] Token disimpan di DB; refresh token dipakai saat access token kedaluwarsa
+- [x] Error dari Google API di-log, tidak menggagalkan operasi DB trip
+- [x] `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET` terdokumentasi di `.env.example`
+- [x] Mobile: `CalendarEventModal` (`mobile/src/features/calendar/components/CalendarEventModal.tsx`, Screen 96) — tombol dari menu ⋮ trip detail, disabled saat voting
+- [x] Postman — folder `Integrations` ditambahkan ke `docs/postman/atur-perjalanan-api.postman_collection.json` (3 request: auth-url, callback, create event)
 
 ---
 

@@ -20,7 +20,9 @@
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "exec": ["// Collection-level pre-request hook (extend per milestone as needed)"]
+        "exec": [
+          "// Collection-level pre-request hook (extend per milestone as needed)"
+        ]
       }
     }
   ],
@@ -120,8 +122,12 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
             },
             "description": "Returns server health status.\n\n**Response 200:**\n```json\n{ \"status\": \"ok\", \"timestamp\": \"2026-07-12T12:00:00.000Z\" }\n```"
           },
@@ -181,8 +187,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/google",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "google"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
             },
             "description": "Authenticate with Google ID token.\n\n**Request body:**\n```json\n{\n  \"id_token\": \"google-oauth-id-token\"\n}\n```\n\n**Response 200:**\n```json\n{\n  \"access_token\": \"jwt-token\",\n  \"realtime_token\": \"supabase-jwt-token\",\n  \"user\": {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": null,\n    \"bio\": null,\n    \"website_url\": null,\n    \"location_label\": null,\n    \"is_public\": true\n  }\n}\n```"
           },
@@ -229,8 +240,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/complete-registration",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "complete-registration"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "complete-registration"
+              ]
             },
             "description": "Complete user registration by setting a username. Required after first Google Sign-In.\n\n**Request body:**\n```json\n{\n  \"username\": \"johndoe\"\n}\n```\n\n**Username requirements:**\n- 3-30 characters\n- Only letters, numbers, and underscores\n- No spaces or special characters\n\n**Response 200:**\n```json\n{\n  \"user\": {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": null,\n    \"bio\": null,\n    \"website_url\": null,\n    \"location_label\": null,\n    \"is_public\": true\n  }\n}\n```\n\n**Response 400:** Invalid username format or already taken"
           },
@@ -270,8 +286,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/check-username?username=testuser",
-              "host": ["{{base_url}}"],
-              "path": ["users", "check-username"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "check-username"
+              ],
               "query": [
                 {
                   "key": "username",
@@ -313,8 +334,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/search?q=john&cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["users", "search"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "search"
+              ],
               "query": [
                 {
                   "key": "q",
@@ -362,8 +388,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Get current user's profile.\n\n**Response 200:**\n```json\n{\n  \"id\": \"user-uuid\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"username\": \"johndoe\",\n  \"avatar_url\": null,\n  \"bio\": null,\n  \"website_url\": null,\n  \"location_label\": null,\n  \"is_public\": true,\n  \"created_at\": \"2026-07-01T10:00:00Z\"\n}\n```"
           },
@@ -403,8 +434,13 @@
             },
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Update current user's profile. All fields are optional.\n\n**Request body:**\n```json\n{\n  \"bio\": \"Travel enthusiast\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}\n```\n\n**Field validations:**\n- `bio`: max 150 characters\n- `website_url`: must be valid URL\n- `location_label`: max 100 characters\n- `is_public`: boolean\n\n**Response 200:** Returns updated user profile"
           },
@@ -430,8 +466,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Delete current user's account (hard delete). This action cannot be undone.\n\n**Response 204:** No content (account deleted)\n\n**Response 401:** Unauthorized (invalid token)"
           },
@@ -462,8 +503,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/johndoe",
-              "host": ["{{base_url}}"],
-              "path": ["users", "johndoe"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "johndoe"
+              ]
             },
             "description": "Get public profile of a user by username. Shows limited info if profile is private.\n\n**URL params:**\n- `username`: User's username\n\n**Response 200:**\n```json\n{\n  \"id\": \"user-uuid\",\n  \"name\": \"John Doe\",\n  \"username\": \"johndoe\",\n  \"avatar_url\": \"https://...\",\n  \"bio\": \"Travel enthusiast\",\n  \"website_url\": \"https://example.com\",\n  \"location_label\": \"Jakarta, Indonesia\",\n  \"is_public\": true\n}\n```\n\n**Response 404:** User not found"
           },
@@ -494,8 +540,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/users/johndoe/trips?cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["users", "johndoe", "trips"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "johndoe",
+                "trips"
+              ],
               "query": [
                 {
                   "key": "cursor",
@@ -555,14 +607,21 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips?tab=upcoming&cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["trips"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips"
+              ],
               "query": [
                 {
                   "key": "tab",
                   "value": "upcoming",
                   "description": "Filter: upcoming or completed",
-                  "enum": ["upcoming", "completed"]
+                  "enum": [
+                    "upcoming",
+                    "completed"
+                  ]
                 },
                 {
                   "key": "cursor",
@@ -619,8 +678,12 @@
             },
             "url": {
               "raw": "{{base_url}}/trips",
-              "host": ["{{base_url}}"],
-              "path": ["trips"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips"
+              ]
             },
             "description": "Create a new trip. Can be created in fixed-date mode or voting mode.\n\n**Request body (Fixed date mode):**\n```json\n{\n  \"name\": \"Bali Adventure 2026\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-05\",\n  \"is_all_day\": true,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\"\n}\n```\n\n**Request body (Voting mode):**\n```json\n{\n  \"name\": \"Bali Adventure 2026\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"candidates\": [\n    {\"start_date\": \"2026-08-01\", \"end_date\": \"2026-08-05\"},\n    {\"start_date\": \"2026-08-08\", \"end_date\": \"2026-08-12\"}\n  ],\n  \"voting_deadline\": \"2026-07-25T23:59:59Z\"\n}\n```\n\n**Response 201:** Returns created trip with `status: fixed` or `status: voting_pending`"
           },
@@ -652,8 +715,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}"
+              ]
             },
             "description": "Get detailed information about a specific trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n{\n  \"id\": \"trip-uuid\",\n  \"name\": \"Bali Adventure\",\n  \"status\": \"voting_pending\",\n  \"start_date\": \"2026-08-01\",\n  \"end_date\": \"2026-08-05\",\n  \"is_all_day\": true,\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\",\n  \"tags\": [\"beach\", \"adventure\"],\n  \"cover_image_url\": \"https://...\",\n  \"creator_id\": \"user-uuid\",\n  \"created_at\": \"2026-07-15T10:00:00Z\",\n  \"participants\": [\n    {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"avatar_url\": \"https://...\",\n      \"role\": \"creator\"\n    }\n  ],\n  \"voting_deadline\": \"2026-07-25T23:59:59Z\"\n}\n```"
           },
@@ -692,8 +760,13 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}"
+              ]
             },
             "description": "Update trip details. Only trip creator can update.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"name\": \"Updated Trip Name\",\n  \"tags\": [\"updated\", \"tags\"],\n  \"start_date\": \"2026-08-02\",\n  \"end_date\": \"2026-08-06\",\n  \"is_all_day\": false,\n  \"start_time\": \"10:00\",\n  \"end_time\": \"20:00\"\n}\n```\n\n**Response 200:** Returns updated trip\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip not found"
           },
@@ -719,8 +792,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}"
+              ]
             },
             "description": "Soft delete a trip. Only trip creator can delete. Sets `deleted_at` timestamp.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 204:** No content (trip soft-deleted)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip not found or already deleted"
           },
@@ -759,8 +837,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/cover",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "cover"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "cover"
+              ]
             },
             "description": "Set the cover image for a trip from one of the trip's uploaded documents.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"document_id\": \"document-uuid\"\n}\n```\n\n**Response 200:** Returns updated trip with `cover_image_url`\n\n**Response 400:** Invalid document ID or document not owned by trip\n\n**Response 404:** Trip or document not found"
           },
@@ -790,8 +874,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/members",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "members"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "members"
+              ]
             },
             "description": "List all members (participants) of a trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"user-uuid\",\n    \"name\": \"John Doe\",\n    \"username\": \"johndoe\",\n    \"avatar_url\": \"https://...\",\n    \"role\": \"creator\",\n    \"joined_at\": \"2026-07-15T10:00:00Z\"\n  },\n  {\n    \"id\": \"user-uuid-2\",\n    \"name\": \"Jane Smith\",\n    \"username\": \"janesmith\",\n    \"avatar_url\": \"https://...\",\n    \"role\": \"participant\",\n    \"joined_at\": \"2026-07-16T10:00:00Z\"\n  }\n]\n```"
           },
@@ -817,8 +907,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/members/{{member_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "members", "{{member_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "members",
+                "{{member_id}}"
+              ]
             },
             "description": "Remove a member from a trip. Only trip creator can remove members.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `memberId`: User UUID of member to remove\n\n**Response 204:** No content (member removed)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Trip or member not found"
           },
@@ -856,8 +953,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/invitations?cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "invitations"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "invitations"
+              ],
               "query": [
                 {
                   "key": "cursor",
@@ -914,8 +1016,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "invitations"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "invitations"
+              ]
             },
             "description": "Invite a user to a trip via username or email. Only trip participants can invite.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (via username):**\n```json\n{\n  \"username\": \"janedoe\"\n}\n```\n\n**Request body (via email):**\n```json\n{\n  \"email\": \"jane@example.com\"\n}\n```\n\n**Response 201:** Returns created invitation with enriched trip and inviter data\n\n**Response 400:** Invalid input or user already invited/participant\n\n**Response 404:** User or trip not found"
           },
@@ -950,8 +1058,15 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "invitations",
+                "{{invitation_id}}"
+              ]
             },
             "description": "Accept or decline a trip invitation. Only the invited user can respond.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `invitationId`: Invitation UUID\n\n**Request body (accept):**\n```json\n{\n  \"accept\": true\n}\n```\n\n**Request body (decline):**\n```json\n{\n  \"accept\": false\n}\n```\n\n**Response 204:** No content (invitation responded)\n- If accept=true: User added as trip participant, invitation deleted\n- If accept=false: Invitation marked as declined, deleted\n\n**Response 404:** Invitation not found or already responded"
           },
@@ -977,8 +1092,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/invitations/{{invitation_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "invitations", "{{invitation_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "invitations",
+                "{{invitation_id}}"
+              ]
             },
             "description": "Cancel a pending invitation. Only the inviter can cancel their own invitations.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `invitationId`: Invitation UUID\n\n**Response 204:** No content (invitation cancelled)\n\n**Response 403:** Forbidden (not the inviter)\n\n**Response 404:** Invitation not found or already responded"
           },
@@ -1025,8 +1147,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls"
+              ]
             },
             "description": "List all polls for a trip including date candidates, activity polls, and custom polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"poll-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"poll_type\": \"tanggal\",\n    \"title\": \"Voting Jadwal\",\n    \"status\": \"active\",\n    \"created_at\": \"2026-07-15T10:00:00Z\",\n    \"options\": [\n      {\n        \"id\": \"option-uuid\",\n        \"label\": \"1-5 August 2026\",\n        \"vote_count\": 3,\n        \"candidate_id\": \"candidate-uuid\"\n      }\n    ],\n    \"my_vote\": {\n      \"option_id\": \"option-uuid\",\n      \"candidate_id\": \"candidate-uuid\"\n    }\n  },\n  {\n    \"id\": \"poll-uuid-2\",\n    \"trip_id\": \"trip-uuid\",\n    \"poll_type\": \"aktivitas\",\n    \"title\": \"Activities\",\n    \"status\": \"active\",\n    \"options\": [\n      {\n        \"id\": \"option-uuid-2\",\n        \"label\": \"Surfing lessons\",\n        \"vote_count\": 2\n      }\n    ],\n    \"my_vote\": {\n      \"option_id\": \"option-uuid-2\"\n    }\n  }\n]\n```"
           },
@@ -1071,8 +1199,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls"
+              ]
             },
             "description": "Create a new poll (activities or other). Max 1 active poll per type.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"poll_type\": \"aktivitas\",\n  \"title\": \"Activity Preferences\",\n  \"options\": [\n    {\"label\": \"Surfing lessons\"},\n    {\"label\": \"Temple tours\"},\n    {\"label\": \"Beach relaxation\"}\n  ]\n}\n```\n\n**Poll types:**\n- `aktivitas`: Activity preferences\n- `lainnya`: Custom/other polls\n- Note: `tanggal` polls are auto-created with date candidates, do not create manually\n\n**Response 201:** Returns created poll with options\n\n**Response 400:** Invalid input or active poll already exists for this type"
           },
@@ -1107,8 +1241,16 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls",
+                "{{poll_id}}",
+                "vote"
+              ]
             },
             "description": "Vote on a poll option. Only trip participants can vote. Overwrites previous vote.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Request body:**\n```json\n{\n  \"option_id\": \"option-uuid\"\n}\n```\n\n**Response 204:** No content (vote recorded)\n\n**Response 400:** Poll not active or invalid option\n\n**Response 404:** Poll or option not found"
           },
@@ -1134,8 +1276,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/vote",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "vote"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls",
+                "{{poll_id}}",
+                "vote"
+              ]
             },
             "description": "Retract (remove) your vote from a poll.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Response 204:** No content (vote retracted)\n\n**Response 404:** Poll not found"
           },
@@ -1161,8 +1311,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "candidates",
+                "{{candidate_id}}",
+                "vote"
+              ]
             },
             "description": "Vote on a date candidate for the trip. Only trip participants can vote. Overwrites previous vote.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `candidateId`: Date candidate UUID\n\n**Response 204:** No content (vote recorded)\n\n**Response 400:** Voting deadline passed or trip status changed\n\n**Response 404:** Candidate or trip not found"
           },
@@ -1188,8 +1346,16 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/candidates/{{candidate_id}}/vote",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "candidates", "{{candidate_id}}", "vote"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "candidates",
+                "{{candidate_id}}",
+                "vote"
+              ]
             },
             "description": "Retract (remove) your vote from a date candidate.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `candidateId`: Date candidate UUID\n\n**Response 204:** No content (vote retracted)\n\n**Response 404:** Candidate or trip not found"
           },
@@ -1224,8 +1390,16 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}/lock",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}", "lock"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls",
+                "{{poll_id}}",
+                "lock"
+              ]
             },
             "description": "Lock a poll and set the winning option. Only trip creator can lock polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**For date polls (poll_type=tanggal):**\n- Sets `trips.start_date` and `trips.end_date` to winning candidate\n- Updates `trips.status` to `fixed`\n- Clears `trips.voting_deadline`\n\n**For other polls:**\n- Marks poll as `status: locked`\n- Stores winning option\n\n**Response 204:** No content (poll locked)\n\n**Response 400:** Poll already locked or no votes yet\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Poll not found"
           },
@@ -1251,8 +1425,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/polls/{{poll_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "polls", "{{poll_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "polls",
+                "{{poll_id}}"
+              ]
             },
             "description": "Delete a poll. Only trip creator can delete active polls.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `pollId`: Poll UUID\n\n**Response 204:** No content (poll deleted)\n\n**Response 403:** Forbidden (not creator)\n\n**Response 404:** Poll not found"
           },
@@ -1295,8 +1476,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/activities",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "activities"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "activities"
+              ]
             },
             "description": "List all activities for a trip, grouped/sorted by date and time.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"activity-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"activity_date\": \"2026-08-01\",\n    \"start_time\": \"09:00\",\n    \"end_time\": \"12:00\",\n    \"kind\": \"destination\",\n    \"title\": \"Visit Uluwatu Temple\",\n    \"description\": \"Famous cliffside temple\",\n    \"location_label\": \"Uluwatu, Bali\",\n    \"maps_link\": \"https://maps.google.com/...\",\n    \"ref_links\": [\"https://example.com/tickets\"],\n    \"cover_source\": \"maps\",\n    \"cover_icon\": \"temple\",\n    \"cover_document_id\": \"doc-uuid\",\n    \"thumbnail_url\": \"https://maps.googleapis.com/...\",\n    \"created_at\": \"2026-07-15T10:00:00Z\"\n  }\n]\n```"
           },
@@ -1327,8 +1514,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "activities",
+                "{{activity_id}}"
+              ]
             },
             "description": "Get a single activity by ID.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Response 200:** Returns activity object with full details\n\n**Response 404:** Activity not found"
           },
@@ -1373,8 +1567,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/activities",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "activities"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "activities"
+              ]
             },
             "description": "Create a new trip activity. Any trip participant can create activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"activity_date\": \"2026-08-01\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"12:00\",\n  \"kind\": \"destination\",\n  \"title\": \"Visit Uluwatu Temple\",\n  \"description\": \"Famous cliffside temple\",\n  \"location_label\": \"Uluwatu, Bali\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [\"https://example.com/tickets\"],\n  \"cover_source\": \"document\",\n  \"cover_document_id\": \"doc-uuid\"\n}\n```\n\n**Activity kinds:**\n- `destination`: Main attractions/activities\n- `logistics`: Transport, check-in, etc.\n- `food`: Meals and dining\n- `rest`: Free time/breaks\n\n**Cover sources:**\n- `document`: Use trip document image\n- `icon`: Use built-in icon\n- `google`: Auto-resolve from maps_link\n\n**Response 201:** Returns created activity\n\n**Response 400:** Invalid date (outside trip date range for fixed trips)"
           },
@@ -1413,8 +1613,15 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "activities",
+                "{{activity_id}}"
+              ]
             },
             "description": "Update an existing activity. Any trip participant can update activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"activity_date\": \"2026-08-02\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"13:00\",\n  \"kind\": \"logistics\",\n  \"title\": \"Updated Activity\",\n  \"description\": \"Updated description\",\n  \"location_label\": \"New Location\",\n  \"maps_link\": \"https://maps.google.com/...\",\n  \"ref_links\": [\"https://example.com/new-link\"],\n  \"cover_source\": \"icon\",\n  \"cover_icon\": \"restaurant\"\n}\n```\n\n**Response 200:** Returns updated activity\n\n**Response 404:** Activity not found"
           },
@@ -1440,8 +1647,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/activities/{{activity_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "activities", "{{activity_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "activities",
+                "{{activity_id}}"
+              ]
             },
             "description": "Delete an activity. Any trip participant can delete activities.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `activityId`: Activity UUID\n\n**Response 204:** No content (activity deleted)\n\n**Response 404:** Activity not found"
           },
@@ -1485,8 +1699,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/messages?cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "messages"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "messages"
+              ],
               "query": [
                 {
                   "key": "cursor",
@@ -1543,8 +1763,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/messages",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "messages"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "messages"
+              ]
             },
             "description": "Send a message in trip chat. Only trip participants can send messages.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body (text message):**\n```json\n{\n  \"message_kind\": \"text\",\n  \"message_text\": \"Hey everyone!\"\n}\n```\n\n**Request body (media message):**\n```json\n{\n  \"message_kind\": \"photo\",\n  \"media_url\": \"https://r2-presigned-url/file.jpg\"\n}\n```\n\n**Request body (with reply):**\n```json\n{\n  \"message_kind\": \"text\",\n  \"message_text\": \"I agree!\",\n  \"reply_to_id\": \"parent-message-uuid\"\n}\n```\n\n**Message kinds:**\n- `text`: Plain text message\n- `photo`: Image/video\n- `video`: Video file\n\n**Response 201:** Returns created message with enriched sender data\n\n**Response 400:** Invalid input or not a trip participant"
           },
@@ -1570,8 +1796,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/messages/read",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "messages", "read"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "messages",
+                "read"
+              ]
             },
             "description": "Mark all messages in the trip as read for the current user. Updates `trip_message_reads.last_read_at` timestamp.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 204:** No content (messages marked as read)\n\n**Response 404:** Trip not found or user not a participant"
           },
@@ -1597,8 +1830,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/messages/{{message_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "messages", "{{message_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "messages",
+                "{{message_id}}"
+              ]
             },
             "description": "Soft delete a message. Only the sender can delete their own messages.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `messageId`: Message UUID\n\n**Response 204:** No content (message soft-deleted)\n\n**Response 403:** Forbidden (not the sender)\n\n**Response 404:** Message not found or already deleted"
           },
@@ -1641,8 +1881,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/documents",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "documents"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "documents"
+              ]
             },
             "description": "List all documents (media files) registered for a trip.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Response 200:**\n```json\n[\n  {\n    \"id\": \"document-uuid\",\n    \"trip_id\": \"trip-uuid\",\n    \"uploader_id\": \"user-uuid\",\n    \"filename\": \"sunset.jpg\",\n    \"media_type\": \"image\",\n    \"content_type\": \"image/jpeg\",\n    \"storage_key\": \"trips/trip-uuid/user-uuid/file.jpg\",\n    \"size_bytes\": 2048576,\n    \"from_chat\": false,\n    \"presigned_url\": \"https://r2-presigned-url/file.jpg\",\n    \"created_at\": \"2026-07-15T10:00:00Z\"\n  }\n]\n```\n\n**Note:** `presigned_url` is a 1-hour presigned GET URL for direct download"
           },
@@ -1687,8 +1933,14 @@
             },
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/documents",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "documents"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "documents"
+              ]
             },
             "description": "Register an uploaded R2 object as a trip document. Use after presigned upload.\n\n**URL params:**\n- `tripId`: Trip UUID\n\n**Request body:**\n```json\n{\n  \"filename\": \"sunset.jpg\",\n  \"storage_key\": \"trips/trip-uuid/user-uuid/file.jpg\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"size_bytes\": 2048576,\n  \"from_chat\": false\n}\n```\n\n**Media types:**\n- `image`: Photo/image files\n- `video`: Video files\n\n**Note:** `storage_key` must match the key used in the presigned upload.\n\n**Response 201:** Returns registered document with presigned download URL\n\n**Response 400:** Invalid input or R2 object verification failed"
           },
@@ -1714,8 +1966,15 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/trips/{{trip_id}}/documents/{{document_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["trips", "{{trip_id}}", "documents", "{{document_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "trips",
+                "{{trip_id}}",
+                "documents",
+                "{{document_id}}"
+              ]
             },
             "description": "Delete a document from R2 and remove database record. Only uploader or trip creator can delete.\n\n**URL params:**\n- `tripId`: Trip UUID\n- `documentId`: Document UUID\n\n**Response 204:** No content (document deleted from R2 and database)\n\n**Response 403:** Forbidden (not uploader or creator)\n\n**Response 404:** Document not found"
           },
@@ -1767,8 +2026,13 @@
             },
             "url": {
               "raw": "{{base_url}}/uploads/presign",
-              "host": ["{{base_url}}"],
-              "path": ["uploads", "presign"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "uploads",
+                "presign"
+              ]
             },
             "description": "Get a presigned PUT URL for direct upload to Cloudflare R2. Valid for 5 minutes.\n\n**Request body:**\n```json\n{\n  \"trip_id\": \"trip-uuid\",\n  \"media_type\": \"image\",\n  \"content_type\": \"image/jpeg\",\n  \"filename\": \"sunset.jpg\"\n}\n```\n\n**Media types:**\n- `image`: Photo/image files\n- `video`: Video files\n\n**Response 200:**\n```json\n{\n  \"upload_url\": \"https://r2-url/...?X-Amz-...\",\n  \"storage_key\": \"trips/trip-uuid/user-uuid/20260715-120000-sunset.jpg\",\n  \"expires_in\": 300\n}\n```\n\n**Upload Flow:**\n1. Call this endpoint to get presigned PUT URL\n2. PUT file directly to R2 using the returned `upload_url`\n3. Call `POST /trips/:tripId/documents` to register the uploaded file\n\n**Response 400:** Invalid input or not a trip participant"
           },
@@ -1812,14 +2076,22 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/wishlists?priority=high&tag=bali&cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists"
+              ],
               "query": [
                 {
                   "key": "priority",
                   "value": "high",
                   "description": "Filter by priority (optional)",
-                  "enum": ["high", "medium", "low"]
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ]
                 },
                 {
                   "key": "tag",
@@ -1866,8 +2138,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/wishlists/tags",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists", "tags"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists",
+                "tags"
+              ]
             },
             "description": "Get all unique tags from user's wishlists for filter chips.\n\n**Response 200:**\n```json\n[\n  \"bali\",\n  \"surfing\",\n  \"adventure\",\n  \"food\",\n  \"culture\"\n]\n```\n\n**Note:** Returns empty array if user has no wishlists"
           },
@@ -1912,8 +2189,12 @@
             },
             "url": {
               "raw": "{{base_url}}/wishlists",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists"
+              ]
             },
             "description": "Create a new wishlist item for trip ideas.\n\n**Request body:**\n```json\n{\n  \"title\": \"Surfing lessons in Uluwatu\",\n  \"location_label\": \"Bali, Indonesia\",\n  \"notes\": \"Want to try surfing for the first time\",\n  \"tags\": [\"bali\", \"surfing\", \"adventure\"],\n  \"thumbnail_url\": \"https://example.com/surfing.jpg\",\n  \"priority_level\": \"high\"\n}\n```\n\n**Priority levels:**\n- `high`: Must-do activities\n- `medium`: Nice to have\n- `low`: Optional/low priority\n\n**Response 201:** Returns created wishlist item"
           },
@@ -1952,8 +2233,13 @@
             },
             "url": {
               "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists", "{{wishlist_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists",
+                "{{wishlist_id}}"
+              ]
             },
             "description": "Update an existing wishlist item. All fields are optional.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Request body (all fields optional):**\n```json\n{\n  \"title\": \"Updated title\",\n  \"location_label\": \"New location\",\n  \"notes\": \"Updated notes\",\n  \"tags\": [\"updated\", \"tags\"],\n  \"thumbnail_url\": \"https://example.com/new-thumb.jpg\",\n  \"priority_level\": \"medium\"\n}\n```\n\n**Response 200:** Returns updated wishlist\n\n**Response 404:** Wishlist not found"
           },
@@ -1979,8 +2265,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/wishlists/{{wishlist_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists", "{{wishlist_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists",
+                "{{wishlist_id}}"
+              ]
             },
             "description": "Soft delete a wishlist item. Only the owner can delete their wishlists.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Response 204:** No content (wishlist soft-deleted)\n\n**Response 404:** Wishlist not found"
           },
@@ -2027,8 +2318,14 @@
             },
             "url": {
               "raw": "{{base_url}}/wishlists/{{wishlist_id}}/convert-to-trip",
-              "host": ["{{base_url}}"],
-              "path": ["wishlists", "{{wishlist_id}}", "convert-to-trip"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wishlists",
+                "{{wishlist_id}}",
+                "convert-to-trip"
+              ]
             },
             "description": "Convert a wishlist item into a trip with seeded activities. Atomic transaction.\n\n**URL params:**\n- `id`: Wishlist UUID\n\n**Request body:**\n```json\n{\n  \"trip_name\": \"Bali Surfing Adventure\",\n  \"start_date\": \"2026-09-01\",\n  \"end_date\": \"2026-09-05\",\n  \"tags\": [\"surfing\", \"adventure\"]\n}\n```\n\n**Transaction flow:**\n1. Creates trip with `status: fixed`\n2. Seeds day 1 activities from wishlist data\n3. Soft deletes the wishlist item\n4. Returns trip + created activities\n5. Rollbacks on any failure\n\n**Response 201:**\n```json\n{\n  \"trip\": {\n    \"id\": \"trip-uuid\",\n    \"name\": \"Bali Surfing Adventure\",\n    \"status\": \"fixed\",\n    \"start_date\": \"2026-09-01\",\n    \"end_date\": \"2026-09-05\",\n    \"tags\": [\"surfing\", \"adventure\"],\n    ...\n  },\n  \"activities\": [\n    {\n      \"id\": \"activity-uuid\",\n      \"title\": \"Surfing lessons in Uluwatu\",\n      \"activity_date\": \"2026-09-01\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"12:00\",\n      ...\n    }\n  ]\n}\n```\n\n**Response 404:** Wishlist not found"
           },
@@ -2076,8 +2373,12 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/notifications?cursor={{cursor}}&limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["notifications"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ],
               "query": [
                 {
                   "key": "cursor",
@@ -2120,8 +2421,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/notifications/unread-count",
-              "host": ["{{base_url}}"],
-              "path": ["notifications", "unread-count"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-count"
+              ]
             },
             "description": "Get count of unread notifications for the current user. Used for notification badge on home screen.\n\n**Response 200:**\n```json\n{\n  \"unread_count\": 5\n}\n```"
           },
@@ -2147,8 +2453,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/notifications/{{notification_id}}/read",
-              "host": ["{{base_url}}"],
-              "path": ["notifications", "{{notification_id}}", "read"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ],
               "variable": [
                 {
                   "key": "id",
@@ -2181,8 +2493,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/notifications/read-all",
-              "host": ["{{base_url}}"],
-              "path": ["notifications", "read-all"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
             },
             "description": "Mark all notifications as read for the current user.\n\n**Response 204:** No content (all notifications marked as read)"
           },
@@ -2208,8 +2525,14 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/trips/{{trip_id}}/invitations",
-                  "host": ["{{base_url}}"],
-                  "path": ["trips", "{{trip_id}}", "invitations"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "trips",
+                    "{{trip_id}}",
+                    "invitations"
+                  ]
                 },
                 "description": "Create a trip invitation (triggers notification creation)"
               },
@@ -2222,8 +2545,12 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/notifications",
-                  "host": ["{{base_url}}"],
-                  "path": ["notifications"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "notifications"
+                  ]
                 },
                 "description": "Verify notification was created for the invited user"
               },
@@ -2236,14 +2563,196 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/notifications/{{notification_id}}/read",
-                  "host": ["{{base_url}}"],
-                  "path": ["notifications", "{{notification_id}}", "read"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "notifications",
+                    "{{notification_id}}",
+                    "read"
+                  ]
                 },
                 "description": "Mark the notification as read"
               },
               "response": []
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Push Tokens",
+      "description": "Register/unregister Expo push notification device tokens (M17 push notifications). All endpoints require authentication.",
+      "item": [
+        {
+          "name": "Register Push Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200/201', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\",\n  \"platform\": \"ios\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/push-tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "push-tokens"
+              ]
+            },
+            "description": "Register (or refresh) the current device's Expo push token for the signed-in user.\n\n**Body:**\n- `token` (string): Expo push token from `expo-notifications`\n- `platform` (string): `ios` or `android`\n\n**Response 201:** registered `PushToken` row."
+          }
+        },
+        {
+          "name": "Unregister Push Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () {",
+                  "    pm.expect(pm.response.code).to.eql(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/push-tokens/ExponentPushToken%5Bxxxxxxxxxxxxxxxxxxxxxx%5D",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "push-tokens",
+                "ExponentPushToken%5Bxxxxxxxxxxxxxxxxxxxxxx%5D"
+              ]
+            },
+            "description": "Remove a device push token (e.g. on sign-out).\n\n**Response 204:** No Content."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integrations",
+      "description": "Google Calendar integration (M16) — create events in the user's own calendar via per-user OAuth.\n\nSetup: add `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET` to backend .env, and register the callback redirect URI in Google Cloud Console.\n\nFlow: 1) Get auth URL (JWT) → open in browser → user consents → backend stores tokens; 2) Create event (JWT) for a trip with status `fixed`.",
+      "item": [
+        {
+          "name": "Get Calendar Auth URL",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/integrations/google-calendar/auth-url?redirect=/trip",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "integrations",
+                "google-calendar",
+                "auth-url"
+              ],
+              "query": [
+                {
+                  "key": "redirect",
+                  "value": "/trip"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calendar OAuth Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/integrations/google-calendar/callback?code=__CODE__&state=__STATE__",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "integrations",
+                "google-calendar",
+                "callback"
+              ],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "__CODE__"
+                },
+                {
+                  "key": "state",
+                  "value": "__STATE__"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Calendar Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trip_id\": \"PUT-TRIP-ID-HERE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/integrations/google-calendar/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "integrations",
+                "google-calendar",
+                "events"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }

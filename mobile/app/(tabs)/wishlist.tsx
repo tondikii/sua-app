@@ -9,11 +9,9 @@ import {
   Image,
   TextInput,
   Modal,
-  Platform,
   ScrollView,
-  Linking,
+  Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, G } from 'react-native-svg';
 import { useWishlists } from '@/features/wishlist/hooks/useWishlists';
@@ -34,6 +32,7 @@ import { Compass } from '@/components/icons/Compass';
 import { AlertCircle } from '@/components/icons/AlertCircle';
 import { Clock } from '@/components/icons/Clock';
 import { TagInput } from '@/components/TagInput';
+import { ItemDetailSheet } from '@/components/ItemDetailSheet';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { bottomSheetFrame } from '@/theme/layout';
@@ -221,114 +220,18 @@ function DetailSheet({ visible, onClose, item, onConvert }: {
   onConvert: () => void;
 }) {
   if (!visible || !item) return null;
-  const pMeta = PRIORITY_META[item.priority_level] ?? PRIORITY_META.medium;
-  const visibleTags = item.tags.slice(0, 3);
-  const overflowTags = item.tags.length - visibleTags.length;
-
-  const openLink = useCallback((url: string) => {
-    Linking.openURL(url).catch(() => {});
-  }, []);
 
   return (
-    <Modal visible transparent animationType="slide">
-      <View style={styles.sheetBackdrop}>
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <View style={styles.sheetHeader}>
-            <View>
-              <Text style={styles.sheetTitle}>{item.place_name}</Text>
-              {item.location_label && <Text style={styles.sheetSubtitle}>{item.location_label}</Text>}
-            </View>
-            <TouchableOpacity onPress={onClose} style={styles.sheetCloseBtn}>
-              <X size={18} color={colors.charcoal} />
-            </TouchableOpacity>
-          </View>
-          <ScrollView contentContainerStyle={styles.sheetBody} showsVerticalScrollIndicator={false}>
-            {item.thumbnail_url && (
-              <View style={styles.detailImageContainer}>
-                <Image source={{ uri: item.thumbnail_url }} style={styles.detailImage} resizeMode="cover" />
-                <LinearGradient
-                  colors={['transparent', 'rgba(26,26,46,0.35)']}
-                  style={styles.detailImageGradient}
-                />
-                <View style={[styles.detailPriorityBadge, { backgroundColor: pMeta.bg }]}>
-                  <Text style={[styles.detailPriorityText, { color: pMeta.color }]}>Prioritas {pMeta.label}</Text>
-                </View>
-              </View>
-            )}
-
-            {/* Info baris: waktu */}
-            {(item.start_time || item.end_time) && (
-              <View style={styles.detailTimeRow}>
-                <Clock size={14} color={colors.charcoal} />
-                <Text style={styles.detailTimeText}>
-                  {item.start_time && item.end_time
-                    ? `${item.start_time} – ${item.end_time}`
-                    : (item.start_time ?? item.end_time)}
-                </Text>
-              </View>
-            )}
-
-            {item.tags.length > 0 && (
-              <View style={styles.detailTags}>
-                {visibleTags.map((tag, i) => (
-                  <View key={i} style={styles.gridCardTagChip}>
-                    <Text style={styles.gridCardTagText}>{tag.startsWith('#') ? tag : `#${tag}`}</Text>
-                  </View>
-                ))}
-                {overflowTags > 0 && (
-                  <View style={styles.gridCardTagChipOverflow}>
-                    <Text style={styles.gridCardTagTextOverflow}>+{overflowTags}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-
-            {item.location_label && (
-              <View style={styles.detailLocation}>
-                <MapPin size={13} color={colors.muted} />
-                <Text style={styles.detailLocationText}>{item.location_label}</Text>
-              </View>
-            )}
-
-            {item.notes && <Text style={styles.detailNotes}>{item.notes}</Text>}
-
-            {(item.maps_link || item.ref_links.length > 0) && (
-              <View>
-                <Text style={styles.detailTautanLabel}>TAUTAN</Text>
-                {item.maps_link && (
-                  <TouchableOpacity style={styles.detailLinkRow} onPress={() => openLink(item.maps_link!)} activeOpacity={0.7}>
-                    <Navigation size={15} color={colors.teal} />
-                    <Text style={styles.detailLinkText}>Buka di Google Maps</Text>
-                  </TouchableOpacity>
-                )}
-                {item.ref_links.map((ref, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    style={styles.detailLinkRow}
-                    onPress={() => openLink(ref.url)}
-                    activeOpacity={0.7}
-                  >
-                    <Link2 size={15} color={colors.teal} />
-                    <View style={styles.detailLinkBody}>
-                      {ref.label?.trim() ? (
-                        <Text style={styles.detailLinkTitle} numberOfLines={1}>{ref.label}</Text>
-                      ) : null}
-                      <Text style={styles.detailLinkUrl} numberOfLines={1}>{ref.url}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-          <View style={styles.sheetFooter}>
-            <TouchableOpacity style={styles.sheetPrimaryBtn} onPress={onConvert} activeOpacity={0.8}>
-              <Text style={styles.sheetPrimaryBtnText}>Jadikan Perjalanan</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+    <ItemDetailSheet
+      visible={visible}
+      item={item}
+      onClose={onClose}
+      footer={
+        <TouchableOpacity style={styles.sheetPrimaryBtn} onPress={onConvert} activeOpacity={0.8}>
+          <Text style={styles.sheetPrimaryBtnText}>Jadikan Perjalanan</Text>
+        </TouchableOpacity>
+      }
+    />
   );
 }
 
@@ -993,31 +896,13 @@ const styles = StyleSheet.create({
   deleteCancelText: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
   deleteConfirmBtn: { flex: 1, height: 44, borderRadius: 12, backgroundColor: colors.danger, borderWidth: 1.5, borderColor: colors.dangerDark, alignItems: 'center', justifyContent: 'center', ...shadows.button },
   deleteConfirmText: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.white },
-  // Detail sheet
-  detailImageContainer: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
-  detailImage: { width: '100%', height: '100%' },
-  detailImageGradient: { ...StyleSheet.absoluteFill as any },
-  detailPriorityBadge: { position: 'absolute', bottom: 10, left: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  detailPriorityText: { fontSize: 11, fontFamily: 'PlusJakartaSans_800ExtraBold' },
-  detailTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
-  detailLocation: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  detailLocationText: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },
-  detailNotes: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, lineHeight: 20.15, marginBottom: 12 },
-  detailTautanLabel: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 },
-  detailLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, marginBottom: 6 },
-  detailLinkBody: { flex: 1, gap: 2 },
-  detailLinkTitle: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
-  detailLinkUrl: { fontSize: 11, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },
-  detailLinkText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.teal, flex: 1 },
-  detailTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
-  detailTimeText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
   // Sheet shared
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(26,26,46,0.45)', justifyContent: 'flex-end', alignItems: 'center' },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '85%', ...bottomSheetFrame },
   sheetHandle: { width: 40, height: 5, borderRadius: 20, backgroundColor: colors.border, alignSelf: 'center', marginTop: 14, marginBottom: 6 },
-  sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-  sheetTitle: { fontSize: 18, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
-  sheetSubtitle: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, marginTop: 2 },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sheetTitle: { fontSize: 17, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, letterSpacing: -0.2 },
+  sheetSubtitle: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },
   sheetCloseBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.light, alignItems: 'center', justifyContent: 'center' },
   sheetBody: { padding: 16, paddingBottom: 40, gap: 14 },
   sheetField: { gap: 6 },

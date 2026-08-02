@@ -107,10 +107,12 @@ export class TripsService {
           isAllDay: data.is_all_day,
           startTime:
             !data.is_all_day && data.start_time
-              ? new Date(`2000-01-01T${data.start_time}:00`)
+              ? new Date(`2000-01-01T${data.start_time}:00Z`)
               : null,
           endTime:
-            !data.is_all_day && data.end_time ? new Date(`2000-01-01T${data.end_time}:00`) : null,
+            !data.is_all_day && data.end_time
+              ? new Date(`2000-01-01T${data.end_time}:00Z`)
+              : null,
         },
       });
 
@@ -277,12 +279,15 @@ export class TripsService {
     const signedCoverUrls = await this.r2.presignDownloads(coverKeys);
 
     return {
-      data: results.map((trip) =>
-        TripSerializer.toCard(
-          trip,
-          trip.coverDocument?.storageKey
-            ? (signedCoverUrls.get(trip.coverDocument.storageKey) ?? null)
-            : null,
+      data: await Promise.all(
+        results.map((trip) =>
+          TripSerializer.toCard(
+            trip,
+            trip.coverDocument?.storageKey
+              ? (signedCoverUrls.get(trip.coverDocument.storageKey) ?? null)
+              : null,
+            this.r2,
+          ),
         ),
       ),
       next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
@@ -333,6 +338,7 @@ export class TripsService {
       trip.coverDocument?.storageKey
         ? await this.r2.presignDownload(trip.coverDocument.storageKey)
         : null,
+      this.r2,
     );
   }
 
@@ -348,8 +354,10 @@ export class TripsService {
         startDate: dto.start_date ? new Date(dto.start_date) : undefined,
         endDate: dto.end_date ? new Date(dto.end_date) : undefined,
         isAllDay: dto.is_all_day,
-        startTime: dto.start_time ? new Date(`2000-01-01T${dto.start_time}:00`) : undefined,
-        endTime: dto.end_time ? new Date(`2000-01-01T${dto.end_time}:00`) : undefined,
+        startTime: dto.start_time
+          ? new Date(`2000-01-01T${dto.start_time}:00Z`)
+          : undefined,
+        endTime: dto.end_time ? new Date(`2000-01-01T${dto.end_time}:00Z`) : undefined,
         isPublic: dto.is_public,
       },
     });
@@ -386,6 +394,18 @@ export class TripsService {
     await this.prisma.trip.update({
       where: { id: tripId },
       data: { coverDocumentId: documentId },
+    });
+
+    return this.getTripDetail(tripId, userId);
+  }
+
+  /** Remove the trip cover (falls back to no cover) — creator only. */
+  async removeTripCover(tripId: string, userId: string) {
+    await this.assertCreator(tripId, userId);
+
+    await this.prisma.trip.update({
+      where: { id: tripId },
+      data: { coverDocumentId: null },
     });
 
     return this.getTripDetail(tripId, userId);
@@ -431,10 +451,14 @@ export class TripsService {
 
     return {
       is_creator: trip.creatorId === userId,
-      members: participants.map((p) =>
-        TripSerializer.toMember({ ...p, creatorId: trip.creatorId }),
+      members: await Promise.all(
+        participants.map((p) =>
+          TripSerializer.toMember({ ...p, creatorId: trip.creatorId }, this.r2),
+        ),
       ),
-      invitations: invitations.map((inv) => InvitationSerializer.toManaged(inv)),
+      invitations: await Promise.all(
+        invitations.map((inv) => InvitationSerializer.toManaged(inv, this.r2)),
+      ),
     };
   }
 

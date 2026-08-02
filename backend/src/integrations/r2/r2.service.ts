@@ -46,6 +46,12 @@ export class R2Service {
         accessKeyId: this.config.get<string>('R2_ACCESS_KEY_ID')!,
         secretAccessKey: this.config.get<string>('R2_SECRET_ACCESS_KEY')!,
       },
+      // SDK v3.645+ default "WHEN_SUPPORTED" stamps `x-amz-checksum-crc32` on
+      // presigned PUT URLs. That is a non-simple header, so browsers fire a
+      // CORS preflight which R2 rejects (uploads fail on web). "WHEN_REQUIRED"
+      // only adds checksums when the service demands them — R2 does not — so
+      // presigned URLs stay simple-header and uploads pass the preflight.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
     });
   }
 
@@ -56,6 +62,31 @@ export class R2Service {
   async presignUpload(tripId: string, contentType: string) {
     const ext = EXTENSION_BY_CONTENT_TYPE[contentType] ?? 'bin';
     const storageKey = `trips/${tripId}/${randomUUID()}.${ext}`;
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: storageKey,
+      ContentType: contentType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.client, command, {
+      expiresIn: PRESIGN_UPLOAD_EXPIRY_SECONDS,
+    });
+
+    return {
+      upload_url: uploadUrl,
+      storage_key: storageKey,
+      expires_in: PRESIGN_UPLOAD_EXPIRY_SECONDS,
+    };
+  }
+
+  /**
+   * Presigned PUT URL for a profile avatar. Bucket layout:
+   * `avatars/{userId}/{uuid}.{ext}` (ARCHITECTURE §4.6 presign flow).
+   */
+  async presignAvatarUpload(userId: string, contentType: string) {
+    const ext = EXTENSION_BY_CONTENT_TYPE[contentType] ?? 'bin';
+    const storageKey = `avatars/${userId}/${randomUUID()}.${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -96,6 +127,34 @@ export class R2Service {
       uniqueKeys.map(async (key) => [key, await this.presignDownload(key)] as const),
     );
     return new Map(entries);
+  }
+
+  /**
+   * Server-side upload of a small binary (e.g. a Google Maps thumbnail) into
+   * the trip's media bucket. Used to persist remote covers into `trip_documents`
+   * so they can double as trip cover / Media-tab items. Returns the storage key.
+   */
+  async putObject(
+    tripId: string,
+    contentType: string,
+    body: Buffer,
+  ): Promise<{ storageKey: string; storageUrl: string }> {
+    const ext = EXTENSION_BY_CONTENT_TYPE[contentType] ?? 'bin';
+    const storageKey = `trips/${tripId}/${randomUUID()}.${ext}`;
+
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: storageKey,
+        ContentType: contentType,
+        Body: body,
+      }),
+    );
+
+    return {
+      storageKey,
+      storageUrl: this.resolvePublicUrl(storageKey),
+    };
   }
 
   /** Derive the R2 object key from a stored URL or return the key as-is. */

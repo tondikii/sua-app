@@ -114,6 +114,12 @@ export class TripsController {
     return this.tripsService.setTripCover(tripId, user.userId, dto.document_id);
   }
 
+  // DELETE /v1/trips/:tripId/cover — remove the current cover, creator only
+  @Delete(':tripId/cover')
+  removeTripCover(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {
+    return this.tripsService.removeTripCover(tripId, user.userId);
+  }
+
   // GET /v1/trips/:tripId/members
   @Get(':tripId/members')
   getTripMembers(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {

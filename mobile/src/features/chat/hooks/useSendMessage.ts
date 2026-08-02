@@ -6,6 +6,7 @@ interface SendMessagePayload {
   message_kind: 'text' | 'photo' | 'video';
   message_text?: string;
   media_url?: string;
+  media_duration_seconds?: number;
   reply_to_id?: string;
 }
 

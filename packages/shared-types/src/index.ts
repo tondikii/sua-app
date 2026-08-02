@@ -142,6 +142,7 @@ export interface TripActivity {
   trip_id: string;
   place_name: string;
   activity_date: string | null;
+  day_number: number;
   start_time: string;
   end_time: string;
   kind: ActivityKind;
@@ -170,6 +171,8 @@ export interface PollOption {
   vote_count: number;
   has_voted: boolean;
   candidate_id: string | null;
+  maps_link: string | null;
+  ref_links: RefLink[];
   /** Users who voted for this option (for stacked avatars). */
   voters: UserSummary[];
 }
@@ -191,6 +194,10 @@ export interface TripPoll {
 export interface PollOptionInput {
   label: string;
   candidate_id?: string;
+  start_date?: string;
+  end_date?: string;
+  maps_link?: string;
+  ref_links?: { url: string; label?: string }[];
 }
 
 export interface CreatePollPayload {
@@ -217,6 +224,7 @@ export interface TripMessage {
   message_kind: MessageKind;
   message_text: string | null;
   media_url: string | null;
+  media_duration_seconds: number | null;
   reply_to: TripMessage | null;
   is_deleted: boolean;
   created_at: string;
@@ -229,11 +237,12 @@ export type MediaType = 'photo' | 'video';
 export interface TripDocument {
   id: string;
   trip_id: string;
-  uploaded_by: UserSummary;
+  uploaded_by: string;
   media_type: MediaType;
   storage_key: string;
   storage_url: string;
   from_chat: boolean;
+  media_duration_seconds: number | null;
   created_at: string;
 }
 
@@ -257,6 +266,13 @@ export interface AppNotification {
   created_at: string;
 }
 
+export type PushTokenPlatform = 'ios' | 'android';
+
+export interface RegisterPushTokenInput {
+  token: string;
+  platform: PushTokenPlatform;
+}
+
 // ── Wishlist ─────────────────────────────────────────────────
 
 export type PriorityLevel = 'high' | 'medium' | 'low';
@@ -276,4 +292,17 @@ export interface WishlistItem {
   thumbnail_url: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ── Google Calendar (M16) ─────────────────────────────────────
+
+/** GET /v1/integrations/google-calendar/auth-url */
+export interface CalendarAuthUrlResponse {
+  auth_url: string;
+}
+
+/** POST /v1/integrations/google-calendar/events */
+export interface CalendarEventResponse {
+  id: string;
+  html_link: string | null;
 }

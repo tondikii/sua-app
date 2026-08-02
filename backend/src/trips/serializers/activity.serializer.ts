@@ -6,6 +6,7 @@ type ActivityLike = {
   tripId: string;
   placeName: string;
   activityDate: Date | null;
+  dayNumber: number;
   startTime: Date;
   endTime: Date;
   kind: string;
@@ -37,6 +38,7 @@ export class ActivitySerializer {
       id: activity.id,
       place_name: activity.placeName,
       activity_date: dateToISO(activity.activityDate),
+      day_number: activity.dayNumber,
       start_time: timeToHHMM(activity.startTime),
       end_time: timeToHHMM(activity.endTime),
       kind: activity.kind,
@@ -64,6 +66,7 @@ export class ActivitySerializer {
       id: activity.id,
       place_name: activity.placeName,
       activity_date: dateToISO(activity.activityDate),
+      day_number: activity.dayNumber,
       start_time: timeToHHMM(activity.startTime),
       end_time: timeToHHMM(activity.endTime),
       kind: activity.kind,

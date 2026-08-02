@@ -14,6 +14,7 @@ import type {
 } from '@atur-perjalanan/shared-validation';
 import { UserSummarySerializer } from '../users/serializers/user.serializer';
 import { RealtimeTokenService } from '../integrations/supabase/realtime-token.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly realtimeToken: RealtimeTokenService,
+    private readonly r2: R2Service,
   ) {
     this.googleClient = new OAuth2Client(config.get<string>('google.clientId'));
   }
@@ -86,7 +88,9 @@ export class AuthService {
       access_token: accessToken,
       realtime_token: realtimeToken,
       is_new_user: needsRegistration,
-      ...(needsRegistration ? {} : { user: UserSummarySerializer.toProfile(user) }),
+      ...(needsRegistration
+        ? {}
+        : { user: await UserSummarySerializer.toProfile(user, this.r2) }),
     };
   }
 
@@ -117,7 +121,7 @@ export class AuthService {
       data: { username },
     });
 
-    return { user: UserSummarySerializer.toProfile(user) };
+    return { user: await UserSummarySerializer.toProfile(user, this.r2) };
   }
 
   private signAppJwt(userId: string): string {

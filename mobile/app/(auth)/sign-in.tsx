@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import {
-  Alert,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -17,6 +16,7 @@ import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 
 import { useAuth } from '../../src/auth/AuthProvider';
 import { useGoogleAuth } from '../../src/hooks/useGoogleAuth';
+import { useToast } from '../../src/components/Toast';
 import { theme } from '../../src/theme';
 
 function GoogleIcon() {
@@ -57,6 +57,7 @@ const HERO_IMAGE =
 export default function SignIn() {
   const { signInGoogle, isNewUser, isAuthenticated } = useAuth();
   const { promptAsync, idToken, error, configured } = useGoogleAuth();
+  const { showToast } = useToast();
   const router = useRouter();
   const signingInRef = useRef(false);
 
@@ -67,19 +68,19 @@ export default function SignIn() {
         try {
           await signInGoogle(idToken);
         } catch {
-          Alert.alert('Gagal Masuk', 'Autentikasi Google gagal. Coba lagi.');
+          showToast('Autentikasi Google gagal. Coba lagi.');
         } finally {
           signingInRef.current = false;
         }
       })();
     }
-  }, [idToken, signInGoogle]);
+  }, [idToken, signInGoogle, showToast]);
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Gagal Masuk', 'Autentikasi Google gagal. Coba lagi.');
+      showToast('Autentikasi Google gagal. Coba lagi.');
     }
-  }, [error]);
+  }, [error, showToast]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -89,8 +90,7 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     if (!configured) {
-      Alert.alert(
-        'Belum Dikonfigurasi',
+      showToast(
         'Google Sign-In belum dikonfigurasi. Tambahkan EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID / EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ke .env.',
       );
       return;

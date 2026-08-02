@@ -6,15 +6,20 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Alert,
   Image,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUpdateProfile } from '@/features/users/hooks/useUpdateProfile';
+import { useAvatarUpload } from '@/features/users/hooks/useAvatarUpload';
+import { useToast } from '@/components/Toast';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { ChevronRight } from '@/components/icons/ChevronRight';
@@ -22,7 +27,6 @@ import { HelpCircle } from '@/components/icons/HelpCircle';
 import { FileText } from '@/components/icons/FileText';
 import { UserX } from '@/components/icons/UserX';
 import { LogOut } from '@/components/icons/LogOut';
-import { User } from '@/components/icons/User';
 import { Globe } from '@/components/icons/Globe';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
@@ -52,37 +56,93 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
   const updateProfile = useUpdateProfile();
+  const avatarUpload = useAvatarUpload();
+  const { showToast } = useToast();
 
   const [view, setView] = useState<SettingsView>('main');
+  const [name, setName] = useState(user?.name ?? '');
   const [bio, setBio] = useState(user?.bio ?? '');
   const [website, setWebsite] = useState(user?.website_url ?? '');
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  // Picked-but-not-saved avatar: { uri } for preview, plus blob/type for the
+  // actual upload that happens only when "Simpan Perubahan" is pressed.
+  const [avatarDraft, setAvatarDraft] = useState<{
+    uri: string;
+    blob: Blob;
+    contentType: string;
+  } | null>(null);
+  const [savingAvatar, setSavingAvatar] = useState(false);
+
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   const handleSave = useCallback(async () => {
-    try {
-      await updateProfile.mutateAsync({ bio: bio.trim() || undefined, website_url: website.trim() || undefined });
-      setView('main');
-    } catch {
-      Alert.alert('Gagal', 'Tidak dapat menyimpan profil');
-    }
-  }, [bio, website, updateProfile]);
-
-  const handleSignOut = useCallback(() => {
-    const doSignOut = () => {
-      void signOut().then(() => router.replace('/(auth)/sign-in'));
-    };
-    // react-native-web's Alert.alert is a no-op stub, so confirm via window.confirm on web.
-    if (Platform.OS === 'web') {
-      if (window.confirm('Kamu akan keluar dari akun di perangkat ini.')) {
-        doSignOut();
-      }
+    if (!name.trim()) {
+      showToast('Nama lengkap wajib diisi');
       return;
     }
-    Alert.alert('Keluar?', 'Kamu akan keluar dari akun di perangkat ini.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: doSignOut },
-    ]);
-  }, [router, signOut]);
+    setSavingAvatar(true);
+    try {
+      let avatarUrl: string | undefined;
+      // Upload the drafted avatar only now — profile is not changed until save.
+      if (avatarDraft) {
+        const profile = await avatarUpload.uploadAvatar(avatarDraft.blob, avatarDraft.contentType);
+        avatarUrl = profile.avatar_url ?? undefined;
+      }
+      await updateProfile.mutateAsync({
+        name: name.trim(),
+        bio: bio.trim() || undefined,
+        website_url: website.trim() || undefined,
+      });
+      setAvatarDraft(null);
+      setView('main');
+      if (avatarUrl) showToast('Foto profil diperbarui');
+    } catch {
+      showToast('Tidak dapat menyimpan profil');
+    } finally {
+      setSavingAvatar(false);
+    }
+  }, [name, bio, website, avatarDraft, avatarUpload, updateProfile, showToast]);
+
+  const handleSignOut = useCallback(() => {
+    setShowSignOutConfirm(true);
+  }, []);
+
+  const handleConfirmSignOut = useCallback(async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      router.replace('/(auth)/sign-in');
+    } finally {
+      setSigningOut(false);
+      setShowSignOutConfirm(false);
+    }
+  }, [signOut, router]);
+
+  const handlePickAvatar = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    try {
+      let blob: Blob;
+      if (Platform.OS === 'web' && asset.file) {
+        blob = asset.file;
+      } else {
+        const res = await fetch(asset.uri);
+        blob = await res.blob();
+      }
+      const contentType = asset.mimeType ?? 'image/jpeg';
+      // Only preview locally — upload happens on "Simpan Perubahan".
+      setAvatarDraft({ uri: asset.uri, blob, contentType });
+    } catch {
+      showToast('Tidak dapat membaca foto yang dipilih');
+    }
+  }, [showToast]);
 
   // Edit profile view
   if (view === 'edit') {
@@ -103,7 +163,9 @@ export default function SettingsScreen() {
           {/* Avatar */}
           <View style={styles.editAvatarSection}>
             <View style={styles.editAvatar}>
-              {user?.avatar_url ? (
+              {avatarDraft ? (
+                <Image source={{ uri: avatarDraft.uri }} style={styles.editAvatarImg} />
+              ) : user?.avatar_url ? (
                 <Image source={{ uri: user.avatar_url }} style={styles.editAvatarImg} />
               ) : (
                 <View style={[styles.editAvatarFallback, { backgroundColor: avatarColorFor(user?.username ?? 'x') }]}>
@@ -111,18 +173,27 @@ export default function SettingsScreen() {
                 </View>
               )}
             </View>
-            <TouchableOpacity>
-              <Text style={styles.changePhotoText}>Ubah Foto Profil</Text>
+            <TouchableOpacity onPress={handlePickAvatar} activeOpacity={0.7}>
+              <Text style={styles.changePhotoText}>
+                {avatarDraft ? 'Ganti Foto' : 'Ubah Foto Profil'}
+              </Text>
             </TouchableOpacity>
+            {avatarDraft && (
+              <Text style={styles.avatarDraftHint}>Foto akan disimpan saat kamu menekan "Simpan Perubahan".</Text>
+            )}
           </View>
 
-          {/* Name (read-only) */}
+          {/* Name (editable) */}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Nama Lengkap</Text>
-            <View style={styles.editInputRow}>
-              <User size={16} color={colors.muted} />
-              <Text style={styles.editInputText}>{user?.name ?? ''}</Text>
-            </View>
+            <FocusedTextInput
+              style={styles.editFieldInputContainer}
+              value={name}
+              onChangeText={setName}
+              placeholder="Nama lengkap kamu"
+              placeholderTextColor={colors.mutedLight}
+              autoCapitalize="words"
+            />
           </View>
 
           {/* Username (read-only) */}
@@ -179,12 +250,12 @@ export default function SettingsScreen() {
         {/* Sticky footer save button */}
         <View style={styles.editFooter}>
           <TouchableOpacity
-            style={[styles.saveFullBtn, updateProfile.isPending && { opacity: 0.7 }]}
+            style={[styles.saveFullBtn, (savingAvatar || updateProfile.isPending) && { opacity: 0.7 }]}
             onPress={handleSave}
-            disabled={updateProfile.isPending}
+            disabled={savingAvatar || updateProfile.isPending}
             activeOpacity={0.8}
           >
-            {updateProfile.isPending ? (
+            {savingAvatar || updateProfile.isPending ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
               <Text style={styles.saveFullBtnText}>Simpan Perubahan</Text>
@@ -278,8 +349,25 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.versionText}>Atur Perjalanan · v2.4.1</Text>
+        <Text style={styles.versionText}>Atur Perjalanan · v{appVersion}</Text>
       </ScrollView>
+
+      {/* Sign out confirmation modal */}
+      <ConfirmModal
+        visible={showSignOutConfirm}
+        title="Keluar?"
+        description="Kamu akan keluar dari akun di perangkat ini."
+        icon={
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <LogOut size={22} color={colors.danger} />
+          </View>
+        }
+        confirmLabel="Keluar"
+        destructive
+        loading={signingOut}
+        onConfirm={() => void handleConfirmSignOut()}
+        onCancel={() => setShowSignOutConfirm(false)}
+      />
     </View>
   );
 }
@@ -375,6 +463,13 @@ const styles = StyleSheet.create({
   editAvatarFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', borderRadius: 26 },
   editAvatarLetter: { fontSize: 34, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.white },
   changePhotoText: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.coral },
+  avatarDraftHint: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: -2,
+  },
   editField: { marginBottom: 16 },
   editLabel: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal, marginBottom: 8 },
   editLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
@@ -397,6 +492,20 @@ const styles = StyleSheet.create({
   editInputText: { fontSize: 15, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, flex: 1 },
   editInputIconText: { fontSize: 16, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },
   editFieldInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal },
+  editFieldInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.light,
+    borderRadius: 14,
+    padding: 13,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+  },
   editTextAreaRow: { alignItems: 'flex-start', minHeight: 88 },
   editTextAreaInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, lineHeight: 22.4, minHeight: 62 },
   editFooter: {

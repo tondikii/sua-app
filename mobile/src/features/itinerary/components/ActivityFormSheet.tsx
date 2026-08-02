@@ -11,9 +11,10 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { ActivityKind, TripActivity, RefLink, CoverSource } from '@atur-perjalanan/shared-types';
+import type { TripActivity, RefLink, CoverSource } from '@atur-perjalanan/shared-types';
 import { useCreateActivity } from '@/features/activities/hooks/useCreateActivity';
 import { useUpdateActivity } from '@/features/activities/hooks/useUpdateActivity';
+import { useSyncMapsThumbnail } from '@/features/activities/hooks/useSyncMapsThumbnail';
 import { ActivityCoverPickerSheet, type CoverSelection } from './ActivityCoverPickerSheet';
 import { getCoverIconMeta } from '@/features/itinerary/utils/coverIcons';
 import { TimePicker } from '@/components/TimePicker';
@@ -22,28 +23,17 @@ import { MapPin } from '@/components/icons/MapPin';
 import { Navigation } from '@/components/icons/Navigation';
 import { Link2 } from '@/components/icons/Link2';
 import { AlertCircle } from '@/components/icons/AlertCircle';
-import { Users } from '@/components/icons/Users';
-import { Train } from '@/components/icons/Train';
-import { UtensilsCrossed } from '@/components/icons/UtensilsCrossed';
-import { Compass } from '@/components/icons/Compass';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { bottomSheetFrame } from '@/theme/layout';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as Record<string, unknown> : {};
 
-const KIND_OPTIONS: { value: ActivityKind; label: string; icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
-  { value: 'gather', label: 'Kumpul', icon: Users },
-  { value: 'transport', label: 'Transport', icon: Train },
-  { value: 'meal', label: 'Makan', icon: UtensilsCrossed },
-  { value: 'activity', label: 'Aktivitas', icon: Compass },
-  { value: 'destination', label: 'Destinasi', icon: MapPin },
-];
-
 interface Props {
   visible: boolean;
   tripId: string;
   activityDate: string;
+  dayNumber?: number;
   editActivity?: TripActivity | null;
   onClose: () => void;
   onSuccess: () => void;
@@ -53,6 +43,7 @@ export function ActivityFormSheet({
   visible,
   tripId,
   activityDate,
+  dayNumber = 1,
   editActivity,
   onClose,
   onSuccess,
@@ -60,11 +51,11 @@ export function ActivityFormSheet({
   const insets = useSafeAreaInsets();
   const createActivity = useCreateActivity(tripId);
   const updateActivity = useUpdateActivity(tripId, editActivity?.id ?? '');
+  const syncMaps = useSyncMapsThumbnail(tripId);
 
   const [placeName, setPlaceName] = useState('');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
-  const [kind, setKind] = useState<ActivityKind>('activity');
   const [description, setDescription] = useState('');
   const [locationLabel, setLocationLabel] = useState('');
   const [mapsLink, setMapsLink] = useState('');
@@ -84,7 +75,6 @@ export function ActivityFormSheet({
       setPlaceName(editActivity.place_name);
       setStartTime(editActivity.start_time);
       setEndTime(editActivity.end_time);
-      setKind(editActivity.kind);
       setDescription(editActivity.description ?? '');
       setLocationLabel(editActivity.location_label ?? '');
       setMapsLink(editActivity.maps_link ?? '');
@@ -100,7 +90,6 @@ export function ActivityFormSheet({
       setPlaceName('');
       setStartTime('09:00');
       setEndTime('10:00');
-      setKind('activity');
       setDescription('');
       setLocationLabel('');
       setMapsLink('');
@@ -131,10 +120,10 @@ export function ActivityFormSheet({
         .filter((r) => r.url.length > 0);
       const payload = {
         place_name: placeName.trim(),
-        activity_date: activityDate || undefined,
+        day_number: dayNumber,
         start_time: startTime,
         end_time: endTime,
-        kind,
+        kind: 'activity' as const,
         description: description.trim() || undefined,
         location_label: locationLabel.trim() || undefined,
         maps_link: mapsLink.trim() || undefined,
@@ -153,7 +142,7 @@ export function ActivityFormSheet({
     } catch {
       setTitleError('Terjadi kesalahan');
     }
-  }, [placeName, startTime, endTime, kind, description, locationLabel, mapsLink, refLinks, coverSource, coverIcon, coverThumb, coverDocumentId, activityDate, editActivity, createActivity, updateActivity, onSuccess]);
+  }, [placeName, startTime, endTime, description, locationLabel, mapsLink, refLinks, coverSource, coverIcon, coverThumb, coverDocumentId, dayNumber, editActivity, createActivity, updateActivity, onSuccess]);
 
   const updateRefLink = useCallback((index: number, patch: Partial<RefLink>) => {
     setRefLinks((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -233,7 +222,6 @@ export function ActivityFormSheet({
             <View style={styles.field}>
               <Text style={styles.label}>Nama Aktivitas <Text style={styles.required}>*</Text></Text>
               <View style={[styles.inputRow, focusedField === 'name' && styles.inputFocused, titleError && styles.inputError]}>
-                <MapPin size={16} color={titleError ? colors.danger : placeName ? colors.coral : colors.mutedLight} />
                 <TextInput
                   style={styles.inputInner}
                   placeholder="Contoh: Pantai Tiga Warna"
@@ -251,28 +239,6 @@ export function ActivityFormSheet({
                   <Text style={styles.errorText}>{titleError}</Text>
                 </View>
               ) : null}
-            </View>
-
-            {/* Jenis */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Jenis</Text>
-              <View style={styles.kindRow}>
-                {KIND_OPTIONS.map((opt) => {
-                  const active = kind === opt.value;
-                  const KindIcon = opt.icon;
-                  return (
-                    <TouchableOpacity
-                      key={opt.value}
-                      style={[styles.kindChip, active && styles.kindChipActive]}
-                      onPress={() => setKind(opt.value)}
-                      activeOpacity={0.7}
-                    >
-                      <KindIcon size={14} color={active ? colors.coral : colors.muted} />
-                      <Text style={[styles.kindLabel, active && styles.kindLabelActive]}>{opt.label}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
             </View>
 
             {/* Cover */}
@@ -301,6 +267,51 @@ export function ActivityFormSheet({
                   <Text style={styles.coverAction}>{hasCover ? 'Ubah' : 'Pilih'}</Text>
                 </View>
               </TouchableOpacity>
+              <View style={styles.coverActions}>
+                <TouchableOpacity onPress={() => setShowCoverPicker(true)} activeOpacity={0.7}>
+                  <Text style={styles.coverActionText}>{hasCover ? 'Ubah' : 'Pilih'}</Text>
+                </TouchableOpacity>
+                {hasCover && (
+                  <>
+                    <Text style={styles.coverActionDivider}>·</Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCoverSource('none');
+                        setCoverIcon(null);
+                        setCoverThumb(null);
+                        setCoverDocumentId(null);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.coverActionText}>Hapus</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {mapsLink.trim().length > 0 && (
+                  <>
+                    <Text style={styles.coverActionDivider}>·</Text>
+                    <TouchableOpacity
+                      onPress={async () => {
+                        try {
+                          const res = await syncMaps.mutateAsync({ maps_link: mapsLink.trim() });
+                          if (res.thumbnail_url) {
+                            setCoverSource('maps');
+                            setCoverThumb(res.thumbnail_url);
+                          }
+                        } catch {
+                          // ignore — thumbnail resolution may fail silently
+                        }
+                      }}
+                      activeOpacity={0.7}
+                      disabled={syncMaps.isPending}
+                    >
+                      <Text style={[styles.coverActionText, { color: colors.muted }]}>
+                        {syncMaps.isPending ? 'Menyinkronkan...' : 'Sinkron Maps'}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
             </View>
 
             {/* Google Maps */}
@@ -542,28 +553,6 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.charcoal,
   },
-  kindRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  kindChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: colors.light,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  kindChipActive: {
-    backgroundColor: colors.coralLight,
-    borderColor: colors.coral,
-  },
-  kindLabel: {
-    fontSize: 12,
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    color: colors.muted,
-  },
-  kindLabelActive: { color: colors.coral },
   coverRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -599,6 +588,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.coral,
+  },
+  coverActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  coverActionText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.coral,
+  },
+  coverActionDivider: {
+    fontSize: 12,
+    color: colors.border,
   },
   refLinkGroup: { flexDirection: 'column', gap: 8, marginBottom: 10 },
   refLinkIndex: {

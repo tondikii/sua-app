@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Platform,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import { useCreateTrip } from '@/features/trips/hooks/useCreateTrip';
 import { useConvertToTrip } from '@/features/wishlist/hooks/useConvertToTrip';
 import { InviteBottomSheet } from '@/features/invitations/components/InviteBottomSheet';
 import { goBackSmart } from '@/lib/navigation';
+import { useToast } from '@/components/Toast';
 import { TagInput } from '@/components/TagInput';
 import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { X } from '@/components/icons/X';
@@ -83,6 +83,7 @@ export default function CreateTripScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const createTrip = useCreateTrip();
+  const { showToast } = useToast();
   const params = useLocalSearchParams<{
     wishlistId?: string;
     name?: string;
@@ -314,9 +315,9 @@ export default function CreateTripScreen() {
       setCreatedTripId(trip.id);
       setShowInvite(true);
     } catch (err) {
-      Alert.alert('Gagal', 'Terjadi kesalahan saat membuat perjalanan.');
+      showToast('Terjadi kesalahan saat membuat perjalanan.');
     }
-  }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, convertToTrip, params.wishlistId]);
+  }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, convertToTrip, params.wishlistId, showToast]);
 
   const isDaySelected = useCallback((day: number) => {
     const iso = formatDateISO(calYear, calMonth, day);

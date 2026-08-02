@@ -1,4 +1,6 @@
 import { toDateOnly, toTime } from '../../common/helpers/date.helpers';
+import { UserSummarySerializer } from '../../users/serializers/user.serializer';
+import type { R2Service } from '../../integrations/r2/r2.service';
 import type { TripInvitation } from '@atur-perjalanan/shared-types';
 
 type UserLike = {
@@ -56,7 +58,10 @@ export class InvitationSerializer {
     };
   }
 
-  static toManaged(inv: InvitationLike & { invitedUser?: UserLike | null }) {
+  static async toManaged(
+    inv: InvitationLike & { invitedUser?: UserLike | null },
+    r2: R2Service,
+  ) {
     return {
       id: inv.id,
       method: inv.method,
@@ -67,7 +72,7 @@ export class InvitationSerializer {
             id: inv.invitedUser.id,
             name: inv.invitedUser.name,
             username: inv.invitedUser.username,
-            avatar_url: inv.invitedUser.avatarUrl,
+            avatar_url: await UserSummarySerializer.resolveAvatar(inv.invitedUser.avatarUrl, r2),
           }
         : null,
       invited_email: inv.invitedEmail,
@@ -76,11 +81,12 @@ export class InvitationSerializer {
     };
   }
 
-  static toEnriched(
+  static async toEnriched(
     inv: InvitationLike & {
       trip: TripSummaryLike;
       inviter: UserLike;
     },
+    r2: R2Service,
   ) {
     return {
       id: inv.id,
@@ -101,7 +107,7 @@ export class InvitationSerializer {
         id: inv.inviter.id,
         name: inv.inviter.name,
         username: inv.inviter.username,
-        avatar_url: inv.inviter.avatarUrl,
+        avatar_url: await UserSummarySerializer.resolveAvatar(inv.inviter.avatarUrl, r2),
       },
     };
   }

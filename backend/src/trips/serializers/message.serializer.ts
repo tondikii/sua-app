@@ -1,3 +1,5 @@
+import { UserSummarySerializer } from '../../users/serializers/user.serializer';
+import type { R2Service } from '../../integrations/r2/r2.service';
 import type { TripMessage, UserSummary } from '@atur-perjalanan/shared-types';
 
 type LocalUserSummary = {
@@ -22,25 +24,29 @@ type MessageRow = {
   replyTo?: (MessageRow & { sender?: LocalUserSummary }) | null;
 };
 
-function toUserSummary(user: LocalUserSummary) {
+async function toUserSummary(user: LocalUserSummary, r2: R2Service) {
   if (!user) return null;
   return {
     id: user.id,
     name: user.name,
     username: user.username,
-    avatar_url: user.avatarUrl,
+    avatar_url: await UserSummarySerializer.resolveAvatar(user.avatarUrl, r2),
   };
 }
 
 export class MessageSerializer {
-  static toList(message: MessageRow, mediaUrlOverride?: string | null) {
+  static async toList(
+    message: MessageRow,
+    mediaUrlOverride?: string | null,
+    r2?: R2Service,
+  ) {
     const isDeleted = !!message.deletedAt;
     const mediaUrl = mediaUrlOverride ?? message.mediaUrl;
 
     return {
       id: message.id,
       trip_id: message.tripId,
-      sender: toUserSummary(message.sender ?? null),
+      sender: await toUserSummary(message.sender ?? null, r2!),
       message_kind: message.messageKind,
       message_text: isDeleted ? null : message.messageText,
       media_url: isDeleted ? null : mediaUrl,
@@ -48,7 +54,7 @@ export class MessageSerializer {
       reply_to: message.replyTo
         ? {
             id: message.replyTo.id,
-            sender: toUserSummary(message.replyTo.sender ?? null),
+            sender: await toUserSummary(message.replyTo.sender ?? null, r2!),
             message_kind: message.replyTo.messageKind,
             message_text: message.replyTo.deletedAt ? null : message.replyTo.messageText,
           }

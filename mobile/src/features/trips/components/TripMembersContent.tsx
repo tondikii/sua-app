@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Platform,
   Image,
 } from 'react-native';
@@ -18,6 +17,7 @@ import { useUserSearch } from '@/features/users/hooks/useUserSearch';
 import { useMembers, type Member } from '@/features/trips/hooks/useMembers';
 import { useRemoveMember } from '@/features/trips/hooks/useRemoveMember';
 import { useLeaveTrip } from '@/features/trips/hooks/useLeaveTrip';
+import { useToast } from '@/components/Toast';
 import type { ManagedInvitation } from '@atur-perjalanan/shared-types';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { Search } from '@/components/icons/Search';
@@ -47,6 +47,7 @@ interface TripMembersContentProps {
  */
 export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMembersContentProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -78,11 +79,20 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
     return () => clearTimeout(timer);
   }, [query]);
 
-  const isAlreadyInvited = useCallback((username: string) => {
-    return invitations.some(
-      (inv) => inv.state !== 'rejected' && inv.invited_user?.username === username,
-    );
-  }, [invitations]);
+  const isAlreadyInvited = useCallback(
+    (username: string) => {
+      if (members.some((m) => m.username === username)) return true;
+      return invitations.some(
+        (inv) => inv.state !== 'rejected' && inv.invited_user?.username === username,
+      );
+    },
+    [members, invitations],
+  );
+
+  const isTripMember = useCallback(
+    (username: string) => members.some((m) => m.username === username),
+    [members],
+  );
 
   const handleInvite = useCallback((username: string, name: string) => {
     setPendingUsername(username);
@@ -109,9 +119,9 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
 
   const handleCancel = useCallback((invitationId: string) => {
     cancelInvitation.mutate(invitationId, {
-      onError: () => Alert.alert('Gagal', 'Tidak dapat membatalkan undangan ini.'),
+      onError: () => showToast('Tidak dapat membatalkan undangan ini.'),
     });
-  }, [cancelInvitation]);
+  }, [cancelInvitation, showToast]);
 
   const handleRemove = useCallback((member: Member) => {
     setRemoveTarget(member);
@@ -127,9 +137,9 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
     } catch {
       setRemoving(false);
       setRemoveTarget(null);
-      Alert.alert('Gagal', 'Tidak dapat mengeluarkan anggota ini.');
+      showToast('Tidak dapat mengeluarkan anggota ini.');
     }
-  }, [removeTarget, removeMember]);
+  }, [removeTarget, removeMember, showToast]);
 
   const handleConfirmLeave = useCallback(async () => {
     setLeaving(true);
@@ -142,9 +152,9 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
     } catch {
       setLeaving(false);
       setShowLeaveConfirm(false);
-      Alert.alert('Gagal', 'Tidak dapat keluar dari perjalanan ini.');
+      showToast('Tidak dapat keluar dari perjalanan ini.');
     }
-  }, [leaveTrip, router]);
+  }, [leaveTrip, router, showToast]);
 
   const showSearchResults = debouncedQuery.trim().length >= 2 && !isEmailQuery;
 
@@ -195,6 +205,7 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
               <Text style={styles.countLabel}>{searchResults.length} hasil</Text>
               {searchResults.map((user, idx) => {
                 const already = isAlreadyInvited(user.username);
+                const isExistingMember = isTripMember(user.username);
                 return (
                   <Row
                     key={user.id}
@@ -205,7 +216,9 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
                     isLast={idx === searchResults.length - 1}
                     trailing={
                       already ? (
-                        <Text style={styles.invitedBadgeText}>✓ Terundang</Text>
+                        <Text style={styles.invitedBadgeText}>
+                          {isExistingMember ? '✓ Anggota' : '✓ Terundang'}
+                        </Text>
                       ) : (
                         <TouchableOpacity
                           style={[styles.primaryBtn, pendingUsername === user.username && styles.primaryBtnDisabled]}

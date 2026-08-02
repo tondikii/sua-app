@@ -9,6 +9,8 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
+  IsInt,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -48,6 +50,12 @@ export class CreateActivityDto {
   @IsOptional()
   @IsDateString()
   activity_date?: string; // ISO 8601 date; optional if trip status=voting_pending
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  day_number?: number; // 1-based day index within the trip
 
   @Matches(TIME_HHMM)
   start_time!: string; // HH:MM
@@ -106,6 +114,12 @@ export class UpdateActivityDto {
   @IsOptional()
   @IsDateString()
   activity_date?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  day_number?: number;
 
   @IsOptional()
   @Matches(TIME_HHMM)

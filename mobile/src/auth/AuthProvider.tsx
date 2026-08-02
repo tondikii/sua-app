@@ -26,6 +26,8 @@ interface AuthContextValue {
   signInGoogle: (idToken: string) => Promise<{ isNewUser: boolean }>;
   /** Set the username for a new user; resolves the fresh profile. */
   completeRegistration: (username: string) => Promise<UserProfile>;
+  /** Replace the in-memory user profile (used after profile/avatar updates). */
+  setUser: (user: UserProfile | null) => void;
   signOut: () => Promise<void>;
 }
 
@@ -137,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!accessToken,
     signInGoogle,
     completeRegistration,
+    setUser,
     signOut,
   };
 

@@ -9,32 +9,63 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { goBackSmart } from '@/lib/navigation';
+import { openExternalLink } from '@/lib/externalLink';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { ChevronDown } from '@/components/icons/ChevronDown';
 import { Mail } from '@/components/icons/Mail';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 
+const CONTACT_EMAIL = 'bantuan@aturperjalanan.id';
+
 const FAQ_ITEMS = [
   {
     q: 'Bagaimana cara membuat perjalanan?',
-    a: 'Tap tombol + di tengah tab bar, isi nama perjalanan dan kandidat tanggal, lalu tap Buat Perjalanan. Setelah itu kamu bisa undang teman atau lewati dulu.',
+    a: 'Tap tombol + di tengah tab bar, isi nama perjalanan, pilih mode tanggal (tanggal pasti atau kandidat yang nanti divoting), lalu tap Buat Perjalanan. Setelah itu kamu bisa langsung mengundang teman atau lewati dulu.',
   },
   {
-    q: 'Apa itu voting tanggal?',
-    a: 'Semua anggota trip memilih tanggal yang cocok. Setelah voting selesai, tanggal pemenang dikunci dan bisa disinkronkan ke kalender.',
+    q: 'Apa bedanya tanggal pasti dan kandidat tanggal?',
+    a: 'Mode "tanggal pasti" langsung menetapkan tanggal perjalanan. Mode "kandidat" membuat voting tanggal otomatis — semua anggota memilih tanggal yang cocok, dan tanggal pemenang dikunci menjadi tanggal perjalanan.',
   },
   {
     q: 'Bagaimana cara mengundang teman?',
-    a: 'Setelah buat perjalanan, atau dari detail perjalanan → tap ikon undang di header → cari username teman. Mereka akan melihat undangan di tab Undangan di Beranda.',
+    a: 'Dari detail perjalanan, buka menu ⋮ di pojok kanan atas → Daftar Anggota → tap ikon undang. Cari username atau email teman, lalu kirim undangan. Mereka akan melihat undangan di tab Undangan di Beranda.',
   },
   {
-    q: 'Siapa yang bisa lihat perjalanan di profil?',
-    a: 'Hanya perjalanan yang kamu tandai publik yang muncul di grid profil. Perjalanan privat hanya terlihat oleh kamu dan partisipan trip.',
+    q: 'Apa yang bisa dilakukan di Itinerary?',
+    a: 'Itinerary menampilkan aktivitas per hari sesuai tanggal perjalanan. Kamu bisa menambah, mengedit, dan menghapus aktivitas (berkumpul, transport, makan, aktivitas, atau tujuan) lengkap dengan waktu, lokasi, link Google Maps, dan cover.',
   },
   {
-    q: 'Bagaimana menghapus akun?',
-    a: 'Buka Pengaturan → Hapus Akun. Kamu juga bisa mengajukan penghapusan lewat situs web kami.',
+    q: 'Bagaimana cara menggunakan voting?',
+    a: 'Setiap perjalanan punya halaman voting untuk memutuskan tanggal, aktivitas, atau hal lainnya. Buat voting baru, isi kandidat, lalu anggota bisa memilih. Voting bisa ditutup/dikunci saat sudah cukup — pemenang otomatis dipakai (misalnya tanggal perjalanan).',
+  },
+  {
+    q: 'Bagaimana cara berkomunikasi dengan anggota trip?',
+    a: 'Tab Chat di detail perjalanan adalah grup chat untuk semua anggota. Kamu bisa mengirim teks, foto, dan video, membalas pesan, serta menghapus pesan yang kamu kirim sendiri.',
+  },
+  {
+    q: 'Bagaimana cara menambah foto atau video ke perjalanan?',
+    a: 'Buka tab Media di detail perjalanan lalu tap tile unggah untuk memilih dari galeri. Media yang dikirim lewat chat juga otomatis tersimpan di tab Media. Kamu bisa menjadikan salah satu media sebagai cover perjalanan.',
+  },
+  {
+    q: 'Bagaimana cara mengubah cover perjalanan?',
+    a: 'Buka tab Media → tap "Jadikan Cover" pada foto/video yang diinginkan. Cover perjalanan juga bisa diambil dari thumbnail Google Maps atau galeri saat membuat aktivitas di Itinerary.',
+  },
+  {
+    q: 'Apa itu Wishlist dan bagaimana mengubahnya jadi perjalanan?',
+    a: 'Wishlist adalah daftar tempat/aktivitas yang ingin kamu kunjungi. Tap "Jadikan Perjalanan" pada item wishlist untuk langsung mengubahnya menjadi perjalanan baru — datanya (waktu, lokasi, link, catatan) otomatis menjadi aktivitas pertama di Itinerary.',
+  },
+  {
+    q: 'Siapa yang bisa melihat perjalanan di profilku?',
+    a: 'Grid perjalanan di profilmu menampilkan semua perjalanan yang kamu buat. Untuk pengguna lain, hanya perjalanan publik yang muncul di profil publik mereka — perjalanan privat hanya terlihat oleh kamu dan partisipan trip.',
+  },
+  {
+    q: 'Bagaimana cara mengedit profil atau mengubah foto?',
+    a: 'Buka Pengaturan → tap kartu profil di bagian atas. Di sana kamu bisa mengubah nama lengkap, bio, website/sosial media, dan foto profil.',
+  },
+  {
+    q: 'Bagaimana cara menghapus akun?',
+    a: 'Buka Pengaturan → Hapus Akun, ketik username kamu untuk konfirmasi, lalu tap Hapus Akun. Tindakan ini permanen dan tidak bisa dibatalkan — semua data akan hilang.',
   },
 ];
 
@@ -85,15 +116,19 @@ export default function HelpFaqScreen() {
           ))}
         </View>
 
-        <View style={styles.contactCard}>
+        <TouchableOpacity
+          style={styles.contactCard}
+          onPress={() => openExternalLink(`mailto:${CONTACT_EMAIL}`)}
+          activeOpacity={0.7}
+        >
           <View style={styles.contactIconContainer}>
             <Mail size={18} color={colors.teal} />
           </View>
           <View>
             <Text style={styles.contactTitle}>Masih butuh bantuan?</Text>
-            <Text style={styles.contactEmail}>bantuan@aturperjalanan.id</Text>
+            <Text style={styles.contactEmail}>{CONTACT_EMAIL}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );

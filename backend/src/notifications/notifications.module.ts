@@ -2,13 +2,21 @@ import { Module } from '@nestjs/common';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { VotingReminderService } from './voting-reminder.service';
+import { PushNotificationsService } from './push-notifications.service';
+import { PushTokensService } from './push-tokens.service';
+import { PushTokensController } from './push-tokens.controller';
 import { PrismaModule } from '../prisma/prisma.module';
-import { ScheduleModule } from '@nestjs/schedule';
+import { R2Module } from '../integrations/r2/r2.module';
 
 @Module({
-  imports: [PrismaModule, ScheduleModule.forRoot()],
-  controllers: [NotificationsController],
-  providers: [NotificationsService, VotingReminderService],
+  imports: [PrismaModule, R2Module],
+  controllers: [NotificationsController, PushTokensController],
+  providers: [
+    NotificationsService,
+    VotingReminderService,
+    PushNotificationsService,
+    PushTokensService,
+  ],
   exports: [NotificationsService], // Export for other services to use
 })
 export class NotificationsModule {}
