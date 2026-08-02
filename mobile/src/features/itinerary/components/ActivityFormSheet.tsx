@@ -28,6 +28,7 @@ import { UtensilsCrossed } from '@/components/icons/UtensilsCrossed';
 import { Compass } from '@/components/icons/Compass';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
+import { bottomSheetFrame } from '@/theme/layout';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as Record<string, unknown> : {};
 
@@ -443,9 +444,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '85%',
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
+    ...bottomSheetFrame,
   },
   header: {
     flexDirection: 'row',

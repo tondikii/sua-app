@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '../src/api/queryClient';
+import { MOBILE_MAX_WIDTH } from '../src/theme/layout';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
 import { SplashScreen } from '../src/components/SplashScreen';
 
@@ -46,8 +47,6 @@ function RootGate({ children }: { children: ReactNode }) {
   return <MobileContainer>{children}</MobileContainer>;
 }
 
-const MAX_WIDTH = 430;
-
 const styles = StyleSheet.create({
   webBackdrop: {
     flex: 1,
@@ -58,7 +57,7 @@ const styles = StyleSheet.create({
   webFrame: {
     width: '100%',
     height: '100%',
-    maxWidth: MAX_WIDTH,
+    maxWidth: MOBILE_MAX_WIDTH,
     overflow: 'hidden',
   },
 });

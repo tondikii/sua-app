@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ import { TimePicker } from '@/components/TimePicker';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
+import { bottomSheetFrame } from '@/theme/layout';
 import type { TripPoll, PollOption, PollType } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {};
@@ -113,6 +114,12 @@ function parseISO(iso: string) {
   };
 }
 
+function buildDeadlineISO(dateIso: string, timeStr: string) {
+  const [hh, mm] = timeStr.split(':').map(Number);
+  const [yyyy, mm2, dd] = dateIso.split('-').map(Number);
+  return new Date(yyyy, mm2 - 1, dd, hh, mm).toISOString();
+}
+
 /**
  * Tenggat field — konsisten dengan form buat perjalanan: kalender bulanan +
  * TimePicker jam, bukan input teks bebas.
@@ -123,7 +130,22 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
   const [year, setYear] = useState(parsed?.year ?? new Date().getFullYear());
   const [month, setMonth] = useState(parsed?.month ?? new Date().getMonth());
   const [time, setTime] = useState(parsed ? `${parsed.hh}:${parsed.mm}` : '20:00');
+  const [selectedDateIso, setSelectedDateIso] = useState<string | null>(
+    parsed ? formatISO(parsed.year, parsed.month, parsed.day) : null,
+  );
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  useEffect(() => {
+    const p = parseISO(value);
+    if (p) {
+      setYear(p.year);
+      setMonth(p.month);
+      setTime(`${p.hh}:${p.mm}`);
+      setSelectedDateIso(formatISO(p.year, p.month, p.day));
+    } else if (!value) {
+      setSelectedDateIso(null);
+    }
+  }, [value]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfWeek(year, month);
@@ -131,12 +153,16 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const commit = (iso: string) => {
-    const [hh, mm] = time.split(':').map(Number);
-    const [yyyy, mm2, dd] = iso.split('-').map(Number);
-    const localDate = new Date(yyyy, mm2 - 1, dd, hh, mm);
-    onChange(localDate.toISOString());
-    setOpen(false);
+  const selectDate = (dateIso: string) => {
+    setSelectedDateIso(dateIso);
+    onChange(buildDeadlineISO(dateIso, time));
+  };
+
+  const selectTime = (timeStr: string) => {
+    setTime(timeStr);
+    if (selectedDateIso) {
+      onChange(buildDeadlineISO(selectedDateIso, timeStr));
+    }
   };
 
   return (
@@ -206,12 +232,12 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
             {cells.map((day, i) => {
               if (day === null) return <View key={`e-${i}`} style={styles.dpCell} />;
               const iso = formatISO(year, month, day);
-              const selected = value.startsWith(iso);
+              const selected = selectedDateIso === iso;
               return (
                 <TouchableOpacity
                   key={day}
                   style={styles.dpCell}
-                  onPress={() => commit(iso)}
+                  onPress={() => selectDate(iso)}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.dpDay, selected && styles.dpDaySelected]}>
@@ -237,7 +263,7 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
           {showTimePicker && (
             <TimePicker
               value={time}
-              onChange={(t) => setTime(t)}
+              onChange={selectTime}
               onClose={() => setShowTimePicker(false)}
               startLabel="Jam"
             />
@@ -1700,9 +1726,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '85%',
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
+    ...bottomSheetFrame,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -1715,6 +1739,7 @@ const styles = StyleSheet.create({
   sheetBackBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   sheetTitle: {
     flex: 1,
+    minWidth: 0,
     fontSize: 17,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: colors.charcoal,
@@ -1782,7 +1807,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  typeOptionInfo: { flex: 1 },
+  typeOptionInfo: { flex: 1, minWidth: 0 },
   typeOptionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   typeOptionLabel: {
     fontSize: 14,
@@ -1845,11 +1870,12 @@ const styles = StyleSheet.create({
   },
   optionText: {
     flex: 1,
+    minWidth: 0,
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.charcoal,
   },
-  optionInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  optionInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center', minWidth: 0 },
   addOptionBtn: {
     width: 46,
     height: 46,

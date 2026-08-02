@@ -23,6 +23,7 @@ import { Mail } from '@/components/icons/Mail';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
+import { bottomSheetFrame } from '@/theme/layout';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
@@ -539,10 +540,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '88%',
-    ...Platform.select({
-      web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, maxWidth: 430, marginHorizontal: 'auto' },
-      default: {},
-    }),
+    ...bottomSheetFrame,
   },
   handleContainer: {
     alignItems: 'center',

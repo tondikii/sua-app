@@ -16,6 +16,7 @@ import { Navigation } from '@/components/icons/Navigation';
 import { Link2 } from '@/components/icons/Link2';
 import { getCoverIconMeta } from '@/features/itinerary/utils/coverIcons';
 import { colors } from '@/theme/colors';
+import { bottomSheetFrame } from '@/theme/layout';
 import type { TripActivity } from '@atur-perjalanan/shared-types';
 
 interface Props {
@@ -138,9 +139,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '85%',
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
+    ...bottomSheetFrame,
   },
   handle: {
     width: 40,

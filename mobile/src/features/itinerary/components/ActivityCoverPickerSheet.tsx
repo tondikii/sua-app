@@ -16,6 +16,7 @@ import { useDocuments } from '@/features/media/hooks/useDocuments';
 import { COVER_ICON_OPTIONS } from '@/features/itinerary/utils/coverIcons';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
+import { bottomSheetFrame } from '@/theme/layout';
 import type { TripActivity } from '@atur-perjalanan/shared-types';
 
 type Section = 'trip_media' | 'icon';
@@ -194,9 +195,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '85%',
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
+    ...bottomSheetFrame,
   },
   handle: {
     width: 40,

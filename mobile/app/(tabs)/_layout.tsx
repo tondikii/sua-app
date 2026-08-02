@@ -11,8 +11,7 @@ import { User } from '@/components/icons/User';
 import { Plus } from '@/components/icons/Plus';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
-
-const MAX_WIDTH = 430;
+import { MOBILE_MAX_WIDTH } from '@/theme/layout';
 
 const TABS = [
   { name: 'index', label: 'Beranda', route: '/', Icon: Home },
@@ -102,7 +101,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     height: 88,
     ...Platform.select({
-      web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, maxWidth: MAX_WIDTH, marginHorizontal: 'auto', zIndex: 100 },
+      web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, maxWidth: MOBILE_MAX_WIDTH, marginHorizontal: 'auto', zIndex: 100 },
       default: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 },
     }),
     ...shadows.elevated,

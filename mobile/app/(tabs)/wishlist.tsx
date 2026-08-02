@@ -36,6 +36,7 @@ import { Clock } from '@/components/icons/Clock';
 import { TagInput } from '@/components/TagInput';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
+import { bottomSheetFrame } from '@/theme/layout';
 import type { WishlistItem, PriorityLevel, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
@@ -1012,7 +1013,7 @@ const styles = StyleSheet.create({
   detailTimeText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
   // Sheet shared
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(26,26,46,0.45)', justifyContent: 'flex-end', alignItems: 'center' },
-  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '85%', width: '100%', maxWidth: 480, alignSelf: 'center' },
+  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '85%', ...bottomSheetFrame },
   sheetHandle: { width: 40, height: 5, borderRadius: 20, backgroundColor: colors.border, alignSelf: 'center', marginTop: 14, marginBottom: 6 },
   sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   sheetTitle: { fontSize: 18, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
