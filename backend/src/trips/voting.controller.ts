@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -14,7 +15,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { VotingService } from './voting.service';
-import { CreatePollSchema, VoteSchema } from '@atur-perjalanan/shared-validation';
+import { CreatePollSchema, UpdatePollSchema, VoteSchema } from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('voting')
@@ -54,6 +55,17 @@ export class VotingController {
     @Body(new ZodValidationPipe(VoteSchema)) dto: any,
   ) {
     return this.votingService.voteOnPoll(tripId, pollId, user.userId, dto.option_id);
+  }
+
+  // PATCH /v1/trips/:tripId/polls/:pollId  (edit poll — creator only)
+  @Patch(':tripId/polls/:pollId')
+  updatePoll(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('tripId', ParseUUIDPipe) tripId: string,
+    @Param('pollId', ParseUUIDPipe) pollId: string,
+    @Body(new ZodValidationPipe(UpdatePollSchema)) dto: any,
+  ) {
+    return this.votingService.updatePoll(tripId, pollId, user.userId, dto);
   }
 
   // DELETE /v1/trips/:tripId/polls/:pollId/vote

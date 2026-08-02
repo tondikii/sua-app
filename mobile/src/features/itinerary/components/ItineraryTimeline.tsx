@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import type { TripActivity, ActivityKind } from '@atur-perjalanan/shared-types';
 import {
   buildItineraryDays,
@@ -9,9 +9,15 @@ import {
   TIME_STATE_META,
   type TimeState,
 } from '../utils/itineraryUtils';
+import { getCoverIconMeta } from '../utils/coverIcons';
+import { ActivityItemMenu } from './ActivityItemMenu';
 import { MapPin } from '@/components/icons/MapPin';
 import { MoreHorizontal } from '@/components/icons/MoreHorizontal';
 import { ExternalLink } from '@/components/icons/ExternalLink';
+import { Users } from '@/components/icons/Users';
+import { Train } from '@/components/icons/Train';
+import { UtensilsCrossed } from '@/components/icons/UtensilsCrossed';
+import { Compass } from '@/components/icons/Compass';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 
@@ -24,14 +30,18 @@ interface ItineraryTimelineProps {
   onChangeDay: (index: number) => void;
   onPressItem: (activity: TripActivity) => void;
   onPressMenu: (activity: TripActivity) => void;
+  onCloseMenu: () => void;
+  menuOpenId: string | null;
+  onPressNav: (url: string) => void;
+  onEditActivity: (activity: TripActivity) => void;
+  onDeleteActivity: (activity: TripActivity) => void;
   onPressAdd: () => void;
   referenceNow?: Date;
 }
 
-function formatTime12(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${hour}:${String(m).padStart(2, '0')}`;
+/** Format "HH:MM" in 24-hour wall-clock (e.g. "19:00" stays "19:00"). */
+function formatTime24(time: string): string {
+  return time;
 }
 
 function DayTabs({ days, activeIndex, onChange }: {
@@ -62,16 +72,28 @@ function DayTabs({ days, activeIndex, onChange }: {
 function ActivityItemRow({
   activity,
   timeState,
+  menuOpen,
   onPress,
   onPressMenu,
+  onPressNav,
+  onEdit,
+  onDelete,
 }: {
   activity: TripActivity;
   timeState: TimeState;
+  menuOpen: boolean;
   onPress: () => void;
   onPressMenu: () => void;
+  onPressNav: (url: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const stateMeta = TIME_STATE_META[timeState];
   const kindMeta = KIND_META[activity.kind] ?? KIND_META.activity;
+  const iconMeta = getCoverIconMeta(activity.cover_icon);
+  const CoverIcon = iconMeta.icon;
+  const hasThumb = Boolean(activity.thumbnail_url);
+  const hasCoverIcon = Boolean(activity.cover_icon);
 
   return (
     <View style={[styles.itemRow, { opacity: stateMeta.opacity }]}>
@@ -84,52 +106,66 @@ function ActivityItemRow({
       </View>
 
       {/* Card */}
-      <TouchableOpacity
-        style={[styles.itemCard, { borderColor: stateMeta.cardBorderColor }]}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.itemHeader}>
-          <Text style={[styles.itemTime, { color: stateMeta.timeColor }]}>
-            {formatTime12(activity.start_time)} – {formatTime12(activity.end_time)}
-          </Text>
-          {timeState === 'present' && (
-            <View style={styles.nowBadge}>
-              <Text style={styles.nowBadgeText}>Sekarang</Text>
-            </View>
-          )}
-          <TouchableOpacity onPress={onPressMenu} style={styles.menuBtn}>
-            <MoreHorizontal size={16} color={colors.muted} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.itemContent}>
-          {/* Thumbnail */}
-          {activity.thumbnail_url ? (
-            <Image source={{ uri: activity.thumbnail_url }} style={styles.thumbnail} />
-          ) : (
-            <View style={[styles.thumbnailPlaceholder, { backgroundColor: kindMeta.bgColor }]}>
-              <Text style={{ fontSize: 18 }}>{getKindEmoji(activity.kind)}</Text>
-            </View>
-          )}
-
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemTitle} numberOfLines={1}>{activity.place_name}</Text>
-            {activity.location_label && (
-              <View style={styles.locationRow}>
-                <MapPin size={11} color={colors.muted} />
-                <Text style={styles.locationText} numberOfLines={1}>{activity.location_label}</Text>
+      <View style={[styles.itemCardWrap, menuOpen && styles.itemCardWrapMenuOpen]}>
+        <TouchableOpacity
+          style={[styles.itemCard, { borderColor: stateMeta.cardBorderColor }]}
+          onPress={onPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.itemHeader}>
+            <Text style={[styles.itemTime, { color: stateMeta.timeColor }]}>
+              {formatTime24(activity.start_time)} – {formatTime24(activity.end_time)}
+            </Text>
+            {timeState === 'present' && (
+              <View style={styles.nowBadge}>
+                <Text style={styles.nowBadgeText}>Sekarang</Text>
               </View>
             )}
+            <TouchableOpacity onPress={onPressMenu} style={styles.menuBtn} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+              <MoreHorizontal size={16} color={menuOpen ? colors.coral : colors.muted} />
+            </TouchableOpacity>
           </View>
 
-          {(activity.kind === 'destination' || activity.kind === 'activity') && activity.maps_link && (
-            <TouchableOpacity style={styles.navButton}>
-              <ExternalLink size={14} color={colors.teal} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </TouchableOpacity>
+          <View style={styles.itemContent}>
+            {/* Thumbnail */}
+            {hasThumb ? (
+              <Image source={{ uri: activity.thumbnail_url! }} style={styles.thumbnail} resizeMode="cover" />
+            ) : hasCoverIcon ? (
+              <View style={[styles.thumbnail, { backgroundColor: iconMeta.bg, alignItems: 'center', justifyContent: 'center' }]}>
+                <CoverIcon size={18} color={iconMeta.color} />
+              </View>
+            ) : (
+              <View style={[styles.thumbnailPlaceholder, { backgroundColor: kindMeta.bgColor }]}>
+                <KindThumb kind={activity.kind} />
+              </View>
+            )}
+
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemTitle} numberOfLines={1}>{activity.place_name}</Text>
+              {activity.location_label && (
+                <View style={styles.locationRow}>
+                  <MapPin size={11} color={colors.muted} />
+                  <Text style={styles.locationText} numberOfLines={1}>{activity.location_label}</Text>
+                </View>
+              )}
+            </View>
+
+            {(activity.kind === 'destination' || activity.kind === 'activity') && activity.maps_link && (
+              <TouchableOpacity
+                style={styles.navButton}
+                onPress={() => onPressNav(activity.maps_link!)}
+                activeOpacity={0.7}
+              >
+                <ExternalLink size={14} color={colors.teal} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </TouchableOpacity>
+
+        {menuOpen && (
+          <ActivityItemMenu onEdit={onEdit} onDelete={onDelete} />
+        )}
+      </View>
     </View>
   );
 }
@@ -142,24 +178,21 @@ function GapRow({ startTime, endTime }: { startTime: string; endTime: string }) 
         <View style={[styles.verticalLine, { backgroundColor: colors.border }]} />
       </View>
       <Text style={styles.gapText}>
-        {formatTime12(startTime)} – {formatTime12(endTime)} · Tidak ada aktivitas
+        {formatTime24(startTime)} – {formatTime24(endTime)} · Tidak ada aktivitas
       </Text>
     </View>
   );
 }
 
-function getKindEmoji(kind: ActivityKind): string {
-  switch (kind) {
-    case 'gather': return '🤝';
-    case 'transport': return '🚌';
-    case 'meal': return '🍽️';
-    case 'activity': return '🎯';
-    case 'destination': return '📍';
-    default: return '📌';
-  }
+function KindThumb({ kind }: { kind: ActivityKind }) {
+  const Icon =
+    kind === 'gather' ? Users
+    : kind === 'transport' ? Train
+    : kind === 'meal' ? UtensilsCrossed
+    : kind === 'destination' ? MapPin
+    : Compass;
+  return <Icon size={16} color={colors.muted} />;
 }
-
-import { ScrollView } from 'react-native';
 
 export function ItineraryTimeline({
   activities,
@@ -170,86 +203,115 @@ export function ItineraryTimeline({
   onChangeDay,
   onPressItem,
   onPressMenu,
+  onCloseMenu,
+  menuOpenId,
+  onPressNav,
+  onEditActivity,
+  onDeleteActivity,
   onPressAdd,
   referenceNow = new Date(),
 }: ItineraryTimelineProps) {
   const days = buildItineraryDays(activities, startDate, endDate, tripStatus);
   const currentDay = days[activeDayIndex] ?? days[0];
 
-  if (!currentDay) {
+  // True empty state — no activities at all (regardless of dates) → centered.
+  if (activities.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconBox}>
-          <Text style={{ fontSize: 28 }}>📋</Text>
+      <View style={styles.emptyWrap}>
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBox}>
+            <MapPin size={32} color={colors.coral} />
+          </View>
+          <Text style={styles.emptyTitle}>Belum ada aktivitas</Text>
+          <Text style={styles.emptyDesc}>
+            Susun aktivitas per hari — titik kumpul, transport, kuliner, dan destinasi. Warna timeline
+            mengikuti status waktu, bukan jenis aktivitas.
+          </Text>
         </View>
-        <Text style={styles.emptyTitle}>Belum ada aktivitas</Text>
-        <Text style={styles.emptyDesc}>Tambahkan aktivitas pertama untuk memulai itinerary.</Text>
-        <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
-          <Text style={styles.addButtonText}>Buat Aktivitas Pertama</Text>
-        </TouchableOpacity>
+        <View style={styles.emptyCtaWrap}>
+          <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
+            <Text style={styles.addButtonText}>Buat Aktivitas Pertama</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
+  }
+
+  if (!currentDay) {
+    return null;
   }
 
   const segments = buildTimelineSegments(currentDay);
   const totalActivities = activities.length;
   const totalDays = days.filter((d) => d.items.length > 0 || d.date).length;
+  const hasItems = segments.length > 0;
 
   return (
-    <View style={styles.container}>
-      {/* Summary */}
-      <Text style={styles.summary}>
-        {totalActivities} aktivitas · {totalDays} hari
-      </Text>
+    <View style={[styles.container, hasItems ? styles.containerWithItems : styles.containerEmpty]}>
+      <View>
+        {/* Summary */}
+        <Text style={styles.summary}>
+          {totalActivities} aktivitas · {totalDays} hari
+        </Text>
 
-      {/* Day tabs */}
-      <DayTabs days={days} activeIndex={activeDayIndex} onChange={onChangeDay} />
+        {/* Day tabs */}
+        <DayTabs days={days} activeIndex={activeDayIndex} onChange={onChangeDay} />
 
-      {/* Day header */}
-      <Text style={styles.dayHeader}>{currentDay.dayLabel}</Text>
-      <Text style={styles.windowBadge}>
-        {formatTime12(currentDay.windowStart)} – {formatTime12(currentDay.windowEnd)}
-      </Text>
+        {/* Day header */}
+        <Text style={styles.dayHeader}>{currentDay.dayLabel}</Text>
+        <Text style={styles.windowBadge}>
+          {formatTime24(currentDay.windowStart)} – {formatTime24(currentDay.windowEnd)}
+        </Text>
 
-      {/* Timeline */}
-      {segments.length === 0 ? (
-        <View style={styles.emptyDay}>
-          <Text style={styles.emptyDayText}>Tidak ada aktivitas di hari ini</Text>
+        {/* Timeline */}
+        {hasItems ? (
+          <View style={styles.timeline}>
+            {segments.map((seg, i) => {
+              if (seg.type === 'gap') {
+                return <GapRow key={`gap-${i}`} startTime={seg.startTime} endTime={seg.endTime} />;
+              }
+
+              const activity = seg.activity!;
+              const timeState = resolveItineraryTimeState(
+                activity.start_time,
+                activity.end_time,
+                activity.activity_date,
+                tripStatus,
+                referenceNow,
+              );
+              const isMenuOpen = activity.id === menuOpenId;
+
+              return (
+                <View key={activity.id} style={[styles.itemWrap, isMenuOpen && styles.itemWrapMenuOpen]}>
+                  {isMenuOpen && (
+                    <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={onCloseMenu} />
+                  )}
+                  <ActivityItemRow
+                    activity={activity}
+                    timeState={timeState}
+                    menuOpen={isMenuOpen}
+                    onPress={() => onPressItem(activity)}
+                    onPressMenu={() => onPressMenu(activity)}
+                    onPressNav={onPressNav}
+                    onEdit={() => onEditActivity(activity)}
+                    onDelete={() => onDeleteActivity(activity)}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.emptyDay}>
+            <Text style={styles.emptyDayText}>Tidak ada aktivitas di hari ini</Text>
+          </View>
+        )}
+
+        {/* Footer CTA — when empty, sits right after the empty text (pushed to center) */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
+            <Text style={styles.addButtonText}>Tambah Aktivitas</Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <View style={styles.timeline}>
-          {segments.map((seg, i) => {
-            if (seg.type === 'gap') {
-              return <GapRow key={`gap-${i}`} startTime={seg.startTime} endTime={seg.endTime} />;
-            }
-
-            const activity = seg.activity!;
-            const timeState = resolveItineraryTimeState(
-              activity.start_time,
-              activity.end_time,
-              activity.activity_date,
-              tripStatus,
-              referenceNow,
-            );
-
-            return (
-              <ActivityItemRow
-                key={activity.id}
-                activity={activity}
-                timeState={timeState}
-                onPress={() => onPressItem(activity)}
-                onPressMenu={() => onPressMenu(activity)}
-              />
-            );
-          })}
-        </View>
-      )}
-
-      {/* Footer CTA */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.addButton} onPress={onPressAdd} activeOpacity={0.8}>
-          <Text style={styles.addButtonText}>Tambah Aktivitas</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -258,6 +320,12 @@ export function ItineraryTimeline({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  containerWithItems: {
+    justifyContent: 'space-between',
+  },
+  containerEmpty: {
+    justifyContent: 'center',
   },
   summary: {
     ...typography.caption,
@@ -309,6 +377,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 0,
   },
+  itemWrap: {
+    flex: 1,
+    position: 'relative',
+  },
+  itemWrapMenuOpen: {
+    zIndex: 50,
+  },
+  menuOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 40,
+  },
   dotColumn: {
     width: 28,
     alignItems: 'center',
@@ -339,6 +418,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1.5,
     backgroundColor: colors.white,
+  },
+  itemCardWrap: {
+    flex: 1,
+    position: 'relative',
+  },
+  itemCardWrapMenuOpen: {
+    zIndex: 30,
+    overflow: 'visible',
   },
   itemHeader: {
     flexDirection: 'row',
@@ -439,12 +526,19 @@ const styles = StyleSheet.create({
     color: colors.mutedLight,
     marginBottom: 12,
   },
+  emptyWrap: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingTop: 24,
+  },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 40,
     paddingHorizontal: 40,
+  },
+  emptyCtaWrap: {
+    paddingBottom: 8,
   },
   emptyIconBox: {
     width: 72,

@@ -33,6 +33,7 @@ describe('VotingService', () => {
         create: jest.fn(),
         delete: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
       },
       tripPollOption: { findMany: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
       tripPollVote: {
@@ -192,14 +193,58 @@ describe('VotingService', () => {
       expect(result.options).toHaveLength(2);
     });
 
-    it('rejects tanggal polls (auto-created only)', async () => {
-      await expect(
-        service.createPoll(TRIP, CREATOR, {
-          title: 'Date Poll',
-          poll_type: 'tanggal',
-          options: ['2027-06-19', '2027-07-01'],
-        }),
-      ).rejects.toThrow(BadRequestException);
+    it('creates a tanggal poll (re-created after previous ended)', async () => {
+      prisma.trip.findFirst.mockResolvedValue({
+        id: TRIP,
+        creatorId: CREATOR,
+        participants: [{ userId: CREATOR }],
+      });
+      prisma.tripPoll.findFirst.mockResolvedValue(null);
+      prisma.tripPoll.create.mockResolvedValue({
+        id: 'poll-tanggal',
+        tripId: TRIP,
+        pollType: 'tanggal',
+        status: 'active',
+      });
+      prisma.tripPoll.findUnique.mockResolvedValue({
+        id: 'poll-tanggal',
+        tripId: TRIP,
+        pollType: 'tanggal',
+        title: 'Date Poll',
+        status: 'active',
+        deadline: null,
+        lockedAt: null,
+        createdBy: CREATOR,
+        createdAt: new Date(),
+        creator: userRow(CREATOR),
+        options: [
+          {
+            id: 'opt-1',
+            pollId: 'poll-tanggal',
+            label: '19 Jun 2027',
+            sortOrder: 0,
+            candidateId: null,
+            votes: [],
+          },
+          {
+            id: 'opt-2',
+            pollId: 'poll-tanggal',
+            label: '01 Jul 2027',
+            sortOrder: 1,
+            candidateId: null,
+            votes: [],
+          },
+        ],
+      });
+
+      const result = await service.createPoll(TRIP, CREATOR, {
+        title: 'Date Poll',
+        poll_type: 'tanggal',
+        options: ['19 Jun 2027', '01 Jul 2027'],
+      });
+
+      expect(result.poll_type).toBe('tanggal');
+      expect(result.options).toHaveLength(2);
     });
 
     it('rejects when active poll exists for same poll_type', async () => {
@@ -217,12 +262,12 @@ describe('VotingService', () => {
       ).rejects.toThrow(ConflictException);
     });
 
-    it('rejects fewer than 2 options', async () => {
+    it('rejects empty options', async () => {
       await expect(
         service.createPoll(TRIP, CREATOR, {
           title: 'Bad Poll',
           poll_type: 'aktivitas',
-          options: ['Only One'],
+          options: [],
         }),
       ).rejects.toThrow(BadRequestException);
     });

@@ -11,9 +11,10 @@ interface CreateActivityPayload {
   description?: string;
   location_label?: string;
   maps_link?: string;
-  ref_links?: { url: string; label: string }[];
+  ref_links?: { url: string; label?: string }[];
   cover_source?: string;
   cover_icon?: string;
+  cover_document_id?: string;
   thumbnail_url?: string;
   sort_order?: number;
 }

@@ -95,6 +95,7 @@ export default function UsernameSetup() {
   const { user, completeRegistration } = useAuth();
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [usernameFocused, setUsernameFocused] = useState(false);
   const [fieldState, setFieldState] = useState<FieldState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -174,8 +175,9 @@ export default function UsernameSetup() {
     fieldState === 'invalid' ||
     fieldState === 'taken';
 
-  const borderColor =
-    fieldState === 'available'
+  const borderColor = usernameFocused
+    ? theme.colors.coral
+    : fieldState === 'available'
       ? theme.colors.teal
       : fieldState === 'invalid' || fieldState === 'taken'
         ? theme.colors.danger
@@ -207,6 +209,8 @@ export default function UsernameSetup() {
             style={styles.input}
             value={username}
             onChangeText={handleChange}
+            onFocus={() => setUsernameFocused(true)}
+            onBlur={() => setUsernameFocused(false)}
             placeholder=""
             autoCapitalize="none"
             autoCorrect={false}
@@ -320,7 +324,8 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: theme.colors.charcoal,
     padding: 0,
-  },
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  } as any,
   availableText: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_600SemiBold',

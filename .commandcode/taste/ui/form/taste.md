@@ -1,0 +1,7 @@
+# ui/form
+- Time inputs should use a structured picker component (scrollable hour/minute columns with confirm/cancel), not a free-form TextInput — the user explicitly wants a proper "time selector" that feels nicer than a raw text field for entering structured data like time. Confidence: 0.8
+- TimePicker component must be extracted as a shared reusable component (e.g., `components/TimePicker.tsx`) and used across all screens that need time input (CreateTrip, ActivityFormSheet, etc.) — never duplicated inline per screen. Confidence: 0.85
+- When a time picker input box is focused/active, it must show a visible focus indicator (coral border) on the input box itself, not just when the picker dropdown is open. Confidence: 0.8
+- Tag input should fill the full width of its container (use `flex: 1`), not be constrained to a fixed minimum width — the tag trigger/input should span the entire available space. Confidence: 0.85
+- Form input icons must be semantically tied to the field they decorate — a location pin (MapPin) icon belongs on the location input, not on a title/name field; the user explicitly asked to remove the MapPin from "Nama Aktivitas" and move it to "Lokasi". Confidence: 0.7
+- The entire tag input container (including empty space around chips) must be tappable to focus the input — tapping outside the TextInput area should still trigger focus; a small/partial tap target is a bug. Confidence: 0.8

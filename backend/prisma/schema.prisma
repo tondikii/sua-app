@@ -406,6 +406,8 @@ model Wishlist {
   endTime       DateTime?     @map("end_time") @db.Time
   locationLabel String?       @map("location_label") @db.Text
   link          String?       @db.Text
+  mapsLink      String?       @map("maps_link") @db.Text
+  refLinks      Json          @default("[]") @map("ref_links")
   notes         String?       @db.Text
   tags          Json          @default("[]")
   priorityLevel PriorityLevel @default(medium) @map("priority_level")

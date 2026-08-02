@@ -2,21 +2,27 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
   Alert,
   Switch,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateTrip } from '@/features/trips/hooks/useCreateTrip';
+import { useConvertToTrip } from '@/features/wishlist/hooks/useConvertToTrip';
 import { InviteBottomSheet } from '@/features/invitations/components/InviteBottomSheet';
+import { goBackSmart } from '@/lib/navigation';
+import { TagInput } from '@/components/TagInput';
+import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { X } from '@/components/icons/X';
 import { Plus } from '@/components/icons/Plus';
 import { Info } from '@/components/icons/Info';
+import { Calendar } from '@/components/icons/Calendar';
+import { Clock } from '@/components/icons/Clock';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { TimePicker } from '@/components/TimePicker';
 import { colors } from '@/theme/colors';
@@ -45,6 +51,25 @@ function parseDateISO(dateStr: string) {
   return { year: y, month: m - 1, day: d };
 }
 
+/** "12 – 15 Jun 2026" or "28 – 2 Jul 2026" when the range crosses months. */
+function formatDateRange(start: string, end: string) {
+  const s = parseDateISO(start);
+  const e = parseDateISO(end);
+  if (s.month === e.month && s.year === e.year) {
+    return `${s.day} – ${e.day} ${MONTH_NAMES[e.month]} ${e.year}`;
+  }
+  return `${s.day} ${MONTH_NAMES[s.month]} – ${e.day} ${MONTH_NAMES[e.month]} ${e.year}`;
+}
+
+/** "15 Agustus 2026 · 20:00" from an ISO datetime string (YYYY-MM-DDTHH:mm:ss.000Z). */
+function formatVotingDeadline(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()} · ${hh}:${mm}`;
+}
+
 interface DateRange {
   startDate: string;
   endDate: string;
@@ -58,16 +83,28 @@ export default function CreateTripScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const createTrip = useCreateTrip();
+  const params = useLocalSearchParams<{
+    wishlistId?: string;
+    name?: string;
+    tags?: string;
+    start?: string;
+    end?: string;
+    location?: string;
+    thumb?: string;
+  }>();
+  const convertToTrip = useConvertToTrip(params.wishlistId ?? '');
 
   const [createdTripId, setCreatedTripId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
 
-  const [name, setName] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [allDay, setAllDay] = useState(true);
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('17:00');
+  const [name, setName] = useState(params.name ?? '');
+  const [tags, setTags] = useState<string[]>(
+    params.tags ? params.tags.split(',').filter(Boolean) : [],
+  );
+  // When the wishlist carries times, prefill them and disable "all day".
+  const [allDay, setAllDay] = useState(!(params.start && params.end));
+  const [startTime, setStartTime] = useState(params.start ?? '08:00');
+  const [endTime, setEndTime] = useState(params.end ?? '17:00');
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -91,7 +128,13 @@ export default function CreateTripScreen() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [activeCandidate, setActiveCandidate] = useState<DateRange | null>(null);
   const [candidateSelectingEnd, setCandidateSelectingEnd] = useState(false);
+  const [candidateInfoOpen, setCandidateInfoOpen] = useState(false);
   const [votingDeadline, setVotingDeadline] = useState('');
+  const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
+  // Deadline picker calendar state
+  const [dlMonth, setDlMonth] = useState(today.getMonth());
+  const [dlYear, setDlYear] = useState(today.getFullYear());
+  const [dlTime, setDlTime] = useState('20:00');
 
   // Validation
   const [errors, setErrors] = useState<{ name?: string; date?: string }>({});
@@ -128,14 +171,10 @@ export default function CreateTripScreen() {
         setActiveCandidate({ startDate: iso, endDate: iso });
         setCandidateSelectingEnd(true);
       } else if (candidateSelectingEnd) {
-        // Save candidate with end date
-        const newCandidate: Candidate = {
-          id: `c${Date.now()}`,
-          startDate: activeCandidate.startDate,
-          endDate: iso >= activeCandidate.startDate ? iso : activeCandidate.startDate,
-        };
-        setCandidates((prev) => [...prev, newCandidate]);
-        setActiveCandidate(null);
+        // Extend active candidate with an end date — not saved yet, still active
+        // until the highlighted "Tambah Kandidat Tanggal" button confirms it.
+        const start = activeCandidate.startDate;
+        setActiveCandidate({ startDate: start, endDate: iso >= start ? iso : start });
         setCandidateSelectingEnd(false);
       } else {
         // Restart: tap again to pick new start
@@ -164,26 +203,44 @@ export default function CreateTripScreen() {
     }
   }, [calYear, calMonth, candidateMode, activeCandidate, candidateSelectingEnd, dateRange, selectingEnd, errors.date]);
 
+  const saveActiveCandidate = useCallback(() => {
+    if (!activeCandidate) return;
+    const newCandidate: Candidate = {
+      id: `c${Date.now()}`,
+      startDate: activeCandidate.startDate,
+      endDate: activeCandidate.endDate,
+    };
+    setCandidates((prev) => [...prev, newCandidate]);
+    setActiveCandidate(null);
+    setCandidateSelectingEnd(false);
+    if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
+  }, [activeCandidate, errors.date]);
+
   const switchToCandidateMode = useCallback(() => {
     if (!candidateMode) {
       setCandidateMode(true);
+      // The range already selected in Mode A becomes the first candidate.
+      if (dateRange) {
+        setCandidates((prev) => [
+          ...prev,
+          { id: `c${Date.now()}`, startDate: dateRange.startDate, endDate: dateRange.endDate },
+        ]);
+      }
       setDateRange(null);
       setSelectingEnd(false);
     }
-  }, [candidateMode]);
+  }, [candidateMode, dateRange]);
 
   const removeCandidate = useCallback((id: string) => {
     setCandidates((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
-  const addTag = useCallback(() => {
-    const trimmed = tagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      const tag = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-      setTags((prev) => [...prev, tag]);
-      setTagInput('');
-    }
-  }, [tagInput, tags]);
+  const addTag = useCallback((raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed || tags.includes(trimmed)) return;
+    const tag = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+    setTags((prev) => (prev.includes(tag) ? prev : [...prev, tag]));
+  }, [tags]);
 
   const removeTag = useCallback((tag: string) => {
     setTags((prev) => prev.filter((t) => t !== tag));
@@ -206,10 +263,9 @@ export default function CreateTripScreen() {
     if (!validate()) return;
 
     try {
-      let payload;
-
       if (candidateMode && candidates.length > 0) {
-        payload = {
+        // Candidate mode isn't supported for wishlist conversion — treat like normal create.
+        const payload = {
           name: name.trim(),
           tags: tags.length > 0 ? tags : undefined,
           candidates: candidates.map((c) => ({
@@ -218,19 +274,41 @@ export default function CreateTripScreen() {
           })),
           voting_deadline: votingDeadline || undefined,
         };
-      } else if (dateRange) {
-        payload = {
-          name: name.trim(),
+        const trip = await createTrip.mutateAsync(payload);
+        setCreatedTripId(trip.id);
+        setShowInvite(true);
+        return;
+      }
+
+      if (!dateRange) return;
+
+      // Wishlist conversion: call the atomic convert-to-trip endpoint which
+      // pre-fills trip name/tags/time from the wishlist, seeds the activity as
+      // the first itinerary item, and soft-deletes the wishlist.
+      if (params.wishlistId) {
+        const trip = await convertToTrip.mutateAsync({
+          trip_name: name.trim(),
           tags: tags.length > 0 ? tags : undefined,
           start_date: dateRange.startDate + 'T00:00:00.000Z',
           end_date: dateRange.endDate + 'T00:00:00.000Z',
           is_all_day: allDay,
           start_time: allDay ? undefined : startTime,
           end_time: allDay ? undefined : endTime,
-        };
-      } else {
+        });
+        setCreatedTripId(trip.id);
+        setShowInvite(true);
         return;
       }
+
+      const payload = {
+        name: name.trim(),
+        tags: tags.length > 0 ? tags : undefined,
+        start_date: dateRange.startDate + 'T00:00:00.000Z',
+        end_date: dateRange.endDate + 'T00:00:00.000Z',
+        is_all_day: allDay,
+        start_time: allDay ? undefined : startTime,
+        end_time: allDay ? undefined : endTime,
+      };
 
       const trip = await createTrip.mutateAsync(payload);
       setCreatedTripId(trip.id);
@@ -238,7 +316,7 @@ export default function CreateTripScreen() {
     } catch (err) {
       Alert.alert('Gagal', 'Terjadi kesalahan saat membuat perjalanan.');
     }
-  }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, router]);
+  }, [validate, candidateMode, candidates, dateRange, name, tags, allDay, startTime, endTime, votingDeadline, createTrip, convertToTrip, params.wishlistId]);
 
   const isDaySelected = useCallback((day: number) => {
     const iso = formatDateISO(calYear, calMonth, day);
@@ -269,7 +347,7 @@ export default function CreateTripScreen() {
     return false;
   }, [name, candidateMode, candidates, dateRange]);
 
-  const submitDisabled = createTrip.isPending || (submitted && hasValidationErrors);
+  const submitDisabled = createTrip.isPending || convertToTrip.isPending || (submitted && hasValidationErrors);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -277,7 +355,7 @@ export default function CreateTripScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.closeButton}>
           <X size={18} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Buat Perjalanan</Text>
@@ -295,7 +373,7 @@ export default function CreateTripScreen() {
           <Text style={styles.label}>
             Nama Perjalanan <Text style={styles.required}>*</Text>
           </Text>
-          <TextInput
+          <FocusedTextInput
             style={[styles.input, submitted && errors.name && styles.inputError]}
             placeholder="Masukkan nama perjalanan..."
             placeholderTextColor={colors.mutedLight}
@@ -310,23 +388,7 @@ export default function CreateTripScreen() {
         {/* Tags */}
         <View style={styles.field}>
           <Text style={styles.label}>Tag</Text>
-          <View style={[styles.tagsContainer, (submitted && errors.date) && styles.inputError]}>
-            {tags.map((tag) => (
-              <TouchableOpacity key={tag} style={styles.tagChip} onPress={() => removeTag(tag)}>
-                <Text style={styles.tagText}>{tag}</Text>
-                <X size={11} color={colors.teal} />
-              </TouchableOpacity>
-            ))}
-            <TextInput
-              style={styles.tagInput}
-              placeholder="+ Tambah tag..."
-              placeholderTextColor={colors.mutedLight}
-              value={tagInput}
-              onChangeText={setTagInput}
-              onSubmitEditing={addTag}
-              returnKeyType="done"
-            />
-          </View>
+          <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
         </View>
 
         {/* Calendar */}
@@ -357,6 +419,7 @@ export default function CreateTripScreen() {
 
               const selected = isDaySelected(day);
               const inRange = isDayInRangeHighlight(day);
+              const isSunday = new Date(calYear, calMonth, day).getDay() === 0;
 
               return (
                 <TouchableOpacity
@@ -374,7 +437,7 @@ export default function CreateTripScreen() {
                       styles.calDayText,
                       selected && styles.calDayTextSelected,
                       inRange && styles.calDayTextInRange,
-                      day === 7 && { color: colors.muted },
+                      isSunday && { color: colors.muted },
                     ]}>
                       {day}
                     </Text>
@@ -420,7 +483,6 @@ export default function CreateTripScreen() {
                       value={startTime}
                       onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
                       onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
-                      focused={focusedField === 'startTime'}
                     />
                   )}
                 </View>
@@ -438,7 +500,6 @@ export default function CreateTripScreen() {
                       value={endTime}
                       onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
                       onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
-                      focused={focusedField === 'endTime'}
                     />
                   )}
                 </View>
@@ -448,39 +509,53 @@ export default function CreateTripScreen() {
         )}
 
         {/* Candidate Mode Toggle */}
-        {!candidateMode && candidates.length === 0 && (
-          <TouchableOpacity
-            style={styles.addCandidateButton}
-            onPress={switchToCandidateMode}
-            activeOpacity={0.7}
-          >
-            <Plus size={16} color={colors.coral} />
-            <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
-            <Info size={15} color={colors.coral} />
-          </TouchableOpacity>
+        {!candidateMode && (
+          <View>
+            {candidateInfoOpen && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>
+                  Tambahkan kandidat tanggal jika tanggal belum pasti. Kandidat tanggal
+                  akan menjadi voting di detail perjalanan.
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.addCandidateButton}
+              onPress={switchToCandidateMode}
+              activeOpacity={0.7}
+            >
+              <Plus size={16} color={colors.coral} />
+              <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+              <TouchableOpacity
+                onPress={() => setCandidateInfoOpen((v) => !v)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Info size={15} color={colors.coral} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Candidate List */}
         {candidateMode && (
           <View style={styles.field}>
-            <Text style={styles.label}>Kandidat Tanggal</Text>
-            {candidates.map((c, i) => {
-              const startParsed = parseDateISO(c.startDate);
-              const endParsed = parseDateISO(c.endDate);
-              return (
-                <View key={c.id} style={styles.candidateRow}>
-                  <View style={styles.candidateBadge}>
-                    <Text style={styles.candidateBadgeText}>{i + 1}</Text>
-                  </View>
-                  <Text style={styles.candidateDate}>
-                    {startParsed.day}–{endParsed.day} {MONTH_NAMES[startParsed.month]} {startParsed.year}
-                  </Text>
-                  <TouchableOpacity onPress={() => removeCandidate(c.id)}>
-                    <X size={14} color={colors.muted} />
-                  </TouchableOpacity>
+            <Text style={styles.label}>
+              Kandidat Tanggal{' '}
+              {candidates.length > 0 && (
+                <Text style={styles.labelHint}>{candidates.length} tersimpan</Text>
+              )}
+            </Text>
+            {candidates.map((c, i) => (
+              <View key={c.id} style={styles.candidateRow}>
+                <View style={styles.candidateBadge}>
+                  <Text style={styles.candidateBadgeText}>{i + 1}</Text>
                 </View>
-              );
-            })}
+                <Text style={styles.candidateDate}>{formatDateRange(c.startDate, c.endDate)}</Text>
+                <TouchableOpacity onPress={() => removeCandidate(c.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <X size={14} color={colors.muted} />
+                </TouchableOpacity>
+              </View>
+            ))}
 
             {activeCandidate && (
               <View style={[styles.candidateRow, styles.candidateRowActive]}>
@@ -490,22 +565,32 @@ export default function CreateTripScreen() {
                   </Text>
                 </View>
                 <Text style={styles.candidateDateActive}>
-                  {parseDateISO(activeCandidate.startDate).day} {MONTH_NAMES[parseDateISO(activeCandidate.startDate).month]} — Pilih akhir
+                  {candidateSelectingEnd
+                    ? `${formatDateRange(activeCandidate.startDate, activeCandidate.startDate)} — Pilih akhir`
+                    : formatDateRange(activeCandidate.startDate, activeCandidate.endDate)}
                 </Text>
               </View>
             )}
 
-            {candidates.length < 3 && !activeCandidate && (
+            {candidates.length < 3 && (
               <TouchableOpacity
                 style={[styles.addCandidateButton, styles.addCandidateHighlighted]}
                 onPress={() => {
-                  setActiveCandidate(null);
-                  setCandidateSelectingEnd(false);
+                  if (activeCandidate) {
+                    // Confirm and save the active (coral) candidate.
+                    saveActiveCandidate();
+                  } else {
+                    // Start selecting a new candidate on the calendar.
+                    setActiveCandidate(null);
+                    setCandidateSelectingEnd(false);
+                  }
                 }}
                 activeOpacity={0.7}
               >
                 <Plus size={16} color={colors.coral} />
-                <Text style={styles.addCandidateText}>Tambah Kandidat Tanggal</Text>
+                <Text style={styles.addCandidateText}>
+                  {activeCandidate ? 'Simpan Kandidat Tanggal' : 'Tambah Kandidat Tanggal'}
+                </Text>
                 <Info size={15} color={colors.coral} />
               </TouchableOpacity>
             )}
@@ -516,13 +601,120 @@ export default function CreateTripScreen() {
         {candidateMode && candidates.length > 0 && (
           <View style={styles.field}>
             <Text style={styles.label}>Tenggat Voting Tanggal</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Pilih tanggal & waktu... (opsional)"
-              placeholderTextColor={colors.mutedLight}
-              value={votingDeadline}
-              onChangeText={setVotingDeadline}
-            />
+            <TouchableOpacity
+              style={[styles.deadlineBox]}
+              onPress={() => {
+                setShowDeadlinePicker((v) => !v);
+                setCandidateInfoOpen(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Calendar size={16} color={votingDeadline ? colors.coral : colors.muted} />
+              <Text style={[styles.deadlineText, !votingDeadline && styles.deadlinePlaceholder]}>
+                {votingDeadline ? formatVotingDeadline(votingDeadline) : 'Pilih tanggal & waktu... (opsional)'}
+              </Text>
+              {votingDeadline.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => { setVotingDeadline(''); setShowDeadlinePicker(false); }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <X size={14} color={colors.muted} />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+            {showDeadlinePicker && (
+              <View style={styles.deadlinePicker}>
+                <View style={styles.deadlinePickerHeader}>
+                  <TouchableOpacity
+                    style={styles.deadlinePickerNav}
+                    onPress={() => {
+                      if (dlMonth === 0) { setDlMonth(11); setDlYear(dlYear - 1); }
+                      else setDlMonth(dlMonth - 1);
+                    }}
+                  >
+                    <ChevronLeft size={16} color={colors.charcoal} />
+                  </TouchableOpacity>
+                  <Text style={styles.deadlinePickerMonth}>
+                    {MONTH_NAMES[dlMonth]} {dlYear}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.deadlinePickerNav}
+                    onPress={() => {
+                      if (dlMonth === 11) { setDlMonth(0); setDlYear(dlYear + 1); }
+                      else setDlMonth(dlMonth + 1);
+                    }}
+                  >
+                    <View style={{ transform: [{ scaleX: -1 }] }}>
+                      <ChevronLeft size={16} color={colors.charcoal} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.calWeekDays}>
+                  {WEEK_DAYS.map((d) => (
+                    <Text key={d} style={styles.calWeekDay}>{d}</Text>
+                  ))}
+                </View>
+                <View style={styles.calGrid}>
+                  {(() => {
+                    const days = getDaysInMonth(dlYear, dlMonth);
+                    const first = getFirstDayOfWeek(dlYear, dlMonth);
+                    const cells: (number | null)[] = [];
+                    for (let i = 0; i < first; i++) cells.push(null);
+                    for (let d = 1; d <= days; d++) cells.push(d);
+                    return cells.map((day, i) => {
+                      if (day === null) return <View key={`empty-${i}`} style={styles.calDayCell} />;
+                      const iso = formatDateISO(dlYear, dlMonth, day);
+                      const selected = votingDeadline.startsWith(iso);
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          style={styles.calDayCell}
+                          onPress={() => {
+                            setVotingDeadline(`${iso}T${dlTime}:00.000Z`);
+                            setShowDeadlinePicker(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[styles.calDay, selected && styles.calDaySelected]}>
+                            <Text style={[styles.calDayText, selected && styles.calDayTextSelected]}>
+                              {day}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    });
+                  })()}
+                </View>
+                <View style={styles.deadlineTimeRow}>
+                  <View style={styles.deadlineTimeField}>
+                    <Text style={styles.timeLabel}>Jam</Text>
+                    <TouchableOpacity
+                      style={[styles.deadlineTimeBox, showStartPicker && styles.timeInputBoxFocused]}
+                      onPress={() => {
+                        setShowStartPicker(true);
+                        setShowEndPicker(false);
+                        setFocusedField('startTime');
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Clock size={14} color={colors.muted} />
+                      <Text style={styles.timeValue}>{dlTime}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.deadlineHint}>
+                    Tenggat voting dipilih dari kalender. Kosongkan jika voting hanya dikunci manual.
+                  </Text>
+                </View>
+                {showStartPicker && (
+                  <TimePicker
+                    value={dlTime}
+                    onChange={(t) => { setDlTime(t); setShowStartPicker(false); setFocusedField(null); }}
+                    onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
+                    startLabel="Jam"
+                  />
+                )}
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
@@ -549,9 +741,13 @@ export default function CreateTripScreen() {
           disabled={submitDisabled}
           activeOpacity={0.8}
         >
-          <Text style={styles.submitText}>
-            {createTrip.isPending ? 'Membuat...' : 'Buat Perjalanan'}
-          </Text>
+          {createTrip.isPending || convertToTrip.isPending ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <Text style={styles.submitText}>
+              {createTrip.isPending || convertToTrip.isPending ? 'Membuat...' : 'Buat Perjalanan'}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -642,39 +838,30 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_500Medium',
     color: colors.danger,
   },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    alignItems: 'center',
-    backgroundColor: colors.light,
-    borderRadius: 14,
-    padding: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1.5,
+  labelHint: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+  },
+  tooltip: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
     borderColor: colors.border,
-    minHeight: 50,
+    borderRadius: 12,
+    padding: 10,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  tagChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.tealLight,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  tagText: {
-    fontSize: 12,
-    fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.teal,
-  },
-  tagInput: {
-    fontSize: 13,
-    fontFamily: 'PlusJakartaSans_400Regular',
+  tooltipText: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
     color: colors.charcoal,
-    minWidth: 100,
-    paddingVertical: 4,
+    lineHeight: 16,
   },
   calendarCard: {
     backgroundColor: colors.white,
@@ -802,8 +989,89 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   timeInputBoxFocused: {
-    borderColor: colors.charcoal,
+    borderColor: colors.coral,
     borderWidth: 2,
+  },
+  deadlineBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.light,
+    borderRadius: 14,
+    padding: 13,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  deadlineText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.charcoal,
+  },
+  deadlinePlaceholder: {
+    color: colors.mutedLight,
+    fontFamily: 'PlusJakartaSans_400Regular',
+  },
+  deadlinePicker: {
+    marginTop: 8,
+    padding: 14,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    shadowColor: '#1A1A2E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  deadlinePickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  deadlinePickerNav: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deadlinePickerMonth: {
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.charcoal,
+  },
+  deadlineTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 10,
+  },
+  deadlineTimeField: {
+    flex: 1,
+    gap: 6,
+  },
+  deadlineTimeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.light,
+    borderRadius: 12,
+    padding: 11,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  deadlineHint: {
+    flex: 1.4,
+    fontSize: 10,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.mutedLight,
+    lineHeight: 14,
   },
   timeValue: {
     fontSize: 14,

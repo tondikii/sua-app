@@ -22,29 +22,97 @@ export class GoogleMapsService {
   }
 
   /**
-   * Parse a Google Maps URL and return a thumbnail URL, or null if unresolvable.
+   * Resolve a cover thumbnail from a Google Maps link.
+   * Priority:
+   *   1. `og:image` scraped with a social-media bot User-Agent — the same photo
+   *      preview WhatsApp shows. Free, no API key, no billing.
+   *   2. Places API photo (when GOOGLE_MAPS_API_KEY + billing are set).
+   *   3. Google Static Map (same requirement as #2).
+   *   4. Yandex Static Map — billing-free map fallback.
    */
   async resolveThumbnailFromMapsLink(mapsLink: string): Promise<string | null> {
-    if (!this.apiKey) {
-      this.logger.debug('GOOGLE_MAPS_API_KEY not set — skipping thumbnail resolve');
-      return null;
+    const resolved = await this.expandShortLink(mapsLink);
+    const location = this.parseMapsLink(resolved);
+
+    const ogImage = await this.resolveOgImage(mapsLink);
+    if (ogImage) return ogImage;
+
+    if (this.apiKey) {
+      if (location?.placeId) {
+        const photoUrl = await this.resolvePlacePhoto(location.placeId);
+        if (photoUrl) return photoUrl;
+      }
+
+      if (location?.lat !== undefined && location?.lng !== undefined) {
+        const staticUrl = this.buildStaticMapUrl(location.lat, location.lng);
+        if (await this.isUrlReachable(staticUrl)) return staticUrl;
+      }
+    } else {
+      this.logger.debug('GOOGLE_MAPS_API_KEY not set — using billing-free fallback');
     }
 
-    const location = this.parseMapsLink(mapsLink);
-    if (!location) {
-      return null;
-    }
-
-    if (location.placeId) {
-      const photoUrl = await this.resolvePlacePhoto(location.placeId);
-      if (photoUrl) return photoUrl;
-    }
-
-    if (location.lat !== undefined && location.lng !== undefined) {
-      return this.buildStaticMapUrl(location.lat, location.lng);
+    if (location?.lat !== undefined && location?.lng !== undefined) {
+      return this.buildFallbackStaticMapUrl(location.lat, location.lng);
     }
 
     return null;
+  }
+
+  /**
+   * Fetch the Open Graph image from the Maps place page using a social-media bot
+   * User-Agent (same trick WhatsApp / Facebook use to show the preview). Returns
+   * the `lh3.googleusercontent.com` photo URL or null.
+   */
+  private async resolveOgImage(mapsLink: string): Promise<string | null> {
+    const BOT_UA =
+      'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
+    try {
+      const res = await fetch(mapsLink, {
+        redirect: 'follow',
+        method: 'GET',
+        headers: {
+          'User-Agent': BOT_UA,
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+      if (!res.ok) return null;
+      const html = await res.text();
+
+      const og = html.match(
+        /property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+      ) ?? html.match(
+        /content=["']([^"']+)["'][^>]*property=["']og:image["']/i,
+      );
+      return og?.[1] || null;
+    } catch (err) {
+      this.logger.warn(`og:image scrape failed for ${mapsLink}: ${err}`);
+      return null;
+    }
+  }
+
+  /** Lightweight reachability check (HEAD) so dead/billing-blocked URLs fall through. */
+  private async isUrlReachable(url: string): Promise<boolean> {
+    try {
+      const res = await fetch(url, { method: 'HEAD' });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Follow redirects for short links (maps.app.goo.gl/...) so the underlying
+   * Google Maps URL (with place_id / @lat,lng) can be parsed. Returns the
+   * original URL when no redirect happens or on failure.
+   */
+  private async expandShortLink(mapsLink: string): Promise<string> {
+    try {
+      const res = await fetch(mapsLink, { redirect: 'follow', method: 'GET' });
+      return res.url || mapsLink;
+    } catch (err) {
+      this.logger.warn(`Short link expand failed for ${mapsLink}: ${err}`);
+      return mapsLink;
+    }
   }
 
   /** Extract place_id or lat/lng from common Google Maps URL formats. */
@@ -58,11 +126,15 @@ export class GoogleMapsService {
         return { placeId: placeIdParam };
       }
 
-      // data param: !1sChIJ... or !1s0x...
+      // data param: !1sChIJ... or !1s0x... (skip "0x...:0x..." pairs — not a
+      // valid Places API place id, coordinates fallback will handle it)
       const dataMatch = mapsLink.match(/!1s([^!&?]+)/);
       if (dataMatch?.[1]) {
         const ref = decodeURIComponent(dataMatch[1]);
-        if (ref.startsWith('ChIJ') || ref.startsWith('0x')) {
+        if (ref.startsWith('ChIJ')) {
+          return { placeId: ref };
+        }
+        if (/^0x[0-9a-fA-F]{16}$/.test(ref)) {
           return { placeId: ref };
         }
       }
@@ -132,6 +204,19 @@ export class GoogleMapsService {
     url.searchParams.set('size', '400x300');
     url.searchParams.set('maptype', 'roadmap');
     url.searchParams.set('key', this.apiKey!);
+    return url.toString();
+  }
+
+  /**
+   * Billing-free fallback (Yandex Static Maps). No API key required, so the
+   * wishlist still gets a map cover even when Google Cloud billing is off.
+   */
+  buildFallbackStaticMapUrl(lat: number, lng: number): string {
+    const url = new URL('https://static-maps.yandex.ru/1.x/');
+    url.searchParams.set('ll', `${lng},${lat}`);
+    url.searchParams.set('z', '15');
+    url.searchParams.set('size', '400,300');
+    url.searchParams.set('l', 'map');
     return url.toString();
   }
 }

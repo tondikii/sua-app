@@ -1,13 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
-import type { WishlistItem } from '@atur-perjalanan/shared-types';
+import type { WishlistItem, RefLink } from '@atur-perjalanan/shared-types';
 
 interface UpdateWishlistPayload {
   place_name?: string;
   start_time?: string;
   end_time?: string;
   location_label?: string;
-  link?: string;
+  maps_link?: string;
+  ref_links?: RefLink[];
   notes?: string;
   tags?: string[];
   priority_level?: 'high' | 'medium' | 'low';

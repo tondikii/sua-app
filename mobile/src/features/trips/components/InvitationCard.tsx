@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import type { TripInvitation } from '@atur-perjalanan/shared-types';
 import { Calendar } from '@/components/icons/Calendar';
 import { formatDateRange } from './TripDateUtils';
@@ -76,7 +76,11 @@ export function InvitationCard({
             disabled={isResponding}
             activeOpacity={0.7}
           >
-            <Text style={styles.acceptText}>Terima</Text>
+            {isResponding ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.acceptText}>Terima</Text>
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.declineButton}
@@ -84,7 +88,11 @@ export function InvitationCard({
             disabled={isResponding}
             activeOpacity={0.7}
           >
-            <Text style={styles.declineText}>Tolak</Text>
+            {isResponding ? (
+              <ActivityIndicator size="small" color={colors.muted} />
+            ) : (
+              <Text style={styles.declineText}>Tolak</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

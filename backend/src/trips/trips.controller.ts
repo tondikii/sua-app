@@ -131,6 +131,13 @@ export class TripsController {
     return this.tripsService.removeMember(tripId, memberId, user.userId);
   }
 
+  // POST /v1/trips/:tripId/leave  (member leaves the trip themselves)
+  @Post(':tripId/leave')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  leaveTrip(@CurrentUser() user: CurrentUserPayload, @Param('tripId') tripId: string) {
+    return this.tripsService.leaveTrip(tripId, user.userId);
+  }
+
   // POST /v1/trips/:tripId/invitations
   @Post(':tripId/invitations')
   createInvitation(

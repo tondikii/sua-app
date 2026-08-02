@@ -7,10 +7,13 @@ import {
 } from '@nestjs/common';
 import { InvitationsService } from './invitations.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 describe('InvitationsService', () => {
   let service: InvitationsService;
   let prisma: any;
+  let mail: any;
 
   const INVITER = 'inviter-1';
   const TRIP = 'trip-1';
@@ -31,7 +34,7 @@ describe('InvitationsService', () => {
   beforeEach(async () => {
     prisma = {
       trip: { findFirst: jest.fn() },
-      user: { findFirst: jest.fn() },
+      user: { findFirst: jest.fn(), findUnique: jest.fn() },
       tripInvitation: {
         create: jest.fn(),
         findFirst: jest.fn(),
@@ -40,11 +43,23 @@ describe('InvitationsService', () => {
         update: jest.fn(),
       },
       tripParticipant: { upsert: jest.fn() },
+      notification: {
+        findMany: jest.fn().mockResolvedValue([]),
+        update: jest.fn(),
+      },
       $transaction: jest.fn((cb: any) => cb(prisma)),
     };
 
+    mail = { sendInvitationEmail: jest.fn().mockResolvedValue(true) };
+    const notifications = { createNotification: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [InvitationsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        InvitationsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: NotificationsService, useValue: notifications },
+        { provide: MailService, useValue: mail },
+      ],
     }).compile();
 
     service = module.get<InvitationsService>(InvitationsService);
@@ -170,8 +185,10 @@ describe('InvitationsService', () => {
     beforeEach(() => {
       prisma.trip.findFirst.mockResolvedValue({
         id: TRIP,
+        name: 'Trip ke Lombok',
         participants: [{ userId: INVITER }],
       });
+      prisma.user.findUnique.mockResolvedValue({ id: INVITER, name: 'Inviter' });
     });
 
     it('creates an email invitation for an unregistered address', async () => {
@@ -187,6 +204,10 @@ describe('InvitationsService', () => {
 
       expect(result.method).toBe('email');
       expect(result.invited_email).toBe('friend@example.com');
+      expect(mail.sendInvitationEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'friend@example.com', tripId: TRIP }),
+      );
+      expect(result.email_delivered).toBe(true);
     });
 
     it('links an existing user when the email is registered', async () => {

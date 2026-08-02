@@ -3,19 +3,25 @@ import {
   BadRequestException,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TripsService } from '../trips/trips.service';
 import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/shared-validation';
 import { WishlistSerializer } from './serializers/wishlist.serializer';
 import { toTimeDate } from '../common/helpers/date.helpers';
+import { GoogleMapsService } from '../common/google-maps/google-maps.service';
+import { normalizeWishlistTags } from './wishlist-tags';
 import { TripStatus } from '@prisma/client';
 
 @Injectable()
 export class WishlistService {
+  private readonly logger = new Logger(WishlistService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tripsService: TripsService,
+    private readonly googleMaps: GoogleMapsService,
   ) {}
 
   /** Create a wishlist item for the current user (WORKFLOW §12, `WishlistFormSheet`). */
@@ -27,13 +33,16 @@ export class WishlistService {
         startTime: toTimeDate(dto.start_time),
         endTime: toTimeDate(dto.end_time),
         locationLabel: dto.location_label,
-        link: dto.link,
+        mapsLink: dto.maps_link,
+        refLinks: dto.ref_links ?? [],
         notes: dto.notes,
-        tags: dto.tags ?? [],
+        tags: normalizeWishlistTags(dto.tags) ?? [],
         priorityLevel: dto.priority_level ?? 'medium',
         thumbnailUrl: dto.thumbnail_url,
       },
     });
+
+    this.scheduleThumbnailResolve(wishlist.id, dto.maps_link);
 
     return WishlistSerializer.toItem(wishlist);
   }
@@ -64,15 +73,31 @@ export class WishlistService {
     const hasMore = wishlists.length > take;
     const results = hasMore ? wishlists.slice(0, take) : wishlists;
 
+    // Backfill: wishlists that have a maps link but no *real* thumbnail yet get
+    // their cover resolved in the background. A Yandex URL is just the billing-free
+    // map fallback — re-resolve so we can upgrade it to the actual place photo
+    // (og:image) once available.
+    for (const w of results) {
+      if (w.mapsLink && this.isFallbackThumbnail(w.thumbnailUrl)) {
+        this.scheduleThumbnailResolve(w.id, w.mapsLink);
+      }
+    }
+
     return {
       data: results.map((w) => WishlistSerializer.toItem(w)),
       next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
   }
 
+  /** True when the thumbnail is null or only a billing-free map fallback (Yandex). */
+  private isFallbackThumbnail(thumbnailUrl: string | null): boolean {
+    if (!thumbnailUrl) return true;
+    return thumbnailUrl.startsWith('https://static-maps.yandex.ru/');
+  }
+
   /** Update a wishlist item — owner only. */
   async updateWishlist(wishlistId: string, userId: string, dto: UpdateWishlistInput) {
-    await this.assertOwner(wishlistId, userId);
+    const existing = await this.assertOwner(wishlistId, userId);
 
     const wishlist = await this.prisma.wishlist.update({
       where: { id: wishlistId },
@@ -81,13 +106,23 @@ export class WishlistService {
         startTime: dto.start_time !== undefined ? toTimeDate(dto.start_time) : undefined,
         endTime: dto.end_time !== undefined ? toTimeDate(dto.end_time) : undefined,
         locationLabel: dto.location_label,
-        link: dto.link,
+        mapsLink: dto.maps_link,
+        refLinks: dto.ref_links,
         notes: dto.notes,
-        tags: dto.tags ?? undefined,
+        tags: normalizeWishlistTags(dto.tags),
         priorityLevel: dto.priority_level,
         thumbnailUrl: dto.thumbnail_url,
       },
     });
+
+    const mapsLinkChanged =
+      dto.maps_link !== undefined && dto.maps_link !== existing.mapsLink;
+    const needsResolve =
+      !dto.thumbnail_url &&
+      (mapsLinkChanged || this.isFallbackThumbnail(existing.thumbnailUrl));
+    if (needsResolve && (dto.maps_link ?? existing.mapsLink)) {
+      this.scheduleThumbnailResolve(wishlistId, dto.maps_link ?? existing.mapsLink);
+    }
 
     return WishlistSerializer.toItem(wishlist);
   }
@@ -122,6 +157,8 @@ export class WishlistService {
     }
 
     const isAllDay = dto.is_all_day ?? true;
+    const activityStart = !isAllDay && dto.start_time ? toTimeDate(dto.start_time) : wishlist.startTime;
+    const activityEnd = !isAllDay && dto.end_time ? toTimeDate(dto.end_time) : wishlist.endTime;
 
     const trip = await this.prisma.$transaction(async (tx) => {
       const created = await tx.trip.create({
@@ -145,11 +182,14 @@ export class WishlistService {
           tripId: created.id,
           placeName: wishlist.placeName,
           activityDate: startDate,
-          ...(wishlist.startTime ? { startTime: wishlist.startTime } : {}),
-          ...(wishlist.endTime ? { endTime: wishlist.endTime } : {}),
+          ...(activityStart ? { startTime: activityStart } : {}),
+          ...(activityEnd ? { endTime: activityEnd } : {}),
           description: wishlist.notes,
           locationLabel: wishlist.locationLabel,
-          mapsLink: wishlist.link,
+          mapsLink: wishlist.mapsLink ?? wishlist.link,
+          refLinks: (wishlist.refLinks as { url: string; label?: string }[]) ?? [],
+          thumbnailUrl: wishlist.thumbnailUrl,
+          coverSource: wishlist.thumbnailUrl ? 'maps' : 'none',
         },
       });
 
@@ -202,5 +242,29 @@ export class WishlistService {
     }
 
     return wishlist;
+  }
+
+  /**
+   * Fire-and-forget: resolve thumbnail_url from maps_link in the background.
+   * Does not block the HTTP response (pola `activity.service.ts`, ARCHITECTURE §3.3).
+   */
+  private scheduleThumbnailResolve(wishlistId: string, mapsLink: string | null | undefined): void {
+    if (!mapsLink) return;
+
+    setImmediate(() => {
+      this.resolveThumbnailInBackground(wishlistId, mapsLink).catch((err) => {
+        this.logger.warn(`Thumbnail resolve failed for wishlist ${wishlistId}: ${err}`);
+      });
+    });
+  }
+
+  private async resolveThumbnailInBackground(wishlistId: string, mapsLink: string): Promise<void> {
+    const thumbnailUrl = await this.googleMaps.resolveThumbnailFromMapsLink(mapsLink);
+    if (!thumbnailUrl) return;
+
+    await this.prisma.wishlist.update({
+      where: { id: wishlistId },
+      data: { thumbnailUrl },
+    });
   }
 }

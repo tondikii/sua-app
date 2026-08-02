@@ -5,6 +5,7 @@ import type { TripMessage } from '@atur-perjalanan/shared-types';
 interface MessagesPage {
   data: TripMessage[];
   next_cursor: string | null;
+  unread_count: number;
 }
 
 export function useMessages(tripId: string) {

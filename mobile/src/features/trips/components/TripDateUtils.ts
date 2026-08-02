@@ -15,11 +15,9 @@ function parseDate(dateStr: string): Date {
   return new Date(+parts[0], +parts[1] - 1, +parts[2]);
 }
 
-function formatTime12(time: string): string {
-  const [h, m] = time.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+/** Format "HH:MM" in 24-hour wall-clock (e.g. "19:00" stays "19:00"). */
+function formatTime24(time: string): string {
+  return time;
 }
 
 export function formatDateRange(
@@ -55,7 +53,7 @@ export function formatDateRange(
   }
 
   if (startTime && endTime) {
-    return `${dateStr} · ${formatTime12(startTime)} – ${formatTime12(endTime)}`;
+    return `${dateStr} · ${formatTime24(startTime)} – ${formatTime24(endTime)}`;
   }
 
   return dateStr;

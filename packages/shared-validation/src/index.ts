@@ -147,11 +147,23 @@ export const CreateDocumentSchema = z.object({
 
 // ── Voting ────────────────────────────────────────────────────
 
+const PollOptionSchema = z.union([
+  z.string(),
+  z.object({
+    label: z.string(),
+    candidate_id: z.string().uuid().optional(),
+  }),
+]);
+
 export const CreatePollSchema = z.object({
   title: z.string().max(255),
-  poll_type: z.enum(['aktivitas', 'lainnya']),
-  options: z.array(z.string()).min(2).max(10),
+  poll_type: z.enum(['tanggal', 'aktivitas', 'lainnya']),
+  options: z.array(PollOptionSchema).min(1).max(10),
   deadline: z.string().datetime().optional(),
+});
+
+export const UpdatePollSchema = CreatePollSchema.partial().extend({
+  options: z.array(PollOptionSchema).min(1).max(10).optional(),
 });
 
 export const VoteSchema = z.object({
@@ -183,7 +195,15 @@ export const CreateWishlistSchema = z.object({
   start_time: z.string().regex(TIME_HHMM, 'start_time must be in HH:MM format').optional(),
   end_time: z.string().regex(TIME_HHMM, 'end_time must be in HH:MM format').optional(),
   location_label: z.string().optional(),
-  link: z.string().url('link must be a valid URL').optional(),
+  maps_link: z.string().url('maps_link must be a valid URL').optional(),
+  ref_links: z
+    .array(
+      z.object({
+        url: z.string().url('ref link url must be a valid URL'),
+        label: z.string().optional(),
+      }),
+    )
+    .optional(),
   notes: z.string().optional(),
   tags: z.array(z.string()).optional(),
   priority_level: z.enum(PRIORITY_LEVELS).optional(),
@@ -200,4 +220,6 @@ export const ConvertToTripSchema = z.object({
   start_date: z.string().datetime(),
   end_date: z.string().datetime(),
   is_all_day: z.boolean().optional(),
+  start_time: z.string().regex(TIME_HHMM, 'start_time must be in HH:MM format').optional(),
+  end_time: z.string().regex(TIME_HHMM, 'end_time must be in HH:MM format').optional(),
 });

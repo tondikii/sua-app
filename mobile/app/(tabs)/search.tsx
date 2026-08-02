@@ -65,6 +65,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [history, setHistory] = useState<SearchUserWithTrips[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -113,7 +114,7 @@ export default function SearchScreen() {
     <View style={styles.screen}>
       {/* Search bar */}
       <View style={styles.searchBarContainer}>
-        <View style={[styles.searchBar, query.length > 0 && styles.searchBarFocused]}>
+        <View style={[styles.searchBar, (searchFocused || query.length > 0) && styles.searchBarFocused]}>
           <Search size={16} color={query.length > 0 ? colors.coral : colors.muted} />
           <TextInput
             style={styles.searchInput}
@@ -121,6 +122,8 @@ export default function SearchScreen() {
             placeholderTextColor={colors.mutedLight}
             value={query}
             onChangeText={handleQueryChange}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             autoCapitalize="none"
             autoCorrect={false}
           />

@@ -23,9 +23,10 @@ describe('ChatService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        count: jest.fn().mockResolvedValue(0),
       },
       tripDocument: { create: jest.fn() },
-      tripMessageRead: { upsert: jest.fn() },
+      tripMessageRead: { upsert: jest.fn(), findUnique: jest.fn().mockResolvedValue(null) },
       $transaction: jest.fn((cb: any) => cb(prisma)),
     };
 

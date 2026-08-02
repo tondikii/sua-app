@@ -29,6 +29,8 @@ type InvitationLike = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Set only for email invites: whether the SMTP delivery succeeded. */
+  emailDelivered?: boolean;
 };
 
 export type InvitationState = 'email_sent' | 'pending_accept' | 'rejected';
@@ -48,6 +50,7 @@ export class InvitationSerializer {
       invited_email: inv.invitedEmail,
       method: inv.method,
       status: inv.status,
+      email_delivered: inv.emailDelivered ?? false,
       created_at: inv.createdAt.toISOString(),
       updated_at: inv.updatedAt.toISOString(),
     };

@@ -8,12 +8,14 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { InvitationSerializer } from './serializers/invitation.serializer';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class InvitationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
+    private readonly mail: MailService,
   ) {}
 
   /**
@@ -48,7 +50,9 @@ export class InvitationsService {
 
     const inv = dto.username
       ? await this.inviteByUsername(tripId, inviterId, dto.username, trip.participants)
-      : await this.inviteByEmail(tripId, inviterId, dto.email!, trip.participants);
+      : await this.inviteByEmail(tripId, inviterId, dto.email!, trip.participants, {
+          tripName: trip.name,
+        });
 
     return InvitationSerializer.toBasic(inv);
   }
@@ -144,13 +148,14 @@ export class InvitationsService {
     inviterId: string,
     email: string,
     participants: Array<{ userId: string }>,
+    tripMeta: { tripName: string },
   ) {
     const normalizedEmail = email.toLowerCase();
 
     // If the email belongs to an existing user, link it so they can respond in-app.
     const existingUser = await this.prisma.user.findFirst({
       where: { email: normalizedEmail },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
     if (existingUser) {
@@ -180,8 +185,9 @@ export class InvitationsService {
       });
     }
 
+    let invitation;
     if (existing) {
-      const invitation = await this.prisma.tripInvitation.update({
+      invitation = await this.prisma.tripInvitation.update({
         where: { id: existing.id },
         data: {
           status: 'pending',
@@ -190,33 +196,20 @@ export class InvitationsService {
           invitedUserId: existingUser?.id ?? null,
         },
       });
-
-      // Create notification for reactivated invitation (only for registered users)
-      if (existingUser) {
-        await this.notifications.createNotification({
-          userId: existingUser.id,
-          type: 'invite',
-          actorId: inviterId,
+    } else {
+      invitation = await this.prisma.tripInvitation.create({
+        data: {
           tripId,
-          payload: { invitation_id: invitation.id },
-        });
-      }
-
-      return invitation;
+          invitedBy: inviterId,
+          invitedUserId: existingUser?.id ?? null,
+          invitedEmail: normalizedEmail,
+          method: 'email',
+          status: 'pending',
+        },
+      });
     }
 
-    const invitation = await this.prisma.tripInvitation.create({
-      data: {
-        tripId,
-        invitedBy: inviterId,
-        invitedUserId: existingUser?.id ?? null,
-        invitedEmail: normalizedEmail,
-        method: 'email',
-        status: 'pending',
-      },
-    });
-
-    // Create notification for new invitation (only for registered users)
+    // In-app notification for registered users (reactivation or new invite).
     if (existingUser) {
       await this.notifications.createNotification({
         userId: existingUser.id,
@@ -227,7 +220,19 @@ export class InvitationsService {
       });
     }
 
-    return invitation;
+    // Always attempt the email so the invitee actually receives the invite.
+    const inviter = await this.prisma.user.findUnique({
+      where: { id: inviterId },
+      select: { name: true },
+    });
+    const emailDelivered = await this.mail.sendInvitationEmail({
+      to: normalizedEmail,
+      tripId,
+      tripName: tripMeta.tripName,
+      inviterName: inviter?.name ?? 'Seorang pengguna',
+    });
+
+    return { ...invitation, emailDelivered };
   }
 
   /**
@@ -321,6 +326,26 @@ export class InvitationsService {
           create: { tripId: invitation.tripId, userId },
           update: {},
         });
+      }
+
+      // Resolve the matching invite notification so the UI stops showing
+      // Terima/Tolak buttons for an already-answered invitation.
+      const inviteNotifs = await tx.notification.findMany({
+        where: {
+          userId,
+          tripId: invitation.tripId,
+          type: 'invite',
+          isRead: false,
+        },
+      });
+      for (const notif of inviteNotifs) {
+        const payload = (notif.payload ?? {}) as Record<string, unknown>;
+        if (payload.invitation_id === invitationId) {
+          await tx.notification.update({
+            where: { id: notif.id },
+            data: { payload: { ...payload, resolved: true, accepted: accept } },
+          });
+        }
       }
     });
   }

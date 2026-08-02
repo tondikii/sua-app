@@ -3,6 +3,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { WishlistService } from './wishlist.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TripsService } from '../trips/trips.service';
+import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 
 /**
  * Unit tests for WishlistService (M8). Prisma is fully mocked; `$transaction`
@@ -13,6 +14,7 @@ describe('WishlistService', () => {
   let service: WishlistService;
   let prisma: any;
   let tripsService: any;
+  let googleMaps: any;
 
   const OWNER = 'user-1';
 
@@ -23,7 +25,8 @@ describe('WishlistService', () => {
     startTime: new Date('2000-01-01T13:00:00'),
     endTime: new Date('2000-01-01T16:00:00'),
     locationLabel: 'Lombok',
-    link: 'https://maps.google.com/xyz',
+    mapsLink: 'https://maps.google.com/xyz',
+    refLinks: [{ url: 'https://example.com/guide', label: 'Panduan' }],
     notes: 'Bawa sunscreen',
     tags: ['#pantai'],
     priorityLevel: 'high',
@@ -48,6 +51,10 @@ describe('WishlistService', () => {
       $transaction: jest.fn((cb: any) => cb(prisma)),
     };
 
+    googleMaps = {
+      resolveThumbnailFromMapsLink: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         WishlistService,
@@ -56,6 +63,7 @@ describe('WishlistService', () => {
           provide: TripsService,
           useValue: { getTripDetail: jest.fn(async (tripId: string) => ({ id: tripId })) },
         },
+        { provide: GoogleMapsService, useValue: googleMaps },
       ],
     }).compile();
 
@@ -78,6 +86,75 @@ describe('WishlistService', () => {
       );
       expect(result.place_name).toBe('Pantai Tanjung Aan');
       expect(result.priority_level).toBe('high'); // reflects mocked create() return
+    });
+
+    it('normalizes tags to #Titlecase', async () => {
+      prisma.wishlist.create.mockResolvedValue(wishlistRow());
+
+      await service.createWishlist(OWNER, {
+        place_name: 'Pantai',
+        tags: ['pantai', '#PANTAI', '  ', '#', 'sUnSeT'],
+      } as any);
+
+      expect(prisma.wishlist.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ tags: ['#Pantai', '#Sunset'] }),
+        }),
+      );
+    });
+
+    it('stores maps_link + ref_links', async () => {
+      prisma.wishlist.create.mockResolvedValue(
+        wishlistRow({
+          mapsLink: 'https://maps.google.com/abc',
+          refLinks: [{ url: 'https://example.com/x', label: 'X' }],
+        }),
+      );
+
+      await service.createWishlist(OWNER, {
+        place_name: 'Pantai',
+        maps_link: 'https://maps.google.com/abc',
+        ref_links: [{ url: 'https://example.com/x', label: 'X' }],
+      } as any);
+
+      expect(prisma.wishlist.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            mapsLink: 'https://maps.google.com/abc',
+            refLinks: [{ url: 'https://example.com/x', label: 'X' }],
+          }),
+        }),
+      );
+    });
+
+    it('schedules thumbnail resolve in background when maps_link set', async () => {
+      prisma.wishlist.create.mockResolvedValue(wishlistRow());
+      googleMaps.resolveThumbnailFromMapsLink.mockResolvedValue('https://thumb.example.com/a.jpg');
+
+      await service.createWishlist(OWNER, {
+        place_name: 'Pantai',
+        maps_link: 'https://maps.google.com/abc',
+      } as any);
+
+      // allow the setImmediate fire-and-forget to run
+      await new Promise((r) => setTimeout(r, 5));
+
+      expect(googleMaps.resolveThumbnailFromMapsLink).toHaveBeenCalledWith(
+        'https://maps.google.com/abc',
+      );
+      expect(prisma.wishlist.update).toHaveBeenCalledWith({
+        where: { id: 'wish-1' },
+        data: { thumbnailUrl: 'https://thumb.example.com/a.jpg' },
+      });
+    });
+
+    it('does not schedule resolve without maps_link', async () => {
+      prisma.wishlist.create.mockResolvedValue(wishlistRow());
+
+      await service.createWishlist(OWNER, { place_name: 'Pantai' } as any);
+      await new Promise((r) => setTimeout(r, 5));
+
+      expect(googleMaps.resolveThumbnailFromMapsLink).not.toHaveBeenCalled();
     });
   });
 
@@ -115,6 +192,54 @@ describe('WishlistService', () => {
           }),
         }),
       );
+    });
+
+    it('backfills thumbnails for wishlists with maps link but no thumbnail', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([
+        wishlistRow({ id: 'wish-1', mapsLink: 'https://maps.google.com/a', thumbnailUrl: null }),
+        wishlistRow({ id: 'wish-2', mapsLink: 'https://maps.google.com/b', thumbnailUrl: 'https://img/cover.jpg' }),
+        wishlistRow({ id: 'wish-3', mapsLink: null, thumbnailUrl: null }),
+      ]);
+      googleMaps.resolveThumbnailFromMapsLink.mockResolvedValue('https://thumb.example.com/x.jpg');
+
+      await service.listWishlists(OWNER, {});
+      await new Promise((r) => setTimeout(r, 5));
+
+      // only wish-1 lacks a thumbnail and has a maps link → resolved
+      expect(googleMaps.resolveThumbnailFromMapsLink).toHaveBeenCalledWith(
+        'https://maps.google.com/a',
+      );
+      expect(googleMaps.resolveThumbnailFromMapsLink).not.toHaveBeenCalledWith(
+        'https://maps.google.com/b',
+      );
+      expect(prisma.wishlist.update).toHaveBeenCalledWith({
+        where: { id: 'wish-1' },
+        data: { thumbnailUrl: 'https://thumb.example.com/x.jpg' },
+      });
+    });
+
+    it('upgrades Yandex fallback thumbnails to real photos on backfill', async () => {
+      prisma.wishlist.findMany.mockResolvedValue([
+        wishlistRow({
+          id: 'wish-y',
+          mapsLink: 'https://maps.google.com/y',
+          thumbnailUrl: 'https://static-maps.yandex.ru/1.x/?ll=107.5%2C-6.8&z=15&size=400%2C300',
+        }),
+      ]);
+      googleMaps.resolveThumbnailFromMapsLink.mockResolvedValue(
+        'https://lh3.googleusercontent.com/PHOTO',
+      );
+
+      await service.listWishlists(OWNER, {});
+      await new Promise((r) => setTimeout(r, 5));
+
+      expect(googleMaps.resolveThumbnailFromMapsLink).toHaveBeenCalledWith(
+        'https://maps.google.com/y',
+      );
+      expect(prisma.wishlist.update).toHaveBeenCalledWith({
+        where: { id: 'wish-y' },
+        data: { thumbnailUrl: 'https://lh3.googleusercontent.com/PHOTO' },
+      });
     });
   });
 
@@ -195,6 +320,7 @@ describe('WishlistService', () => {
             placeName: 'Pantai Tanjung Aan',
             locationLabel: 'Lombok',
             mapsLink: 'https://maps.google.com/xyz',
+            refLinks: [{ url: 'https://example.com/guide', label: 'Panduan' }],
           }),
         }),
       );

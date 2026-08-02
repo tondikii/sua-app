@@ -44,13 +44,11 @@ export class ActivitySerializer {
       location_label: activity.locationLabel,
       maps_link: activity.mapsLink,
       ref_links: activity.refLinks || [],
-      cover: {
-        source: activity.coverSource,
-        icon: activity.coverIcon,
-        document_id: activity.coverDocumentId,
-        thumbnail_url:
-          activity.thumbnailUrl || coverThumbnailUrl || coverDocument?.storageUrl || null,
-      },
+      cover_source: activity.coverSource,
+      cover_icon: activity.coverIcon,
+      cover_document_id: activity.coverDocumentId,
+      thumbnail_url:
+        activity.thumbnailUrl || coverThumbnailUrl || coverDocument?.storageUrl || null,
       sort_order: activity.sortOrder,
       created_at: activity.createdAt.toISOString(),
       updated_at: activity.updatedAt.toISOString(),

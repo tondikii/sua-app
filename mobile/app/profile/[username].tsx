@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePublicProfile } from '@/features/users/hooks/usePublicProfile';
 import { useUserTrips } from '@/features/users/hooks/useUserTrips';
+import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { TripCard } from '@/features/trips/components/TripCard';
 import { colors } from '@/theme/colors';
@@ -33,7 +34,7 @@ export default function PublicProfileScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.headerBtn}>
           <ChevronLeft size={20} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>@{username}</Text>

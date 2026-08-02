@@ -8,6 +8,8 @@ interface ConvertPayload {
   start_date: string;
   end_date: string;
   is_all_day?: boolean;
+  start_time?: string;
+  end_time?: string;
 }
 
 export function useConvertToTrip(wishlistId: string) {

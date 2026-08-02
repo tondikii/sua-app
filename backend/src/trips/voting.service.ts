@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PollSerializer } from './serializers/poll.serializer';
+import type { PollType } from '@atur-perjalanan/shared-types';
 
 const USER_SUMMARY_SELECT = {
   id: true,
@@ -22,6 +23,7 @@ export class VotingService {
   /**
    * List all polls for a trip (tanggal/aktivitas/lainnya) with tallies.
    * Includes current user's votes and creator info per poll.
+   * Polls whose deadline has passed are auto-marked `expired` first.
    */
   async listPolls(tripId: string, userId: string) {
     const trip = await this.prisma.trip.findFirst({
@@ -44,6 +46,13 @@ export class VotingService {
       });
     }
 
+    // Auto-expire active polls whose deadline has passed (Screen 72).
+    const now = new Date();
+    await this.prisma.tripPoll.updateMany({
+      where: { tripId, status: 'active', deadline: { lt: now } },
+      data: { status: 'expired' },
+    });
+
     const polls = await this.prisma.tripPoll.findMany({
       where: { tripId, status: { not: 'cancelled' } },
       orderBy: { createdAt: 'asc' },
@@ -51,7 +60,9 @@ export class VotingService {
         creator: { select: USER_SUMMARY_SELECT },
         options: {
           orderBy: { sortOrder: 'asc' },
-          include: { votes: true },
+          include: {
+            votes: { include: { user: { select: USER_SUMMARY_SELECT } } },
+          },
         },
       },
     });
@@ -71,22 +82,28 @@ export class VotingService {
   }
 
   /**
-   * Create a new poll (aktivitas/lainnya only — tanggal is auto-created via M4).
-   * Enforces: max 1 active poll per poll_type per trip.
-   * Participants only.
+   * Create a new poll (tanggal/aktivitas/lainnya).
+   * Enforces: max 1 active poll per poll_type per trip (tanggal may only be
+   * re-created after the previous one is locked/expired). Participants only.
    */
   async createPoll(tripId: string, userId: string, dto: any) {
-    if (!['aktivitas', 'lainnya'].includes(dto.poll_type)) {
+    if (!['tanggal', 'aktivitas', 'lainnya'].includes(dto.poll_type)) {
       throw new BadRequestException({
         code: 'INVALID_POLL_TYPE',
-        message: "poll_type must be 'aktivitas' or 'lainnya'",
+        message: "poll_type must be 'tanggal', 'aktivitas' or 'lainnya'",
       });
     }
 
-    if (dto.options.length < 2 || dto.options.length > 10) {
+    // Normalize options: plain string -> { label }
+    const normalizedOptions: Array<{ label: string; candidate_id?: string }> = dto.options.map(
+      (opt: string | { label: string; candidate_id?: string }) =>
+        typeof opt === 'string' ? { label: opt } : opt,
+    );
+
+    if (normalizedOptions.length < 1 || normalizedOptions.length > 10) {
       throw new BadRequestException({
         code: 'INVALID_OPTIONS_COUNT',
-        message: 'Must provide 2–10 options',
+        message: 'Must provide 1–10 options',
       });
     }
 
@@ -109,7 +126,7 @@ export class VotingService {
 
     // Check: max 1 active poll per poll_type
     const existingActive = await this.prisma.tripPoll.findFirst({
-      where: { tripId, pollType: dto.poll_type as 'aktivitas' | 'lainnya', status: 'active' },
+      where: { tripId, pollType: dto.poll_type as PollType, status: 'active' },
     });
 
     if (existingActive) {
@@ -123,7 +140,7 @@ export class VotingService {
       const created = await tx.tripPoll.create({
         data: {
           tripId,
-          pollType: dto.poll_type as 'aktivitas' | 'lainnya',
+          pollType: dto.poll_type as PollType,
           title: dto.title,
           status: 'active',
           deadline: dto.deadline ? new Date(dto.deadline) : null,
@@ -132,11 +149,12 @@ export class VotingService {
       });
 
       await Promise.all(
-        dto.options.map((label: string, idx: number) =>
+        normalizedOptions.map((opt, idx) =>
           tx.tripPollOption.create({
             data: {
               pollId: created.id,
-              label,
+              label: opt.label,
+              candidateId: opt.candidate_id ?? null,
               sortOrder: idx,
             },
           }),
@@ -153,12 +171,108 @@ export class VotingService {
         creator: { select: USER_SUMMARY_SELECT },
         options: {
           orderBy: { sortOrder: 'asc' },
-          include: { votes: true },
+          include: {
+            votes: { include: { user: { select: USER_SUMMARY_SELECT } } },
+          },
         },
       },
     });
 
     return PollSerializer.toList(full!, full!.options, full!.creator, null);
+  }
+
+  /**
+   * Update an active poll (creator only): title, deadline, and options are
+   * replaced (existing votes are dropped). Used by Screen 66/67 edit flow.
+   */
+  async updatePoll(tripId: string, pollId: string, userId: string, dto: any) {
+    const poll = await this.prisma.tripPoll.findFirst({
+      where: { id: pollId, tripId },
+    });
+
+    if (!poll) {
+      throw new NotFoundException({ code: 'POLL_NOT_FOUND', message: 'Poll not found' });
+    }
+
+    const trip = await this.prisma.trip.findUnique({
+      where: { id: tripId },
+      select: { creatorId: true },
+    });
+
+    if (trip?.creatorId !== userId) {
+      throw new ForbiddenException({
+        code: 'NOT_TRIP_CREATOR',
+        message: 'Only the trip creator can edit polls',
+      });
+    }
+
+    if (poll.status !== 'active') {
+      throw new BadRequestException({
+        code: 'POLL_NOT_ACTIVE',
+        message: `Cannot edit a ${poll.status} poll`,
+      });
+    }
+
+    if (dto.options && (dto.options.length < 1 || dto.options.length > 10)) {
+      throw new BadRequestException({
+        code: 'INVALID_OPTIONS_COUNT',
+        message: 'Must provide 1–10 options',
+      });
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.options) {
+        const normalizedOptions: Array<{ label: string; candidate_id?: string }> = dto.options.map(
+          (opt: string | { label: string; candidate_id?: string }) =>
+            typeof opt === 'string' ? { label: opt } : opt,
+        );
+        // Replace options: drop votes + old options, create fresh ones.
+        const oldOptions = await tx.tripPollOption.findMany({ where: { pollId } });
+        await tx.tripPollVote.deleteMany({
+          where: { optionId: { in: oldOptions.map((o) => o.id) } },
+        });
+        await tx.tripPollOption.deleteMany({ where: { pollId } });
+        await Promise.all(
+          normalizedOptions.map((opt, idx) =>
+            tx.tripPollOption.create({
+              data: {
+                pollId,
+                label: opt.label,
+                candidateId: opt.candidate_id ?? null,
+                sortOrder: idx,
+              },
+            }),
+          ),
+        );
+      }
+
+      await tx.tripPoll.update({
+        where: { id: pollId },
+        data: {
+          title: dto.title ?? poll.title,
+          deadline: dto.deadline !== undefined ? (dto.deadline ? new Date(dto.deadline) : null) : poll.deadline,
+        },
+      });
+    });
+
+    const full = await this.prisma.tripPoll.findUnique({
+      where: { id: pollId },
+      include: {
+        creator: { select: USER_SUMMARY_SELECT },
+        options: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            votes: { include: { user: { select: USER_SUMMARY_SELECT } } },
+          },
+        },
+      },
+    });
+
+    const viewerVote = await this.prisma.tripPollVote.findFirst({
+      where: { pollId, userId },
+    });
+
+    return PollSerializer.toList(full!, full!.options, full!.creator, viewerVote);
   }
 
   /**
@@ -355,7 +469,7 @@ export class VotingService {
       });
     }
 
-    if (poll.status !== 'active') {
+    if (poll.status !== 'active' && poll.status !== 'expired') {
       throw new BadRequestException({
         code: 'POLL_NOT_ACTIVE',
         message: `Cannot lock a ${poll.status} poll`,
@@ -478,10 +592,10 @@ export class VotingService {
       });
     }
 
-    if (poll.status !== 'active') {
+    if (poll.status !== 'active' && poll.status !== 'expired') {
       throw new BadRequestException({
         code: 'POLL_NOT_ACTIVE',
-        message: 'Can only delete active polls',
+        message: 'Can only delete active or expired polls',
       });
     }
 

@@ -9,11 +9,13 @@ import {
   Alert,
   Image,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUpdateProfile } from '@/features/users/hooks/useUpdateProfile';
+import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { ChevronRight } from '@/components/icons/ChevronRight';
 import { HelpCircle } from '@/components/icons/HelpCircle';
@@ -54,6 +56,7 @@ export default function SettingsScreen() {
   const [view, setView] = useState<SettingsView>('main');
   const [bio, setBio] = useState(user?.bio ?? '');
   const [website, setWebsite] = useState(user?.website_url ?? '');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleSave = useCallback(async () => {
     try {
@@ -65,11 +68,21 @@ export default function SettingsScreen() {
   }, [bio, website, updateProfile]);
 
   const handleSignOut = useCallback(() => {
+    const doSignOut = () => {
+      void signOut().then(() => router.replace('/(auth)/sign-in'));
+    };
+    // react-native-web's Alert.alert is a no-op stub, so confirm via window.confirm on web.
+    if (Platform.OS === 'web') {
+      if (window.confirm('Kamu akan keluar dari akun di perangkat ini.')) {
+        doSignOut();
+      }
+      return;
+    }
     Alert.alert('Keluar?', 'Kamu akan keluar dari akun di perangkat ini.', [
       { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: () => signOut() },
+      { text: 'Keluar', style: 'destructive', onPress: doSignOut },
     ]);
-  }, [signOut]);
+  }, [router, signOut]);
 
   // Edit profile view
   if (view === 'edit') {
@@ -127,12 +140,14 @@ export default function SettingsScreen() {
               <Text style={styles.editLabel}>Bio</Text>
               <Text style={styles.editCounter}>{bio.length} / 150</Text>
             </View>
-            <View style={[styles.editInputRow, styles.editTextAreaRow]}>
+            <View style={[styles.editInputRow, styles.editTextAreaRow, focusedField === 'bio' && styles.editInputRowFocused]}>
               <Text style={[styles.editInputIconText, { marginTop: 2, flexShrink: 0 }]}>≡</Text>
               <TextInput
                 style={[styles.editTextAreaInput, webOutlineNone]}
                 value={bio}
                 onChangeText={(t) => setBio(t.slice(0, 150))}
+                onFocus={() => setFocusedField('bio')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="Ceritakan tentang dirimu..."
                 placeholderTextColor={colors.mutedLight}
                 multiline
@@ -145,12 +160,14 @@ export default function SettingsScreen() {
           {/* Website */}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Website / Sosial Media</Text>
-            <View style={styles.editInputRow}>
+            <View style={[styles.editInputRow, focusedField === 'website' && styles.editInputRowFocused]}>
               <Globe size={16} color={colors.muted} />
               <TextInput
                 style={[styles.editFieldInput, webOutlineNone]}
                 value={website}
                 onChangeText={setWebsite}
+                onFocus={() => setFocusedField('website')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="instagram.com/username"
                 placeholderTextColor={colors.mutedLight}
                 autoCapitalize="none"
@@ -161,8 +178,17 @@ export default function SettingsScreen() {
 
         {/* Sticky footer save button */}
         <View style={styles.editFooter}>
-          <TouchableOpacity style={styles.saveFullBtn} onPress={handleSave} activeOpacity={0.8}>
-            <Text style={styles.saveFullBtnText}>Simpan Perubahan</Text>
+          <TouchableOpacity
+            style={[styles.saveFullBtn, updateProfile.isPending && { opacity: 0.7 }]}
+            onPress={handleSave}
+            disabled={updateProfile.isPending}
+            activeOpacity={0.8}
+          >
+            {updateProfile.isPending ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.saveFullBtnText}>Simpan Perubahan</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -174,7 +200,7 @@ export default function SettingsScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.headerBtn}>
           <ChevronLeft size={18} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Pengaturan</Text>
@@ -363,6 +389,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: colors.border,
+  },
+  editInputRowFocused: {
+    borderColor: colors.coral,
+    borderWidth: 2,
   },
   editInputText: { fontSize: 15, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, flex: 1 },
   editInputIconText: { fontSize: 16, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },

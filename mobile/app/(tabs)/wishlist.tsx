@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,16 @@ import {
   Modal,
   Platform,
   ScrollView,
+  Linking,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, G } from 'react-native-svg';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWishlists } from '@/features/wishlist/hooks/useWishlists';
 import { useWishlistTags } from '@/features/wishlist/hooks/useWishlistTags';
 import { useCreateWishlist } from '@/features/wishlist/hooks/useCreateWishlist';
 import { useUpdateWishlist } from '@/features/wishlist/hooks/useUpdateWishlist';
 import { useDeleteWishlist } from '@/features/wishlist/hooks/useDeleteWishlist';
-import { useConvertToTrip } from '@/features/wishlist/hooks/useConvertToTrip';
 import { Plus } from '@/components/icons/Plus';
 import { X } from '@/components/icons/X';
 import { MapPin } from '@/components/icons/MapPin';
@@ -28,11 +28,15 @@ import { Trash2 } from '@/components/icons/Trash2';
 import { MoreHorizontal } from '@/components/icons/MoreHorizontal';
 import { Pencil } from '@/components/icons/Pencil';
 import { Search } from '@/components/icons/Search';
-import { ChevronRight } from '@/components/icons/ChevronRight';
+import { Navigation } from '@/components/icons/Navigation';
+import { Link2 } from '@/components/icons/Link2';
+import { Compass } from '@/components/icons/Compass';
+import { AlertCircle } from '@/components/icons/AlertCircle';
+import { Clock } from '@/components/icons/Clock';
+import { TagInput } from '@/components/TagInput';
 import { colors } from '@/theme/colors';
-import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
-import type { WishlistItem, PriorityLevel } from '@atur-perjalanan/shared-types';
+import type { WishlistItem, PriorityLevel, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
@@ -86,6 +90,8 @@ function WishlistGridCard({
   onOpenMenu: () => void;
 }) {
   const pMeta = PRIORITY_META[item.priority_level] ?? PRIORITY_META.medium;
+  const visibleTags = item.tags.slice(0, 2);
+  const overflowTags = item.tags.length - visibleTags.length;
 
   return (
     <TouchableOpacity style={styles.gridCard} onPress={onPress} activeOpacity={0.8}>
@@ -100,28 +106,32 @@ function WishlistGridCard({
         <View style={[styles.priorityBadge, { backgroundColor: pMeta.bg, borderColor: pMeta.color + '25' }]}>
           <Text style={[styles.priorityBadgeText, { color: pMeta.color }]}>{pMeta.label}</Text>
         </View>
-        <TouchableOpacity style={styles.navIcon} activeOpacity={0.7}>
-          <ChevronRight size={13} color={colors.teal} />
-        </TouchableOpacity>
       </View>
       <View style={styles.gridCardBody}>
-        <Text style={styles.gridCardTitle} numberOfLines={1}>{item.place_name}</Text>
-        <TouchableOpacity style={styles.menuBtn} onPress={onOpenMenu} activeOpacity={0.7}>
-          <MoreHorizontal size={15} color={colors.muted} />
-        </TouchableOpacity>
+        <View style={styles.gridCardTitleRow}>
+          <Text style={styles.gridCardTitle} numberOfLines={2}>{item.place_name}</Text>
+          <TouchableOpacity style={styles.menuBtn} onPress={onOpenMenu} activeOpacity={0.7} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+            <MoreHorizontal size={15} color={colors.muted} />
+          </TouchableOpacity>
+        </View>
         {item.location_label && (
           <View style={styles.gridCardLocation}>
             <MapPin size={11} color={colors.muted} />
-            <Text style={styles.gridCardLocationText} numberOfLines={1}>{item.location_label}</Text>
+            <Text style={styles.gridCardLocationText} numberOfLines={2}>{item.location_label}</Text>
           </View>
         )}
         {item.tags.length > 0 && (
           <View style={styles.gridCardTags}>
-            {item.tags.slice(0, 2).map((tag, i) => (
+            {visibleTags.map((tag, i) => (
               <View key={i} style={styles.gridCardTagChip}>
                 <Text style={styles.gridCardTagText}>{tag.startsWith('#') ? tag : `#${tag}`}</Text>
               </View>
             ))}
+            {overflowTags > 0 && (
+              <View style={styles.gridCardTagChipOverflow}>
+                <Text style={styles.gridCardTagTextOverflow}>+{overflowTags}</Text>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -129,29 +139,23 @@ function WishlistGridCard({
   );
 }
 
-// ─── Context Menu ─────────────────────────────────────────────────────────────
+// ─── Context Menu (popover anchored di card) ────────────────────────────────
 
 function WishlistContextMenu({
-  visible,
   onClose,
   onEdit,
   onDelete,
   onConvert,
-  item,
 }: {
-  visible: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onConvert: () => void;
-  item: WishlistItem | null;
 }) {
-  if (!visible || !item) return null;
-
   return (
     <View style={styles.contextMenu}>
       <TouchableOpacity style={styles.contextMenuItem} onPress={onConvert} activeOpacity={0.7}>
-        <ChevronRight size={15} color={colors.teal} />
+        <Compass size={15} color={colors.teal} />
         <Text style={[styles.contextMenuText, { color: colors.teal }]}>Jadikan Perjalanan</Text>
       </TouchableOpacity>
       <View style={styles.contextMenuDivider} />
@@ -217,6 +221,12 @@ function DetailSheet({ visible, onClose, item, onConvert }: {
 }) {
   if (!visible || !item) return null;
   const pMeta = PRIORITY_META[item.priority_level] ?? PRIORITY_META.medium;
+  const visibleTags = item.tags.slice(0, 3);
+  const overflowTags = item.tags.length - visibleTags.length;
+
+  const openLink = useCallback((url: string) => {
+    Linking.openURL(url).catch(() => {});
+  }, []);
 
   return (
     <Modal visible transparent animationType="slide">
@@ -236,20 +246,40 @@ function DetailSheet({ visible, onClose, item, onConvert }: {
             {item.thumbnail_url && (
               <View style={styles.detailImageContainer}>
                 <Image source={{ uri: item.thumbnail_url }} style={styles.detailImage} resizeMode="cover" />
-                <View style={styles.detailImageOverlay} />
+                <LinearGradient
+                  colors={['transparent', 'rgba(26,26,46,0.35)']}
+                  style={styles.detailImageGradient}
+                />
                 <View style={[styles.detailPriorityBadge, { backgroundColor: pMeta.bg }]}>
                   <Text style={[styles.detailPriorityText, { color: pMeta.color }]}>Prioritas {pMeta.label}</Text>
                 </View>
               </View>
             )}
 
+            {/* Info baris: waktu */}
+            {(item.start_time || item.end_time) && (
+              <View style={styles.detailTimeRow}>
+                <Clock size={14} color={colors.charcoal} />
+                <Text style={styles.detailTimeText}>
+                  {item.start_time && item.end_time
+                    ? `${item.start_time} – ${item.end_time}`
+                    : (item.start_time ?? item.end_time)}
+                </Text>
+              </View>
+            )}
+
             {item.tags.length > 0 && (
               <View style={styles.detailTags}>
-                {item.tags.map((tag, i) => (
+                {visibleTags.map((tag, i) => (
                   <View key={i} style={styles.gridCardTagChip}>
                     <Text style={styles.gridCardTagText}>{tag.startsWith('#') ? tag : `#${tag}`}</Text>
                   </View>
                 ))}
+                {overflowTags > 0 && (
+                  <View style={styles.gridCardTagChipOverflow}>
+                    <Text style={styles.gridCardTagTextOverflow}>+{overflowTags}</Text>
+                  </View>
+                )}
               </View>
             )}
 
@@ -262,13 +292,31 @@ function DetailSheet({ visible, onClose, item, onConvert }: {
 
             {item.notes && <Text style={styles.detailNotes}>{item.notes}</Text>}
 
-            {item.link && (
+            {(item.maps_link || item.ref_links.length > 0) && (
               <View>
                 <Text style={styles.detailTautanLabel}>TAUTAN</Text>
-                <TouchableOpacity style={styles.detailLinkRow}>
-                  <ChevronRight size={15} color={colors.teal} />
-                  <Text style={styles.detailLinkText} numberOfLines={1}>{item.link}</Text>
-                </TouchableOpacity>
+                {item.maps_link && (
+                  <TouchableOpacity style={styles.detailLinkRow} onPress={() => openLink(item.maps_link!)} activeOpacity={0.7}>
+                    <Navigation size={15} color={colors.teal} />
+                    <Text style={styles.detailLinkText}>Buka di Google Maps</Text>
+                  </TouchableOpacity>
+                )}
+                {item.ref_links.map((ref, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={styles.detailLinkRow}
+                    onPress={() => openLink(ref.url)}
+                    activeOpacity={0.7}
+                  >
+                    <Link2 size={15} color={colors.teal} />
+                    <View style={styles.detailLinkBody}>
+                      {ref.label?.trim() ? (
+                        <Text style={styles.detailLinkTitle} numberOfLines={1}>{ref.label}</Text>
+                      ) : null}
+                      <Text style={styles.detailLinkUrl} numberOfLines={1}>{ref.url}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
             )}
           </ScrollView>
@@ -350,9 +398,11 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
   const [endTime, setEndTime] = useState('');
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [focusedTime, setFocusedTime] = useState<'start' | 'end' | null>(null);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
-  const [link, setLink] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
+  const [mapsLink, setMapsLink] = useState('');
+  const [refLinks, setRefLinks] = useState<RefLink[]>([{ url: '', label: '' }]);
   const [tags, setTags] = useState<string[]>([]);
   const [titleError, setTitleError] = useState('');
 
@@ -364,9 +414,9 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
       setStartTime(editItem.start_time ?? '');
       setEndTime(editItem.end_time ?? '');
       setNotes(editItem.notes ?? '');
-      setLink(editItem.link ?? '');
+      setMapsLink(editItem.maps_link ?? '');
+      setRefLinks(editItem.ref_links.length > 0 ? editItem.ref_links.map((r) => ({ url: r.url, label: r.label ?? '' })) : [{ url: '', label: '' }]);
       setTags(editItem.tags ?? []);
-      setTagsInput('');
       setTitleError('');
     } else {
       setPlaceName('');
@@ -375,9 +425,9 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
       setStartTime('');
       setEndTime('');
       setNotes('');
-      setLink('');
+      setMapsLink('');
+      setRefLinks([{ url: '', label: '' }]);
       setTags([]);
-      setTagsInput('');
       setTitleError('');
     }
   }, [editItem, visible]);
@@ -391,6 +441,9 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
     }
     setTitleError('');
     try {
+      const filledRefLinks = refLinks
+        .map((r) => ({ url: r.url.trim(), label: r.label?.trim() }))
+        .filter((r) => r.url.length > 0);
       const payload = {
         place_name: placeName.trim(),
         location_label: location.trim() || undefined,
@@ -398,7 +451,8 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
         start_time: startTime || undefined,
         end_time: endTime || undefined,
         notes: notes.trim() || undefined,
-        link: link.trim() || undefined,
+        maps_link: mapsLink.trim() || undefined,
+        ref_links: filledRefLinks.length > 0 ? filledRefLinks : undefined,
         tags: tags.length > 0 ? tags : undefined,
       };
       if (editItem) {
@@ -410,15 +464,26 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
     } catch {
       setTitleError('Terjadi kesalahan');
     }
-  }, [placeName, location, priority, startTime, endTime, notes, link, tags, editItem, mutation, onClose]);
+  }, [placeName, location, priority, startTime, endTime, notes, mapsLink, refLinks, tags, editItem, mutation, onClose]);
 
-  const addTag = useCallback(() => {
-    const trimmed = tagsInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags((prev) => [...prev, trimmed.startsWith('#') ? trimmed : `#${trimmed}`]);
-      setTagsInput('');
-    }
-  }, [tagsInput, tags]);
+  const updateRefLink = useCallback((index: number, patch: Partial<RefLink>) => {
+    setRefLinks((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+  }, []);
+
+  const addRefLink = useCallback(() => {
+    setRefLinks((prev) => [...prev, { url: '', label: '' }]);
+  }, []);
+
+  const removeRefLink = useCallback((index: number) => {
+    setRefLinks((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  }, []);
+
+  const addTag = useCallback((raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const tag = trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+    setTags((prev) => (prev.includes(tag) ? prev : [...prev, tag]));
+  }, []);
 
   const removeTag = useCallback((tag: string) => {
     setTags((prev) => prev.filter((t) => t !== tag));
@@ -439,41 +504,65 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.sheetBody} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={styles.sheetBody} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {/* Nama Aktivitas */}
+            <View style={styles.sheetField}>
+              <Text style={styles.sheetLabel}>Nama Aktivitas <Text style={{ color: colors.coral }}>*</Text></Text>
+              <View style={[styles.sheetInput, styles.sheetInputRow, focusedField === 'placeName' && styles.sheetInputFocused, titleError && styles.sheetInputError]}>
+                <TextInput
+                  style={styles.sheetInputInner}
+                  placeholder="Contoh: Pantai Tanjung Aan"
+                  placeholderTextColor={colors.mutedLight}
+                  value={placeName}
+                  onChangeText={(t) => { setPlaceName(t); if (titleError) setTitleError(''); }}
+                  onFocus={() => setFocusedField('placeName')}
+                  onBlur={() => setFocusedField(null)}
+                />
+                {titleError ? <AlertCircle size={17} color={colors.danger} /> : null}
+              </View>
+              {titleError ? (
+                <View style={styles.errorRow}>
+                  <AlertCircle size={12} color={colors.danger} />
+                  <Text style={styles.errorText}>{titleError}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Tags */}
+            <View style={styles.sheetField}>
+              <Text style={styles.sheetLabel}>Tags</Text>
+              <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
+            </View>
+
             {/* Mulai / Selesai */}
             <View style={styles.timeRow}>
               <View style={[styles.sheetField, { flex: 1 }]}>
                 <Text style={styles.sheetLabel}>Mulai</Text>
-                <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowStartPicker(true); setShowEndPicker(false); }} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={[styles.timeInputBox, focusedTime === 'start' && styles.timeInputBoxFocused]}
+                  onPress={() => { setShowStartPicker(true); setShowEndPicker(false); setFocusedTime('start'); }}
+                  activeOpacity={0.7}
+                >
                   <Text style={[styles.timeValue, !startTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{startTime || '09:00'}</Text>
                 </TouchableOpacity>
               </View>
               <View style={[styles.sheetField, { flex: 1 }]}>
                 <Text style={styles.sheetLabel}>Selesai</Text>
-                <TouchableOpacity style={styles.timeInputBox} onPress={() => { setShowEndPicker(true); setShowStartPicker(false); }} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={[styles.timeInputBox, focusedTime === 'end' && styles.timeInputBoxFocused]}
+                  onPress={() => { setShowEndPicker(true); setShowStartPicker(false); setFocusedTime('end'); }}
+                  activeOpacity={0.7}
+                >
                   <Text style={[styles.timeValue, !endTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{endTime || '16:00'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
             {showStartPicker && (
-              <TimePicker value={startTime || '09:00'} onChange={(t) => { setStartTime(t); setShowStartPicker(false); }} onClose={() => setShowStartPicker(false)} />
+              <TimePicker value={startTime || '09:00'} onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedTime(null); }} onClose={() => { setShowStartPicker(false); setFocusedTime(null); }} />
             )}
             {showEndPicker && (
-              <TimePicker value={endTime || '16:00'} onChange={(t) => { setEndTime(t); setShowEndPicker(false); }} onClose={() => setShowEndPicker(false)} />
+              <TimePicker value={endTime || '16:00'} onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedTime(null); }} onClose={() => { setShowEndPicker(false); setFocusedTime(null); }} />
             )}
-
-            {/* Nama Aktivitas */}
-            <View style={styles.sheetField}>
-              <Text style={styles.sheetLabel}>Nama Aktivitas <Text style={{ color: colors.coral }}>*</Text></Text>
-              <TextInput
-                style={[styles.sheetInput, titleError ? styles.sheetInputError : undefined]}
-                placeholder="Contoh: Pantai Tanjung Aan"
-                placeholderTextColor={colors.mutedLight}
-                value={placeName}
-                onChangeText={(t) => { setPlaceName(t); if (titleError) setTitleError(''); }}
-              />
-              {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
-            </View>
 
             {/* Prioritas */}
             <View style={styles.sheetField}>
@@ -498,49 +587,102 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
             {/* Lokasi */}
             <View style={styles.sheetField}>
               <Text style={styles.sheetLabel}>Lokasi</Text>
-              <TextInput style={styles.sheetInput} placeholder="Nama tempat atau alamat" placeholderTextColor={colors.mutedLight} value={location} onChangeText={setLocation} />
+              <View style={[styles.sheetInput, styles.sheetInputRow, focusedField === 'location' && styles.sheetInputFocused]}>
+                <MapPin size={16} color={location ? colors.coral : colors.mutedLight} />
+                <TextInput
+                  style={styles.sheetInputInner}
+                  placeholder="Nama tempat atau alamat"
+                  placeholderTextColor={colors.mutedLight}
+                  value={location}
+                  onChangeText={setLocation}
+                  onFocus={() => setFocusedField('location')}
+                  onBlur={() => setFocusedField(null)}
+                />
+              </View>
             </View>
 
-            {/* Notes */}
+            {/* Google Maps */}
+            <View style={styles.sheetField}>
+              <Text style={styles.sheetLabel}>Google Maps</Text>
+              <View style={[styles.sheetInput, styles.sheetInputRow, focusedField === 'mapsLink' && styles.sheetInputFocused]}>
+                <Navigation size={16} color={mapsLink ? colors.teal : colors.mutedLight} />
+                <TextInput
+                  style={styles.sheetInputInner}
+                  placeholder="Tempel link Google Maps..."
+                  placeholderTextColor={colors.mutedLight}
+                  value={mapsLink}
+                  onChangeText={setMapsLink}
+                  onFocus={() => setFocusedField('mapsLink')}
+                  onBlur={() => setFocusedField(null)}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </View>
+            </View>
+
+            {/* Link Lainnya */}
+            <View style={styles.sheetField}>
+              <Text style={styles.sheetLabel}>Link Lainnya</Text>
+              {refLinks.map((ref, index) => (
+                <View key={index} style={styles.refLinkGroup}>
+                  {refLinks.length > 1 && <Text style={styles.refLinkIndex}>Link {index + 1}</Text>}
+                  <Text style={styles.refLinkSubLabel}>URL</Text>
+                  <View style={[styles.sheetInput, styles.sheetInputRow, focusedField === `refUrl-${index}` && styles.sheetInputFocused]}>
+                    <Link2 size={16} color={colors.mutedLight} />
+                    <TextInput
+                      style={styles.sheetInputInner}
+                      placeholder="Tempel link referensi..."
+                      placeholderTextColor={colors.mutedLight}
+                      value={ref.url}
+                      onChangeText={(t) => updateRefLink(index, { url: t })}
+                      onFocus={() => setFocusedField(`refUrl-${index}`)}
+                      onBlur={() => setFocusedField(null)}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="url"
+                    />
+                    {refLinks.length > 1 && (
+                      <TouchableOpacity onPress={() => removeRefLink(index)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <X size={14} color={colors.muted} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {ref.url.trim().length > 0 && (
+                    <>
+                      <Text style={styles.refLinkSubLabel}>Judul tampilan</Text>
+                      <TextInput
+                        style={[styles.sheetInput, focusedField === `refLabel-${index}` && styles.sheetInputFocused]}
+                        placeholder="Kosongkan untuk tampilkan URL"
+                        placeholderTextColor={colors.mutedLight}
+                        value={ref.label}
+                        onChangeText={(t) => updateRefLink(index, { label: t })}
+                        onFocus={() => setFocusedField(`refLabel-${index}`)}
+                        onBlur={() => setFocusedField(null)}
+                      />
+                    </>
+                  )}
+                </View>
+              ))}
+              <TouchableOpacity style={styles.addLinkBtn} onPress={addRefLink} activeOpacity={0.7}>
+                <Text style={styles.addLinkBtnText}>+ Tambah link</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Catatan */}
             <View style={styles.sheetField}>
               <Text style={styles.sheetLabel}>Catatan</Text>
               <TextInput
-                style={[styles.sheetInput, { minHeight: 60 }]}
+                style={[styles.sheetInput, { minHeight: 60 }, focusedField === 'notes' && styles.sheetInputFocused]}
                 placeholder="Tambahkan catatan..."
                 placeholderTextColor={colors.mutedLight}
                 value={notes}
                 onChangeText={setNotes}
+                onFocus={() => setFocusedField('notes')}
+                onBlur={() => setFocusedField(null)}
                 multiline
                 textAlignVertical="top"
               />
-            </View>
-
-            {/* Link */}
-            <View style={styles.sheetField}>
-              <Text style={styles.sheetLabel}>Link Referensi</Text>
-              <TextInput style={styles.sheetInput} placeholder="https://..." placeholderTextColor={colors.mutedLight} value={link} onChangeText={setLink} />
-            </View>
-
-            {/* Tags */}
-            <View style={styles.sheetField}>
-              <Text style={styles.sheetLabel}>Tags</Text>
-              <View style={styles.tagsInputContainer}>
-                {tags.map((tag) => (
-                  <TouchableOpacity key={tag} style={styles.tagChipItem} onPress={() => removeTag(tag)}>
-                    <Text style={styles.tagChipItemText}>{tag}</Text>
-                    <X size={10} color={colors.teal} />
-                  </TouchableOpacity>
-                ))}
-                <TextInput
-                  style={styles.tagInputField}
-                  placeholder="+ Tambah tag..."
-                  placeholderTextColor={colors.mutedLight}
-                  value={tagsInput}
-                  onChangeText={setTagsInput}
-                  onSubmitEditing={addTag}
-                  returnKeyType="done"
-                />
-              </View>
             </View>
           </ScrollView>
 
@@ -568,6 +710,7 @@ export default function WishlistScreen() {
   const [sortTab, setSortTab] = useState<string>('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<WishlistItem | null>(null);
   const [menuTarget, setMenuTarget] = useState<WishlistItem | null>(null);
@@ -612,7 +755,16 @@ export default function WishlistScreen() {
   const handleConvert = useCallback((item: WishlistItem) => {
     setMenuTarget(null);
     setDetailItem(null);
-    router.push(`/trip/create?wishlistId=${item.id}&name=${encodeURIComponent(item.place_name)}`);
+    const params = new URLSearchParams({
+      wishlistId: item.id,
+      name: item.place_name,
+      ...(item.tags.length > 0 ? { tags: item.tags.join(',') } : {}),
+      ...(item.start_time ? { start: item.start_time } : {}),
+      ...(item.end_time ? { end: item.end_time } : {}),
+      ...(item.location_label ? { location: item.location_label } : {}),
+      ...(item.thumbnail_url ? { thumb: item.thumbnail_url } : {}),
+    });
+    router.push(`/trip/create?${params.toString()}`);
   }, [router]);
 
   const handleEndReached = useCallback(() => {
@@ -641,7 +793,7 @@ export default function WishlistScreen() {
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <View style={[styles.searchBar, searchQuery.length > 0 && styles.searchBarFocused]}>
+        <View style={[styles.searchBar, (searchFocused || searchQuery.length > 0) && styles.searchBarFocused]}>
           <Search size={16} color={searchQuery.length > 0 ? colors.coral : colors.muted} />
           <TextInput
             style={[styles.searchInput, webOutlineNone]}
@@ -649,6 +801,8 @@ export default function WishlistScreen() {
             placeholderTextColor={colors.mutedLight}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -662,23 +816,37 @@ export default function WishlistScreen() {
 
       {/* Sort tabs */}
       <View style={styles.sortTabs}>
-        {SORT_TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.sortTab, sortTab === tab.id && styles.sortTabActive]}
-            onPress={() => setSortTab(tab.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.sortTabText, sortTab === tab.id && styles.sortTabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {SORT_TABS.map((tab) => {
+          const active = sortTab === tab.id;
+          const count = tab.id === 'all'
+            ? items.length
+            : items.filter((i) => i.priority_level === tab.id).length;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={[styles.sortTab, active && styles.sortTabActive]}
+              onPress={() => setSortTab(tab.id)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.sortTabText, active && styles.sortTabTextActive]}>
+                {tab.label}
+              </Text>
+              <View style={[styles.sortTabCount, active && styles.sortTabCountActive]}>
+                <Text style={[styles.sortTabCountText, active && styles.sortTabCountTextActive]}>{count}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Tag chips */}
       {tags.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagChipsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tagChipsScroll}
+          contentContainerStyle={styles.tagChipsContainer}
+        >
           <TouchableOpacity
             style={[styles.tagChip, activeTag === null && styles.tagChipActive]}
             onPress={() => setActiveTag(null)}
@@ -731,12 +899,10 @@ export default function WishlistScreen() {
         <>
           <TouchableOpacity style={styles.contextOverlay} activeOpacity={1} onPress={() => setMenuTarget(null)} />
           <WishlistContextMenu
-            visible
             onClose={() => setMenuTarget(null)}
             onEdit={() => handleEdit(menuTarget)}
             onDelete={() => handleDelete(menuTarget)}
             onConvert={() => handleConvert(menuTarget)}
-            item={menuTarget}
           />
         </>
       )}
@@ -760,44 +926,51 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 22, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, letterSpacing: -0.5 },
   addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.coral, alignItems: 'center', justifyContent: 'center', ...shadows.button },
   // Search
-  searchContainer: { paddingHorizontal: 22, paddingBottom: 14 },
+  searchContainer: { paddingHorizontal: 22, paddingTop: 14 },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, gap: 10, borderWidth: 1.5, borderColor: colors.border },
   searchBarFocused: { borderColor: colors.coral, shadowColor: colors.coral, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 2 },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal },
   clearBtn: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
   // Sort tabs
-  sortTabs: { flexDirection: 'row', paddingHorizontal: 22, gap: 8, marginBottom: 12, borderBottomWidth: 1.5, borderBottomColor: colors.border, paddingBottom: 10 },
-  sortTab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: colors.light },
-  sortTabActive: { backgroundColor: colors.coralLight },
-  sortTabText: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },
+  sortTabs: { flexDirection: 'row', paddingHorizontal: 22, gap: 16, marginBottom: 12, borderBottomWidth: 1.5, borderBottomColor: colors.border, paddingTop: 12 },
+  sortTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingBottom: 10, borderBottomWidth: 2.5, borderBottomColor: 'transparent', marginBottom: -1.5 },
+  sortTabActive: { borderBottomColor: colors.coral },
+  sortTabText: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },
   sortTabTextActive: { fontFamily: 'PlusJakartaSans_700Bold', color: colors.coral },
+  sortTabCount: { minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 5, backgroundColor: colors.light, alignItems: 'center', justifyContent: 'center' },
+  sortTabCountActive: { backgroundColor: colors.coralLight },
+  sortTabCountText: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted },
+  sortTabCountTextActive: { color: colors.coral },
   // Tag chips
-  tagChipsContainer: { paddingHorizontal: 22, gap: 8, marginBottom: 12 },
-  tagChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: colors.light, borderWidth: 1, borderColor: colors.border },
+  tagChipsScroll: { flexGrow: 0 },
+  tagChipsContainer: { paddingHorizontal: 22, paddingTop: 10, paddingBottom: 4, gap: 8, alignItems: 'center' },
+  tagChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: colors.light, borderWidth: 1, borderColor: colors.border, flexShrink: 0 },
   tagChipActive: { backgroundColor: colors.teal, borderColor: colors.teal },
   tagChipText: { fontSize: 12, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted },
   tagChipTextActive: { color: colors.white },
   // Grid
-  gridContent: { paddingHorizontal: 22, paddingBottom: 112 },
-  gridRow: { gap: 14, marginBottom: 14 },
-  gridCard: { flex: 1, backgroundColor: colors.white, borderRadius: 20, overflow: 'hidden', ...shadows.card },
+  gridContent: { paddingHorizontal: 22, paddingTop: 6, paddingBottom: 100 },
+  gridRow: { gap: 14, marginBottom: 14, alignItems: 'flex-start' },
+  gridCard: { width: '48%', backgroundColor: colors.white, borderRadius: 20, overflow: 'hidden', ...shadows.card },
   gridCardCover: { height: 118, backgroundColor: colors.light, overflow: 'hidden' },
   gridCardImage: { width: '100%', height: '100%' },
   gridCardPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   priorityBadge: { position: 'absolute', top: 8, left: 8, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
   priorityBadgeText: { fontSize: 9, fontFamily: 'PlusJakartaSans_800ExtraBold' },
-  navIcon: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
-  gridCardBody: { padding: 11, paddingHorizontal: 12, paddingBottom: 13 },
-  gridCardTitle: { fontSize: 13, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, letterSpacing: -0.2, lineHeight: 16.9, marginBottom: 4 },
-  menuBtn: { position: 'absolute', top: 11, right: 12, width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  gridCardBody: { padding: 11, paddingHorizontal: 12, paddingBottom: 13, position: 'relative' },
+  gridCardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4, marginBottom: 4 },
+  gridCardTitle: { flex: 1, fontSize: 13, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, letterSpacing: -0.2, lineHeight: 16.9 },
+  menuBtn: { width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: -2 },
   gridCardLocation: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   gridCardLocationText: { fontSize: 10, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, flex: 1 },
-  gridCardTags: { flexDirection: 'row', gap: 4, marginTop: 6 },
+  gridCardTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   gridCardTagChip: { backgroundColor: colors.tealLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   gridCardTagText: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.teal },
-  // Context menu
+  gridCardTagChipOverflow: { backgroundColor: colors.light, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 20 },
+  gridCardTagTextOverflow: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted },
+  // Context menu (overlay + popover, tidak ter-clip oleh kartu)
   contextOverlay: { ...StyleSheet.absoluteFill as any, zIndex: 30 },
-  contextMenu: { position: 'absolute', top: '50%', left: '50%', transform: [{ translateX: -86 }, { translateY: -80 }], width: 172, backgroundColor: colors.white, borderRadius: 12, paddingVertical: 4, ...shadows.menu, zIndex: 40 },
+  contextMenu: { position: 'absolute', top: '45%', alignSelf: 'center', width: 172, backgroundColor: colors.white, borderRadius: 12, paddingVertical: 4, ...shadows.menu, zIndex: 40 },
   contextMenuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, paddingHorizontal: 14 },
   contextMenuText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
   contextMenuDivider: { height: 1, backgroundColor: colors.border },
@@ -820,21 +993,26 @@ const styles = StyleSheet.create({
   deleteConfirmBtn: { flex: 1, height: 44, borderRadius: 12, backgroundColor: colors.danger, borderWidth: 1.5, borderColor: colors.dangerDark, alignItems: 'center', justifyContent: 'center', ...shadows.button },
   deleteConfirmText: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.white },
   // Detail sheet
-  detailImageContainer: { height: 148, borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
+  detailImageContainer: { width: '100%', aspectRatio: 16 / 9, borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
   detailImage: { width: '100%', height: '100%' },
-  detailImageOverlay: { ...StyleSheet.absoluteFill as any, backgroundColor: 'rgba(26,26,46,0.35)' },
+  detailImageGradient: { ...StyleSheet.absoluteFill as any },
   detailPriorityBadge: { position: 'absolute', bottom: 10, left: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   detailPriorityText: { fontSize: 11, fontFamily: 'PlusJakartaSans_800ExtraBold' },
   detailTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
   detailLocation: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
   detailLocationText: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted },
-  detailNotes: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.charcoal, lineHeight: 20.15, marginBottom: 12 },
+  detailNotes: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, lineHeight: 20.15, marginBottom: 12 },
   detailTautanLabel: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8 },
-  detailLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 11, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, marginBottom: 4 },
+  detailLinkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, marginBottom: 6 },
+  detailLinkBody: { flex: 1, gap: 2 },
+  detailLinkTitle: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
+  detailLinkUrl: { fontSize: 11, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },
   detailLinkText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.teal, flex: 1 },
+  detailTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  detailTimeText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.charcoal },
   // Sheet shared
-  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(26,26,46,0.45)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '85%' },
+  sheetBackdrop: { flex: 1, backgroundColor: 'rgba(26,26,46,0.45)', justifyContent: 'flex-end', alignItems: 'center' },
+  sheet: { backgroundColor: colors.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, maxHeight: '85%', width: '100%', maxWidth: 480, alignSelf: 'center' },
   sheetHandle: { width: 40, height: 5, borderRadius: 20, backgroundColor: colors.border, alignSelf: 'center', marginTop: 14, marginBottom: 6 },
   sheetHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 22, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   sheetTitle: { fontSize: 18, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
@@ -844,8 +1022,19 @@ const styles = StyleSheet.create({
   sheetField: { gap: 6 },
   sheetLabel: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
   sheetInput: { backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, borderWidth: 1.5, borderColor: colors.border, ...webOutlineNone },
+  sheetInputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sheetInputInner: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, padding: 0, ...webOutlineNone },
+  sheetInputFocused: { borderColor: colors.coral, borderWidth: 2 },
   sheetInputError: { borderColor: colors.danger, borderWidth: 2, backgroundColor: colors.dangerLight },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2, paddingLeft: 2 },
+  errorText: { fontSize: 12, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.danger },
+  refLinkGroup: { flexDirection: 'column', gap: 8, marginBottom: 10 },
+  refLinkIndex: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted },
+  refLinkSubLabel: { fontSize: 11, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted, marginBottom: -2 },
+  addLinkBtn: { paddingVertical: 4 },
+  addLinkBtnText: { fontSize: 12, fontFamily: 'PlusJakartaSans_700Bold', color: colors.coral },
   timeInputBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1.5, borderColor: colors.border },
+  timeInputBoxFocused: { borderColor: colors.coral, borderWidth: 2 },
   timeValue: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
   // TimePicker
   timePickerContainer: { marginTop: 8, padding: 12, paddingHorizontal: 10, backgroundColor: colors.white, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, ...shadows.card },
@@ -862,15 +1051,10 @@ const styles = StyleSheet.create({
   timePickerCancelText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted },
   timePickerConfirm: { backgroundColor: colors.coral, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 16 },
   timePickerConfirmText: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.white },
-  errorText: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.danger },
   priorityRow: { flexDirection: 'row', gap: 8 },
   priorityChip: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.light, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center' },
   priorityChipText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted },
   timeRow: { flexDirection: 'row', gap: 12 },
-  tagsInputContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center', backgroundColor: colors.light, borderRadius: 14, padding: 12, paddingHorizontal: 14, borderWidth: 1.5, borderColor: colors.border, minHeight: 44 },
-  tagChipItem: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.tealLight, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  tagChipItemText: { fontSize: 12, fontFamily: 'PlusJakartaSans_700Bold', color: colors.teal },
-  tagInputField: { fontSize: 13, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, minWidth: 80, paddingVertical: 2, ...webOutlineNone },
   // Footer
   sheetFooter: { padding: 16, paddingHorizontal: 22, paddingBottom: 32, borderTopWidth: 1, borderTopColor: colors.border },
   sheetSubmitBtn: { height: 50, borderRadius: 14, backgroundColor: colors.coral, alignItems: 'center', justifyContent: 'center', ...shadows.button },

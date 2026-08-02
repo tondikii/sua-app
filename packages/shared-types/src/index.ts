@@ -68,6 +68,8 @@ export interface TripDetail extends TripSummary {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+  /** Date candidates created with the trip (voting_pending trips). */
+  date_candidates?: DateCandidate[];
 }
 
 export interface DateCandidate {
@@ -89,6 +91,39 @@ export interface TripInvitation {
   status: InvitationStatus;
   method: 'username' | 'email';
   invited_email: string | null;
+  created_at: string;
+}
+
+/** Basic invitation payload returned by POST /trips/:id/invitations. */
+export interface InvitationBasic {
+  id: string;
+  trip_id: string;
+  invited_by: string;
+  invited_user_id: string | null;
+  invited_email: string | null;
+  method: 'username' | 'email';
+  status: InvitationStatus;
+  /** Whether the invitation email was actually delivered via SMTP (email invites only). */
+  email_delivered: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Managed invitation returned by GET /trips/:tripId/members (pending + declined). */
+export interface ManagedInvitation {
+  id: string;
+  method: 'username' | 'email';
+  status: InvitationStatus;
+  /** Derived UI state: email_sent | pending_accept | rejected. */
+  state: 'email_sent' | 'pending_accept' | 'rejected';
+  invited_user: {
+    id: string;
+    name: string;
+    username: string;
+    avatar_url: string | null;
+  } | null;
+  invited_email: string | null;
+  invited_by: string;
   created_at: string;
 }
 
@@ -116,6 +151,7 @@ export interface TripActivity {
   ref_links: RefLink[];
   cover_source: CoverSource;
   cover_icon: string | null;
+  cover_document_id: string | null;
   thumbnail_url: string | null;
   sort_order: number;
   created_at: string;
@@ -134,6 +170,8 @@ export interface PollOption {
   vote_count: number;
   has_voted: boolean;
   candidate_id: string | null;
+  /** Users who voted for this option (for stacked avatars). */
+  voters: UserSummary[];
 }
 
 export interface TripPoll {
@@ -147,6 +185,25 @@ export interface TripPoll {
   created_by: UserSummary;
   options: PollOption[];
   created_at: string;
+}
+
+/** Payload for creating or updating a poll (PATCH /polls/:id). */
+export interface PollOptionInput {
+  label: string;
+  candidate_id?: string;
+}
+
+export interface CreatePollPayload {
+  title: string;
+  poll_type: PollType;
+  options: (string | PollOptionInput)[];
+  deadline?: string;
+}
+
+export interface UpdatePollPayload {
+  title?: string;
+  options?: (string | PollOptionInput)[];
+  deadline?: string | null;
 }
 
 // ── Chat ─────────────────────────────────────────────────────
@@ -211,7 +268,8 @@ export interface WishlistItem {
   start_time: string | null;
   end_time: string | null;
   location_label: string | null;
-  link: string | null;
+  maps_link: string | null;
+  ref_links: RefLink[];
   notes: string | null;
   tags: string[];
   priority_level: PriorityLevel;

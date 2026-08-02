@@ -33,6 +33,7 @@ type PollVoteLike = {
   optionId: string;
   userId: string;
   createdAt: Date;
+  user?: UserLike;
 };
 
 export class PollSerializer {
@@ -61,6 +62,16 @@ export class PollSerializer {
         sort_order: opt.sortOrder,
         candidate_id: opt.candidateId,
         vote_count: opt.votes?.length ?? 0,
+        has_voted: viewerVote?.optionId === opt.id,
+        voters: (opt.votes ?? [])
+          .map((v) => v.user)
+          .filter((u): u is UserLike => Boolean(u))
+          .map((u) => ({
+            id: u.id,
+            name: u.name,
+            username: u.username,
+            avatar_url: u.avatarUrl,
+          })),
       })),
       voted_option_id: viewerVote?.optionId ?? null,
       created_at: poll.createdAt.toISOString(),

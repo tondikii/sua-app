@@ -19,8 +19,6 @@ interface TimePickerProps {
   label?: string;
   startLabel?: string;
   endLabel?: string;
-  /** When true, the input box shows a coral focus border */
-  focused?: boolean;
 }
 
 export function TimePicker({
@@ -30,7 +28,6 @@ export function TimePicker({
   label,
   startLabel = 'Mulai',
   endLabel = 'Selesai',
-  focused = false,
 }: TimePickerProps) {
   const [h, m] = value.split(':');
   const [selHour, setSelHour] = useState(h);

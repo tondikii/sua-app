@@ -438,6 +438,43 @@ export class TripsService {
     };
   }
 
+  /**
+   * Leave a trip as a member — removes yourself from participants.
+   * The creator cannot leave (they own the trip); they should delete instead.
+   */
+  async leaveTrip(tripId: string, userId: string): Promise<void> {
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: tripId },
+      select: { id: true, creatorId: true },
+    });
+
+    if (!trip) {
+      throw new NotFoundException({ code: 'TRIP_NOT_FOUND', message: 'Trip not found' });
+    }
+
+    if (trip.creatorId === userId) {
+      throw new BadRequestException({
+        code: 'CREATOR_CANNOT_LEAVE',
+        message: 'The trip creator cannot leave the trip',
+      });
+    }
+
+    const participant = await this.prisma.tripParticipant.findUnique({
+      where: { tripId_userId: { tripId, userId } },
+    });
+
+    if (!participant) {
+      throw new NotFoundException({
+        code: 'MEMBER_NOT_FOUND',
+        message: 'You are not a member of this trip',
+      });
+    }
+
+    await this.prisma.tripParticipant.delete({
+      where: { tripId_userId: { tripId, userId } },
+    });
+  }
+
   /** Remove a member — creator only; creator cannot remove themselves. */
   async removeMember(tripId: string, memberId: string, userId: string): Promise<void> {
     const trip = await this.assertCreator(tripId, userId);

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
-import type { UserSummary, TripInvitation } from '@atur-perjalanan/shared-types';
+import type { UserSummary, ManagedInvitation } from '@atur-perjalanan/shared-types';
 
 export interface Member extends UserSummary {
   joined_at: string;
@@ -10,7 +10,7 @@ export interface Member extends UserSummary {
 export interface MembersResponse {
   is_creator: boolean;
   members: Member[];
-  invitations: TripInvitation[];
+  invitations: ManagedInvitation[];
 }
 
 export function useMembers(tripId: string) {

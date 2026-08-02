@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useNotifications } from '@/features/notifications/hooks/useNotification
 import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount';
 import { useMarkAsRead } from '@/features/notifications/hooks/useMarkAsRead';
 import { useRespondInvitation } from '@/features/invitations/hooks/useRespondInvitation';
+import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { Bell } from '@/components/icons/Bell';
 import { Calendar } from '@/components/icons/Calendar';
@@ -65,16 +66,22 @@ function NotificationCard({
   onPress,
   onAccept,
   onDecline,
+  respondingAction,
+  resolved,
 }: {
   notification: AppNotification;
   onPress: () => void;
   onAccept?: () => void;
   onDecline?: () => void;
+  respondingAction?: 'accept' | 'decline' | null;
+  resolved?: boolean;
 }) {
   const { icon, bg } = getNotificationIcon(notification.type);
   const actor = notification.actor;
   const timeText = formatNotificationTime(notification.created_at);
   const text = getNotificationText(notification);
+  const accepted = notification.payload?.accepted === true;
+  const isResolved = resolved ?? notification.payload?.resolved === true;
 
   return (
     <TouchableOpacity
@@ -117,14 +124,40 @@ function NotificationCard({
           </Text>
           <Text style={styles.timeText}>{timeText}</Text>
 
-          {notification.type === 'invite' && onAccept && onDecline && (
+          {notification.type === 'invite' && onAccept && onDecline && !isResolved && (
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.acceptBtn} onPress={onAccept} activeOpacity={0.7}>
-                <Text style={styles.acceptBtnText}>Terima</Text>
+              <TouchableOpacity
+                style={[styles.acceptBtn, respondingAction === 'accept' && styles.btnDisabled]}
+                onPress={onAccept}
+                disabled={respondingAction !== null}
+                activeOpacity={0.7}
+              >
+                {respondingAction === 'accept' ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Text style={styles.acceptBtnText}>Terima</Text>
+                )}
               </TouchableOpacity>
-              <TouchableOpacity style={styles.declineBtn} onPress={onDecline} activeOpacity={0.7}>
-                <Text style={styles.declineBtnText}>Tolak</Text>
+              <TouchableOpacity
+                style={[styles.declineBtn, respondingAction === 'decline' && styles.btnDisabled]}
+                onPress={onDecline}
+                disabled={respondingAction !== null}
+                activeOpacity={0.7}
+              >
+                {respondingAction === 'decline' ? (
+                  <ActivityIndicator size="small" color={colors.muted} />
+                ) : (
+                  <Text style={styles.declineBtnText}>Tolak</Text>
+                )}
               </TouchableOpacity>
+            </View>
+          )}
+
+          {notification.type === 'invite' && isResolved && (
+            <View style={styles.resolvedBadge}>
+              <Text style={[styles.resolvedBadgeText, accepted ? styles.resolvedBadgeAccepted : styles.resolvedBadgeDeclined]}>
+                {accepted ? '✓ Undangan diterima' : '✕ Undangan ditolak'}
+              </Text>
             </View>
           )}
 
@@ -150,6 +183,7 @@ export default function NotificationsScreen() {
   const { data: unreadData } = useUnreadCount();
   const { markOne, markAll } = useMarkAsRead();
   const respondInvitation = useRespondInvitation();
+  const [responding, setResponding] = useState<{ id: string; action: 'accept' | 'decline' } | null>(null);
 
   const notifications = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
@@ -173,7 +207,11 @@ export default function NotificationsScreen() {
       const tripId = notification.trip?.id;
       const invitationId = notification.payload?.invitation_id as string | undefined;
       if (tripId && invitationId) {
-        respondInvitation.mutate({ tripId, invitationId, accept: true });
+        setResponding({ id: notification.id, action: 'accept' });
+        respondInvitation.mutate(
+          { tripId, invitationId, accept: true },
+          { onSettled: () => setResponding(null) },
+        );
       }
     },
     [markOne, respondInvitation],
@@ -187,7 +225,11 @@ export default function NotificationsScreen() {
       const tripId = notification.trip?.id;
       const invitationId = notification.payload?.invitation_id as string | undefined;
       if (tripId && invitationId) {
-        respondInvitation.mutate({ tripId, invitationId, accept: false });
+        setResponding({ id: notification.id, action: 'decline' });
+        respondInvitation.mutate(
+          { tripId, invitationId, accept: false },
+          { onSettled: () => setResponding(null) },
+        );
       }
     },
     [markOne, respondInvitation],
@@ -204,9 +246,10 @@ export default function NotificationsScreen() {
         onPress={() => handlePressNotification(item)}
         onAccept={item.type === 'invite' ? () => handleAcceptInvite(item) : undefined}
         onDecline={item.type === 'invite' ? () => handleDeclineInvite(item) : undefined}
+        respondingAction={responding?.id === item.id ? responding.action : null}
       />
     ),
-    [handlePressNotification, handleAcceptInvite, handleDeclineInvite],
+    [handlePressNotification, handleAcceptInvite, handleDeclineInvite, responding],
   );
 
   return (
@@ -214,7 +257,7 @@ export default function NotificationsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.backButton}>
           <ChevronLeft size={20} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifikasi</Text>
@@ -385,6 +428,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginTop: 12,
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+  resolvedBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: colors.light,
+  },
+  resolvedBadgeText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_700Bold',
+  },
+  resolvedBadgeAccepted: {
+    color: colors.teal,
+  },
+  resolvedBadgeDeclined: {
+    color: colors.danger,
   },
   acceptBtn: {
     height: 36,

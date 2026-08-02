@@ -3,6 +3,7 @@ import { Redirect, Tabs, useRouter, usePathname } from 'expo-router';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthProvider';
+import { setLastTab } from '@/lib/navigation';
 import { Home } from '@/components/icons/Home';
 import { Search } from '@/components/icons/Search';
 import { Heart } from '@/components/icons/Heart';
@@ -11,12 +12,14 @@ import { Plus } from '@/components/icons/Plus';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 
+const MAX_WIDTH = 430;
+
 const TABS = [
-  { name: 'index', label: 'Beranda', Icon: Home },
-  { name: 'search', label: 'Cari', Icon: Search },
-  { name: '_fab', label: '', Icon: Plus, isFab: true },
-  { name: 'wishlist', label: 'Wishlist', Icon: Heart },
-  { name: 'profile', label: 'Profil', Icon: User },
+  { name: 'index', label: 'Beranda', route: '/', Icon: Home },
+  { name: 'search', label: 'Cari', route: '/search', Icon: Search },
+  { name: '_fab', label: '', route: '/trip/create', Icon: Plus, isFab: true },
+  { name: 'wishlist', label: 'Wishlist', route: '/wishlist', Icon: Heart },
+  { name: 'profile', label: 'Profil', route: '/profile', Icon: User },
 ];
 
 function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
@@ -29,11 +32,12 @@ function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
     return pathname.includes(`/${name}`);
   };
 
-  const handlePress = (name: string, isFab?: boolean) => {
+  const handlePress = (name: string, isFab?: boolean, route?: string) => {
     if (isFab) {
       router.push('/trip/create');
       return;
     }
+    if (route) setLastTab(route);
     navigation.navigate(name);
   };
 
@@ -58,7 +62,7 @@ function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
           <TouchableOpacity
             key={tab.name}
             style={styles.tab}
-            onPress={() => handlePress(tab.name)}
+            onPress={() => handlePress(tab.name, false, tab.route)}
             activeOpacity={0.7}
           >
             <Icon size={22} color={active ? colors.coral : colors.muted} />
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     height: 88,
     ...Platform.select({
-      web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, zIndex: 100 },
+      web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, maxWidth: MAX_WIDTH, marginHorizontal: 'auto', zIndex: 100 },
       default: { position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 100 },
     }),
     ...shadows.elevated,

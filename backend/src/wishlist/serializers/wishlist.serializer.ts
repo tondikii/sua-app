@@ -8,7 +8,8 @@ type WishlistLike = {
   startTime: Date | null;
   endTime: Date | null;
   locationLabel: string | null;
-  link: string | null;
+  mapsLink: string | null;
+  refLinks: unknown;
   notes: string | null;
   tags: unknown;
   priorityLevel: string;
@@ -25,7 +26,8 @@ export class WishlistSerializer {
       start_time: toTime(wishlist.startTime),
       end_time: toTime(wishlist.endTime),
       location_label: wishlist.locationLabel,
-      link: wishlist.link,
+      maps_link: wishlist.mapsLink,
+      ref_links: (wishlist.refLinks as { url: string; label?: string }[]) ?? [],
       notes: wishlist.notes,
       tags: (wishlist.tags as string[]) ?? [],
       priority_level: wishlist.priorityLevel,

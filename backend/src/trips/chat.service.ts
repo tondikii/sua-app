@@ -52,9 +52,27 @@ export class ChatService {
     const hasMore = messages.length > take;
     const results = hasMore ? messages.slice(0, take) : messages;
 
+    // Unread badge: count of messages from others after the user's read cursor.
+    const readRow = await this.prisma.tripMessageRead.findUnique({
+      where: { tripId_userId: { tripId, userId } },
+    });
+    const unreadCount = readRow
+      ? await this.prisma.tripMessage.count({
+          where: {
+            tripId,
+            deletedAt: null,
+            createdAt: { gt: readRow.lastReadAt },
+            senderId: { not: userId },
+          },
+        })
+      : await this.prisma.tripMessage.count({
+          where: { tripId, deletedAt: null, senderId: { not: userId } },
+        });
+
     return {
       data: await Promise.all(results.map((m) => this.toMessageResponse(m))),
       next_cursor: hasMore ? (results[results.length - 1]?.createdAt.toISOString() ?? null) : null,
+      unread_count: unreadCount,
     };
   }
 

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Image,
-  Alert,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDocuments, type TripDocumentItem } from '@/features/media/hooks/useDocuments';
 import { useSetCover } from '@/features/media/hooks/useSetCover';
 import { useDeleteDocument } from '@/features/media/hooks/useDeleteDocument';
-import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { Trash2 } from '@/components/icons/Trash2';
 import { Upload } from '@/components/icons/Upload';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
@@ -24,11 +22,13 @@ function DocumentTile({
   onPress,
   onSetCover,
   onDelete,
+  settingCover,
 }: {
   item: TripDocumentItem;
   onPress: () => void;
   onSetCover: () => void;
   onDelete: () => void;
+  settingCover?: boolean;
 }) {
   return (
     <TouchableOpacity style={styles.tile} onPress={onPress} onLongPress={onDelete} activeOpacity={0.8}>
@@ -49,21 +49,23 @@ function DocumentTile({
         </View>
       )}
       {!item.is_cover && (
-        <TouchableOpacity style={styles.setCoverBtn} onPress={onSetCover}>
-          <Text style={styles.setCoverBtnText}>Jadikan Cover</Text>
+        <TouchableOpacity style={styles.setCoverBtn} onPress={onSetCover} disabled={settingCover}>
+          {settingCover ? (
+            <ActivityIndicator size="small" color={colors.charcoal} />
+          ) : (
+            <Text style={styles.setCoverBtnText}>Jadikan Cover</Text>
+          )}
         </TouchableOpacity>
       )}
     </TouchableOpacity>
   );
 }
 
-export default function MediaScreen() {
-  const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
+export function MediaTabContent({ tripId }: { tripId: string }) {
   const { data, isLoading } = useDocuments(tripId);
   const setCover = useSetCover(tripId);
   const deleteDoc = useDeleteDocument(tripId);
+  const [deleteTarget, setDeleteTarget] = useState<TripDocumentItem | null>(null);
 
   const documents = data?.data ?? [];
 
@@ -71,37 +73,28 @@ export default function MediaScreen() {
     setCover.mutate(docId);
   }, [setCover]);
 
-  const handleDelete = useCallback((docId: string) => {
-    Alert.alert('Hapus Media?', 'File akan dihapus permanen.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Hapus', style: 'destructive', onPress: () => deleteDoc.mutate(docId) },
-    ]);
-  }, [deleteDoc]);
+  const handleDelete = useCallback((doc: TripDocumentItem) => {
+    setDeleteTarget(doc);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteDoc.mutate(deleteTarget.id);
+    setDeleteTarget(null);
+  }, [deleteDoc, deleteTarget]);
 
   const renderItem = useCallback(({ item }: { item: TripDocumentItem }) => (
     <DocumentTile
       item={item}
       onPress={() => {}}
       onSetCover={() => handleSetCover(item.id)}
-      onDelete={() => handleDelete(item.id)}
+      onDelete={() => handleDelete(item)}
+      settingCover={setCover.isPending}
     />
-  ), [handleSetCover, handleDelete]);
+  ), [handleSetCover, handleDelete, setCover.isPending]);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-          <ChevronLeft size={20} color={colors.charcoal} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>Media Perjalanan</Text>
-        </View>
-        <View style={styles.headerBtn} />
-      </View>
-
+    <View style={styles.screen}>
       {/* Info */}
       <View style={styles.infoSection}>
         <Text style={styles.infoTitle}>Media Perjalanan</Text>
@@ -135,6 +128,23 @@ export default function MediaScreen() {
           }
         />
       )}
+
+      {/* Delete media confirmation modal */}
+      <ConfirmModal
+        visible={deleteTarget !== null}
+        title="Hapus Media?"
+        description="File ini akan dihapus permanen dari perjalanan."
+        icon={
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Trash2 size={22} color={colors.danger} />
+          </View>
+        }
+        confirmLabel="Hapus"
+        destructive
+        loading={deleteDoc.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </View>
   );
 }
@@ -142,10 +152,6 @@ export default function MediaScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-  headerBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  headerInfo: { flex: 1, marginHorizontal: 10 },
-  headerTitle: { fontSize: 15, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
   infoSection: { padding: 16, paddingBottom: 8 },
   infoTitle: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
   infoDesc: { fontSize: 12, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted, marginTop: 4 },

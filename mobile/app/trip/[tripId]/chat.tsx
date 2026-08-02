@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -12,14 +11,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '@/features/chat/hooks/useMessages';
 import { useSendMessage } from '@/features/chat/hooks/useSendMessage';
 import { useDeleteMessage } from '@/features/chat/hooks/useDeleteMessage';
 import { useMarkChatRead } from '@/features/chat/hooks/useMarkChatRead';
-import { useAuth } from '@/auth/AuthProvider';
-import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { Paperclip } from '@/components/icons/Paperclip';
 import { Send } from '@/components/icons/Send';
 import { Reply } from '@/components/icons/Reply';
@@ -153,11 +150,7 @@ function LongPressMenu({
   );
 }
 
-export default function ChatScreen() {
-  const { tripId } = useLocalSearchParams<{ tripId: string }>();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+export function ChatTabContent({ tripId, currentUserId }: { tripId: string; currentUserId: string }) {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(tripId);
   const sendMessage = useSendMessage(tripId);
   const deleteMessage = useDeleteMessage(tripId);
@@ -167,6 +160,7 @@ export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<TripMessage | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const messages = useMemo(() => {
     const pages = data?.pages ?? [];
@@ -199,14 +193,17 @@ export default function ChatScreen() {
 
   const handleDelete = useCallback((messageId: string) => {
     setHighlightedId(null);
-    Alert.alert('Hapus Pesan?', 'Pesan akan dihapus.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Hapus', style: 'destructive', onPress: () => deleteMessage.mutate(messageId) },
-    ]);
-  }, [deleteMessage]);
+    setDeleteTarget(messageId);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteMessage.mutate(deleteTarget);
+    setDeleteTarget(null);
+  }, [deleteMessage, deleteTarget]);
 
   const renderMessage = useCallback(({ item }: { item: TripMessage }) => {
-    const isMe = item.sender?.id === user?.id;
+    const isMe = item.sender?.id === currentUserId;
     return (
       <ChatBubble
         message={item}
@@ -215,36 +212,22 @@ export default function ChatScreen() {
         onLongPress={() => setHighlightedId(item.id)}
       />
     );
-  }, [user, highlightedId]);
+  }, [currentUserId, highlightedId]);
 
   if (isLoading) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.coral} /></View>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.coral} />
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={[styles.screen, { paddingTop: insets.top }]}
+      style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={0}
     >
-      <Stack.Screen options={{ headerShown: false }} />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-          <ChevronLeft size={20} color={colors.charcoal} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle} numberOfLines={1}>Chat</Text>
-        </View>
-        <View style={styles.headerBtn} />
-      </View>
-
       {/* Messages */}
       {messages.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -284,8 +267,8 @@ export default function ChatScreen() {
       )}
 
       {/* Input bar */}
-      <View style={[styles.inputBar, { paddingBottom: insets.bottom + 12 }]}>
-        <TextInput
+      <View style={styles.inputBar}>
+        <FocusedTextInput
           style={styles.inputField}
           placeholder="Tulis pesan..."
           placeholderTextColor={colors.mutedLight}
@@ -295,18 +278,22 @@ export default function ChatScreen() {
           maxLength={1000}
         />
         <TouchableOpacity
-          style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]}
+          style={[styles.sendBtn, (!inputText.trim() || sendMessage.isPending) && styles.sendBtnDisabled]}
           onPress={handleSend}
           disabled={!inputText.trim() || sendMessage.isPending}
         >
-          <Send size={17} color={inputText.trim() ? colors.white : colors.muted} />
+          {sendMessage.isPending ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <Send size={17} color={inputText.trim() ? colors.white : colors.muted} />
+          )}
         </TouchableOpacity>
       </View>
 
       {/* Long press menu */}
       {highlightedId && (
         <LongPressMenu
-          isMe={messages.find((m) => m.id === highlightedId)?.sender?.id === user?.id}
+          isMe={messages.find((m) => m.id === highlightedId)?.sender?.id === currentUserId}
           onReply={() => {
             const msg = messages.find((m) => m.id === highlightedId);
             if (msg) setReplyTo(msg);
@@ -323,6 +310,23 @@ export default function ChatScreen() {
           onClose={() => setHighlightedId(null)}
         />
       )}
+
+      {/* Delete message confirmation modal */}
+      <ConfirmModal
+        visible={deleteTarget !== null}
+        title="Hapus Pesan?"
+        description="Pesan akan dihapus."
+        icon={
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Trash2 size={22} color={colors.danger} />
+          </View>
+        }
+        confirmLabel="Hapus"
+        destructive
+        loading={deleteMessage.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -330,10 +334,6 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-  headerBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  headerInfo: { flex: 1, marginHorizontal: 10 },
-  headerTitle: { fontSize: 15, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
   messagesContent: { padding: 16, paddingBottom: 8, gap: 6 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   emptyTitle: { fontSize: 19, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, marginBottom: 8 },
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   replyLabel: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.coral },
   replyText: { fontSize: 12, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },
   // Input bar
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.white, gap: 8 },
+  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.white, gap: 8 },
   inputField: { flex: 1, backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 11, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, borderWidth: 1, borderColor: colors.border, maxHeight: 100 },
   sendBtn: { width: 40, height: 40, borderRadius: 13, backgroundColor: colors.coral, alignItems: 'center', justifyContent: 'center', shadowColor: colors.coral, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.31, shadowRadius: 18, elevation: 4 },
   sendBtnDisabled: { backgroundColor: colors.border, shadowOpacity: 0 },

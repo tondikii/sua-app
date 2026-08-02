@@ -1,6 +1,9 @@
 export default () => ({
   port: parseInt(process.env.PORT ?? '8080', 10),
   appEnv: process.env.APP_ENV ?? 'development',
+  app: {
+    webUrl: process.env.APP_WEB_URL ?? 'http://localhost:8081',
+  },
 
   database: {
     url: process.env.DATABASE_URL,
@@ -30,5 +33,14 @@ export default () => ({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     bucketName: process.env.R2_BUCKET_NAME,
     publicUrl: process.env.R2_PUBLIC_URL,
+  },
+
+  mail: {
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.MAIL_FROM,
   },
 });

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { ChevronDown } from '@/components/icons/ChevronDown';
 import { Mail } from '@/components/icons/Mail';
@@ -63,7 +64,7 @@ export default function HelpFaqScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.backBtn}>
           <ChevronLeft size={18} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Bantuan & FAQ</Text>

@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { TripsModule } from './trips/trips.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MailModule } from './mail/mail.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -24,6 +25,7 @@ import { HealthController } from './health.controller';
       },
     ]),
     ScheduleModule.forRoot(),
+    MailModule,
     PrismaModule,
     AuthModule,
     UsersModule,

@@ -55,7 +55,7 @@ export function buildItineraryDays(
   activities: TripActivity[],
   startDate: string | null,
   endDate: string | null,
-  tripStatus: string,
+  _tripStatus: string,
 ): ItineraryDay[] {
   if (!startDate || !endDate) {
     // No dates (voting pending) — group all activities as a single day

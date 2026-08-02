@@ -5,20 +5,18 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  TextInput,
-  Alert,
-  Platform,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { useDeleteAccount } from '@/features/users/hooks/useDeleteAccount';
+import { goBackSmart } from '@/lib/navigation';
+import { ConfirmModal } from '@/components/ConfirmModal';
+import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { UserX } from '@/components/icons/UserX';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
-
-const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
 export default function DeleteAccountScreen() {
   const router = useRouter();
@@ -26,31 +24,26 @@ export default function DeleteAccountScreen() {
   const { user } = useAuth();
   const deleteAccount = useDeleteAccount();
   const [confirmText, setConfirmText] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const canDelete = confirmText.trim() === (user?.username ?? '');
 
   const handleDelete = useCallback(() => {
     if (!canDelete) return;
-    Alert.alert(
-      'Hapus Akun?',
-      'Tindakan ini tidak bisa dibatalkan. Semua data akan hilang permanen.',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hapus',
-          style: 'destructive',
-          onPress: () => deleteAccount.mutate(),
-        },
-      ],
-    );
-  }, [canDelete, deleteAccount]);
+    setShowConfirm(true);
+  }, [canDelete]);
+
+  const handleConfirmDelete = useCallback(() => {
+    deleteAccount.mutate();
+    setShowConfirm(false);
+  }, [deleteAccount]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.backBtn}>
           <ChevronLeft size={18} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Hapus Akun</Text>
@@ -70,8 +63,8 @@ export default function DeleteAccountScreen() {
 
         <View style={styles.confirmSection}>
           <Text style={styles.confirmLabel}>Ketik username untuk konfirmasi</Text>
-          <TextInput
-            style={[styles.confirmInput, webOutlineNone]}
+          <FocusedTextInput
+            style={styles.confirmInput}
             value={confirmText}
             onChangeText={setConfirmText}
             placeholder={user?.username ?? ''}
@@ -93,10 +86,27 @@ export default function DeleteAccountScreen() {
             {deleteAccount.isPending ? 'Menghapus...' : 'Hapus Akun'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.cancelBtn} onPress={() => goBackSmart(router)} activeOpacity={0.7}>
           <Text style={styles.cancelBtnText}>Batal</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Delete account confirmation modal */}
+      <ConfirmModal
+        visible={showConfirm}
+        title="Hapus akun?"
+        description="Tindakan ini tidak bisa dibatalkan. Semua data akan hilang permanen."
+        icon={
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <UserX size={22} color={colors.danger} />
+          </View>
+        }
+        confirmLabel="Hapus"
+        destructive
+        loading={deleteAccount.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
     </View>
   );
 }
