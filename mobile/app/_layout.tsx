@@ -18,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '../src/api/queryClient';
 import { MOBILE_MAX_WIDTH } from '../src/theme/layout';
+import { ThemeProvider, useThemeContext } from '../src/theme';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
 import { ToastProvider } from '../src/components/Toast';
 import { useNotificationsSubscription } from '../src/realtime/useNotificationsSubscription';
@@ -29,10 +30,10 @@ ExpoSplashScreen.preventAutoHideAsync();
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
 /** On web, centres the app at mobile width inside a dark backdrop. */
-function MobileContainer({ children }: { children: ReactNode }) {
+function MobileContainer({ children, backdropColor }: { children: ReactNode; backdropColor?: string }) {
   if (Platform.OS !== 'web') return <>{children}</>;
   return (
-    <View style={styles.webBackdrop}>
+    <View style={[styles.webBackdrop, { backgroundColor: backdropColor ?? '#1A1A2E' }]}>
       <View style={styles.webFrame}>{children}</View>
     </View>
   );
@@ -41,6 +42,7 @@ function MobileContainer({ children }: { children: ReactNode }) {
 /** Shows the branded splash until fonts are ready AND the session has hydrated. */
 function RootGate({ children }: { children: ReactNode }) {
   const { isHydrated, user } = useAuth();
+  const { scheme } = useThemeContext();
 
   // Subscribe to real-time notifications when authenticated
   useNotificationsSubscription(user?.id);
@@ -52,7 +54,11 @@ function RootGate({ children }: { children: ReactNode }) {
   }, []);
 
   if (!isHydrated) return <SplashScreen />;
-  return <MobileContainer>{children}</MobileContainer>;
+  return (
+    <MobileContainer backdropColor={scheme === 'dark' ? '#0F0F13' : '#1A1A2E'}>
+      {children}
+    </MobileContainer>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -85,10 +91,11 @@ export default function RootLayout() {
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: 'm11' }}>
       <AuthProvider>
         <SafeAreaProvider>
-          <StatusBar style="dark" />
-          {fontsReady && (
-            <RootGate>
-              <ToastProvider>
+          <ThemeProvider>
+            <ThemedStatusBar />
+            {fontsReady && (
+              <RootGate>
+                <ToastProvider>
                 <Stack screenOptions={{ headerShown: false }}>
                   <Stack.Screen name="(auth)" />
                   <Stack.Screen name="(tabs)" />
@@ -102,10 +109,17 @@ export default function RootLayout() {
                   />
                 </Stack>
               </ToastProvider>
-            </RootGate>
-          )}
+              </RootGate>
+            )}
+          </ThemeProvider>
         </SafeAreaProvider>
       </AuthProvider>
     </PersistQueryClientProvider>
   );
+}
+
+/** Status bar follows the active color scheme (dark text on light, light on dark). */
+function ThemedStatusBar() {
+  const { scheme } = useThemeContext();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
 }

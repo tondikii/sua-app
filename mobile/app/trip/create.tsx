@@ -298,6 +298,10 @@ export default function CreateTripScreen() {
         });
         setCreatedTripId(trip.id);
         setShowInvite(true);
+        showToast('Perjalanan berhasil dibuat', {
+          type: 'success',
+          submessage: 'Kamu bisa mulai undang teman sekarang.',
+        });
         return;
       }
 
@@ -314,6 +318,10 @@ export default function CreateTripScreen() {
       const trip = await createTrip.mutateAsync(payload);
       setCreatedTripId(trip.id);
       setShowInvite(true);
+      showToast('Perjalanan berhasil dibuat', {
+        type: 'success',
+        submessage: 'Kamu bisa mulai undang teman sekarang.',
+      });
     } catch (err) {
       showToast('Terjadi kesalahan saat membuat perjalanan.');
     }

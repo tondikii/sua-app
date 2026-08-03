@@ -4,7 +4,6 @@ import {
   FlatList,
   RefreshControl,
   StyleSheet,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTrips } from '@/features/trips/hooks/useTrips';
@@ -16,13 +15,16 @@ import { HomeTabs, type HomeTab } from '@/features/home/components/HomeTabs';
 import { TripCard } from '@/features/trips/components/TripCard';
 import { InvitationCard } from '@/features/trips/components/InvitationCard';
 import { EmptyTripsState } from '@/features/home/components/EmptyTripsState';
-import { colors } from '@/theme/colors';
+import { HomeSkeleton } from '@/components/Skeleton';
+import { ErrorScreen } from '@/components/ErrorScreen';
+import { useTheme } from '@/theme';
 import type { TripSummary, TripInvitation } from '@atur-perjalanan/shared-types';
 
 type ListItem = TripSummary | TripInvitation;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors: c } = useTheme();
   const [activeTab, setActiveTab] = useState<HomeTab>('mendatang');
 
   const upcoming = useTrips('upcoming');
@@ -68,6 +70,13 @@ export default function HomeScreen() {
       : activeTab === 'selesai'
         ? completed.isLoading
         : invitations.isLoading;
+
+  const isError =
+    activeTab === 'mendatang'
+      ? upcoming.isError
+      : activeTab === 'selesai'
+        ? completed.isError
+        : invitations.isError;
 
   const onRefresh = useCallback(() => {
     if (activeTab === 'mendatang') upcoming.refetch();
@@ -148,10 +157,15 @@ export default function HomeScreen() {
 
   const renderEmpty = useCallback(() => {
     if (isLoading) {
+      return <HomeSkeleton />;
+    }
+
+    if (isError) {
       return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.coral} />
-        </View>
+        <ErrorScreen
+          onRetry={onRefresh}
+          loading={isRefreshing}
+        />
       );
     }
 
@@ -174,7 +188,7 @@ export default function HomeScreen() {
         description="Undangan perjalanan dari teman akan muncul di sini."
       />
     );
-  }, [activeTab, isLoading, handleCreateTrip]);
+  }, [activeTab, isLoading, isError, isRefreshing, onRefresh, handleCreateTrip]);
 
   const data: ListItem[] = activeTab === 'mendatang' ? upcomingItems : activeTab === 'selesai' ? completedItems : invitationItems;
 
@@ -189,7 +203,7 @@ export default function HomeScreen() {
   }, [activeTab, upcoming, completed, invitations]);
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: c.white }]}>
       <HomeHeader unreadCount={unreadCount} onPressBell={handlePressBell} />
       <HomeTabs activeTab={activeTab} counts={counts} onChangeTab={setActiveTab} />
 
@@ -204,8 +218,8 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={colors.coral}
-            colors={[colors.coral]}
+            tintColor={c.coral}
+            colors={[c.coral]}
           />
         }
         onEndReached={handleEndReached}
@@ -219,7 +233,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.white,
   },
   listContent: {
     paddingHorizontal: 22,
@@ -230,11 +243,5 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 0,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
   },
 });

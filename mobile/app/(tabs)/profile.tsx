@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUserTrips } from '@/features/users/hooks/useUserTrips';
 import { EmptyTripsState } from '@/features/home/components/EmptyTripsState';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { openExternalLink } from '@/lib/externalLink';
 import { Settings } from '@/components/icons/Settings';
 import { Globe } from '@/components/icons/Globe';
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
     data: tripsData,
     isLoading: tripsLoading,
     isError: tripsError,
+    refetch: refetchTrips,
   } = useUserTrips(user?.username ?? '');
   const trips = tripsData?.data ?? [];
   const gridCardWidth = (Math.min(screenWidth, 430) - 22 * 2 - GRID_GAP) / GRID_COLUMNS;
@@ -140,12 +142,7 @@ export default function ProfileScreen() {
             <ActivityIndicator size="large" color={colors.coral} />
           </View>
         ) : tripsError ? (
-          <EmptyTripsState
-            title="Gagal memuat"
-            description="Terjadi kesalahan saat memuat perjalanan."
-            onPressCta={handleCreateTrip}
-            compact
-          />
+          <ErrorScreen onRetry={() => void refetchTrips()} />
         ) : trips.length === 0 ? (
           <EmptyTripsState
             title="Belum ada perjalanan"

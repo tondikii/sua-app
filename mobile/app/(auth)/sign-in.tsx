@@ -17,6 +17,7 @@ import Svg, { Circle, Path, Polygon } from 'react-native-svg';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { useGoogleAuth } from '../../src/hooks/useGoogleAuth';
 import { useToast } from '../../src/components/Toast';
+import { ApiError } from '../../src/api/client';
 import { theme } from '../../src/theme';
 
 function GoogleIcon() {
@@ -67,8 +68,12 @@ export default function SignIn() {
       (async () => {
         try {
           await signInGoogle(idToken);
-        } catch {
-          showToast('Autentikasi Google gagal. Coba lagi.');
+        } catch (err) {
+          if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
+            showToast('Aplikasi sedang penuh. Batas pengguna aktif sudah tercapai — coba lagi nanti ya.');
+          } else {
+            showToast('Autentikasi Google gagal. Coba lagi.');
+          }
         } finally {
           signingInRef.current = false;
         }

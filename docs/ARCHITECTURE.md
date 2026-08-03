@@ -188,9 +188,15 @@ atur-perjalanan/
 │   │   │   ├── notifications.module.ts
 │   │   │   ├── notifications.controller.ts
 │   │   │   ├── notifications.service.ts
-│   │   │   └── notifications.gateway.ts       # writes only; delivery via Supabase Realtime
+│   │   │   ├── push-notifications.service.ts   # Expo push fan-out (mirror of in-app)
+│   │   │   ├── push-tokens.service.ts          # Expo push token registry
+│   │   │   ├── reminder-horizons.ts            # shared proportional reminder engine
+│   │   │   ├── voting-reminder.service.ts      # cron: voting deadline reminders
+│   │   │   ├── trip-start-reminder.service.ts  # cron: trip start reminders (M21)
+│   │   │   └── notifications.gateway.ts        # writes only; delivery via Supabase Realtime
 │   │   ├── jobs/                 # scheduled tasks (@nestjs/schedule)
-│   │   │   └── voting-reminder.job.ts
+│   │   │   ├── voting-reminder.job.ts
+│   │   │   └── trip-start-reminder.job.ts
 │   │   ├── integrations/
 │   │   │   ├── google/
 │   │   │   │   ├── google-auth.service.ts     # ID token verification
@@ -805,7 +811,7 @@ CREATE INDEX idx_trip_documents_trip_id ON trip_documents (trip_id, created_at D
 
 ```sql
 CREATE TYPE notification_type AS ENUM (
-    'invite', 'follow', 'voting_deadline', 'activity_update'
+    'invite', 'follow', 'voting_deadline', 'activity_update', 'trip_start_soon'
 );
 
 CREATE TABLE notifications (
@@ -831,6 +837,7 @@ CREATE INDEX idx_notifications_user_unread
 | `invite`            | `{actor} mengundangmu ke {trip}`                           | Terima · Tolak  | `{ "invitation_id": "uuid" }`                            |
 | `voting_deadline`   | `Voting Tanggal {trip} segera berakhir.`                   | Vote Sekarang → | `{ "poll_type": "tanggal" \| "aktivitas" \| "lainnya" }` |
 | `activity_update`   | `{actor} menambahkan aktivitas {activity_name} di {trip}.` | Tap → itinerary | `{ "activity_name": "..." }`                             |
+| `trip_start_soon`   | `Perjalanan {trip} berangkat {waktu}. Siap-siap!`          | Tap → trip      | `{ "reminder_type": "r1"\|"r2", "start_datetime": "...", "is_all_day": bool, "start_time": "HH:mm"\|null }` |
 | `follow`            | —                                                          | —               | post-MVP; enum reserved                                  |
 
 This table is also added to the `supabase_realtime` publication (§6) so the notification bell updates live.

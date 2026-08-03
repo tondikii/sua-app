@@ -54,8 +54,10 @@
 ### Notifikasi
 
 - [ ] Header _Notifikasi_ + **Tandai semua dibaca**; kartu unread border coral + dot 8px.
-- [ ] Template teks selaras preview: invite, Voting Tanggal, Voting Destinasi, aktivitas baru (`Screen9Notifikasi.tsx`).
-- [ ] Aksi: Terima/Tolak (invite); **Vote Sekarang →** amber (voting); tap kartu (aktivitas).
+- [ ] Template teks selaras preview: invite, Voting Tanggal, Voting Destinasi, aktivitas baru, trip start (`Screen9Notifikasi.tsx`).
+- [ ] Aksi: Terima/Tolak (invite); **Vote Sekarang →** amber (voting); tap kartu (aktivitas, trip start).
+- [ ] Reminder trip start (`trip_start_soon`): terkirim 2× proporsional (R1 50% gap, R2 25% gap, min lead 30m/5m) sebelum `start_date`+`start_time`, ke semua peserta; muncul dengan ikon 🕐 dan teks _"Perjalanan **{trip}** berangkat {waktu}. Siap-siap!"_; tap → trip.
+- [ ] Voting reminder (`voting_deadline`): horizon proporsional yang sama (bukan H-7d/H-1d/H-1h) — deadline pendek (mis. 30 menit) tetap menerima reminder.
 - [ ] `PUT /v1/notifications/:id/read` dan `PUT /v1/notifications/read-all` berfungsi.
 - [ ] Terima/Tolak dari notif `invite`: resolve `invitation_id` via `GET /v1/trips/invitations` + `trip_id`.
 - [ ] Pagination trip: cursor UUID; notifikasi: cursor RFC3339.

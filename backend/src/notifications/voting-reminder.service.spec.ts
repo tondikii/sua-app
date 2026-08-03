@@ -3,6 +3,7 @@ import { VotingReminderService } from './voting-reminder.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from './notifications.service';
 import { TripStatus } from '@prisma/client';
+import { getReminderTargets } from './reminder-horizons';
 
 describe('VotingReminderService', () => {
   let service: VotingReminderService;
@@ -28,6 +29,7 @@ describe('VotingReminderService', () => {
     id: 'trip-1',
     creatorId: 'creator-1',
     votingDeadline: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000),
+    updatedAt: NOW, // deadline was set "now" → anchor = now
     status: TripStatus.voting_pending,
     participants: [
       { userId: 'user-1', user: { id: 'user-1' } }, // Has voted
@@ -39,10 +41,10 @@ describe('VotingReminderService', () => {
   });
 
   /**
-   * Mock `trip.findMany` so it only returns the given trip when the window
-   * filter supplied by the service actually matches the trip's deadline —
-   * mirroring what the database would do. The service runs three windows
-   * (H-7d, H-1d, H-1h) per `handleVotingReminders()` call.
+   * Mock `trip.findMany` so it only returns the given trip when the trip's
+   * deadline falls within the lookahead window ([now, now+30d)) — mirroring
+   * the DB query. The service then decides via `dueTarget` whether a
+   * reminder target falls in the current run window.
    */
   const mockTripInItsWindow = (row: Record<string, any>) => {
     mockPrismaService.trip.findMany.mockImplementation((args: any) => {
@@ -84,61 +86,58 @@ describe('VotingReminderService', () => {
   });
 
   describe('time windows', () => {
-    it('H-7d: filters voting_deadline in [now+7d, now+7d+1h)', async () => {
+    it('queries voting_pending trips with a lookahead window around now', async () => {
       mockTripInItsWindow(tripRow());
 
       await service.handleVotingReminders();
 
-      const windowStart = new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const windowEnd = new Date(windowStart.getTime() + 60 * 60 * 1000);
       const firstCall = (prismaService.trip.findMany as jest.Mock).mock.calls[0][0];
       expect(firstCall.where).toMatchObject({
         status: TripStatus.voting_pending,
         deletedAt: null,
-        votingDeadline: { gte: windowStart, lt: windowEnd },
+        votingDeadline: {
+          gte: NOW,
+          lt: new Date(NOW.getTime() + 30 * 24 * 60 * 60 * 1000),
+        },
       });
     });
 
-    it('H-1d: filters voting_deadline in [now+1d, now+1d+1h)', async () => {
-      mockTripInItsWindow(
-        tripRow({
-          id: 'trip-2',
-          votingDeadline: new Date(NOW.getTime() + 24 * 60 * 60 * 1000),
-        }),
-      );
+    it('fires R1 when its target falls within the run window (50% of gap)', async () => {
+      // Deadline 7 days away, anchor = now → R1 target = now+3.5d.
+      const row = tripRow({
+        votingDeadline: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1000),
+        updatedAt: NOW,
+      });
+      // Run the cron when the R1 target falls within the next hour.
+      const r1 = getReminderTargets(row.votingDeadline, row.updatedAt)[0];
+      const runAt = new Date(r1.at.getTime() - 30 * 60 * 1000);
+      jest.setSystemTime(runAt);
+      mockTripInItsWindow(row);
 
       await service.handleVotingReminders();
 
-      const windowStart = new Date(NOW.getTime() + 24 * 60 * 60 * 1000);
-      const windowEnd = new Date(windowStart.getTime() + 60 * 60 * 1000);
-      const secondCall = (prismaService.trip.findMany as jest.Mock).mock.calls[1][0];
-      expect(secondCall.where).toMatchObject({
-        votingDeadline: { gte: windowStart, lt: windowEnd },
-      });
+      expect(mockNotificationsService.createManyNotifications).toHaveBeenCalledTimes(1);
+      const [items] = (mockNotificationsService.createManyNotifications as jest.Mock).mock.calls[0];
+      expect(items[0].payload.reminder_type).toBe('r1');
     });
 
-    it('H-1h: filters voting_deadline in [now+1h, now+2h)', async () => {
-      mockTripInItsWindow(
-        tripRow({
-          id: 'trip-3',
-          votingDeadline: new Date(NOW.getTime() + 60 * 60 * 1000),
-        }),
-      );
+    it('does not fire when no target falls in the current run window', async () => {
+      // Deadline 7 days away, anchor = now → targets at now+3.5d and now+5.25d.
+      // Now is 10:00; targets are far in the future → no reminder.
+      mockTripInItsWindow(tripRow());
 
       await service.handleVotingReminders();
 
-      const windowStart = new Date(NOW.getTime() + 60 * 60 * 1000);
-      const windowEnd = new Date(windowStart.getTime() + 60 * 60 * 1000);
-      const thirdCall = (prismaService.trip.findMany as jest.Mock).mock.calls[2][0];
-      expect(thirdCall.where).toMatchObject({
-        votingDeadline: { gte: windowStart, lt: windowEnd },
-      });
+      expect(mockNotificationsService.createManyNotifications).not.toHaveBeenCalled();
     });
   });
 
   describe('recipient selection', () => {
     it('sends to participants who have not voted, with poll_type + poll_id payload', async () => {
-      mockTripInItsWindow(tripRow());
+      const row = tripRow();
+      const r1 = getReminderTargets(row.votingDeadline, row.updatedAt)[0];
+      jest.setSystemTime(new Date(r1.at.getTime() - 30 * 60 * 1000));
+      mockTripInItsWindow(row);
       mockNotificationsService.createManyNotifications.mockResolvedValue({ count: 1 });
 
       await service.handleVotingReminders();
@@ -150,7 +149,7 @@ describe('VotingReminderService', () => {
           actorId: 'creator-1',
           tripId: 'trip-1',
           payload: {
-            reminder_type: '7_days_before',
+            reminder_type: 'r1',
             voting_deadline: expect.any(String),
             poll_type: 'tanggal',
             poll_id: 'poll-1',
@@ -160,15 +159,16 @@ describe('VotingReminderService', () => {
     });
 
     it('does not send when all participants have voted', async () => {
-      mockTripInItsWindow(
-        tripRow({
-          participants: [
-            { userId: 'user-1', user: { id: 'user-1' } },
-            { userId: 'user-2', user: { id: 'user-2' } },
-          ],
-          dateCandidates: [{ votes: [{ userId: 'user-1' }, { userId: 'user-2' }] }],
-        }),
-      );
+      const row = tripRow({
+        participants: [
+          { userId: 'user-1', user: { id: 'user-1' } },
+          { userId: 'user-2', user: { id: 'user-2' } },
+        ],
+        dateCandidates: [{ votes: [{ userId: 'user-1' }, { userId: 'user-2' }] }],
+      });
+      const r1 = getReminderTargets(row.votingDeadline, row.updatedAt)[0];
+      jest.setSystemTime(new Date(r1.at.getTime() - 30 * 60 * 1000));
+      mockTripInItsWindow(row);
 
       await service.handleVotingReminders();
 
@@ -184,13 +184,16 @@ describe('VotingReminderService', () => {
       expect(mockNotificationsService.createManyNotifications).not.toHaveBeenCalled();
     });
 
-    it('dedups users who already received this reminder window for the trip', async () => {
-      mockTripInItsWindow(tripRow());
-      // user-2 already received the 7_days_before reminder.
+    it('dedups users who already received this reminder type for the trip', async () => {
+      const row = tripRow();
+      const r1 = getReminderTargets(row.votingDeadline, row.updatedAt)[0];
+      jest.setSystemTime(new Date(r1.at.getTime() - 30 * 60 * 1000));
+      mockTripInItsWindow(row);
+      // user-2 already received the r1 reminder.
       mockPrismaService.notification.findMany.mockResolvedValue([
         {
           userId: 'user-2',
-          payload: { reminder_type: '7_days_before' },
+          payload: { reminder_type: 'r1' },
         },
       ]);
 
@@ -200,12 +203,15 @@ describe('VotingReminderService', () => {
     });
 
     it('does not dedup users whose reminder_type differs', async () => {
-      mockTripInItsWindow(tripRow());
-      // user-2 received a different reminder window (1_day_before) — still notify.
+      const row = tripRow();
+      const r1 = getReminderTargets(row.votingDeadline, row.updatedAt)[0];
+      jest.setSystemTime(new Date(r1.at.getTime() - 30 * 60 * 1000));
+      mockTripInItsWindow(row);
+      // user-2 received a different reminder (r2) — still notify r1.
       mockPrismaService.notification.findMany.mockResolvedValue([
         {
           userId: 'user-2',
-          payload: { reminder_type: '1_day_before' },
+          payload: { reminder_type: 'r2' },
         },
       ]);
       mockNotificationsService.createManyNotifications.mockResolvedValue({ count: 1 });

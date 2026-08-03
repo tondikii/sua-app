@@ -403,6 +403,7 @@ enum NotificationType {
   follow
   voting_deadline
   activity_update
+  trip_start_soon
 }
 
 // ────────────────────────────────────────────────────────────

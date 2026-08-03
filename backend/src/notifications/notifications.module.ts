@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { VotingReminderService } from './voting-reminder.service';
+import { TripStartReminderService } from './trip-start-reminder.service';
 import { PushNotificationsService } from './push-notifications.service';
 import { PushTokensService } from './push-tokens.service';
 import { PushTokensController } from './push-tokens.controller';
@@ -14,6 +15,7 @@ import { R2Module } from '../integrations/r2/r2.module';
   providers: [
     NotificationsService,
     VotingReminderService,
+    TripStartReminderService,
     PushNotificationsService,
     PushTokensService,
   ],

@@ -4,7 +4,7 @@
 >
 > **Tujuan dokumen ini**:
 >
-> - Peta jalan pengembangan lengkap dari _setup_ dokumentasi (M0) hingga rilis di App Store & Play Store (M20).
+> - Peta jalan pengembangan lengkap dari _setup_ dokumentasi (M0) hingga rilis di App Store & Play Store (M18).
 > - **Satu-satunya tempat progress development dilacak.** `docs/ARCHITECTURE.md` adalah target-state blueprint dan sengaja tidak menyimpan status pengerjaan — semua ✅/🔲 ada di sini.
 > - Setiap milestone dirancang agar dapat dikerjakan oleh AI agent secara mandiri cukup dengan prompt seperti **"Let's implement M5"** dan referensi dokumen ini.
 > - Untuk product team: tracking progress development, dependency map antar milestone, dan estimasi effort per tahap.
@@ -44,10 +44,11 @@
 | M14 | Mobile – Voting, Chat, Media, Kelola Trip UI    | ✅ Selesai |
 | M15 | Mobile – Pencarian, Profil & Wishlist UI        | ✅ Selesai |
 | M16 | Google Calendar Integration                     | ✅ Selesai |
-| M17 | Figma Design QA (Audit 125 Layar)               | 🔲 Belum   |
-| M18 | Mobile Testing Suite                            | 🔲 Belum   |
-| M19 | CI/CD Pipelines                                 | 🔲 Belum   |
-| M20 | Rilis App Store & Play Store (EAS)              | 🔲 Belum   |
+| M17 | Figma Design QA (Audit 125 Layar)               | ✅ Selesai |
+| M18 | Deployment Web + Rilis Play Store (Free-Tier)   | 🔲 Belum   |
+| M19 | Mobile Testing Suite                            | 🔲 Belum   |
+| M20 | CI/CD Pipelines                                 | 🔲 Belum   |
+| M21 | Trip Start Reminders (Proporsional 2×)          | ✅ Selesai |
 
 ---
 
@@ -295,7 +296,7 @@ Satu Postman Collection terpusat di `docs/postman/`, diperbarui **inkremental** 
 - [x] `GET /v1/notifications` — enriched (`actor`, `trip` summary), cursor pagination
 - [x] `GET /v1/notifications/unread-count`, `PUT /:id/read`, `PUT /read-all`
 - [x] Migrasi SQL: `ALTER PUBLICATION supabase_realtime ADD TABLE notifications;` + RLS `user_id = auth.uid()`
-- [x] `@nestjs/schedule` cron — voting reminder H-7d, H-1d, H-1h sebelum `voting_deadline` untuk peserta yang belum vote
+- [x] `@nestjs/schedule` cron — voting reminder proporsional 2× (R1 50% gap, R2 25% gap, min lead 30m/5m, anchor `trip.updatedAt`) sebelum `voting_deadline` untuk peserta yang belum vote (diubah dari H-7d/H-1d/H-1h — lihat M21)
 - [x] Unit + e2e tests: notifikasi ter-generate pada setiap event, unread count, mark read, reminder cron (fake timers)
 - [x] Postman — tambah folder `Notifications` ke `docs/postman/atur-perjalanan-api.postman_collection.json` (semua endpoint M9)
 
@@ -370,7 +371,7 @@ mobile/
 > - **Web kini target first-class** (selain iOS & Android) — satu codebase Expo + `react-native-web`. M11 dikerjakan ulang dari scaffold M2 (SDK 51) ke **Expo SDK 57** (React Native 0.86, React 19.2, expo-router 5); SDK 51 sudah 4 versi di belakang dan momen fondasi adalah termurah untuk upgrade sebelum 100+ layar dibangun di M12–M15.
 > - **Deviasi penyimpanan token (web)** — _justified_: browser tidak punya keystore, jadi `expo-secure-store` tidak bisa dipakai di web. Token disimpan **in-memory + `sessionStorage`** (clear on tab close) lewat `TokenStorage` interface; native tetap `expo-secure-store` (Keychain/Keystore). `realtime_token` memang harus JS-readable (Supabase) sehingga postur ini konsisten. Lihat `ARCHITECTURE.md §5` (web target). Interface ini memungkinkan swap ke httpOnly-cookie di kemudian hari tanpa menyentuh layer auth.
 > - **Auth dipindah Zustand → Context** (`AuthProvider`) sesuai `ARCHITECTURE.md §5.5`; `src/store/` kembali ke peran aslinya (ephemeral UI state saja).
-> - **Splash**: `Screen1Splash` (React + SVG) di-port ke RN (`react-native-svg` + `expo-linear-gradient`) sebagai boot screen; native splash PNG memakai gradient coral yang sama agar transisi mulus. Aset brand masih placeholder (generate via `scripts/`) — ganti dengan artwork final sebelum rilis (M20).
+> - **Splash**: `Screen1Splash` (React + SVG) di-port ke RN (`react-native-svg` + `expo-linear-gradient`) sebagai boot screen; native splash PNG memakai gradient coral yang sama agar transisi mulus. Aset brand masih placeholder (generate via `scripts/`) — ganti dengan artwork final sebelum rilis (M18).
 > - Real OAuth Google + layar onboarding/username adalah **M12**; tombol sign-in masih placeholder.
 
 ---
@@ -518,34 +519,81 @@ mobile/
 
 ---
 
-## M17 — Figma Design QA (Audit 125 Layar) 🔲 BELUM DIMULAI
+## M17 — Figma Design QA (Audit 125 Layar) ✅ SELESAI
 
 **AI Prompt**: _"Let's implement M17. Read `docs/MILESTONES.md`, `docs/FIGMA.md`. Run `figma/` preview locally, audit all 125 screens against the Expo app, create a gap report, fix misalignments."_
 
 **Referensi**: `docs/FIGMA.md`, `figma/src/app/`, `mobile/app/`
 
+> 📋 **Gap Report**: Lengkap lihat `docs/M17_AUDIT_REPORT.md` — seluruh **125 layar** diaudit terhadap implementasi Expo (matriks per §1–§13), design tokens diverifikasi 1:1, tab counter rules & bottom nav/FAB diverifikasi, 4 gap parsial tercatat (media video native, cover galeri device).
+
 ### Checklist — System States §13
 
-- [ ] Skeleton/shimmer Beranda (`Screen118`)
-- [ ] Toast host — Sukses/Error/Info + 3s auto-dismiss (`Screen119`)
-- [ ] Offline/error screen + retry (`Screen120`)
-- [ ] Media viewer — foto + video pause/play (`Screen121`–`123`)
-- [ ] Dark mode optional (`Screen124`)
-- [ ] Theme tokens match `colors.ts` + `Screen125`
+- [x] Skeleton/shimmer Beranda (`Screen118`) — `src/components/Skeleton.tsx` (`HomeSkeleton`), wired di home loading state
+- [x] Toast host — Sukses/Error/Info + 3s auto-dismiss (`Screen119`) — `src/components/Toast.tsx` 3 varian (teal/coral/white) + action button + close
+- [x] Offline/error screen + retry (`Screen120`) — `src/components/ErrorScreen.tsx`, wired di home, trip detail, wishlist, search, profile
+- [x] Media viewer — foto + video pause/play (`Screen121`–`123`) — `MediaViewer.tsx` (sudah ada sejak M14; terverifikasi sejajar, video playback penuh di web)
+- [x] Dark mode optional (`Screen124`) — `colorsDark` + `ThemeProvider`/`useTheme`; Beranda + tab bar + Home components ikut tema; toggle **Mode Gelap** di Settings (persist `ap_color_scheme`)
+- [x] Theme tokens match `colors.ts` + `Screen125` — audit 1:1 (warna/tipografi/radius/spacing/shadows); tambah `shimmerBase`/`shimmerShine`
 
 ### Checklist
 
-- [ ] Seluruh **125 layar** diaudit terhadap implementasi Expo
-- [ ] Palet warna & tipografi (Plus Jakarta Sans) match token
-- [ ] Trip detail tab counter rules sesuai `ARCHITECTURE.md`
-- [ ] Bottom nav & FAB match `BottomNav.tsx`
-- [ ] Tidak ada magic number spacing/warna (semua dari `theme/`)
+- [x] Seluruh **125 layar** diaudit terhadap implementasi Expo — matriks lengkap di `docs/M17_AUDIT_REPORT.md`
+- [x] Palet warna & tipografi (Plus Jakarta Sans) match token
+- [x] Trip detail tab counter rules sesuai `ARCHITECTURE.md` — Itinerary hidden jika 0; Voting selalu tampil incl 0; Chat unread only; Media selalu tampil incl 0
+- [x] Bottom nav & FAB match `BottomNav.tsx` — 4 tab + FAB coral 54×54 radius 18, bar 88
+- [x] Tidak ada magic number spacing/warna (semua dari `theme/`) — hex literal hanya di `theme/colors.ts`; sisa radius inline di screen besar didokumentasikan sebagai low-priority refactor
 
 ---
 
-## M18 — Mobile Testing Suite 🔲 BELUM DIMULAI
+## M18 — Deployment Web + Rilis Play Store (Free-Tier) 🔲 BELUM DIMULAI
 
-**AI Prompt**: _"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ACCEPTANCE_CRITERIA.md`, `mobile/src/`. Implement unit tests (Jest + React Native Testing Library) and E2E tests (Detox or Maestro)."_
+**AI Prompt**: _"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §5`. Deploy backend ke Render free, web ke Cloudflare Pages, batasi user aktif (USER_LIMIT), dan rilis ke Google Play."_
+
+**Referensi**: `docs/ARCHITECTURE.md §5`, `mobile/app.json`, `mobile/eas.json`, `backend/src/main.ts`, `render.yaml`
+
+> **Konteks**: Prioritas diubah setelah M17 — kita deploy dulu (web + rilis Play Store) dengan semua gratis-tier sebelum testing suite & CI/CD. Batas maksimum **50 user aktif** (backend gate via `USER_LIMIT`) karena gratis-tier. User dummy tidak ada di repo (hanya contoh copy di komponen). **Play Console sudah aktif** (developer account sudah bayar) — rilis Play Store termasuk dalam milestone ini (M21 lama digabung ke sini). Panduan lengkap: **`docs/DEPLOYMENT.md`**.
+
+### Checklist — Limit User & Free-Tier
+
+- [x] `USER_LIMIT` (default 50) di config + `.env.example`
+- [x] Backend gate di `googleLogin` — blokir registrasi baru saat user aktif ≥ `USER_LIMIT` (403 `USER_LIMIT_REACHED`); user lama tetap login
+- [x] UI sign-in menangani `USER_LIMIT_REACHED` — pesan "Aplikasi sedang penuh"
+
+### Checklist — Backend (Render free)
+
+- [x] `render.yaml` — Web Service NestJS (native build), healthcheck `/health`, env vars, free plan
+- [x] CORS production — whitelist `APP_WEB_URL` (Cloudflare Pages) di `main.ts`
+- [x] `releaseCommand` — `prisma migrate deploy` otomatis sebelum service start
+- [ ] Env production di Render: `DATABASE_URL` (pooler), `DIRECT_URL`, Supabase, JWT, Google, R2, `APP_WEB_URL=https://atur-perjalanan.pages.dev`, `EXPO_ACCESS_TOKEN`, `USER_LIMIT=50`, `APP_ENV=production`
+- [ ] Google OAuth: redirect URI produksi + origin web ditambahkan ke OAuth client
+
+### Checklist — Web (Cloudflare Pages)
+
+- [x] `mobile/package.json` — script `export:web`
+- [x] `mobile/.env.production` — API URL Render, web origin, Google web client ID
+- [x] `mobile/public/_redirects` — SPA fallback (deep link) di Cloudflare Pages
+- [ ] Cloudflare Pages project: build command `pnpm --filter mobile export:web`, output `mobile/dist`
+- [ ] R2 bucket CORS — tambah origin `https://atur-perjalanan.pages.dev`
+- [x] `app.json` — `userInterfaceStyle: "automatic"` (dark mode M17)
+
+### Checklist — Rilis Play Store (EAS + Play Console)
+
+- [ ] Kredensial signing dikelola via EAS (`eas credentials`), tidak di-commit
+- [ ] `eas build --platform android --profile production` → AAB (production profile di `eas.json` sudah ada)
+- [ ] SHA-1 keystore EAS ditambahkan ke Android OAuth client (Google Cloud Console) — **manual**
+- [ ] `eas submit --platform android --profile production` → upload ke Play Console
+- [ ] App di Play Console: content rating, privacy policy, data safety, store listing (judul, deskripsi, screenshot) — **manual**
+- [ ] Ikon/splash final (ganti placeholder gradient) sebelum rilis
+- [ ] Rilis ke **Internal Testing** dulu → production track setelah verified
+
+> **Aksi manual user**: buat service di Render, project Cloudflare Pages, tambah SHA-1 ke OAuth client, isi store listing & content rating di Play Console. Config/script disiapkan agent; aksi akun & upload tetap manual.
+
+---
+
+## M19 — Mobile Testing Suite 🔲 BELUM DIMULAI
+
+**AI Prompt**: _"Let's implement M19. Read `docs/MILESTONES.md`, `docs/ACCEPTANCE_CRITERIA.md`, `mobile/src/`. Implement unit tests (Jest + React Native Testing Library) and E2E tests (Detox or Maestro)."_
 
 ### Checklist
 
@@ -556,9 +604,9 @@ mobile/
 
 ---
 
-## M19 — CI/CD Pipelines 🔲 BELUM DIMULAI
+## M20 — CI/CD Pipelines 🔲 BELUM DIMULAI
 
-**AI Prompt**: _"Let's implement M19. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Create GitHub Actions CI/CD pipelines for the TypeScript monorepo."_
+**AI Prompt**: _"Let's implement M20. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §2`. Create GitHub Actions CI/CD pipelines for the TypeScript monorepo."_
 
 **Referensi**: `docs/ARCHITECTURE.md §2` (`.github/workflows/`)
 
@@ -572,17 +620,53 @@ mobile/
 
 ---
 
-## M20 — Rilis App Store & Play Store (EAS) 🔲 BELUM DIMULAI
+## M21 — Trip Start Reminders (Proporsional 2×) ✅ SELESAI
 
-**AI Prompt**: _"Let's implement M20. Read `docs/MILESTONES.md`. Configure EAS Build/Submit profiles and ship to both stores."_
+**AI Prompt**: _"Let's implement M21. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §3.3, §4.6`, `docs/PRD.md §2.8`. Add trip-start reminders with the shared proportional reminder engine (`reminder-horizons.ts`) and revise the voting reminder to use it."_
+
+**Referensi**: `docs/ARCHITECTURE.md §3.3, §4.6`, `docs/PRD.md §2.8`, `docs/WORKFLOW.md §3`, `docs/ACCEPTANCE_CRITERIA.md §2`
+
+### Tujuan
+
+Reminder **start time perjalanan** belum ada (hanya voting deadline). Plus, horizon voting reminder yang lama (H-7d/H-1d/H-1h) gagal untuk deadline pendek (mis. 30 menit — tidak ada window yang kena). M21 memperkenalkan **horizon proporsional** yang dipakai bersama oleh kedua jenis reminder.
+
+### Keputusan (dari user)
+
+- **2 reminder** per deadline/start (bukan 3).
+- **Fraksi**: R1 = **50%** gap, R2 = **25%** gap (10% terlalu mepet untuk deadline pendek).
+- **Min lead mutlak**: R1 ≥ **30 menit**, R2 ≥ **5 menit** sebelum deadline — reminder tidak pernah terkirim setelah deadline.
+- **Hitung ulang** saat deadline/start dipindah: anchor = `trip.updatedAt`, jadi target otomatis bergeser saat trip diubah.
+- Berlaku untuk **voting deadline dan trip-start** (formula bersama di `reminder-horizons.ts`).
+
+### Formula
+
+```
+gap     = deadline − trip.updatedAt
+R1 at   = deadline − max(gap × 0.50, 30 menit)
+R2 at   = deadline − max(gap × 0.25,  5 menit)
+```
+
+| Gap       | R1 (50%)        | R2 (25%)      |
+| --------- | --------------- | ------------- |
+| 14 hari   | H-7d            | H-3.5d        |
+| 3 jam     | H-1.5 jam       | H-45 menit    |
+| 30 menit  | H-15 menit      | H-7.5 menit   |
+
+Cron `EVERY_HOUR`; reminder terkirim saat **target jatuh dalam [now, now+1h)** (`dueTarget`).
 
 ### Checklist
 
-- [ ] `eas.json` — profile `production` (Android AAB + iOS build)
-- [ ] Kredensial signing dikelola via EAS (`eas credentials`), tidak di-commit
-- [ ] `android-release.yml` / EAS trigger pada Git tag `v*.*.*`
-- [ ] App dibuat di Google Play Console **dan** App Store Connect (content rating, privacy policy, store listing)
-- [ ] `eas submit` — build terunggah ke Internal Testing (Android) & TestFlight (iOS) tanpa error
+- [x] `backend/src/notifications/reminder-horizons.ts` — `getReminderTargets` + `dueTarget` (fraksi `[0.5, 0.25]`, min `[30m, 5m]`, filter target ≤ anchor)
+- [x] `backend/src/notifications/trip-start-reminder.service.ts` — cron `EVERY_HOUR`: query trip `fixed` + `startDate ∈ [now, now+30d)`, hitung `startDatetime` (`start_date` + `start_time`; all-day = `start_date 00:00Z`), kirim ke semua peserta dengan dedup per (user, trip, `reminder_type`)
+- [x] `backend/src/notifications/voting-reminder.service.ts` — refactor dari H-7d/H-1d/H-1h ke horizon proporsional (`reminder_type: 'r1'|'r2'`)
+- [x] `NotificationType` enum Prisma + migrasi `20260803_add_trip_start_soon` + `trip_start_soon` di `packages/shared-types`
+- [x] `push-notifications.service.ts` — case `trip_start_soon` ("Perjalanan Segera Dimulai", body + data `start_datetime`/`is_all_day`)
+- [x] `notifications.module.ts` — register `TripStartReminderService`
+- [x] Mobile `app/notifications.tsx` — ikon `Clock` (coral/coralLight) + teks "Perjalanan {trip} berangkat {waktu}. Siap-siap!"
+- [x] Unit tests: `reminder-horizons.spec.ts`, `trip-start-reminder.service.spec.ts`, `voting-reminder.service.spec.ts` (44 test di folder notifications lulus)
+- [x] Dokumentasi: PRD §2.8, ARCHITECTURE §3.3/§4.6, WORKFLOW §3, ACCEPTANCE_CRITERIA §2 (baris baru di tabel)
+
+> **Catatan implementasi**: `startTime` TIME disimpan Prisma sebagai `Date('2000-01-01T{hh:mm}:00Z')` — diambil `getUTCHours/Minutes` untuk menggabungkan ke `start_date`. Query lookahead 30 hari (bukan 1 jam) karena target R2 trip 30 hari = H-7.5d. Anchor = `trip.updatedAt` memenuhi "hitung ulang saat dipindah" tanpa kolom/state tambahan.
 
 ---
 

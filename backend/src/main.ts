@@ -26,9 +26,17 @@ async function bootstrap() {
   // Global request-id interceptor
   app.useGlobalInterceptors(new RequestIdInterceptor());
 
-  // CORS — tighten in production via APP_ENV
+  // CORS — dev: allow all origins; production: whitelist APP_WEB_URL so the
+  // static web app (Cloudflare Pages) can call the API. Play Store native
+  // builds don't send Origin, so they are unaffected.
+  const appWebUrl = process.env.APP_WEB_URL ?? 'http://localhost:8081';
   app.enableCors({
-    origin: process.env.APP_ENV === 'production' ? false : true,
+    origin:
+      process.env.APP_ENV === 'production'
+        ? [appWebUrl]
+        : true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
   });
 
   // Swagger (dev only)

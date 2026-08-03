@@ -1,0 +1,3 @@
+# Cloudflare Pages — SPA fallback (expo-router single output)
+# Semua route client-side diarahkan ke index.html; aset statis tetap dilayani.
+/*  /index.html  200

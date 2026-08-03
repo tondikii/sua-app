@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -65,6 +66,20 @@ export class AuthService {
         })
       : await (async () => {
           isNewUser = true;
+
+          // Free-tier gate — reject new registrations once the active user
+          // count reaches USER_LIMIT (default 50). Existing users can still
+          // sign in; only brand-new Google accounts are blocked.
+          const activeUsers = await this.prisma.user.count();
+          const userLimit = this.config.get<number>('userLimit') ?? 50;
+          if (activeUsers >= userLimit) {
+            throw new ForbiddenException({
+              code: 'USER_LIMIT_REACHED',
+              message:
+                'Aplikasi sedang penuh. Batas pengguna aktif sudah tercapai — coba lagi nanti ya.',
+            });
+          }
+
           // Generate a temporary placeholder username — must be replaced via complete-registration
           const tempUsername = `user_${Date.now()}`;
           return this.prisma.user.create({

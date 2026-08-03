@@ -3,10 +3,9 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } fr
 import type { TripInvitation } from '@atur-perjalanan/shared-types';
 import { Calendar } from '@/components/icons/Calendar';
 import { formatDateRange } from './TripDateUtils';
-import { colors } from '@/theme/colors';
+import { useTheme, avatarColorFor } from '@/theme';
 import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
-import { avatarColorFor } from '@/theme/colors';
 
 interface InvitationCardProps {
   invitation: TripInvitation;
@@ -23,6 +22,7 @@ export function InvitationCard({
   onDecline,
   isResponding,
 }: InvitationCardProps) {
+  const { colors: c } = useTheme();
   const trip = invitation.trip;
   const inviter = invitation.inviter;
 
@@ -36,13 +36,13 @@ export function InvitationCard({
   );
 
   return (
-    <TouchableOpacity onPress={onPressTrip} activeOpacity={0.8} style={styles.card}>
+    <TouchableOpacity onPress={onPressTrip} activeOpacity={0.8} style={[styles.card, { backgroundColor: c.white }]}>
       <View style={styles.imageContainer}>
         {trip.cover_image_url ? (
           <Image source={{ uri: trip.cover_image_url }} style={styles.image} resizeMode="cover" />
         ) : (
-          <View style={styles.imagePlaceholder}>
-            <Calendar size={32} color={colors.mutedLight} />
+          <View style={[styles.imagePlaceholder, { backgroundColor: c.light }]}>
+            <Calendar size={32} color={c.mutedLight} />
           </View>
         )}
         <View style={styles.overlay}>
@@ -62,36 +62,36 @@ export function InvitationCard({
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={1}>{trip.name}</Text>
+        <Text style={[styles.title, { color: c.charcoal }]} numberOfLines={1}>{trip.name}</Text>
 
         <View style={styles.dateRow}>
-          <Calendar size={13} color={colors.muted} />
-          <Text style={styles.dateText} numberOfLines={1}>{dateRange}</Text>
+          <Calendar size={13} color={c.muted} />
+          <Text style={[styles.dateText, { color: c.muted }]} numberOfLines={1}>{dateRange}</Text>
         </View>
 
         <View style={styles.actions}>
           <TouchableOpacity
-            style={styles.acceptButton}
+            style={[styles.acceptButton, { backgroundColor: c.coral }]}
             onPress={onAccept}
             disabled={isResponding}
             activeOpacity={0.7}
           >
             {isResponding ? (
-              <ActivityIndicator size="small" color={colors.white} />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.acceptText}>Terima</Text>
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.declineButton}
+            style={[styles.declineButton, { backgroundColor: c.light, borderColor: c.border }]}
             onPress={onDecline}
             disabled={isResponding}
             activeOpacity={0.7}
           >
             {isResponding ? (
-              <ActivityIndicator size="small" color={colors.muted} />
+              <ActivityIndicator size="small" color={c.muted} />
             ) : (
-              <Text style={styles.declineText}>Tolak</Text>
+              <Text style={[styles.declineText, { color: c.muted }]}>Tolak</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -102,7 +102,6 @@ export function InvitationCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     overflow: 'hidden',
     ...shadows.card,
@@ -120,7 +119,6 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -130,9 +128,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: 14,
     paddingBottom: 10,
-    // gradient overlay via linear-gradient would be ideal, using simple dark overlay
-    // approximating: linear-gradient(to top, rgba(26,26,46,0.55), transparent 55%)
-    // For RN simplicity, use a semi-transparent bottom section
   },
   inviterRow: {
     flexDirection: 'row',
@@ -154,12 +149,12 @@ const styles = StyleSheet.create({
   inviterLetter: {
     fontSize: 9,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   inviterText: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   inviterName: {
     fontFamily: 'PlusJakartaSans_700Bold',
@@ -171,7 +166,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.charcoal,
   },
   dateRow: {
     flexDirection: 'row',
@@ -181,7 +175,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...typography.caption,
-    color: colors.muted,
   },
   actions: {
     flexDirection: 'row',
@@ -192,28 +185,24 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.coral,
     alignItems: 'center',
     justifyContent: 'center',
   },
   acceptText: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   declineButton: {
     flex: 1,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.light,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   declineText: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
-    color: colors.muted,
   },
 });

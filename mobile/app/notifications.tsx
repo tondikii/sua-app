@@ -21,6 +21,7 @@ import { Calendar } from '@/components/icons/Calendar';
 import { Send } from '@/components/icons/Send';
 import { Check } from '@/components/icons/Check';
 import { ListChecks } from '@/components/icons/ListChecks';
+import { Clock } from '@/components/icons/Clock';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
@@ -38,6 +39,8 @@ function getNotificationIcon(type: NotificationType): NotifIconInfo {
       return { icon: <Check size={10} color={colors.amber} />, bg: colors.amberLight };
     case 'activity_update':
       return { icon: <ListChecks size={10} color={colors.teal} />, bg: colors.tealLight };
+    case 'trip_start_soon':
+      return { icon: <Clock size={10} color={colors.coral} />, bg: colors.coralLight };
     default:
       return { icon: <Bell size={10} color={colors.muted} />, bg: colors.light };
   }
@@ -55,6 +58,18 @@ function getNotificationText(notification: AppNotification): string {
     case 'activity_update': {
       const destName = (notification.payload?.activity_name as string) ?? 'aktivitas';
       return `${actorName} menambahkan aktivitas ${destName} di ${tripName}.`;
+    }
+    case 'trip_start_soon': {
+      const start = notification.payload?.start_datetime as string | undefined;
+      const formatted = start
+        ? new Date(start).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'segera';
+      return `Perjalanan ${tripName} berangkat ${formatted}. Siap-siap!`;
     }
     default:
       return 'Notifikasi baru';

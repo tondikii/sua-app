@@ -33,6 +33,7 @@ import { AlertCircle } from '@/components/icons/AlertCircle';
 import { Clock } from '@/components/icons/Clock';
 import { TagInput } from '@/components/TagInput';
 import { ItemDetailSheet } from '@/components/ItemDetailSheet';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { bottomSheetFrame } from '@/theme/layout';
@@ -623,7 +624,7 @@ export default function WishlistScreen() {
 
   const priority = sortTab === 'all' ? undefined : sortTab;
   const tag = activeTag || undefined;
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWishlists(priority, tag);
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useWishlists(priority, tag);
   const { data: tagsData } = useWishlistTags();
   const deleteWishlist = useDeleteWishlist();
 
@@ -774,6 +775,8 @@ export default function WishlistScreen() {
       {/* Content */}
       {isLoading ? (
         <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.coral} /></View>
+      ) : isError ? (
+        <ErrorScreen onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <View style={styles.emptyContainer}>
           <WishlistEmptyIllustration />

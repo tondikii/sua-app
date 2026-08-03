@@ -30,6 +30,7 @@ import { useMessages } from '@/features/chat/hooks/useMessages';
 import { goBackSmart } from '@/lib/navigation';
 import { useToast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { CalendarEventModal } from '@/features/calendar/components/CalendarEventModal';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { MoreHorizontal } from '@/components/icons/MoreHorizontal';
@@ -58,7 +59,7 @@ export default function TripDetailScreen() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { data: trip, isLoading: tripLoading } = useTripDetail(tripId);
+  const { data: trip, isLoading: tripLoading, isError: tripError, refetch: refetchTrip } = useTripDetail(tripId);
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities(tripId);
   const { data: membersData, isLoading: membersLoading } = useMembers(tripId);
   const { data: pollsData } = usePolls(tripId);
@@ -193,6 +194,15 @@ export default function TripDetailScreen() {
     );
   }
 
+  if (tripError) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ErrorScreen onRetry={() => void refetchTrip()} />
+      </View>
+    );
+  }
+
   if (!trip) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -306,8 +316,16 @@ export default function TripDetailScreen() {
             : tab.key === 'voting' ? votingCount
             : tab.key === 'chat' ? chatCount
             : mediaCount;
-          // Chat badge hanya unread dan tab tidak aktif; tab lain selalu tampil counternya (termasuk 0).
-          const showBadge = tab.key === 'chat' ? count > 0 && !active : true;
+          // Badge rules (docs/FIGMA.md "Trip Detail — Tab Structure"):
+          // - Itinerary: hidden jika 0
+          // - Voting: selalu tampil termasuk 0
+          // - Chat: unread saja (hanya jika > 0 dan tab tidak aktif)
+          // - Media: selalu tampil termasuk 0
+          const showBadge = tab.key === 'itinerary'
+            ? count > 0
+            : tab.key === 'chat'
+              ? count > 0 && !active
+              : true;
           return (
             <TouchableOpacity
               key={tab.key}

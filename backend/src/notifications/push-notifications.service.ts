@@ -141,6 +141,27 @@ export class PushNotificationsService {
           },
         };
       }
+      case 'trip_start_soon': {
+        const startDatetime = payload.start_datetime as string | undefined;
+        const formatted = startDatetime
+          ? new Date(startDatetime).toLocaleString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : 'segera';
+        return {
+          title: 'Perjalanan Segera Dimulai',
+          body: `${trip} berangkat ${formatted}. Siap-siap!`,
+          data: {
+            type: opts.type,
+            trip_id: opts.tripId,
+            start_datetime: payload.start_datetime ?? null,
+            is_all_day: payload.is_all_day ?? null,
+          },
+        };
+      }
       default:
         return {
           title: 'Notifikasi Baru',

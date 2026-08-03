@@ -5,6 +5,9 @@ export default () => ({
     webUrl: process.env.APP_WEB_URL ?? 'http://localhost:8081',
   },
 
+  /** Maximum number of registered (active) users — free-tier gate. */
+  userLimit: parseInt(process.env.USER_LIMIT ?? '50', 10),
+
   database: {
     url: process.env.DATABASE_URL,
     directUrl: process.env.DIRECT_URL,

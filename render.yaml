@@ -1,0 +1,87 @@
+# ── Atur Perjalanan — Render Blueprint (free tier) ──────────────────
+# Deploy backend NestJS sebagai Web Service.
+#
+# Deploy:
+#   1. Push repo ke GitHub, buka render.com → New → Blueprint
+#   2. Pilih repo ini — Render membaca render.yaml ini
+#   3. Set environment variables (lihat `envVars` di bawah / dashboard)
+#
+# Catatan free tier: service tidur setelah ~15 menit idle; request pertama
+# lambat (~50s boot). Cron reminder voting (M9) hanya jalan saat service awake.
+# ─────────────────────────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: atur-perjalanan-backend
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter backend exec prisma generate &&
+      pnpm --filter backend build
+    startCommand: node backend/dist/main
+    healthCheckPath: /health
+    releaseCommand: >-
+      pnpm --filter backend exec prisma migrate deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: APP_WEB_URL
+        value: https://atur-perjalanan.pages.dev
+      - key: USER_LIMIT
+        value: "50"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: GOOGLE_CALENDAR_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CALENDAR_CLIENT_SECRET
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+
+# Release command — `prisma migrate deploy` otomatis dijalankan Render
+# sebelum service start (setiap deploy baru).

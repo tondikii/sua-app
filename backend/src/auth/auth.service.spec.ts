@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -32,7 +32,7 @@ const mockUser = {
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: { user: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock } };
+  let prisma: { user: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock; count: jest.Mock } };
   let jwtService: { sign: jest.Mock };
 
   beforeEach(async () => {
@@ -41,6 +41,7 @@ describe('AuthService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        count: jest.fn().mockResolvedValue(0),
       },
     };
 
@@ -65,10 +66,11 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
-              const config: Record<string, string> = {
+              const config: Record<string, string | number> = {
                 'google.clientId': 'test-client-id',
                 'jwt.secret': 'test-secret',
                 'supabase.jwtSecret': 'supabase-secret',
+                userLimit: 50,
               };
               return config[key];
             }),
@@ -120,6 +122,45 @@ describe('AuthService', () => {
       });
 
       prisma.user.findFirst.mockResolvedValue(mockUser);
+      prisma.user.update.mockResolvedValue(mockUser);
+
+      const result = await service.googleLogin({ id_token: 'valid-token' });
+
+      expect(result.is_new_user).toBe(false);
+      expect(result.user).toBeDefined();
+    });
+
+    it('should throw ForbiddenException when user limit reached for new users', async () => {
+      mockVerifyIdToken.mockResolvedValue({
+        getPayload: () => ({
+          sub: 'google-new-456',
+          email: 'full@example.com',
+          name: 'Full User',
+          picture: null,
+        }),
+      });
+
+      prisma.user.findFirst.mockResolvedValue(null); // no existing user
+      prisma.user.count.mockResolvedValue(50); // at limit
+
+      await expect(service.googleLogin({ id_token: 'valid-token' })).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('should allow existing users to log in even at user limit', async () => {
+      mockVerifyIdToken.mockResolvedValue({
+        getPayload: () => ({
+          sub: 'google-123',
+          email: 'test@example.com',
+          name: 'Test User',
+          picture: null,
+        }),
+      });
+
+      prisma.user.findFirst.mockResolvedValue(mockUser);
+      prisma.user.count.mockResolvedValue(50); // at limit
       prisma.user.update.mockResolvedValue(mockUser);
 
       const result = await service.googleLogin({ id_token: 'valid-token' });

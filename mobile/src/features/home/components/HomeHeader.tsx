@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Bell } from '@/components/icons/Bell';
-import { colors } from '@/theme/colors';
+import { useTheme } from '@/theme';
 import { typography } from '@/theme/typography';
 
 interface HomeHeaderProps {
@@ -10,19 +10,20 @@ interface HomeHeaderProps {
 }
 
 export function HomeHeader({ unreadCount, onPressBell }: HomeHeaderProps) {
+  const { colors: c } = useTheme();
   const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Perjalananku</Text>
+      <Text style={[styles.title, { color: c.charcoal }]}>Perjalananku</Text>
       <TouchableOpacity
-        style={styles.bellButton}
+        style={[styles.bellButton, { backgroundColor: c.light }]}
         onPress={onPressBell}
         activeOpacity={0.7}
       >
-        <Bell size={20} color={colors.charcoal} />
+        <Bell size={20} color={c.charcoal} />
         {unreadCount > 0 && (
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: c.coral, borderColor: c.white }]}>
             <Text style={styles.badgeText}>{badgeText}</Text>
           </View>
         )}
@@ -42,14 +43,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.charcoal,
     letterSpacing: -0.5,
   },
   bellButton: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -60,16 +59,14 @@ const styles = StyleSheet.create({
     minWidth: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: colors.coral,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: colors.white,
   },
   badgeText: {
     fontSize: 10,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.white,
+    color: '#FFFFFF',
   },
 });

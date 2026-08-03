@@ -9,12 +9,14 @@ import {
   Image,
   Platform,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
+import { useTheme, useThemeContext } from '@/theme';
 import { useUpdateProfile } from '@/features/users/hooks/useUpdateProfile';
 import { useAvatarUpload } from '@/features/users/hooks/useAvatarUpload';
 import { useToast } from '@/components/Toast';
@@ -55,6 +57,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { scheme, toggleScheme, isHydrated: themeHydrated } = useThemeContext();
+  const { colors: c } = useTheme();
   const updateProfile = useUpdateProfile();
   const avatarUpload = useAvatarUpload();
   const { showToast } = useToast();
@@ -268,13 +272,13 @@ export default function SettingsScreen() {
 
   // Main settings
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { backgroundColor: c.light, paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBackSmart(router)} style={styles.headerBtn}>
-          <ChevronLeft size={18} color={colors.charcoal} />
+        <TouchableOpacity onPress={() => goBackSmart(router)} style={[styles.headerBtn, { backgroundColor: c.white }]}>
+          <ChevronLeft size={18} color={c.charcoal} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pengaturan</Text>
+        <Text style={[styles.headerTitle, { color: c.charcoal }]}>Pengaturan</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -321,6 +325,27 @@ export default function SettingsScreen() {
             label="Syarat & Ketentuan"
             sub="Ketentuan penggunaan layanan"
           />
+        </View>
+
+        {/* Tampilan section */}
+        <Text style={styles.sectionLabel}>Tampilan</Text>
+        <View style={styles.menuCard}>
+          <View style={styles.menuRow}>
+            <View style={[styles.menuIconContainer, { backgroundColor: colors.tealLight }]}>
+              <HelpCircle size={17} color={colors.teal} />
+            </View>
+            <View style={styles.menuRowText}>
+              <Text style={styles.menuRowLabel}>Mode Gelap</Text>
+              <Text style={styles.menuRowSub}>Beranda & tab bar ikut tema gelap</Text>
+            </View>
+            <Switch
+              value={themeHydrated ? scheme === 'dark' : false}
+              onValueChange={toggleScheme}
+              trackColor={{ false: colors.border, true: colors.coral }}
+              thumbColor="#FFFFFF"
+              disabled={!themeHydrated}
+            />
+          </View>
         </View>
 
         {/* Account section */}

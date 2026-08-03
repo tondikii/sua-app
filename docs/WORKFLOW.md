@@ -386,8 +386,10 @@ Respons `GET /v1/notifications` hanya berisi UUID. FE **wajib** resolve:
 | voting #2                         | `voting_deadline`                            | 🗳️ `#FFF8ED`    | _"Voting Tanggal **{trip}** segera berakhir."_         | Vote Sekarang → (amber `#F59E0B` on `#FFF8ED`) |
 | voting #3                         | `voting_deadline` 🔜 `poll_type=destination` | 🗳️ `#FFF8ED`    | _"Voting Destinasi **{trip}** deadline besok."_        | Vote Sekarang →                                |
 | activity #4                       | `destination_update`                         | 📋 `tealLight`  | _"{nama} menambahkan aktivitas **{dest}** di {trip}."_ | — (tap kartu → mark read + navigasi trip)      |
+| trip start #5                     | `trip_start_soon`                            | 🕐 `coralLight` | _"Perjalanan **{trip}** berangkat {waktu}. Siap-siap!"_ | — (tap kartu → mark read + navigasi trip)      |
 
 - `destination_update` payload BE: `{ "dest_name": "..." }`.
+- `trip_start_soon` payload BE: `{ "reminder_type": "r1"|"r2", "start_datetime": "...", "is_all_day": bool, "start_time": "HH:mm"|null }`.
 - Kartu `actions.length === 0` → `cursor: pointer`; tap = mark read + navigasi trip Itinerary.
 - **Hydration client**: BE kirim `actor_id`, `trip_id` (UUID) — FE resolve nama/avatar/trip dari cache atau fetch paralel. 🔜 M3–M10: enriched DTO (`actor`, `trip` embed).
 - Terima/Tolak dari notif `invite`: lookup `invitation_id` via `GET /v1/trips/invitations` + `trip_id` (payload saat ini `{}`).
@@ -883,7 +885,7 @@ Kunci tanggal (`Screen73`): creator-only · `POST …/candidates/:id/lock` → `
 | Buat voting (sheet)     | POST              | `/v1/trips/:id/polls` `{poll_type, title, options[], deadline?}` | 🔜 M5           |
 | Hapus poll              | DELETE            | `/v1/trips/:id/polls/:id`                                        | 🔜 M5           |
 
-> Voting tanggal legacy = `trip_date_candidates` (auto saat create trip mode kandidat §6). Multi-poll hub butuh `trip_polls` (§3.5 ARCHITECTURE). Reminder notifikasi: cron H-7d / H-1d / H-1h sebelum `voting_deadline`.
+> Voting tanggal legacy = `trip_date_candidates` (auto saat create trip mode kandidat §6). Multi-poll hub butuh `trip_polls` (§3.5 ARCHITECTURE). Reminder notifikasi: cron proporsional 2× (R1 50% gap, R2 25% gap, min lead 30m/5m, anchor `trip.updatedAt`) sebelum `voting_deadline` — lihat M21. Trip start reminder: tipe `trip_start_soon` (cron sama, sebelum `start_date`+`start_time`).
 
 ## §9. Detail Perjalanan — Tab Chat
 

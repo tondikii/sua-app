@@ -4,10 +4,9 @@ import type { TripSummary } from '@atur-perjalanan/shared-types';
 import { TripTags } from './TripTags';
 import { Calendar } from '@/components/icons/Calendar';
 import { formatDateRange } from './TripDateUtils';
-import { colors } from '@/theme/colors';
+import { useTheme, avatarColorFor } from '@/theme';
 import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
-import { avatarColorFor } from '@/theme/colors';
 
 interface TripCardProps {
   trip: TripSummary;
@@ -20,6 +19,7 @@ const AVATAR_SIZE = 26;
 const AVATAR_OVERLAP = 9;
 
 export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
+  const { colors: c } = useTheme();
   const dateRange = formatDateRange(
     trip.start_date,
     trip.end_date,
@@ -32,7 +32,7 @@ export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
   const avatars = trip.participants_preview.slice(0, MAX_AVATARS);
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.card, dimmed && styles.cardDimmed]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.card, { backgroundColor: c.white }, dimmed && styles.cardDimmed]}>
       <View style={styles.imageContainer}>
         {trip.cover_image_url ? (
           <Image
@@ -41,14 +41,14 @@ export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
             resizeMode="cover"
           />
         ) : (
-          <View style={[styles.imagePlaceholder, dimmed && styles.imageDimmed]}>
-            <Calendar size={32} color={colors.mutedLight} />
+          <View style={[styles.imagePlaceholder, { backgroundColor: c.light }, dimmed && styles.imageDimmed]}>
+            <Calendar size={32} color={c.mutedLight} />
           </View>
         )}
       </View>
 
       <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={1}>{trip.name}</Text>
+        <Text style={[styles.title, { color: c.charcoal }]} numberOfLines={1}>{trip.name}</Text>
 
         {trip.tags.length > 0 && (
           <View style={styles.tagsRow}>
@@ -58,8 +58,8 @@ export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
 
         <View style={styles.footer}>
           <View style={styles.dateRow}>
-            <Calendar size={13} color={colors.muted} />
-            <Text style={styles.dateText} numberOfLines={1}>{dateRange}</Text>
+            <Calendar size={13} color={c.muted} />
+            <Text style={[styles.dateText, { color: c.muted }]} numberOfLines={1}>{dateRange}</Text>
           </View>
 
           {avatars.length > 0 && (
@@ -69,7 +69,7 @@ export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
                   key={user.id}
                   style={[
                     styles.avatar,
-                    { marginLeft: i > 0 ? -AVATAR_OVERLAP : 0, zIndex: MAX_AVATARS - i },
+                    { borderColor: c.white, marginLeft: i > 0 ? -AVATAR_OVERLAP : 0, zIndex: MAX_AVATARS - i },
                   ]}
                 >
                   {user.avatar_url ? (
@@ -91,7 +91,6 @@ export function TripCard({ trip, dimmed, onPress }: TripCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
     borderRadius: 20,
     overflow: 'hidden',
     ...shadows.card,
@@ -116,7 +115,6 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -127,7 +125,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.charcoal,
     letterSpacing: -0.3,
   },
   tagsRow: {
@@ -147,7 +144,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...typography.caption,
-    color: colors.muted,
     flex: 1,
   },
   avatarStack: {
@@ -159,7 +155,6 @@ const styles = StyleSheet.create({
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
     borderWidth: 2,
-    borderColor: colors.white,
     overflow: 'hidden',
   },
   avatarImage: {
@@ -177,6 +172,6 @@ const styles = StyleSheet.create({
   avatarLetter: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.white,
+    color: '#FFFFFF',
   },
 });

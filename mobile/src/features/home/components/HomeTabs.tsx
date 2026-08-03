@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors } from '@/theme/colors';
+import { useTheme } from '@/theme';
 
 export type HomeTab = 'mendatang' | 'selesai' | 'undangan';
 
@@ -17,8 +17,10 @@ const TABS: { id: HomeTab; label: string }[] = [
 ];
 
 export function HomeTabs({ activeTab, counts, onChangeTab }: HomeTabsProps) {
+  const { colors: c } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderBottomColor: c.border }]}>
       {TABS.map((tab) => {
         const isActive = tab.id === activeTab;
         const count = counts[tab.id];
@@ -31,16 +33,16 @@ export function HomeTabs({ activeTab, counts, onChangeTab }: HomeTabsProps) {
             activeOpacity={0.7}
           >
             <View style={styles.tabContent}>
-              <Text style={isActive ? styles.labelActive : styles.labelInactive}>
+              <Text style={[isActive ? styles.labelActive : styles.labelInactive, { color: isActive ? c.coral : c.muted }]}>
                 {tab.label}
               </Text>
-              <View style={[styles.badge, isActive ? styles.badgeActive : styles.badgeInactive]}>
-                <Text style={[styles.badgeText, isActive ? styles.badgeTextActive : styles.badgeTextInactive]}>
+              <View style={[styles.badge, isActive ? styles.badgeActive : styles.badgeInactive, { backgroundColor: isActive ? c.coralLight : c.light }]}>
+                <Text style={[styles.badgeText, { color: isActive ? c.coral : c.muted }]}>
                   {count}
                 </Text>
               </View>
             </View>
-            <View style={[styles.underline, isActive && styles.underlineActive]} />
+            <View style={[styles.underline, isActive && [styles.underlineActive, { backgroundColor: c.coral }]]} />
           </TouchableOpacity>
         );
       })}
@@ -54,7 +56,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginHorizontal: 22,
     borderBottomWidth: 1.5,
-    borderBottomColor: colors.border,
   },
   tab: {
     marginRight: 18,
@@ -69,40 +70,26 @@ const styles = StyleSheet.create({
   labelActive: {
     fontSize: 14,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.coral,
   },
   labelInactive: {
     fontSize: 14,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
   },
   badge: {
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8,
   },
-  badgeActive: {
-    backgroundColor: colors.coralLight,
-  },
-  badgeInactive: {
-    backgroundColor: colors.light,
-  },
+  badgeActive: {},
+  badgeInactive: {},
   badgeText: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
-  },
-  badgeTextActive: {
-    color: colors.coral,
-  },
-  badgeTextInactive: {
-    color: colors.muted,
   },
   underline: {
     height: 2.5,
     backgroundColor: 'transparent',
     borderRadius: 2,
   },
-  underlineActive: {
-    backgroundColor: colors.coral,
-  },
+  underlineActive: {},
 });

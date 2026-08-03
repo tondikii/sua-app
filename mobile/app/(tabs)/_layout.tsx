@@ -4,12 +4,12 @@ import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { setLastTab } from '@/lib/navigation';
+import { useTheme } from '@/theme';
 import { Home } from '@/components/icons/Home';
 import { Search } from '@/components/icons/Search';
 import { Heart } from '@/components/icons/Heart';
 import { User } from '@/components/icons/User';
 import { Plus } from '@/components/icons/Plus';
-import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { MOBILE_MAX_WIDTH } from '@/theme/layout';
 
@@ -25,6 +25,7 @@ function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
+  const { colors: c } = useTheme();
 
   const isActive = (name: string) => {
     if (name === 'index') return pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index';
@@ -41,17 +42,17 @@ function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
+    <View style={[styles.container, { backgroundColor: c.white, borderTopColor: c.border, paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
       {TABS.map((tab) => {
         if (tab.isFab) {
           return (
             <TouchableOpacity
               key={tab.name}
-              style={styles.fab}
+              style={[styles.fab, { backgroundColor: c.coral }]}
               onPress={() => handlePress(tab.name, true)}
               activeOpacity={0.85}
             >
-              <Plus size={24} color={colors.white} />
+              <Plus size={24} color="#FFFFFF" />
             </TouchableOpacity>
           );
         }
@@ -64,8 +65,8 @@ function CustomTabBar({ state, navigation }: { state: any; navigation: any }) {
             onPress={() => handlePress(tab.name, false, tab.route)}
             activeOpacity={0.7}
           >
-            <Icon size={22} color={active ? colors.coral : colors.muted} />
-            <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{tab.label}</Text>
+            <Icon size={22} color={active ? c.coral : c.muted} />
+            <Text style={[styles.tabLabel, active && [styles.tabLabelActive, { color: c.coral }], { color: active ? c.coral : c.muted }]}>{tab.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -96,9 +97,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     height: 88,
     ...Platform.select({
       web: { position: 'fixed' as any, bottom: 0, left: 0, right: 0, maxWidth: MOBILE_MAX_WIDTH, marginHorizontal: 'auto', zIndex: 100 },
@@ -116,17 +115,14 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
   },
   tabLabelActive: {
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.coral,
   },
   fab: {
     width: 54,
     height: 54,
     borderRadius: 18,
-    backgroundColor: colors.coral,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -28,

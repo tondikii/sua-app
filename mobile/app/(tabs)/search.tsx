@@ -17,6 +17,7 @@ import { Search } from '@/components/icons/Search';
 import { X } from '@/components/icons/X';
 import { Clock } from '@/components/icons/Clock';
 import { ChevronRight } from '@/components/icons/ChevronRight';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
@@ -69,7 +70,7 @@ export default function SearchScreen() {
   const [history, setHistory] = useState<SearchUserWithTrips[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-  const { data, isLoading } = useUserSearch(debouncedQuery);
+  const { data, isLoading, isError, refetch } = useUserSearch(debouncedQuery);
   const results = data?.data ?? [];
 
   // Hydrate search history from AsyncStorage on mount
@@ -166,6 +167,8 @@ export default function SearchScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.coral} />
           </View>
+        ) : isError ? (
+          <ErrorScreen onRetry={() => void refetch()} />
         ) : results.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>

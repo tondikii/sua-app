@@ -46,6 +46,7 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Arsitektur DB, Backend, dan Mobile (target state — tidak melacak progress).
 6. [Milestones & Roadmap](docs/MILESTONES.md) - Progress development ada di sini.
 7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory, penghubung ke workflow.
+8. [Deployment Guide](docs/DEPLOYMENT.md) - Langkah deploy backend (Render), web (Cloudflare Pages), dan Play Store (EAS).
 
 ## 🚀 Memulai Pengerjaan
 
@@ -57,7 +58,7 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 | [pnpm](https://pnpm.io/installation)                 | 9+                                               |
 | [Supabase CLI](https://supabase.com/docs/guides/cli) | latest                                           |
 | [Expo CLI](https://docs.expo.dev/more/expo-cli/)     | latest (`npx expo`)                              |
-| [EAS CLI](https://docs.expo.dev/eas/)                | latest (build/submit — M20)                      |
+| [EAS CLI](https://docs.expo.dev/eas/)                | latest (build/submit — M18)                      |
 | Xcode (untuk build iOS)                              | 15+ (opsional, jika tidak pakai EAS Build cloud) |
 | Android Studio (untuk emulator Android)              | Hedgehog (2023.1.1)+                             |
 
@@ -138,6 +139,69 @@ pnpm --filter mobile build:preview:ios             # EAS preview build (IPA — 
 pnpm --filter mobile build:production:android      # EAS production build (AAB — Play Store)
 pnpm --filter mobile build:production:ios          # EAS production build (IPA — App Store)
 ```
+
+## 🚀 Deployment (Free-Tier)
+
+> **Prioritas M18**: deploy backend + web + Play Store dengan semua gratis-tier, batasi **50 user aktif**.
+
+### Arsitektur Production
+
+| Layer | Host | Alamat |
+| --- | --- | --- |
+| Backend (NestJS) | **Render.com** (free) | `https://atur-perjalanan-backend.onrender.com` |
+| Web (Expo export) | **Cloudflare Pages** | `https://atur-perjalanan.pages.dev` |
+| Database | Supabase (cloud) | project `vclvoovqneuiorpiidqz` |
+| Storage | Cloudflare R2 | bucket `atur-perjalanan-media` |
+
+### 1. Backend — Render
+
+```bash
+# Blueprint infra-as-code ada di render.yaml
+# 1. Push repo ke GitHub
+# 2. render.com → New → Blueprint → pilih repo
+# 3. Isi env vars (sync: false → set manual di dashboard):
+#    DATABASE_URL (pooler :6543), DIRECT_URL (:5432), SUPABASE_*, JWT_SECRET,
+#    GOOGLE_CLIENT_ID, R2_*, APP_WEB_URL=https://atur-perjalanan.pages.dev,
+#    EXPO_ACCESS_TOKEN, USER_LIMIT=50, APP_ENV=production
+# 4. Release Command: pnpm --filter backend exec prisma migrate deploy
+```
+
+### 2. Web — Cloudflare Pages
+
+```bash
+# Local: build production web bundle
+cd mobile
+cp .env.production .env   # atau set env vars di dashboard Pages
+pnpm export:web           # output: mobile/dist
+
+# Cloudflare Pages project:
+#   Build command: pnpm --filter mobile export:web
+#   Output dir:    mobile/dist
+#   Env vars:      EXPO_PUBLIC_API_URL, EXPO_PUBLIC_WEB_ORIGIN,
+#                  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, EXPO_PUBLIC_SUPABASE_*
+```
+
+> **R2 CORS**: tambahkan origin `https://atur-perjalanan.pages.dev` ke bucket CORS (lihat `.env.example`).
+
+### 3. Google OAuth (manual)
+
+- Web client ID → **Authorized redirect origin** `https://atur-perjalanan.pages.dev`
+- Android client ID → tambahkan **SHA-1** keystore (dari EAS/Play Console)
+- Backend `GOOGLE_CLIENT_ID` + Calendar redirect URI produksi
+
+### 4. Play Store (EAS)
+
+```bash
+cd mobile
+eas build --platform android --profile production   # → .aab
+eas submit --platform android --profile production  # → Play Internal Testing
+```
+
+Aksi manual: tambah SHA-1 ke OAuth client, isi store listing & content rating di Play Console (akun developer sudah aktif), privacy policy.
+
+### Limit User Aktif
+
+`USER_LIMIT` (default 50) di env backend. Setelah tercapai, registrasi Google baru ditolak (`USER_LIMIT_REACHED`, pesan "Aplikasi sedang penuh"); user lama tetap login. Ubah tanpa deploy ulang — cukup restart service.
 
 ## 📝 Changelog Dokumen
 

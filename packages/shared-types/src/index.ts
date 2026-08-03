@@ -254,7 +254,7 @@ export interface PresignResponse {
 
 // ── Notification ─────────────────────────────────────────────
 
-export type NotificationType = 'invite' | 'follow' | 'voting_deadline' | 'activity_update';
+export type NotificationType = 'invite' | 'follow' | 'voting_deadline' | 'activity_update' | 'trip_start_soon';
 
 export interface AppNotification {
   id: string;

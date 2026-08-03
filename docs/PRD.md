@@ -104,6 +104,7 @@
 | _Voting Tanggal **Bali Trip** segera berakhir._                           | `voting_deadline`                | Vote Sekarang → (amber) |
 | _Voting Destinasi **Raja Ampat** deadline besok._                         | `voting_deadline` 🔜 `poll_type` | Vote Sekarang →         |
 | _Rina menambahkan aktivitas **Sunrise di Puncak Jayagiri** di Bali Trip._ | `destination_update`             | Tap → trip              |
+| _Perjalanan **Bali Trip** berangkat 5 Agu, 08:00. Siap-siap!_              | `trip_start_soon`                | Tap → trip              |
 
 > Hydrate `actor_id`/`trip_id` di FE. Payload `invite` saat ini `{}` — lookup `invitation_id` via `GET /v1/trips/invitations`. 🔜 M9 enriched DTO.
 
