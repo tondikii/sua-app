@@ -28,6 +28,9 @@ interface ItineraryTimelineProps {
   startDate: string | null;
   endDate: string | null;
   tripStatus: string;
+  /** Trip-level wall-clock start/end (HH:MM) — used for the day window badge. */
+  tripStartTime?: string | null;
+  tripEndTime?: string | null;
   activeDayIndex: number;
   onChangeDay: (index: number) => void;
   onPressItem: (activity: TripActivity) => void;
@@ -219,6 +222,8 @@ export function ItineraryTimeline({
   startDate,
   endDate,
   tripStatus,
+  tripStartTime,
+  tripEndTime,
   activeDayIndex,
   onChangeDay,
   onPressItem,
@@ -230,7 +235,7 @@ export function ItineraryTimeline({
   onDeleteActivity,
   referenceNow = new Date(),
 }: ItineraryTimelineProps) {
-  const days = buildItineraryDays(activities, startDate, endDate, tripStatus);
+  const days = buildItineraryDays(activities, startDate, endDate, tripStatus, tripStartTime, tripEndTime);
   const currentDay = days[activeDayIndex] ?? days[0];
 
   if (!currentDay) {

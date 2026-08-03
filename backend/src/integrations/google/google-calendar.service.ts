@@ -53,21 +53,32 @@ export class GoogleCalendarService {
 
   /**
    * Build the Google OAuth consent URL. `access_type=offline` + `prompt=consent`
-   * guarantee a refresh_token on first authorization.
+   * guarantee a refresh_token on first authorization. `login_hint` pre-selects
+   * the user's own Google account (they already signed in to the app), so Google
+   * doesn't prompt to pick an account again.
+   *
+   * `redirect` is the post-callback target: a full URI (e.g.
+   * `aturperjalanan://trip/abc` on native, or `http://localhost:8081/trip/abc`
+   * on web) or a path (falls back to `app.webUrl + path`).
    */
-  buildAuthUrl(userId: string, redirectPath = '/trip'): string {
+  async buildAuthUrl(userId: string, redirect = '/'): Promise<string> {
     if (!this.configured) {
       throw new BadRequestException({
         code: 'CALENDAR_NOT_CONFIGURED',
         message: 'Google Calendar integration is not configured on the server',
       });
     }
-    const state = Buffer.from(JSON.stringify({ userId, redirectPath })).toString('base64url');
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    const state = Buffer.from(JSON.stringify({ userId, redirect })).toString('base64url');
     return this.oauth.generateAuthUrl({
       access_type: 'offline',
       prompt: 'consent',
       scope: CALENDAR_SCOPE,
       state,
+      ...(user?.email ? { login_hint: user.email } : {}),
     });
   }
 
@@ -77,11 +88,11 @@ export class GoogleCalendarService {
    */
   async handleCallback(code: string, state: string): Promise<{ redirectUrl: string }> {
     let userId: string;
-    let redirectPath = '/';
+    let redirect = '/';
     try {
       const parsed = JSON.parse(Buffer.from(state, 'base64url').toString());
       userId = parsed.userId as string;
-      redirectPath = (parsed.redirectPath as string) || '/';
+      redirect = (parsed.redirect as string) || '/';
     } catch {
       throw new BadRequestException({ code: 'INVALID_OAUTH_STATE', message: 'Invalid OAuth state' });
     }
@@ -103,7 +114,14 @@ export class GoogleCalendarService {
       },
     });
 
-    return { redirectUrl: `${this.appWebUrl}${redirectPath}` };
+    // Full URI (deeplink or web) is used as-is; a bare path is prefixed with
+    // the app web URL.
+    const redirectUrl =
+      redirect.startsWith('http://') || redirect.startsWith('https://') || redirect.startsWith('aturperjalanan://')
+        ? redirect
+        : `${this.appWebUrl}${redirect}`;
+
+    return { redirectUrl };
   }
 
   /** True when the user has stored calendar tokens. */
@@ -172,8 +190,10 @@ export class GoogleCalendarService {
   /**
    * Create a calendar event for the trip in the user's own calendar.
    * - All-day trips → `start.date`/`end.date` (end exclusive: end_date + 1 day).
-   * - Timed trips → `start.dateTime`/`end.dateTime` as local wall-clock,
-   *   combining the stored date + HH:MM without any timezone conversion.
+   * - Timed trips → `start.dateTime`/`end.dateTime` as local wall-clock
+   *   (Asia/Jakarta), combining the stored date + HH:MM.
+   * Enriched payload: tags, description, location (from the itinerary),
+   * attendees (participant emails), and reminder defaults.
    */
   async createEvent(
     userId: string,
@@ -184,6 +204,11 @@ export class GoogleCalendarService {
       isAllDay: boolean;
       startTime: string | null;
       endTime: string | null;
+      tags?: string[];
+      description?: string;
+      location?: string | null;
+      attendees?: string[];
+      itinerary?: string;
     },
   ): Promise<{ id: string; html_link: string | null }> {
     if (!trip.startDate) {
@@ -208,9 +233,34 @@ export class GoogleCalendarService {
       const endDateTime = this.combineDateTime(endDate, trip.endTime ?? '10:00');
       event = {
         summary: trip.name,
-        start: { dateTime: startDateTime },
-        end: { dateTime: endDateTime },
+        start: { dateTime: startDateTime, timeZone: 'Asia/Jakarta' },
+        end: { dateTime: endDateTime, timeZone: 'Asia/Jakarta' },
       };
+    }
+
+    // Enrich with tags → summary suffix (e.g. "Staycation · #Hotel").
+    if (trip.tags?.length) {
+      event.summary = `${trip.name} · ${trip.tags.slice(0, 3).join(' ')}`;
+    }
+
+    // Description: custom description + itinerary + tags block.
+    const descriptionParts: string[] = [];
+    if (trip.description) descriptionParts.push(trip.description);
+    if (trip.itinerary) descriptionParts.push(trip.itinerary);
+    if (descriptionParts.length) {
+      event.description = descriptionParts.join('\n\n');
+    }
+
+    if (trip.location) {
+      event.location = trip.location;
+    }
+
+    // Attendees: everyone who joined the trip.
+    if (trip.attendees?.length) {
+      event.attendees = trip.attendees.map((email) => ({ email }));
+      // Participants can modify the event & see the guest list.
+      event.guestsCanModify = true;
+      event.guestsCanSeeGuests = true;
     }
 
     const res = await fetch(`${CALENDAR_API_BASE}/calendars/primary/events`, {

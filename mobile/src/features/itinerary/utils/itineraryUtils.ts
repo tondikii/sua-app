@@ -22,6 +22,17 @@ export interface TimelineSegment {
 const DEFAULT_WINDOW_START = '07:00';
 const DEFAULT_WINDOW_END = '20:00';
 
+/** Parse "HH:MM" into minutes since midnight. */
+function toMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+}
+
+/** True when an activity's end time is earlier than its start time (spans midnight). */
+function spansMidnight(activity: TripActivity): boolean {
+  return toMinutes(activity.end_time) < toMinutes(activity.start_time);
+}
+
 export function resolveItineraryTimeState(
   startTime: string,
   endTime: string,
@@ -46,6 +57,14 @@ export function resolveItineraryTimeState(
   const startMinutes = startH * 60 + startM;
   const endMinutes = endH * 60 + endM;
 
+  // Activity spans midnight (e.g. 13:00 -> 12:00 the next day): "now" is within
+  // the activity from start until midnight, and from midnight until end.
+  if (endMinutes < startMinutes) {
+    if (nowMinutes >= startMinutes) return 'present';
+    if (nowMinutes < endMinutes) return 'present';
+    return 'past';
+  }
+
   if (nowMinutes >= startMinutes && nowMinutes <= endMinutes) return 'present';
   if (nowMinutes > endMinutes) return 'past';
   return 'future';
@@ -56,6 +75,8 @@ export function buildItineraryDays(
   startDate: string | null,
   endDate: string | null,
   tripStatus: string,
+  tripStartTime?: string | null,
+  tripEndTime?: string | null,
 ): ItineraryDay[] {
   // Group activities by day_number
   const dayMap = new Map<number, TripActivity[]>();
@@ -93,11 +114,32 @@ export function buildItineraryDays(
       ? `Hari ${dayNumber}`
       : getDayLabel(date, i);
 
-    // Window: extend to 24:00 when a next day exists, start at 00:00 when a previous day exists.
+    // Window: start at the earliest activity start (default 07:00 when empty),
+    // end at the latest activity end. For multi-day trips the window extends to
+    // midnight so an activity spanning midnight (e.g. 13:00 -> 12:00) isn't
+    // clamped to the default 07:00–20:00 window.
     const hasNextDay = dayNumber < totalDays;
     const hasPrevDay = dayNumber > 1;
-    const windowStart = hasPrevDay ? '00:00' : DEFAULT_WINDOW_START;
-    const windowEnd = hasNextDay ? '24:00' : DEFAULT_WINDOW_END;
+
+    // Window basis: trip-level times when provided (e.g. "14:00 – 12:00"),
+    // otherwise the default day window. Activities may still widen it.
+    let windowStart = tripStartTime || DEFAULT_WINDOW_START;
+    let windowEnd = tripEndTime || DEFAULT_WINDOW_END;
+    if (hasPrevDay) windowStart = '00:00';
+    if (hasNextDay) windowEnd = '24:00';
+
+    for (const item of items) {
+      const startMin = toMinutes(item.start_time);
+      if (startMin < toMinutes(windowStart)) windowStart = item.start_time;
+      if (spansMidnight(item)) {
+        // Spans into the next day — keep the window open to midnight so the
+        // activity isn't cut off by the default end.
+        windowEnd = '24:00';
+      } else {
+        const endMin = toMinutes(item.end_time);
+        if (endMin > toMinutes(windowEnd)) windowEnd = item.end_time;
+      }
+    }
 
     result.push({
       dayNumber,
@@ -130,19 +172,37 @@ export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
 
   if (items.length === 0) return segments;
 
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
+  // Sort: activities that don't span midnight by start time first, then
+  // midnight-spanning ones (they're the "last" event of the day).
+  const sorted = [...items].sort((a, b) => {
+    const aSpans = spansMidnight(a);
+    const bSpans = spansMidnight(b);
+    if (aSpans !== bSpans) return aSpans ? 1 : -1;
+    return toMinutes(a.start_time) - toMinutes(b.start_time);
+  });
 
-    // Check gap before this item
-    if (i === 0 && item.start_time > day.windowStart) {
-      segments.push({
-        type: 'gap',
-        startTime: day.windowStart,
-        endTime: item.start_time,
-      });
-    } else if (i > 0) {
-      const prevEnd = items[i - 1].end_time;
-      if (item.start_time > prevEnd) {
+  for (let i = 0; i < sorted.length; i++) {
+    const item = sorted[i];
+
+    // Gap before this item.
+    if (i === 0) {
+      const prevEnd = day.windowStart;
+      const startMin = toMinutes(item.start_time);
+      if (!spansMidnight(item) && startMin > toMinutes(prevEnd)) {
+        segments.push({
+          type: 'gap',
+          startTime: prevEnd,
+          endTime: item.start_time,
+        });
+      }
+    } else {
+      const prev = sorted[i - 1];
+      const prevEnd = prev.end_time;
+      const startMin = toMinutes(item.start_time);
+      // If the previous item spans midnight (ends "tomorrow"), no gap — this
+      // item would overlap the day start; also skip when the item itself spans
+      // midnight (it's last, nothing after it).
+      if (!spansMidnight(prev) && !spansMidnight(item) && startMin > toMinutes(prevEnd)) {
         segments.push({
           type: 'gap',
           startTime: prevEnd,
@@ -159,9 +219,10 @@ export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
     });
   }
 
-  // Trailing gap: after the last activity until the day window ends.
-  const lastItem = items[items.length - 1];
-  if (lastItem.end_time < day.windowEnd) {
+  // Trailing gap: after the last activity until the day window ends — but only
+  // when the last item doesn't span midnight (those end "tomorrow", past the window).
+  const lastItem = sorted[sorted.length - 1];
+  if (!spansMidnight(lastItem) && toMinutes(lastItem.end_time) < toMinutes(day.windowEnd)) {
     segments.push({
       type: 'gap',
       startTime: lastItem.end_time,

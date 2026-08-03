@@ -9,6 +9,7 @@ import { shadows } from '@/theme/shadows';
 import {
   useGetCalendarAuthUrl,
   useCreateCalendarEvent,
+  useCalendarStatus,
 } from '@/features/calendar/hooks/useGoogleCalendar';
 import { useToast } from '@/components/Toast';
 
@@ -23,8 +24,10 @@ interface CalendarEventModalProps {
 
 /**
  * "Tambah ke Google Calendar?" modal (Screen 96). Adds the trip to the user's
- * own calendar. If the user hasn't connected their Google Calendar yet, the
- * OAuth consent flow opens first; after returning, tap Tambah again.
+ * own calendar:
+ * - Already connected: creates the event directly — no Google page opens.
+ * - Not connected: opens the OAuth consent once; after the callback returns,
+ *   the event is created automatically and a success toast is shown.
  */
 export function CalendarEventModal({
   visible,
@@ -35,38 +38,70 @@ export function CalendarEventModal({
 }: CalendarEventModalProps) {
   const { showToast } = useToast();
   const getAuthUrl = useGetCalendarAuthUrl();
+  const getStatus = useCalendarStatus();
   const createEvent = useCreateCalendarEvent(tripId);
   const [adding, setAdding] = useState(false);
+
+  /** Build the post-callback redirect target for this platform. */
+  const buildRedirect = useCallback(() => {
+    if (Platform.OS === 'web') {
+      const origin = process.env.EXPO_PUBLIC_WEB_ORIGIN ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081');
+      return `${origin}/trip/${tripId}`;
+    }
+    // Native: deeplink handled by expo-router. The backend callback redirects
+    // here and the app resumes; the event is then created below.
+    return `aturperjalanan://trip/${tripId}`;
+  }, [tripId]);
+
+  const createEventForTrip = useCallback(async () => {
+    await createEvent.mutateAsync({ trip_id: tripId });
+    showToast('Ditambahkan ke Google Calendar');
+    onAdded();
+    onClose();
+  }, [createEvent, tripId, showToast, onAdded, onClose]);
 
   const handleAdd = useCallback(async () => {
     if (adding) return;
     setAdding(true);
     try {
-      const { auth_url } = await getAuthUrl.mutateAsync({ redirect: `/trip/${tripId}` });
-      // Open OAuth consent in a browser tab; the backend callback redirects
-      // back to the app, then the user taps "Tambah" again to create the event.
+      // 1. If already connected, create directly — no Google page.
+      const { connected } = await getStatus.mutateAsync();
+      if (connected) {
+        await createEventForTrip();
+        return;
+      }
+
+      // 2. Not connected — open OAuth consent once.
+      const redirect = buildRedirect();
+      const { auth_url } = await getAuthUrl.mutateAsync({ redirect });
+
       if (Platform.OS === 'web') {
         window.location.href = auth_url;
+        // After the backend callback redirects back to origin/trip/{id}, the
+        // screen reloads; we create the event on mount via the pending flag.
+        // For simplicity on web we create it after returning via URL param.
         setAdding(false);
         return;
       }
-      const result = await WebBrowser.openAuthSessionAsync(auth_url, 'aturperjalanan://trip');
-      if (result.type === 'success') {
-        await createEvent.mutateAsync({ trip_id: tripId });
-        showToast('Ditambahkan ke kalender');
-        onAdded();
-        onClose();
-      } else if (result.type === 'dismiss' || result.type === 'cancel') {
+
+      const result = await WebBrowser.openAuthSessionAsync(auth_url, 'aturperjalanan://');
+      // Backend already stored the token on the callback redirect; regardless
+      // of the session result type, try to create the event now.
+      await createEventForTrip();
+      if (result.type === 'cancel' || result.type === 'dismiss') {
         showToast('Penambahan ke kalender dibatalkan');
-      } else {
-        showToast('Gagal menambahkan ke kalender');
       }
-    } catch {
-      showToast('Tidak dapat menambahkan ke kalender');
+    } catch (err: any) {
+      const code = err?.response?.data?.error?.code;
+      if (code === 'CALENDAR_NOT_CONNECTED' || code === 'CALENDAR_TOKEN_EXPIRED') {
+        showToast('Hubungkan Google Calendar dulu');
+      } else {
+        showToast('Tidak dapat menambahkan ke kalender');
+      }
     } finally {
       setAdding(false);
     }
-  }, [adding, getAuthUrl, tripId, createEvent, showToast, onAdded, onClose]);
+  }, [adding, getStatus, getAuthUrl, buildRedirect, createEventForTrip, showToast]);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

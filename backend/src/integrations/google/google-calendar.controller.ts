@@ -23,17 +23,26 @@ export class GoogleCalendarController {
     private readonly prisma: PrismaService,
   ) {}
 
+  // GET /v1/integrations/google-calendar/status — JWT
+  @Get('status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getStatus(@CurrentUser() user: CurrentUserPayload) {
+    const connected = await this.googleCalendar.isConnected(user.userId);
+    return { connected };
+  }
+
   // GET /v1/integrations/google-calendar/auth-url — JWT
   @Get('auth-url')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  getAuthUrl(
+  async getAuthUrl(
     @CurrentUser() user: CurrentUserPayload,
     @Query('redirect') redirect?: string,
   ) {
-    const authUrl = this.googleCalendar.buildAuthUrl(
+    const authUrl = await this.googleCalendar.buildAuthUrl(
       user.userId,
-      redirect && redirect.startsWith('/') ? redirect : '/',
+      redirect || '/',
     );
     return { auth_url: authUrl };
   }
@@ -75,6 +84,22 @@ export class GoogleCalendarController {
         isAllDay: true,
         startTime: true,
         endTime: true,
+        tags: true,
+        creator: { select: { name: true, email: true } },
+        participants: {
+          include: { user: { select: { name: true, email: true } } },
+        },
+        activities: {
+          orderBy: [{ dayNumber: 'asc' }, { startTime: 'asc' }],
+          select: {
+            placeName: true,
+            locationLabel: true,
+            mapsLink: true,
+            dayNumber: true,
+            startTime: true,
+            endTime: true,
+          },
+        },
       },
     });
     if (!trip) {
@@ -87,6 +112,45 @@ export class GoogleCalendarController {
       });
     }
 
+    const tags = (trip.tags as string[]) ?? [];
+    const participantNames = trip.participants
+      .map((p) => p.user.name)
+      .filter((n): n is string => Boolean(n));
+    const creatorName = trip.creator?.name;
+
+    // Description: who's going + date range.
+    const dateLabel = trip.startDate
+      ? `${this.toDateOnly(trip.startDate)}${trip.endDate && this.toDateOnly(trip.endDate) !== this.toDateOnly(trip.startDate) ? ` s/d ${this.toDateOnly(trip.endDate)}` : ''}`
+      : '';
+    const who = [creatorName ? `Dibuat oleh: ${creatorName}` : null, participantNames.length ? `Peserta: ${participantNames.join(', ')}` : null]
+      .filter(Boolean)
+      .join('\n');
+    const description = [who, dateLabel ? `Tanggal: ${dateLabel}` : null, tags.length ? `Tag: ${tags.join(' ')}` : null]
+      .filter(Boolean)
+      .join('\n');
+
+    // Location from the first activity that has one.
+    const locationActivity = trip.activities.find((a) => a.locationLabel || a.mapsLink);
+    const location = locationActivity
+      ? (locationActivity.locationLabel ?? locationActivity.mapsLink ?? null)
+      : null;
+
+    // Itinerary summary per day.
+    const byDay = new Map<number, typeof trip.activities>();
+    for (const a of trip.activities) {
+      const d = a.dayNumber ?? 1;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d)!.push(a);
+    }
+    const itineraryLines: string[] = [];
+    for (const [day, acts] of [...byDay.entries()].sort((a, b) => a[0] - b[0])) {
+      const time = (a: { startTime: Date | null }) => (a.startTime ? this.toTime(a.startTime) : '');
+      const actsStr = acts
+        .map((a) => `${time(a)} ${a.placeName}${a.locationLabel ? ` (${a.locationLabel})` : ''}`)
+        .join('\n');
+      itineraryLines.push(`Hari ${day}:\n${actsStr}`);
+    }
+
     return this.googleCalendar.createEvent(user.userId, {
       name: trip.name,
       startDate: trip.startDate ? this.toDateOnly(trip.startDate) : null,
@@ -94,6 +158,11 @@ export class GoogleCalendarController {
       isAllDay: trip.isAllDay,
       startTime: trip.startTime ? this.toTime(trip.startTime) : null,
       endTime: trip.endTime ? this.toTime(trip.endTime) : null,
+      tags,
+      description,
+      location,
+      attendees: trip.participants.map((p) => p.user.email).filter((e): e is string => Boolean(e)),
+      itinerary: itineraryLines.length ? itineraryLines.join('\n\n') : undefined,
     });
   }
 

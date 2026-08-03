@@ -1,4 +1,6 @@
-import { IsString, IsArray, IsOptional, MaxLength, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsArray, IsOptional, MaxLength, IsDateString, IsBoolean, Matches } from 'class-validator';
+
+const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /**
  * "Jadikan Perjalanan" (WORKFLOW §12, Screen114-115). Conversion always
@@ -26,4 +28,12 @@ export class ConvertToTripDto {
   @IsOptional()
   @IsBoolean()
   is_all_day?: boolean;
+
+  @IsOptional()
+  @Matches(TIME_HHMM, { message: 'start_time must be in HH:MM format' })
+  start_time?: string;
+
+  @IsOptional()
+  @Matches(TIME_HHMM, { message: 'end_time must be in HH:MM format' })
+  end_time?: string;
 }

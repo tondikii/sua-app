@@ -4,6 +4,7 @@ import { WishlistService } from './wishlist.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TripsService } from '../trips/trips.service';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
+import { R2Service } from '../integrations/r2/r2.service';
 
 /**
  * Unit tests for WishlistService (M8). Prisma is fully mocked; `$transaction`
@@ -15,6 +16,7 @@ describe('WishlistService', () => {
   let prisma: any;
   let tripsService: any;
   let googleMaps: any;
+  let r2: any;
 
   const OWNER = 'user-1';
 
@@ -45,14 +47,22 @@ describe('WishlistService', () => {
         findMany: jest.fn(),
         update: jest.fn(),
       },
-      trip: { create: jest.fn() },
+      trip: { create: jest.fn(), update: jest.fn() },
       tripParticipant: { create: jest.fn() },
-      tripActivity: { create: jest.fn() },
+      tripActivity: { create: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
+      tripDocument: { create: jest.fn(), findFirst: jest.fn() },
       $transaction: jest.fn((cb: any) => cb(prisma)),
     };
 
     googleMaps = {
       resolveThumbnailFromMapsLink: jest.fn().mockResolvedValue(null),
+    };
+
+    r2 = {
+      putObject: jest.fn().mockResolvedValue({
+        storageKey: 'trips/trip-1/uuid.jpg',
+        storageUrl: 'https://r2.example.com/trips/trip-1/uuid.jpg',
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -64,6 +74,7 @@ describe('WishlistService', () => {
           useValue: { getTripDetail: jest.fn(async (tripId: string) => ({ id: tripId })) },
         },
         { provide: GoogleMapsService, useValue: googleMaps },
+        { provide: R2Service, useValue: r2 },
       ],
     }).compile();
 
@@ -343,6 +354,121 @@ describe('WishlistService', () => {
       ).rejects.toThrow(BadRequestException);
 
       expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('uses request start_time/end_time when not all-day', async () => {
+      prisma.wishlist.findFirst.mockResolvedValue(wishlistRow());
+      prisma.trip.create.mockResolvedValue({ id: 'trip-1' });
+      prisma.tripParticipant.create.mockResolvedValue({});
+      prisma.tripActivity.create.mockResolvedValue({});
+      prisma.wishlist.update.mockResolvedValue({});
+
+      await service.convertToTrip('wish-1', OWNER, {
+        start_date: '2026-08-01',
+        end_date: '2026-08-02',
+        is_all_day: false,
+        start_time: '13:00',
+        end_time: '12:00',
+      } as any);
+
+      const activityData = prisma.tripActivity.create.mock.calls[0][0].data;
+      expect(activityData.startTime).toEqual(new Date('1970-01-01T13:00:00Z'));
+      expect(activityData.endTime).toEqual(new Date('1970-01-01T12:00:00Z'));
+
+      // Trip-level times must also be stored (header shows them).
+      const tripData = prisma.trip.create.mock.calls[0][0].data;
+      expect(tripData.startTime).toEqual(new Date('1970-01-01T13:00:00Z'));
+      expect(tripData.endTime).toEqual(new Date('1970-01-01T12:00:00Z'));
+      expect(tripData.isAllDay).toBe(false);
+    });
+
+    it('rejects invalid HH:MM time format', async () => {
+      prisma.wishlist.findFirst.mockResolvedValue(wishlistRow());
+
+      await expect(
+        service.convertToTrip('wish-1', OWNER, {
+          start_date: '2026-08-01',
+          end_date: '2026-08-02',
+          is_all_day: false,
+          start_time: '25:99',
+          end_time: '12:00',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('allows end_time earlier than start_time (multi-day activity)', async () => {
+      prisma.wishlist.findFirst.mockResolvedValue(wishlistRow());
+      prisma.trip.create.mockResolvedValue({ id: 'trip-1' });
+      prisma.tripParticipant.create.mockResolvedValue({});
+      prisma.tripActivity.create.mockResolvedValue({});
+      prisma.wishlist.update.mockResolvedValue({});
+
+      const result = await service.convertToTrip('wish-1', OWNER, {
+        start_date: '2026-08-01',
+        end_date: '2026-08-02',
+        is_all_day: false,
+        start_time: '13:00',
+        end_time: '12:00',
+      } as any);
+
+      expect(result.id).toBe('trip-1');
+    });
+
+    it('imports wishlist thumbnail to trip media and sets it as cover', async () => {
+      prisma.wishlist.findFirst.mockResolvedValue(
+        wishlistRow({ thumbnailUrl: 'https://lh3.googleusercontent.com/PHOTO' }),
+      );
+      prisma.trip.create.mockResolvedValue({ id: 'trip-1' });
+      prisma.tripParticipant.create.mockResolvedValue({});
+      prisma.tripActivity.create.mockResolvedValue({ id: 'act-1' });
+      prisma.wishlist.update.mockResolvedValue({});
+      prisma.tripDocument.findFirst.mockResolvedValue(null);
+      prisma.tripDocument.create.mockResolvedValue({ id: 'doc-1' });
+      prisma.trip.update.mockResolvedValue({});
+      prisma.tripActivity.update.mockResolvedValue({});
+
+      // Mock global fetch used by importThumbnailToTripMedia.
+      const originalFetch = global.fetch;
+      (global as any).fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        headers: { get: () => 'image/jpeg' },
+        arrayBuffer: async () => new ArrayBuffer(8),
+      });
+
+      try {
+        await service.convertToTrip('wish-1', OWNER, {
+          start_date: '2026-08-01',
+          end_date: '2026-08-02',
+        } as any);
+      } finally {
+        (global as any).fetch = originalFetch;
+      }
+
+      expect(r2.putObject).toHaveBeenCalledWith(
+        'trip-1',
+        'image/jpeg',
+        expect.any(Buffer),
+      );
+      expect(prisma.tripDocument.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tripId: 'trip-1',
+            uploadedBy: OWNER,
+            mediaType: 'photo',
+            fromChat: false,
+          }),
+        }),
+      );
+      expect(prisma.trip.update).toHaveBeenCalledWith({
+        where: { id: 'trip-1' },
+        data: { coverDocumentId: 'doc-1' },
+      });
+      expect(prisma.tripActivity.updateMany).toHaveBeenCalledWith({
+        where: { tripId: 'trip-1', dayNumber: 1 },
+        data: { coverDocumentId: 'doc-1', coverSource: 'trip_media', thumbnailUrl: null },
+      });
     });
 
     it('throws Forbidden when not owner', async () => {

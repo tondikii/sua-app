@@ -31,8 +31,9 @@ describe('GoogleCalendarController', () => {
     controller = module.get<GoogleCalendarController>(GoogleCalendarController);
   });
 
-  it('should return an auth URL for the current user', () => {
-    const result = controller.getAuthUrl({ userId: 'u1' }, '/trip/abc');
+  it('should return an auth URL for the current user', async () => {
+    calendarMock.buildAuthUrl.mockResolvedValue('https://accounts.google.com/...');
+    const result = await controller.getAuthUrl({ userId: 'u1' }, '/trip/abc');
     expect(calendarMock.buildAuthUrl).toHaveBeenCalledWith('u1', '/trip/abc');
     expect(result.auth_url).toContain('accounts.google.com');
   });
@@ -51,6 +52,10 @@ describe('GoogleCalendarController', () => {
       isAllDay: true,
       startTime: null,
       endTime: null,
+      tags: [],
+      creator: { name: 'Creator', email: 'c@x.com' },
+      participants: [],
+      activities: [],
     });
     await expect(controller.createEvent({ userId: 'u1' }, { trip_id: 't1' })).rejects.toThrow(
       BadRequestException,
@@ -68,6 +73,22 @@ describe('GoogleCalendarController', () => {
       isAllDay: true,
       startTime: null,
       endTime: null,
+      tags: ['#pantai'],
+      creator: { name: 'Budi', email: 'budi@x.com' },
+      participants: [
+        { user: { name: 'Budi', email: 'budi@x.com' } },
+        { user: { name: 'Sari', email: 'sari@x.com' } },
+      ],
+      activities: [
+        {
+          placeName: 'Pantai',
+          locationLabel: 'Lombok',
+          mapsLink: null,
+          dayNumber: 1,
+          startTime: new Date('1970-01-01T09:00:00Z'),
+          endTime: new Date('1970-01-01T10:00:00Z'),
+        },
+      ],
     });
     calendarMock.createEvent.mockResolvedValue({ id: 'evt-1', html_link: null });
 
@@ -79,6 +100,9 @@ describe('GoogleCalendarController', () => {
         startDate: '2026-08-15',
         endDate: '2026-08-17',
         isAllDay: true,
+        tags: ['#pantai'],
+        attendees: ['budi@x.com', 'sari@x.com'],
+        location: 'Lombok',
       }),
     );
     expect(result.id).toBe('evt-1');

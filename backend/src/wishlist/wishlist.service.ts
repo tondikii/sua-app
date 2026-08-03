@@ -11,6 +11,7 @@ import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/
 import { WishlistSerializer } from './serializers/wishlist.serializer';
 import { toTimeDate } from '../common/helpers/date.helpers';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
+import { R2Service } from '../integrations/r2/r2.service';
 import { normalizeWishlistTags } from './wishlist-tags';
 import { TripStatus } from '@prisma/client';
 
@@ -22,6 +23,7 @@ export class WishlistService {
     private readonly prisma: PrismaService,
     private readonly tripsService: TripsService,
     private readonly googleMaps: GoogleMapsService,
+    private readonly r2: R2Service,
   ) {}
 
   /** Create a wishlist item for the current user (WORKFLOW §12, `WishlistFormSheet`). */
@@ -157,8 +159,37 @@ export class WishlistService {
     }
 
     const isAllDay = dto.is_all_day ?? true;
-    const activityStart = !isAllDay && dto.start_time ? toTimeDate(dto.start_time) : wishlist.startTime;
-    const activityEnd = !isAllDay && dto.end_time ? toTimeDate(dto.end_time) : wishlist.endTime;
+
+    // Validate HH:MM format when provided (conversion is not all-day).
+    const TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!isAllDay) {
+      for (const [key, value] of [
+        ['start_time', dto.start_time],
+        ['end_time', dto.end_time],
+      ] as const) {
+        if (value !== undefined && value !== null && !TIME_HHMM.test(String(value))) {
+          throw new BadRequestException({
+            code: 'INVALID_TIME_FORMAT',
+            message: `${key} must be in HH:MM format`,
+          });
+        }
+      }
+    }
+
+    // Activity wall-clock times: prefer the request's HH:MM, fall back to the
+    // wishlist's stored times. Multi-day trips may span midnight (e.g. Sat 13:00
+    // -> Sun 12:00), so end_time is allowed to be earlier in the day than
+    // start_time — the DB `valid_activity_time` check was dropped for this.
+    const startTimeStr = !isAllDay && dto.start_time ? dto.start_time : undefined;
+    const endTimeStr = !isAllDay && dto.end_time ? dto.end_time : undefined;
+    const activityStart = startTimeStr ? toTimeDate(startTimeStr) : wishlist.startTime;
+    const activityEnd = endTimeStr ? toTimeDate(endTimeStr) : wishlist.endTime;
+
+    // Trip-level wall-clock times (shown in the trip header). Multi-day trips
+    // may span midnight (e.g. Sat 13:00 -> Sun 12:00), so end_time may be
+    // earlier in the day than start_time.
+    const tripStartTime = startTimeStr ? toTimeDate(startTimeStr) : null;
+    const tripEndTime = endTimeStr ? toTimeDate(endTimeStr) : null;
 
     const trip = await this.prisma.$transaction(async (tx) => {
       const created = await tx.trip.create({
@@ -170,6 +201,8 @@ export class WishlistService {
           startDate,
           endDate,
           isAllDay,
+          startTime: tripStartTime,
+          endTime: tripEndTime,
         },
       });
 
@@ -200,6 +233,21 @@ export class WishlistService {
 
       return created;
     });
+
+    // Persist the wishlist's maps thumbnail into trip media (R2) so it appears
+    // in the Media tab and can serve as the trip cover — same behaviour as
+    // activity "Sinkron Maps". Best-effort after commit; never fails the trip.
+    if (wishlist.thumbnailUrl) {
+      await this.importThumbnailToTripMedia(
+        trip.id,
+        userId,
+        wishlist.thumbnailUrl,
+      ).catch((err) => {
+        this.logger.warn(
+          `Import wishlist thumbnail to trip media failed for wishlist ${wishlistId}: ${err}`,
+        );
+      });
+    }
 
     return this.tripsService.getTripDetail(trip.id, userId);
   }
@@ -265,6 +313,65 @@ export class WishlistService {
     await this.prisma.wishlist.update({
       where: { id: wishlistId },
       data: { thumbnailUrl },
+    });
+  }
+
+  /**
+   * Download the wishlist's maps thumbnail and store it in the trip's R2 media
+   * bucket, registering a `trip_documents` row (Media tab) and setting it as
+   * both the trip cover and the seeded activity's cover. Best-effort: failures
+   * are logged and never roll back the trip creation.
+   */
+  private async importThumbnailToTripMedia(
+    tripId: string,
+    uploaderId: string,
+    thumbnailUrl: string,
+  ): Promise<void> {
+    const existing = await this.prisma.tripDocument.findFirst({
+      where: { tripId, storageUrl: thumbnailUrl },
+    });
+
+    let documentId: string;
+    if (existing) {
+      documentId = existing.id;
+    } else {
+      const res = await fetch(thumbnailUrl);
+      if (!res.ok) return;
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const contentType = res.headers.get('content-type') ?? 'image/jpeg';
+
+      const { storageKey, storageUrl } = await this.r2.putObject(
+        tripId,
+        contentType,
+        buffer,
+      );
+
+      const document = await this.prisma.tripDocument.create({
+        data: {
+          tripId,
+          uploadedBy: uploaderId,
+          mediaType: 'photo',
+          storageKey,
+          storageUrl,
+          fromChat: false,
+        },
+      });
+      documentId = document.id;
+    }
+
+    // Use the imported R2 media as the trip cover and the seeded activity's
+    // cover (replacing the raw external URL with a stable media reference).
+    await this.prisma.trip.update({
+      where: { id: tripId },
+      data: { coverDocumentId: documentId },
+    });
+    await this.prisma.tripActivity.updateMany({
+      where: { tripId, dayNumber: 1 },
+      data: {
+        coverDocumentId: documentId,
+        coverSource: 'trip_media',
+        thumbnailUrl: null,
+      },
     });
   }
 }

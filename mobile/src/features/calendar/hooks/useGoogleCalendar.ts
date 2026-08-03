@@ -4,8 +4,9 @@ import type { CalendarAuthUrlResponse, CalendarEventResponse } from '@atur-perja
 
 /**
  * Google Calendar integration (M16) — creates an event in the user's OWN
- * calendar. If the user hasn't connected yet, the flow first opens the OAuth
- * consent URL; after the callback returns the user taps again to create.
+ * calendar. When the user has already connected their calendar, the event is
+ * created directly (no Google page). Otherwise the OAuth consent flow opens
+ * once, and after the callback the event is created automatically.
  */
 export function useGetCalendarAuthUrl() {
   return useMutation<CalendarAuthUrlResponse, Error, { redirect?: string }>({
@@ -13,6 +14,12 @@ export function useGetCalendarAuthUrl() {
       apiClient.get<CalendarAuthUrlResponse>(
         `/integrations/google-calendar/auth-url${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`,
       ),
+  });
+}
+
+export function useCalendarStatus() {
+  return useMutation<{ connected: boolean }, Error, void>({
+    mutationFn: () => apiClient.get<{ connected: boolean }>('/integrations/google-calendar/status'),
   });
 }
 
