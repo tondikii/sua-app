@@ -2,8 +2,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Build APK development (expo-dev-client) secara LOKAL via EAS Build.
 #
-#   EAS Build lokal = prebuild + Gradle build di mesin sendiri (bukan cloud),
-#   hasilnya APK yang bisa di-install ke device/emulator.
+#   EAS Build lokal = prebuild (CNG otomatis) + Gradle build di mesin sendiri
+#   (bukan cloud), hasilnya APK yang bisa di-install ke device/emulator.
 #
 # Penggunaan:
 #   ./scripts/build-android-dev-local.sh            # pakai .env (default)
@@ -53,8 +53,14 @@ restore_env() {
   fi
 }
 
-# Jalankan EAS build lokal. --local = build di mesin (prebuild + Gradle).
-# --output menentukan path APK yang dihasilkan.
+# 1) Regenerate brand assets (icon/splash) supaya selalu versi terbaru.
+echo "── 1/2 Generate brand assets ──────────────────────────────────"
+node scripts/generate-brand-assets.cjs
+
+# 2) Jalankan EAS build lokal. EAS menjalankan prebuild (CNG) otomatis
+#    karena project ini tidak commit folder android/.
+#    --output menentukan path APK yang dihasilkan.
+echo "── 2/2 EAS build local ────────────────────────────────────────"
 if command -v eas >/dev/null 2>&1; then
   EAS="eas"
 else
