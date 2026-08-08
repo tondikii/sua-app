@@ -71,6 +71,9 @@ importers:
       expo-server-sdk:
         specifier: ^7.0.0
         version: 7.0.0
+      express:
+        specifier: ^4.22.1
+        version: 4.22.1
       google-auth-library:
         specifier: ^9.14.1
         version: 9.15.1
