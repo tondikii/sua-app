@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserSearch } from '@/features/users/hooks/useUserSearch';
 import { Search } from '@/components/icons/Search';
 import { X } from '@/components/icons/X';
@@ -64,6 +65,7 @@ function SearchUserRow({
 
 export default function SearchScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -114,7 +116,7 @@ export default function SearchScreen() {
   return (
     <View style={styles.screen}>
       {/* Search bar */}
-      <View style={styles.searchBarContainer}>
+      <View style={[styles.searchBarContainer, { paddingTop: insets.top + 12 }]}>
         <View style={[styles.searchBar, (searchFocused || query.length > 0) && styles.searchBarFocused]}>
           <Search size={16} color={query.length > 0 ? colors.coral : colors.muted} />
           <TextInput

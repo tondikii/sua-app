@@ -8,6 +8,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  Modal,
+  KeyboardAvoidingView,
   Image,
 } from 'react-native';
 import { useCreateInvitation } from '@/features/invitations/hooks/useCreateInvitation';
@@ -179,9 +181,14 @@ export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: Inv
   if (!visible) return null;
 
   return (
-    <View style={styles.backdrop}>
-      <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
-      <View style={styles.sheet}>
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
+        <TouchableOpacity style={styles.backdropTouch} onPress={onClose} activeOpacity={1} />
+        <View style={styles.sheet}>
         {/* Handle */}
         <View style={styles.handleContainer}>
           <View style={styles.handle} />
@@ -295,7 +302,8 @@ export function InviteBottomSheet({ visible, tripId, onClose, onEnterTrip }: Inv
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 

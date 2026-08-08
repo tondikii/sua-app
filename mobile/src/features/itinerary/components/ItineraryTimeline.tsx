@@ -112,6 +112,7 @@ function ActivityItemRow({
   const hasThumb = Boolean(activity.thumbnail_url);
   const hasCoverIcon = Boolean(activity.cover_icon);
   const isPresent = timeState === 'present';
+  const isPast = timeState === 'past';
 
   return (
     <View style={[styles.itemRow, { opacity: stateMeta.opacity }]}>
@@ -134,6 +135,7 @@ function ActivityItemRow({
             styles.itemCard,
             { borderColor: stateMeta.cardBorderColor },
             isPresent && styles.itemCardPresent,
+            isPast && styles.itemCardPast,
           ]}
           onPress={onPress}
           activeOpacity={0.7}
@@ -154,7 +156,11 @@ function ActivityItemRow({
 
           <View style={styles.itemContent}>
             {hasThumb ? (
-              <Image source={{ uri: activity.thumbnail_url! }} style={styles.thumbnail} resizeMode="cover" />
+              <Image
+                source={{ uri: activity.thumbnail_url! }}
+                style={[styles.thumbnail, isPast && styles.thumbnailPast]}
+                resizeMode="cover"
+              />
             ) : hasCoverIcon ? (
               <View style={[styles.thumbnail, { backgroundColor: iconMeta.bg, alignItems: 'center', justifyContent: 'center' }]}>
                 <CoverIcon size={18} color={iconMeta.color} />
@@ -446,6 +452,9 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 6 },
   },
+  itemCardPast: {
+    backgroundColor: colors.light,
+  },
   itemCardWrap: {
     flex: 1,
     position: 'relative',
@@ -488,6 +497,9 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     marginRight: 10,
+  },
+  thumbnailPast: {
+    opacity: 0.5,
   },
   thumbnailPlaceholder: {
     width: 44,

@@ -444,9 +444,9 @@ export default function CreateTripScreen() {
                   ]}>
                     <Text style={[
                       styles.calDayText,
+                      isSunday && !selected && { color: colors.muted },
                       selected && styles.calDayTextSelected,
                       inRange && styles.calDayTextInRange,
-                      isSunday && { color: colors.muted },
                     ]}>
                       {day}
                     </Text>
@@ -487,13 +487,12 @@ export default function CreateTripScreen() {
                   >
                     <Text style={styles.timeValue}>{startTime}</Text>
                   </TouchableOpacity>
-                  {showStartPicker && (
-                    <TimePicker
-                      value={startTime}
-                      onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
-                      onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
-                    />
-                  )}
+                  <TimePicker
+                    visible={showStartPicker}
+                    value={startTime}
+                    onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
+                    onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
+                  />
                 </View>
                 <View style={styles.timeField}>
                   <Text style={styles.timeLabel}>Selesai</Text>
@@ -504,13 +503,12 @@ export default function CreateTripScreen() {
                   >
                     <Text style={styles.timeValue}>{endTime}</Text>
                   </TouchableOpacity>
-                  {showEndPicker && (
-                    <TimePicker
-                      value={endTime}
-                      onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
-                      onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
-                    />
-                  )}
+                  <TimePicker
+                    visible={showEndPicker}
+                    value={endTime}
+                    onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
+                    onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
+                  />
                 </View>
               </View>
             )}
@@ -714,14 +712,13 @@ export default function CreateTripScreen() {
                     Tenggat voting dipilih dari kalender. Kosongkan jika voting hanya dikunci manual.
                   </Text>
                 </View>
-                {showStartPicker && (
-                  <TimePicker
-                    value={dlTime}
-                    onChange={(t) => { setDlTime(t); setShowStartPicker(false); setFocusedField(null); }}
-                    onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
-                    startLabel="Jam"
-                  />
-                )}
+                <TimePicker
+                  visible={showStartPicker}
+                  value={dlTime}
+                  onChange={(t) => { setDlTime(t); setShowStartPicker(false); setFocusedField(null); }}
+                  onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
+                  startLabel="Jam"
+                />
               </View>
             )}
           </View>

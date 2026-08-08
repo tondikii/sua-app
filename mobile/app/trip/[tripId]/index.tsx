@@ -59,7 +59,12 @@ export default function TripDetailScreen() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { data: trip, isLoading: tripLoading, isError: tripError, refetch: refetchTrip } = useTripDetail(tripId);
+  const {
+    data: trip,
+    isLoading: tripLoading,
+    isError: tripError,
+    refetch: refetchTrip,
+  } = useTripDetail(tripId);
   const { data: activitiesData, isLoading: activitiesLoading } = useActivities(tripId);
   const { data: membersData, isLoading: membersLoading } = useMembers(tripId);
   const { data: pollsData } = usePolls(tripId);
@@ -224,8 +229,12 @@ export default function TripDetailScreen() {
           <ChevronLeft size={20} color={colors.charcoal} />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{trip.name}</Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>{dateRange}</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {trip.name}
+          </Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>
+            {dateRange}
+          </Text>
         </View>
         <TouchableOpacity
           style={styles.menuBtn}
@@ -239,11 +248,18 @@ export default function TripDetailScreen() {
       {/* Kebab popup */}
       {showMenu && (
         <>
-          <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setShowMenu(false)} />
+          <TouchableOpacity
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          />
           <View style={styles.menuDropdown}>
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => { setShowMenu(false); router.push(`/trip/${tripId}/members`); }}
+              onPress={() => {
+                setShowMenu(false);
+                router.push(`/trip/${tripId}/members`);
+              }}
               activeOpacity={0.7}
             >
               <View style={[styles.menuIconBox, { backgroundColor: colors.tealLight }]}>
@@ -255,15 +271,26 @@ export default function TripDetailScreen() {
             {/* Tambah ke Google Calendar — hanya aktif saat tanggal sudah dikunci */}
             <TouchableOpacity
               style={[styles.menuItem, trip?.status !== 'fixed' && styles.menuItemDisabled]}
-              onPress={() => { setShowMenu(false); setShowCalendar(true); }}
+              onPress={() => {
+                setShowMenu(false);
+                setShowCalendar(true);
+              }}
               disabled={trip?.status !== 'fixed'}
               activeOpacity={0.7}
             >
               <View style={[styles.menuIconBox, { backgroundColor: colors.tealLight }]}>
-                <Calendar size={16} color={trip?.status === 'fixed' ? colors.teal : colors.mutedLight} />
+                <Calendar
+                  size={16}
+                  color={trip?.status === 'fixed' ? colors.teal : colors.mutedLight}
+                />
               </View>
               <View style={styles.menuItemTextWrap}>
-                <Text style={[styles.menuItemText, trip?.status !== 'fixed' && { color: colors.mutedLight }]}>
+                <Text
+                  style={[
+                    styles.menuItemText,
+                    trip?.status !== 'fixed' && { color: colors.mutedLight },
+                  ]}
+                >
                   Tambah ke Google Calendar
                 </Text>
                 {trip?.status !== 'fixed' && (
@@ -276,7 +303,10 @@ export default function TripDetailScreen() {
                 <View style={styles.menuDivider} />
                 <TouchableOpacity
                   style={styles.menuItem}
-                  onPress={() => { setShowMenu(false); router.push(`/trip/${tripId}/edit`); }}
+                  onPress={() => {
+                    setShowMenu(false);
+                    router.push(`/trip/${tripId}/edit`);
+                  }}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.menuIconBox, { backgroundColor: colors.light }]}>
@@ -285,22 +315,34 @@ export default function TripDetailScreen() {
                   <Text style={styles.menuItemText}>Edit Info Perjalanan</Text>
                 </TouchableOpacity>
                 <View style={styles.menuDivider} />
-                <TouchableOpacity style={styles.menuItem} onPress={handleDeleteTrip} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleDeleteTrip}
+                  activeOpacity={0.7}
+                >
                   <View style={[styles.menuIconBox, { backgroundColor: colors.dangerLight }]}>
                     <Trash2 size={16} color={colors.danger} />
                   </View>
-                  <Text style={[styles.menuItemText, { color: colors.danger }]}>Hapus Perjalanan</Text>
+                  <Text style={[styles.menuItemText, { color: colors.danger }]}>
+                    Hapus Perjalanan
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
             {!isCreator && (
               <>
                 <View style={styles.menuDivider} />
-                <TouchableOpacity style={styles.menuItem} onPress={handleLeaveTrip} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleLeaveTrip}
+                  activeOpacity={0.7}
+                >
                   <View style={[styles.menuIconBox, { backgroundColor: colors.dangerLight }]}>
                     <LogOut size={16} color={colors.danger} />
                   </View>
-                  <Text style={[styles.menuItemText, { color: colors.danger }]}>Keluar dari Perjalanan</Text>
+                  <Text style={[styles.menuItemText, { color: colors.danger }]}>
+                    Keluar dari Perjalanan
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -312,20 +354,21 @@ export default function TripDetailScreen() {
       <View style={styles.tabs}>
         {TABS.map((tab) => {
           const active = activeTab === tab.key;
-          const count = tab.key === 'itinerary' ? itineraryCount
-            : tab.key === 'voting' ? votingCount
-            : tab.key === 'chat' ? chatCount
-            : mediaCount;
+          const count =
+            tab.key === 'itinerary'
+              ? itineraryCount
+              : tab.key === 'voting'
+                ? votingCount
+                : tab.key === 'chat'
+                  ? chatCount
+                  : mediaCount;
           // Badge rules (docs/FIGMA.md "Trip Detail — Tab Structure"):
           // - Itinerary: hidden jika 0
           // - Voting: selalu tampil termasuk 0
           // - Chat: unread saja (hanya jika > 0 dan tab tidak aktif)
           // - Media: selalu tampil termasuk 0
-          const showBadge = tab.key === 'itinerary'
-            ? count > 0
-            : tab.key === 'chat'
-              ? count > 0 && !active
-              : true;
+          const showBadge =
+            tab.key === 'itinerary' ? count > 0 : tab.key === 'chat' ? count > 0 && !active : true;
           return (
             <TouchableOpacity
               key={tab.key}
@@ -335,8 +378,24 @@ export default function TripDetailScreen() {
             >
               <Text style={active ? styles.tabTextActive : styles.tabText}>{tab.label}</Text>
               {showBadge && (
-                <View style={tab.key === 'chat' ? styles.tabBadgeUnread : active ? styles.tabBadgeActive : styles.tabBadge}>
-                  <Text style={tab.key === 'chat' ? styles.tabBadgeTextUnread : active ? styles.tabBadgeTextActive : styles.tabBadgeText}>
+                <View
+                  style={
+                    tab.key === 'chat'
+                      ? styles.tabBadgeUnread
+                      : active
+                        ? styles.tabBadgeActive
+                        : styles.tabBadge
+                  }
+                >
+                  <Text
+                    style={
+                      tab.key === 'chat'
+                        ? styles.tabBadgeTextUnread
+                        : active
+                          ? styles.tabBadgeTextActive
+                          : styles.tabBadgeText
+                    }
+                  >
                     {count}
                   </Text>
                 </View>
@@ -381,22 +440,16 @@ export default function TripDetailScreen() {
             activeOpacity={0.8}
           >
             <Plus size={16} color={colors.white} />
-            <Text style={styles.createFabText}>Buat Aktivitas</Text>
+            <Text style={styles.createFabText}>Buat Aktivitas Baru</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {activeTab === 'voting' && (
-        <VotingTabContent tripId={tripId} isCreator={isCreator} />
-      )}
+      {activeTab === 'voting' && <VotingTabContent tripId={tripId} isCreator={isCreator} />}
 
-      {activeTab === 'chat' && (
-        <ChatTabContent tripId={tripId} currentUserId={user?.id ?? ''} />
-      )}
+      {activeTab === 'chat' && <ChatTabContent tripId={tripId} currentUserId={user?.id ?? ''} />}
 
-      {activeTab === 'media' && (
-        <MediaTabContent tripId={tripId} />
-      )}
+      {activeTab === 'media' && <MediaTabContent tripId={tripId} />}
 
       {/* Activity Form Sheet (day-aware; edit mode when editingActivity set) */}
       <ActivityFormSheet
@@ -405,7 +458,10 @@ export default function TripDetailScreen() {
         activityDate={editingActivity?.activity_date ?? ''}
         dayNumber={activeDayIndex + 1}
         editActivity={editingActivity}
-        onClose={() => { setShowForm(false); setEditingActivity(null); }}
+        onClose={() => {
+          setShowForm(false);
+          setEditingActivity(null);
+        }}
         onSuccess={handleFormSuccess}
       />
 

@@ -18,8 +18,10 @@ export function useConvertToTrip(wishlistId: string) {
     mutationFn: (payload) =>
       apiClient.post<TripDetail>(`/wishlists/${wishlistId}/convert-to-trip`, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['wishlists'] });
-      qc.invalidateQueries({ queryKey: ['trips'] });
+      // refetchType 'all' so the tags query refetches even when the wishlist
+      // screen is not the active screen (e.g. buried under the create-trip form).
+      qc.invalidateQueries({ queryKey: ['wishlists'], refetchType: 'all' });
+      qc.invalidateQueries({ queryKey: ['trips'], refetchType: 'all' });
     },
   });
 }

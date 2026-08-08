@@ -6,7 +6,9 @@ export function useDeleteWishlist() {
   return useMutation<void, Error, string>({
     mutationFn: (id) => apiClient.delete<void>(`/wishlists/${id}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['wishlists'] });
+      // refetchType 'all' so the tags query refetches even when the wishlist
+      // screen is not the active screen (e.g. buried under another route).
+      qc.invalidateQueries({ queryKey: ['wishlists'], refetchType: 'all' });
     },
   });
 }

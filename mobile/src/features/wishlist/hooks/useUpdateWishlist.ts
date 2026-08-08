@@ -20,7 +20,7 @@ export function useUpdateWishlist(id: string) {
   return useMutation<WishlistItem, Error, UpdateWishlistPayload>({
     mutationFn: (payload) => apiClient.put<WishlistItem>(`/wishlists/${id}`, payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['wishlists'] });
+      qc.invalidateQueries({ queryKey: ['wishlists'], refetchType: 'all' });
     },
   });
 }

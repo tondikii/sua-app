@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Circle, Path, G } from 'react-native-svg';
@@ -19,6 +20,8 @@ import { useWishlistTags } from '@/features/wishlist/hooks/useWishlistTags';
 import { useCreateWishlist } from '@/features/wishlist/hooks/useCreateWishlist';
 import { useUpdateWishlist } from '@/features/wishlist/hooks/useUpdateWishlist';
 import { useDeleteWishlist } from '@/features/wishlist/hooks/useDeleteWishlist';
+import { TimePicker } from '@/components/TimePicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus } from '@/components/icons/Plus';
 import { X } from '@/components/icons/X';
 import { MapPin } from '@/components/icons/MapPin';
@@ -40,9 +43,6 @@ import { bottomSheetFrame } from '@/theme/layout';
 import type { WishlistItem, PriorityLevel, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MINUTES = ['00', '15', '30', '45'];
 
 const PRIORITY_META: Record<PriorityLevel, { label: string; color: string; bg: string }> = {
   high: { label: 'Tinggi', color: colors.coral, bg: colors.coralLight },
@@ -236,57 +236,6 @@ function DetailSheet({ visible, onClose, item, onConvert }: {
   );
 }
 
-// ─── TimePicker component ────────────────────────────────────────────────────
-
-function TimePicker({ value, onChange, onClose }: { value: string; onChange: (t: string) => void; onClose: () => void }) {
-  const [h, m] = value ? value.split(':') : ['09', '00'];
-  const [selHour, setSelHour] = useState(h);
-  const [selMin, setSelMin] = useState(m);
-
-  return (
-    <View style={styles.timePickerContainer}>
-      <View style={styles.timePickerColumns}>
-        <View style={styles.timePickerCol}>
-          <Text style={styles.timePickerColLabel}>Jam</Text>
-          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
-            {HOURS.map((hour) => (
-              <TouchableOpacity
-                key={hour}
-                style={[styles.timePickerItem, selHour === hour && styles.timePickerItemActive]}
-                onPress={() => setSelHour(hour)}
-              >
-                <Text style={[styles.timePickerItemText, selHour === hour && styles.timePickerItemTextActive]}>{hour}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        <View style={styles.timePickerCol}>
-          <Text style={styles.timePickerColLabel}>Menit</Text>
-          <ScrollView style={styles.timePickerList} showsVerticalScrollIndicator={false}>
-            {MINUTES.map((min) => (
-              <TouchableOpacity
-                key={min}
-                style={[styles.timePickerItem, selMin === min && styles.timePickerItemActive]}
-                onPress={() => setSelMin(min)}
-              >
-                <Text style={[styles.timePickerItemText, selMin === min && styles.timePickerItemTextActive]}>{min}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-      <View style={styles.timePickerActions}>
-        <TouchableOpacity onPress={onClose} style={styles.timePickerCancel}>
-          <Text style={styles.timePickerCancelText}>Batal</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onChange(`${selHour}:${selMin}`)} style={styles.timePickerConfirm}>
-          <Text style={styles.timePickerConfirmText}>Pilih</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
 // ─── Create / Edit Sheet ──────────────────────────────────────────────────────
 
 function WishlistFormSheet({ visible, onClose, editItem }: {
@@ -396,7 +345,11 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.sheetBackdrop}>
+      <KeyboardAvoidingView
+        style={styles.sheetBackdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
@@ -462,12 +415,18 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
                 </TouchableOpacity>
               </View>
             </View>
-            {showStartPicker && (
-              <TimePicker value={startTime || '09:00'} onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedTime(null); }} onClose={() => { setShowStartPicker(false); setFocusedTime(null); }} />
-            )}
-            {showEndPicker && (
-              <TimePicker value={endTime || '16:00'} onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedTime(null); }} onClose={() => { setShowEndPicker(false); setFocusedTime(null); }} />
-            )}
+            <TimePicker
+              visible={showStartPicker}
+              value={startTime || '09:00'}
+              onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedTime(null); }}
+              onClose={() => { setShowStartPicker(false); setFocusedTime(null); }}
+            />
+            <TimePicker
+              visible={showEndPicker}
+              value={endTime || '16:00'}
+              onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedTime(null); }}
+              onClose={() => { setShowEndPicker(false); setFocusedTime(null); }}
+            />
 
             {/* Prioritas */}
             <View style={styles.sheetField}>
@@ -603,7 +562,7 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -612,6 +571,7 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
 
 export default function WishlistScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [sortTab, setSortTab] = useState<string>('all');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -689,7 +649,7 @@ export default function WishlistScreen() {
   return (
     <View style={styles.screen}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Text style={styles.headerTitle}>Wishlist Aktivitas</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowForm(true)}>
           <Plus size={20} color={colors.white} />
@@ -925,21 +885,6 @@ const styles = StyleSheet.create({
   timeInputBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1.5, borderColor: colors.border },
   timeInputBoxFocused: { borderColor: colors.coral, borderWidth: 2 },
   timeValue: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
-  // TimePicker
-  timePickerContainer: { marginTop: 8, padding: 12, paddingHorizontal: 10, backgroundColor: colors.white, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, ...shadows.card },
-  timePickerColumns: { flexDirection: 'row', gap: 8 },
-  timePickerCol: { flex: 1, alignItems: 'center' },
-  timePickerColLabel: { fontSize: 10, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted, marginBottom: 6 },
-  timePickerList: { maxHeight: 140, borderRadius: 10, backgroundColor: colors.light },
-  timePickerItem: { paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center' },
-  timePickerItemActive: { backgroundColor: colors.coralLight },
-  timePickerItemText: { fontSize: 15, fontFamily: 'PlusJakartaSans_500Medium', color: colors.charcoal },
-  timePickerItemTextActive: { fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.coral },
-  timePickerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 10 },
-  timePickerCancel: { paddingVertical: 6, paddingHorizontal: 12 },
-  timePickerCancelText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted },
-  timePickerConfirm: { backgroundColor: colors.coral, borderRadius: 10, paddingVertical: 6, paddingHorizontal: 16 },
-  timePickerConfirmText: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.white },
   priorityRow: { flexDirection: 'row', gap: 8 },
   priorityChip: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.light, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center' },
   priorityChipText: { fontSize: 13, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted },

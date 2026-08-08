@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell } from '@/components/icons/Bell';
 import { useTheme } from '@/theme';
 import { typography } from '@/theme/typography';
@@ -11,10 +12,11 @@ interface HomeHeaderProps {
 
 export function HomeHeader({ unreadCount, onPressBell }: HomeHeaderProps) {
   const { colors: c } = useTheme();
+  const insets = useSafeAreaInsets();
   const badgeText = unreadCount > 9 ? '9+' : String(unreadCount);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       <Text style={[styles.title, { color: c.charcoal }]}>Perjalananku</Text>
       <TouchableOpacity
         style={[styles.bellButton, { backgroundColor: c.light }]}

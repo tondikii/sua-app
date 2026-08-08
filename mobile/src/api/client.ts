@@ -1,6 +1,6 @@
 import type { ErrorResponse } from '@atur-perjalanan/shared-types';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080/v1';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.224.111.6:8080/v1';
 
 /** Error raised for any non-2xx API response. Carries the backend `code` + `x-request-id`. */
 export class ApiError extends Error {

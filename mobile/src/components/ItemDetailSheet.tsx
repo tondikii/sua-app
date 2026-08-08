@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { Clock } from '@/components/icons/Clock';
 import { Navigation } from '@/components/icons/Navigation';
 import { Link2 } from '@/components/icons/Link2';
 import { MapPin } from '@/components/icons/MapPin';
-import { colors } from '@/theme/colors';
+import { useTheme, type Colors } from '@/theme';
 import { bottomSheetFrame } from '@/theme/layout';
 import type { RefLink } from '@atur-perjalanan/shared-types';
 
@@ -58,6 +58,8 @@ export function ItemDetailSheet({
   imageFallback,
   timeExtra,
 }: Props) {
+  const { colors: c } = useTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const openLink = useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});
   }, []);
@@ -83,13 +85,13 @@ export function ItemDetailSheet({
               <Text style={styles.headerTitle} numberOfLines={1}>{item.place_name}</Text>
               {item.location_label ? (
                 <View style={styles.headerLocationRow}>
-                  <MapPin size={11} color={colors.muted} />
+                  <MapPin size={11} color={c.muted} />
                   <Text style={styles.headerLocationText} numberOfLines={1}>{item.location_label}</Text>
                 </View>
               ) : null}
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <X size={18} color={colors.charcoal} />
+              <X size={18} color={c.charcoal} />
             </TouchableOpacity>
           </View>
 
@@ -107,7 +109,7 @@ export function ItemDetailSheet({
             {/* Time row */}
             {hasTime ? (
               <View style={styles.timeRow}>
-                <Clock size={14} color={colors.charcoal} />
+                <Clock size={14} color={c.charcoal} />
                 <Text style={styles.timeText}>{timeText}</Text>
                 {timeExtra ? timeExtra : null}
               </View>
@@ -142,7 +144,7 @@ export function ItemDetailSheet({
                     onPress={() => openLink(item.maps_link!)}
                     activeOpacity={0.7}
                   >
-                    <Navigation size={15} color={colors.teal} />
+                    <Navigation size={15} color={c.teal} />
                     <Text style={styles.linkText}>Buka di Google Maps</Text>
                   </TouchableOpacity>
                 ) : null}
@@ -153,7 +155,7 @@ export function ItemDetailSheet({
                     onPress={() => openLink(ref.url)}
                     activeOpacity={0.7}
                   >
-                    <Link2 size={15} color={colors.teal} />
+                    <Link2 size={15} color={c.teal} />
                     <View style={styles.linkBody}>
                       {ref.label?.trim() ? (
                         <Text style={styles.linkTitle} numberOfLines={1}>{ref.label}</Text>
@@ -173,7 +175,8 @@ export function ItemDetailSheet({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(c: Colors) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(26,26,46,0.45)',
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sheet: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     maxHeight: '85%',
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 5,
     borderRadius: 20,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     alignSelf: 'center',
     marginTop: 14,
     marginBottom: 6,
@@ -204,14 +207,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: c.border,
     marginBottom: 4,
   },
   headerTitleWrap: { flex: 1, gap: 2 },
   headerTitle: {
     fontSize: 17,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.charcoal,
+    color: c.charcoal,
     letterSpacing: -0.2,
   },
   headerLocationRow: {
@@ -222,13 +225,13 @@ const styles = StyleSheet.create({
   headerLocationText: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
+    color: c.muted,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: colors.light,
+    backgroundColor: c.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -257,7 +260,7 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_600SemiBold',
-    color: colors.charcoal,
+    color: c.charcoal,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   tagChip: {
-    backgroundColor: colors.tealLight,
+    backgroundColor: c.tealLight,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
@@ -275,10 +278,10 @@ const styles = StyleSheet.create({
   tagChipText: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.teal,
+    color: c.teal,
   },
   tagChipOverflow: {
-    backgroundColor: colors.light,
+    backgroundColor: c.light,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 20,
@@ -286,12 +289,12 @@ const styles = StyleSheet.create({
   tagChipTextOverflow: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.muted,
+    color: c.muted,
   },
   description: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.charcoal,
+    color: c.charcoal,
     lineHeight: 20.15,
     paddingHorizontal: 20,
     paddingTop: 6,
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
   linksLabel: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.muted,
+    color: c.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: 8,
@@ -317,24 +320,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginBottom: 6,
   },
   linkBody: { flex: 1, gap: 2 },
   linkTitle: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
-    color: colors.charcoal,
+    color: c.charcoal,
   },
   linkUrl: {
     fontSize: 11,
     fontFamily: 'PlusJakartaSans_400Regular',
-    color: colors.muted,
+    color: c.muted,
   },
   linkText: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
-    color: colors.teal,
+    color: c.teal,
     flex: 1,
   },
   footer: {
@@ -342,6 +345,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingBottom: 32,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
-});
+  });
+}

@@ -16,6 +16,7 @@
       "bundleIdentifier": "id.sudutkode.aturperjalanan"
     },
     "android": {
+      "edgeToEdgeEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FF6B6B"
@@ -47,7 +48,7 @@
         {
           "image": "./assets/splash.png",
           "imageWidth": 200,
-          "resizeMode": "cover",
+          "resizeMode": "contain",
           "backgroundColor": "#FF6B6B"
         }
       ]

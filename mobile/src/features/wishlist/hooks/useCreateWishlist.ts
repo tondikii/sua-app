@@ -20,7 +20,7 @@ export function useCreateWishlist() {
   return useMutation<WishlistItem, Error, CreateWishlistPayload>({
     mutationFn: (payload) => apiClient.post<WishlistItem>('/wishlists', payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['wishlists'] });
+      qc.invalidateQueries({ queryKey: ['wishlists'], refetchType: 'all' });
     },
   });
 }

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  KeyboardAvoidingView,
   Image,
   Linking,
 } from 'react-native';
@@ -264,14 +265,13 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
             </TouchableOpacity>
             <Text style={styles.deadlineTimeHint}>Pilih tanggal lalu atur jam.</Text>
           </View>
-          {showTimePicker && (
-            <TimePicker
-              value={time}
-              onChange={selectTime}
-              onClose={() => setShowTimePicker(false)}
-              startLabel="Jam"
-            />
-          )}
+          <TimePicker
+            visible={showTimePicker}
+            value={time}
+            onChange={selectTime}
+            onClose={() => setShowTimePicker(false)}
+            startLabel="Jam"
+          />
         </View>
       )}
     </View>
@@ -1035,7 +1035,11 @@ function CreateVotingSheet({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.sheetBackdrop}>
+      <KeyboardAvoidingView
+        style={styles.sheetBackdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
         <View style={styles.sheet}>
           <View style={styles.sheetHeader}>
             {mode === 'detail' ? (
@@ -1287,7 +1291,7 @@ function CreateVotingSheet({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1382,7 +1386,11 @@ function EditVotingSheet({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.sheetBackdrop}>
+      <KeyboardAvoidingView
+        style={styles.sheetBackdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
         <View style={styles.sheet}>
           <View style={styles.sheetHeader}>
             <View style={styles.sheetBackBtn} />
@@ -1539,7 +1547,7 @@ function EditVotingSheet({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

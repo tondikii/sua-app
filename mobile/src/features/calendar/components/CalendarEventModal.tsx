@@ -1,5 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { Modal } from 'react-native';
 import { X } from '@/components/icons/X';
@@ -45,7 +52,9 @@ export function CalendarEventModal({
   /** Build the post-callback redirect target for this platform. */
   const buildRedirect = useCallback(() => {
     if (Platform.OS === 'web') {
-      const origin = process.env.EXPO_PUBLIC_WEB_ORIGIN ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081');
+      const origin =
+        process.env.EXPO_PUBLIC_WEB_ORIGIN ??
+        (typeof window !== 'undefined' ? window.location.origin : 'http://10.224.111.6:8081');
       return `${origin}/trip/${tripId}`;
     }
     // Native: deeplink handled by expo-router. The backend callback redirects
@@ -123,7 +132,12 @@ export function CalendarEventModal({
           <Text style={styles.description}>{dateLabel} · kalender kamu</Text>
 
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={adding} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={onClose}
+              disabled={adding}
+              activeOpacity={0.7}
+            >
               <Text style={styles.cancelText}>Batal</Text>
             </TouchableOpacity>
             <TouchableOpacity

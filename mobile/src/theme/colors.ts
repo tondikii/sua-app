@@ -41,44 +41,8 @@ export const colors = {
   shimmerShine: '#E4E4EE',
 } as const;
 
-/** Color token shape — values are CSS color strings (both palettes). */
+/** Color token shape — values are CSS color strings. */
 export type Colors = { [K in keyof typeof colors]: string };
-
-/**
- * Dark palette — Figma Screen 124 (Dark Mode — Beranda).
- * Coral/teal brand hues are unchanged; surfaces/neutrals go dark.
- */
-export const colorsDark: Colors = {
-  coral: '#FF6B6B',
-  coralLight: 'rgba(255,107,107,0.16)',
-  coralDark: '#E85555',
-
-  teal: '#4ECDC4',
-  tealLight: 'rgba(78,205,196,0.16)',
-
-  charcoal: '#F0F0FA',
-  muted: '#80809A',
-  mutedLight: '#55556A',
-  border: 'rgba(255,255,255,0.07)',
-  light: '#23232F',
-  white: '#1B1B26',
-  shadow: 'rgba(0,0,0,0.45)',
-
-  danger: '#F94141',
-  dangerDark: '#E83030',
-  dangerLight: '#FFEBEB',
-  dangerBorder: '#F5A8A8',
-
-  amber: '#F59E0B',
-  amberLight: '#FFF8ED',
-
-  disabled: '#55556A',
-  overlay: 'rgba(0,0,0,0.45)',
-  overlayDark: 'rgba(0,0,0,0.55)',
-
-  shimmerBase: '#23232F',
-  shimmerShine: '#2E2E3C',
-};
 
 /** Deterministic avatar background palette (figma `AVATAR_COLORS`). */
 export const AVATAR_COLORS = [

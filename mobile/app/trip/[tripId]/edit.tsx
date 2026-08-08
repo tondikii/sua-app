@@ -309,13 +309,12 @@ export default function EditTripScreen() {
                 >
                   <Text style={styles.timeValue}>{startTime}</Text>
                 </TouchableOpacity>
-                {showStartPicker && (
-                  <TimePicker
-                    value={startTime}
-                    onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
-                    onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
-                  />
-                )}
+                <TimePicker
+                  visible={showStartPicker}
+                  value={startTime}
+                  onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
+                  onClose={() => { setShowStartPicker(false); setFocusedField(null); }}
+                />
               </View>
               <View style={styles.timeField}>
                 <Text style={styles.timeLabel}>Selesai</Text>
@@ -326,13 +325,12 @@ export default function EditTripScreen() {
                 >
                   <Text style={styles.timeValue}>{endTime}</Text>
                 </TouchableOpacity>
-                {showEndPicker && (
-                  <TimePicker
-                    value={endTime}
-                    onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
-                    onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
-                  />
-                )}
+                <TimePicker
+                  visible={showEndPicker}
+                  value={endTime}
+                  onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
+                  onClose={() => { setShowEndPicker(false); setFocusedField(null); }}
+                />
               </View>
             </View>
           )}

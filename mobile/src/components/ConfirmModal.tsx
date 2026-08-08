@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { X } from '@/components/icons/X';
-import { colors } from '@/theme/colors';
+import { useTheme, type Colors } from '@/theme';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -33,12 +33,14 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  const { colors: c } = useTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <TouchableOpacity style={styles.closeBtn} onPress={onCancel} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <X size={13} color={colors.muted} />
+            <X size={13} color={c.muted} />
           </TouchableOpacity>
 
           {icon && <View style={styles.iconWrap}>{icon}</View>}
@@ -63,7 +65,7 @@ export function ConfirmModal({
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator size="small" color={colors.white} />
+                <ActivityIndicator size="small" color={c.white} />
               ) : (
                 <Text style={styles.confirmText}>{confirmLabel}</Text>
               )}
@@ -75,7 +77,8 @@ export function ConfirmModal({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(c: Colors) {
+  return StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(26,26,46,0.45)',
@@ -86,7 +89,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 300,
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 20,
     padding: 22,
     paddingTop: 24,
@@ -105,7 +108,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 8,
-    backgroundColor: colors.light,
+    backgroundColor: c.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.dangerLight,
+    backgroundColor: c.dangerLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -121,7 +124,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
-    color: colors.charcoal,
+    color: c.charcoal,
     textAlign: 'center',
     letterSpacing: -0.2,
     lineHeight: 22,
@@ -131,7 +134,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_500Medium',
-    color: colors.muted,
+    color: c.muted,
     textAlign: 'center',
     lineHeight: 19,
     paddingHorizontal: 4,
@@ -145,9 +148,9 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
     height: 44,
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.charcoal,
+    color: c.charcoal,
   },
   confirmBtn: {
     flex: 1,
@@ -165,18 +168,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   confirmBtnPrimary: {
-    backgroundColor: colors.coral,
-    shadowColor: colors.coral,
+    backgroundColor: c.coral,
+    shadowColor: c.coral,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.22,
     shadowRadius: 18,
     elevation: 3,
   },
   confirmBtnDanger: {
-    backgroundColor: colors.danger,
+    backgroundColor: c.danger,
     borderWidth: 1.5,
-    borderColor: colors.dangerDark,
-    shadowColor: colors.danger,
+    borderColor: c.dangerDark,
+    shadowColor: c.danger,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
@@ -185,6 +188,7 @@ const styles = StyleSheet.create({
   confirmText: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.white,
+    color: c.white,
   },
-});
+  });
+}

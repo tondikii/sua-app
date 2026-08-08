@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthProvider';
 import { useUserTrips } from '@/features/users/hooks/useUserTrips';
 import { EmptyTripsState } from '@/features/home/components/EmptyTripsState';
@@ -67,6 +68,7 @@ function ProfileTripGridCard({ trip, onPress, cardWidth }: { trip: TripSummary; 
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { width: screenWidth } = useWindowDimensions();
   const {
@@ -89,7 +91,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.screen}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerSpacer} />
         <Text style={styles.headerTitle}>{user?.username ?? 'Profil'}</Text>
         <TouchableOpacity onPress={handleSettings} style={styles.settingsBtn} activeOpacity={0.7}>

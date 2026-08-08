@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, StyleSheet, TextInput, type TextInputProps } from 'react-native';
-import { colors } from '@/theme/colors';
+import { useTheme, type Colors } from '@/theme';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
@@ -20,6 +20,8 @@ export function FocusedTextInput({
   onBlur,
   ...rest
 }: FocusedTextInputProps) {
+  const { colors: c } = useTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const [focused, setFocused] = useState(false);
 
   const handleFocus = useCallback((e: any) => {
@@ -42,9 +44,11 @@ export function FocusedTextInput({
   );
 }
 
-const styles = StyleSheet.create({
-  focused: {
-    borderColor: colors.coral,
-    borderWidth: 2,
-  },
-});
+function createStyles(c: Colors) {
+  return StyleSheet.create({
+    focused: {
+      borderColor: c.coral,
+      borderWidth: 2,
+    },
+  });
+}

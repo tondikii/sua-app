@@ -80,6 +80,7 @@ export default function SignIn() {
     try {
       await signInGoogle(token);
     } catch (err) {
+      console.log('ERR TONDIKI:', err);
       if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
         showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
       } else {
@@ -169,11 +170,7 @@ export default function SignIn() {
             activeOpacity={0.9}
             disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color={theme.colors.white} />
-            ) : (
-              <GoogleIcon />
-            )}
+            {loading ? <ActivityIndicator color={theme.colors.white} /> : <GoogleIcon />}
             <Text style={styles.googleButtonText}>
               {loading ? 'Sebentar...' : 'Lanjutkan dengan Google'}
             </Text>
@@ -203,7 +200,7 @@ export default function SignIn() {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
-const heroHeight = screenWidth > 430 ? 430 * 0.46 : screenWidth * 0.46;
+const heroHeight = screenWidth > 430 ? 430 * 0.56 : screenWidth * 0.56;
 
 const styles = StyleSheet.create({
   container: {

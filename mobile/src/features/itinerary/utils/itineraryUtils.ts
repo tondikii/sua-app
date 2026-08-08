@@ -257,7 +257,7 @@ export const TIME_STATE_META: Record<TimeState, {
     ringColor: '#F7F7FB',
     timeColor: '#9091A0',
     cardBorderColor: '#EBEBF2',
-    opacity: 0.72,
+    opacity: 0.55,
   },
   present: {
     dotColor: '#FF6B6B',

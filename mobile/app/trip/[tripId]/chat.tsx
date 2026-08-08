@@ -442,7 +442,7 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
   return (
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={0}
     >
       {/* Messages or empty state */}

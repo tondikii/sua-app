@@ -1,7 +1,7 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { X } from '@/components/icons/X';
-import { colors } from '@/theme/colors';
+import { useTheme, type Colors } from '@/theme';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
 
@@ -24,6 +24,8 @@ export function TagInput({
   placeholder = '+ Tambah tag...',
   maxTags = 10,
 }: TagInputProps) {
+  const { colors: c } = useTheme();
+  const styles = useMemo(() => createStyles(c), [c]);
   const inputRef = useRef<TextInput>(null);
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
@@ -59,7 +61,7 @@ export function TagInput({
             onPress={() => onRemove(tag)}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            <X size={11} color={colors.teal} />
+            <X size={11} color={c.teal} />
           </TouchableOpacity>
         </View>
       ))}
@@ -68,7 +70,7 @@ export function TagInput({
           ref={inputRef}
           style={[styles.input, webOutlineNone]}
           placeholder={placeholder}
-          placeholderTextColor={colors.mutedLight}
+          placeholderTextColor={c.mutedLight}
           value={value}
           onChangeText={handleChangeText}
           onSubmitEditing={() => commit(value)}
@@ -84,30 +86,31 @@ export function TagInput({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(c: Colors) {
+  return StyleSheet.create({
   container: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     alignItems: 'center',
-    backgroundColor: colors.light,
+    backgroundColor: c.light,
     borderRadius: 14,
     padding: 12,
     paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     minHeight: 50,
   },
   containerFocused: {
-    borderColor: colors.coral,
+    borderColor: c.coral,
     borderWidth: 2,
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.tealLight,
+    backgroundColor: c.tealLight,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -115,14 +118,15 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 12,
     fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.teal,
+    color: c.teal,
   },
   input: {
     flex: 1,
     minWidth: 100,
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_400Regular',
-    color: colors.charcoal,
+    color: c.charcoal,
     paddingVertical: 4,
   },
-});
+  });
+}

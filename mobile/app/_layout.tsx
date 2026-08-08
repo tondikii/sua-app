@@ -1,8 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Redirect, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import * as ExpoSplashScreen from 'expo-splash-screen';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   useFonts,
@@ -19,14 +18,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { queryClient } from '../src/api/queryClient';
 import { MOBILE_MAX_WIDTH } from '../src/theme/layout';
-import { ThemeProvider, useThemeContext } from '../src/theme';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
 import { ToastProvider } from '../src/components/Toast';
 import { useNotificationsSubscription } from '../src/realtime/useNotificationsSubscription';
 import { usePushNotifications } from '../src/features/notifications/push/usePushNotifications';
-import { SplashScreen } from '../src/components/SplashScreen';
-
-ExpoSplashScreen.preventAutoHideAsync();
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 
@@ -42,21 +37,26 @@ function MobileContainer({ children, backdropColor }: { children: ReactNode; bac
 
 /** Shows the branded splash until fonts are ready AND the session has hydrated. */
 function RootGate({ children }: { children: ReactNode }) {
-  const { isHydrated, user } = useAuth();
-  const { scheme } = useThemeContext();
+  const { isHydrated, isAuthenticated, user } = useAuth();
+  const pathname = usePathname();
 
   // Subscribe to real-time notifications when authenticated
   useNotificationsSubscription(user?.id);
   // Register the device for push notifications (native only)
   usePushNotifications(user?.id);
 
-  useEffect(() => {
-    ExpoSplashScreen.hideAsync();
-  }, []);
+  if (!isHydrated) return null;
 
-  if (!isHydrated) return <SplashScreen />;
+  // Auth guard at the ROOT level — covers screens outside `(tabs)` (settings,
+  // notifications, profile, trip) that the tabs layout guard can't reach.
+  // `(auth)` routes are exempt so sign-in/onboarding stay reachable.
+  const isAuthRoute = pathname.startsWith('/(auth)') || pathname === '/sign-in' || pathname === '/onboarding';
+  if (!isAuthenticated && !isAuthRoute) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
   return (
-    <MobileContainer backdropColor={scheme === 'dark' ? '#0F0F13' : '#1A1A2E'}>
+    <MobileContainer backdropColor="#1A1A2E">
       {children}
     </MobileContainer>
   );
@@ -101,35 +101,27 @@ export default function RootLayout() {
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: 'm11' }}>
       <AuthProvider>
         <SafeAreaProvider>
-          <ThemeProvider>
-            <ThemedStatusBar />
-            {fontsReady && (
-              <RootGate>
-                <ToastProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(auth)" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="trip" />
-                  <Stack.Screen name="notifications" />
-                  <Stack.Screen name="settings" />
-                  <Stack.Screen name="profile" />
-                  <Stack.Screen
-                    name="trip/create"
-                    options={{ presentation: 'modal' }}
-                  />
-                </Stack>
-              </ToastProvider>
-              </RootGate>
-            )}
-          </ThemeProvider>
+          <StatusBar style="dark" />
+          {fontsReady && (
+            <RootGate>
+              <ToastProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="trip" />
+                <Stack.Screen name="notifications" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="profile" />
+                <Stack.Screen
+                  name="trip/create"
+                  options={{ presentation: 'modal' }}
+                />
+              </Stack>
+            </ToastProvider>
+            </RootGate>
+          )}
         </SafeAreaProvider>
       </AuthProvider>
     </PersistQueryClientProvider>
   );
-}
-
-/** Status bar follows the active color scheme (dark text on light, light on dark). */
-function ThemedStatusBar() {
-  const { scheme } = useThemeContext();
-  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
 }

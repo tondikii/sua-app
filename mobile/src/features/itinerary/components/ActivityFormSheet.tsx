@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Modal,
   Platform,
+  KeyboardAvoidingView,
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -169,7 +170,11 @@ export function ActivityFormSheet({
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
+      >
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           {/* Header */}
           <View style={styles.header}>
@@ -211,12 +216,18 @@ export function ActivityFormSheet({
                 </TouchableOpacity>
               </View>
             </View>
-            {showStartPicker && (
-              <TimePicker value={startTime} onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }} onClose={() => setShowStartPicker(false)} />
-            )}
-            {showEndPicker && (
-              <TimePicker value={endTime} onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }} onClose={() => setShowEndPicker(false)} />
-            )}
+            <TimePicker
+              visible={showStartPicker}
+              value={startTime}
+              onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
+              onClose={() => setShowStartPicker(false)}
+            />
+            <TimePicker
+              visible={showEndPicker}
+              value={endTime}
+              onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
+              onClose={() => setShowEndPicker(false)}
+            />
 
             {/* Nama */}
             <View style={styles.field}>
@@ -431,7 +442,7 @@ export function ActivityFormSheet({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
 
       <ActivityCoverPickerSheet
         visible={showCoverPicker}
