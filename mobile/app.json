@@ -31,6 +31,12 @@
       "expo-router",
       "expo-system-ui",
       [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.463752801012-d0f7hsgg7f23ft4bacgeki81o5rnr2vf"
+        }
+      ],
+      [
         "expo-notifications",
         {
           "color": "#FF6B6B"

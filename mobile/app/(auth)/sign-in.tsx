@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -57,11 +58,39 @@ const HERO_IMAGE =
 
 export default function SignIn() {
   const { signInGoogle, isNewUser, isAuthenticated, isSigningOut } = useAuth();
-  const { promptAsync, idToken, error, configured } = useGoogleAuth();
+  const { promptAsync, loading, idToken, error, configured } = useGoogleAuth();
   const { showToast } = useToast();
   const router = useRouter();
   const signingInRef = useRef(false);
 
+  // Native flow: promptAsync resolves the id_token directly.
+  // Web flow: id_token arrives via the URL hash and is picked up below.
+  const handleGoogleSignIn = async () => {
+    if (!configured) {
+      showToast('Masuk Google belum siap nih. Hubungi developer atau coba lagi nanti.');
+      return;
+    }
+    if (Platform.OS === 'web') {
+      await promptAsync();
+      return;
+    }
+    const token = await promptAsync();
+    if (!token || signingInRef.current) return;
+    signingInRef.current = true;
+    try {
+      await signInGoogle(token);
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
+        showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
+      } else {
+        showToast('Gagal masuk pakai Google. Coba lagi ya.');
+      }
+    } finally {
+      signingInRef.current = false;
+    }
+  };
+
+  // Web flow: exchange the id_token captured from the URL hash.
   useEffect(() => {
     if (idToken && !signingInRef.current) {
       signingInRef.current = true;
@@ -94,14 +123,6 @@ export default function SignIn() {
       router.replace(isNewUser ? '/(auth)/username-setup' : '/(tabs)');
     }
   }, [isAuthenticated, isNewUser, isSigningOut, router]);
-
-  const handleGoogleSignIn = async () => {
-    if (!configured) {
-      showToast('Masuk Google belum siap nih. Hubungi developer atau coba lagi nanti.');
-      return;
-    }
-    await promptAsync();
-  };
 
   return (
     <View style={styles.container}>
@@ -146,9 +167,16 @@ export default function SignIn() {
             style={styles.googleButton}
             onPress={handleGoogleSignIn}
             activeOpacity={0.9}
+            disabled={loading}
           >
-            <GoogleIcon />
-            <Text style={styles.googleButtonText}>Lanjutkan dengan Google</Text>
+            {loading ? (
+              <ActivityIndicator color={theme.colors.white} />
+            ) : (
+              <GoogleIcon />
+            )}
+            <Text style={styles.googleButtonText}>
+              {loading ? 'Sebentar...' : 'Lanjutkan dengan Google'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>

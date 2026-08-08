@@ -3,6 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as ExpoSplashScreen from 'expo-splash-screen';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -86,6 +87,15 @@ export default function RootLayout() {
   });
 
   const fontsReady = fontsLoaded || !!fontError;
+
+  // Configure native Google Sign-In once (Android uses webClientId to mint the
+  // id_token the backend validates; iOS uses the url scheme from app.json).
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    });
+  }, []);
 
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, buster: 'm11' }}>
