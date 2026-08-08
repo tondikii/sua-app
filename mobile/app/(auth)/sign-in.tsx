@@ -56,7 +56,7 @@ const HERO_IMAGE =
   'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=700&fit=crop&auto=format';
 
 export default function SignIn() {
-  const { signInGoogle, isNewUser, isAuthenticated } = useAuth();
+  const { signInGoogle, isNewUser, isAuthenticated, isSigningOut } = useAuth();
   const { promptAsync, idToken, error, configured } = useGoogleAuth();
   const { showToast } = useToast();
   const router = useRouter();
@@ -70,9 +70,9 @@ export default function SignIn() {
           await signInGoogle(idToken);
         } catch (err) {
           if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
-            showToast('Aplikasi sedang penuh. Batas pengguna aktif sudah tercapai — coba lagi nanti ya.');
+            showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
           } else {
-            showToast('Autentikasi Google gagal. Coba lagi.');
+            showToast('Gagal masuk pakai Google. Coba lagi ya.');
           }
         } finally {
           signingInRef.current = false;
@@ -83,20 +83,22 @@ export default function SignIn() {
 
   useEffect(() => {
     if (error) {
-      showToast('Autentikasi Google gagal. Coba lagi.');
+      showToast('Gagal masuk pakai Google. Coba lagi ya.');
     }
   }, [error, showToast]);
 
+  // Auto-redirect after a successful sign-in. Guard `isSigningOut` so a sign-out
+  // in flight (state not committed yet) never bounces the user back to (tabs).
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isSigningOut) {
       router.replace(isNewUser ? '/(auth)/username-setup' : '/(tabs)');
     }
-  }, [isAuthenticated, isNewUser, router]);
+  }, [isAuthenticated, isNewUser, isSigningOut, router]);
 
   const handleGoogleSignIn = async () => {
     if (!configured) {
       showToast(
-        'Google Sign-In belum dikonfigurasi. Tambahkan EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID / EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ke .env.',
+        'Masuk Google belum siap nih. Hubungi developer atau coba lagi nanti.',
       );
       return;
     }
@@ -109,9 +111,9 @@ export default function SignIn() {
         <Image source={{ uri: HERO_IMAGE }} style={styles.heroImage} />
         <LinearGradient
           colors={[
-            'rgba(0,0,0,0.30)',
-            'rgba(0,0,0,0.05)',
-            'rgba(255,255,255,0.85)',
+            'rgba(0,0,0,0.15)',
+            'rgba(0,0,0,0.03)',
+            'rgba(255,255,255,0.55)',
             'rgba(255,255,255,1)',
           ]}
           locations={[0, 0.45, 0.88, 1]}
@@ -135,9 +137,9 @@ export default function SignIn() {
           contentContainerStyle={styles.bottomContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.heading}>Mulai Perjalananmu</Text>
+          <Text style={styles.heading}>Yuk mulai!</Text>
           <Text style={styles.description}>
-            Bergabung dan rencanakan perjalanan seru bersama orang-orang tersayang.
+            Atur perjalanan bareng teman-temanmu di satu tempat — dari rencana sampai jadwal harian.
           </Text>
 
           <View style={{ flex: 1 }} />
@@ -165,8 +167,8 @@ export default function SignIn() {
           )}
 
           <Text style={styles.legal}>
-            Dengan melanjutkan, kamu menyetujui{' '}
-            <Text style={styles.legalLink}>Syarat & Ketentuan</Text> serta{' '}
+            Dengan lanjut, kamu setuju sama{' '}
+            <Text style={styles.legalLink}>Syarat & Ketentuan</Text> dan{' '}
             <Text style={styles.legalLink}>Kebijakan Privasi</Text> kami.
           </Text>
         </ScrollView>
@@ -214,10 +216,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: theme.colors.coral,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.38,
-    shadowRadius: 28,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
   heroTitle: {
     color: theme.colors.white,
@@ -271,10 +273,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     shadowColor: theme.colors.coral,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.27,
-    shadowRadius: 28,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 3,
   },
   googleButtonText: {
     color: theme.colors.white,

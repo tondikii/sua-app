@@ -126,13 +126,17 @@ export default function SettingsScreen() {
   const handleConfirmSignOut = useCallback(async () => {
     setSigningOut(true);
     try {
+      // Tidak perlu router.replace manual — begitu state auth di-commit
+      // (isAuthenticated → false), guard `(tabs)/_layout` otomatis
+      // me-redirect ke /(auth)/sign-in. Redirect manual di sini menimbulkan
+      // race: sign-in.tsx masih melihat state lama (isAuthenticated true)
+      // dan melempar user kembali ke home.
       await signOut();
-      router.replace('/(auth)/sign-in');
     } finally {
       setSigningOut(false);
       setShowSignOutConfirm(false);
     }
-  }, [signOut, router]);
+  }, [signOut]);
 
   const handlePickAvatar = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({

@@ -125,7 +125,6 @@ export default function UsernameSetup() {
       setErrorMessage('Huruf, angka, dan underscore (_) · min. 3 karakter');
       return;
     }
-
     setFieldState('checking');
 
     debounceRef.current = setTimeout(async () => {
@@ -140,12 +139,12 @@ export default function UsernameSetup() {
           setErrorMessage('');
         } else {
           setFieldState('taken');
-          setErrorMessage('Username sudah digunakan. Coba yang lain.');
+          setErrorMessage('Username ini udah kepakai. Coba yang lain.');
         }
       } catch {
         if (!mountedRef.current) return;
         setFieldState('taken');
-        setErrorMessage('Gagal memeriksa username. Coba lagi.');
+        setErrorMessage('Gagal cek username. Coba lagi.');
       }
     }, 300);
   }, []);
@@ -197,9 +196,9 @@ export default function UsernameSetup() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Buat username</Text>
+        <Text style={styles.title}>Pilih username</Text>
         <Text style={styles.description}>
-          Ini nama yang akan dilihat teman saat kamu diundang ke perjalanan.
+          Ini nama yang bakal dilihat teman-temanmu saat kamu diundang ke perjalanan.
         </Text>
 
         <Text style={styles.label}>Username</Text>
@@ -236,7 +235,7 @@ export default function UsernameSetup() {
 
         {suggestions.length > 0 && (
           <View style={styles.suggestions}>
-            <Text style={styles.suggestionsLabel}>Saran</Text>
+            <Text style={styles.suggestionsLabel}>Saran buat kamu</Text>
             <View style={styles.chips}>
               {suggestions.map((s) => (
                 <TouchableOpacity

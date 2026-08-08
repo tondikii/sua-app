@@ -142,7 +142,7 @@ function MiniVotingPreview() {
             {c.votes} suara
           </Text>
           {c.voted ? (
-            <Text style={previewStyles.votedLabel}>✓ Voted</Text>
+            <Text style={previewStyles.votedLabel}>Sudah vote</Text>
           ) : (
             <Text style={previewStyles.voteBtn}>Vote</Text>
           )}
@@ -153,9 +153,53 @@ function MiniVotingPreview() {
 }
 
 function MiniItineraryPreview() {
+  const items = [
+    {
+      time: '07:00 – 08:30',
+      title: 'Berkumpul di Bandara Lombok',
+      location: 'Praya, NTB',
+      kind: 'gather',
+      state: 'past',
+    },
+    {
+      time: '09:00 – 11:00',
+      title: 'Perjalanan ke penginapan',
+      location: 'Van sewa',
+      kind: 'transport',
+      state: 'past',
+    },
+    {
+      time: '13:00 – 16:00',
+      title: 'Pantai Tiga Warna',
+      location: 'Lombok Timur, NTB',
+      kind: 'destination',
+      state: 'present',
+    },
+    {
+      time: '16:30 – 18:30',
+      title: 'Bukit Merese',
+      location: 'Lombok Tengah, NTB',
+      kind: 'destination',
+      state: 'future',
+    },
+  ] as const;
+
+  const kindIcon = (kind: string) => {
+    switch (kind) {
+      case 'gather':
+        return <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"><Circle cx={9} cy={8} r={3} stroke={theme.colors.muted} strokeWidth={2} /><Path d="M3 20v-1a6 6 0 0112 0v1" stroke={theme.colors.muted} strokeWidth={2} /><Path d="M16 4a3 3 0 010 6M21 20v-1a5 5 0 00-4-4.9" stroke={theme.colors.muted} strokeWidth={2} /></Svg>;
+      case 'transport':
+        return <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"><Rect x={5} y={2} width={14} height={20} rx={2} stroke={theme.colors.muted} strokeWidth={2} /><Path d="M9 6h6M9 18h6" stroke={theme.colors.muted} strokeWidth={2} /></Svg>;
+      case 'meal':
+        return <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"><Path d="M6 2v7a2 2 0 002 2v11M10 2v4M8 2v4M14 2l2 20" stroke={theme.colors.muted} strokeWidth={2} strokeLinecap="round" /></Svg>;
+      default:
+        return <Svg width={16} height={16} viewBox="0 0 24 24" fill="none"><Path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z" stroke={theme.colors.muted} strokeWidth={2} /><Circle cx={12} cy={10} r={3} stroke={theme.colors.muted} strokeWidth={2} /></Svg>;
+    }
+  };
+
   return (
     <View style={previewStyles.card}>
-      <Text style={previewStyles.summary}>21 aktivitas · 4 hari</Text>
+      <Text style={previewStyles.summary}>4 aktivitas · 4 hari</Text>
       <View style={previewStyles.dayTabs}>
         {['Hari 1', 'Hari 2', 'Hari 3', 'Hari 4'].map((d, i) => (
           <View key={d} style={[previewStyles.dayTab, i === 0 && previewStyles.dayTabActive]}>
@@ -166,19 +210,15 @@ function MiniItineraryPreview() {
         ))}
       </View>
       <View style={previewStyles.dayHeader}>
-        <Text style={previewStyles.dayLabel}>HARI 1</Text>
-        <View style={previewStyles.dayMeta}>
-          <Text style={previewStyles.dayDate}>19 Juni 2026</Text>
-          <Text style={previewStyles.dayWindow}>07:00 – 24:00</Text>
+        <View>
+          <Text style={previewStyles.dayLabel}>HARI 1</Text>
+          <Text style={previewStyles.dayDate}>Tanggal belum ditentukan</Text>
+        </View>
+        <View style={previewStyles.dayWindow}>
+          <Text style={previewStyles.dayWindowText}>07:00 – 20:00</Text>
         </View>
       </View>
-      {[
-        { time: '07:00–08:30', title: 'Titik kumpul — Terminal travel', state: 'past' },
-        { time: '08:30–10:30', title: 'Perjalanan ke penginapan', state: 'past' },
-        { time: '12:00–13:00', title: 'Makan siang — warung lokal', state: 'past' },
-        { time: '14:00–16:30', title: 'Pantai Tiga Warna', state: 'present' },
-        { time: '17:00–18:30', title: 'Bukit Merese — sunset', state: 'future' },
-      ].map((item, i) => {
+      {items.map((item, i) => {
         const isPresent = item.state === 'present';
         const color = isPresent
           ? theme.colors.coral
@@ -187,7 +227,14 @@ function MiniItineraryPreview() {
             : theme.colors.teal;
         return (
           <View key={i} style={previewStyles.activityRow}>
-            <View style={[previewStyles.activityDot, { backgroundColor: color }]} />
+            <View style={previewStyles.dotColumn}>
+              <View style={[previewStyles.dotRing, { backgroundColor: isPresent ? theme.colors.coralLight : theme.colors.light }]}>
+                <View style={[previewStyles.activityDot, { backgroundColor: color }]} />
+              </View>
+              {i < items.length - 1 && (
+                <View style={[previewStyles.verticalLine, { backgroundColor: isPresent ? theme.colors.coral : theme.colors.border }]} />
+              )}
+            </View>
             <View
               style={[
                 previewStyles.activityCard,
@@ -197,13 +244,21 @@ function MiniItineraryPreview() {
                 },
               ]}
             >
-              <Text
-                style={[previewStyles.activityTime, isPresent && { color: theme.colors.coral }]}
-              >
-                {item.time}
-              </Text>
-              <Text style={previewStyles.activityName}>{item.title}</Text>
-              {isPresent && <Text style={previewStyles.nowBadge}>Sekarang</Text>}
+              <View style={previewStyles.activityHeader}>
+                <Text style={[previewStyles.activityTime, isPresent && { color: theme.colors.coral }]}>
+                  {item.time}
+                </Text>
+                {isPresent && <Text style={previewStyles.nowBadge}>Sekarang</Text>}
+              </View>
+              <View style={previewStyles.activityContent}>
+                <View style={previewStyles.activityThumb}>
+                  {kindIcon(item.kind)}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={previewStyles.activityName} numberOfLines={1}>{item.title}</Text>
+                  <Text style={previewStyles.activityLocation} numberOfLines={1}>{item.location}</Text>
+                </View>
+              </View>
             </View>
           </View>
         );
@@ -221,14 +276,14 @@ function MiniChatPreview() {
         </View>
         <View style={previewStyles.chatBubbleReceived}>
           <Text style={previewStyles.chatText}>
-            Besok kita berangkat jam 7 ya? Jangan lupa check itinerary 📋
+            Besok kita berangkat jam 7 ya? Jangan lupa cek itinerary.
           </Text>
         </View>
       </View>
       <View style={previewStyles.chatSent}>
         <View style={previewStyles.chatBubbleSent}>
           <Text style={previewStyles.chatTextSent}>
-            Siap! Undangan udah aku kirim ke yang belum join ✉️
+            Siap! Undangan udah aku kirim ke yang belum join.
           </Text>
         </View>
       </View>
@@ -243,7 +298,7 @@ function MiniChatPreview() {
             }}
             style={previewStyles.chatImage}
           />
-          <Text style={previewStyles.chatText}>Referensi buat besok 📸</Text>
+          <Text style={previewStyles.chatText}>Referensi buat besok.</Text>
         </View>
       </View>
     </View>
@@ -379,7 +434,7 @@ export default function Onboarding() {
           ))}
         </View>
         <TouchableOpacity style={styles.cta} onPress={goNext} activeOpacity={0.9}>
-          <Text style={styles.ctaText}>{isLast ? 'Mulai Sekarang' : 'Selanjutnya →'}</Text>
+          <Text style={styles.ctaText}>{isLast ? 'Mulai Sekarang' : 'Selanjutnya'}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -682,7 +737,11 @@ const previewStyles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_800ExtraBold',
   },
   dayHeader: {
-    marginBottom: 5,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 6,
   },
   dayLabel: {
     fontSize: 10,
@@ -692,60 +751,98 @@ const previewStyles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: 1,
   },
-  dayMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   dayDate: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: theme.colors.charcoal,
   },
   dayWindow: {
+    backgroundColor: theme.colors.light,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  dayWindowText: {
     fontSize: 8,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: theme.colors.muted,
-    backgroundColor: theme.colors.light,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
   },
   activityRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
     marginBottom: 4,
   },
+  dotColumn: {
+    width: 18,
+    alignItems: 'center',
+  },
+  dotRing: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 5,
+  },
   activityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  verticalLine: {
+    width: 2,
+    flex: 1,
+    minHeight: 12,
+    marginTop: 2,
   },
   activityCard: {
     flex: 1,
     backgroundColor: theme.colors.white,
-    borderRadius: 10,
-    padding: 5,
-    paddingHorizontal: 7,
+    borderRadius: 12,
+    padding: 7,
+    paddingHorizontal: 9,
     borderWidth: 1.5,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 1,
+    marginBottom: 4,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
   },
   activityTime: {
     fontSize: 8,
     fontFamily: 'PlusJakartaSans_700Bold',
     color: theme.colors.muted,
   },
+  activityContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  activityThumb: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: theme.colors.light,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   activityName: {
     fontSize: 10,
     fontFamily: 'PlusJakartaSans_800ExtraBold',
     color: theme.colors.charcoal,
     lineHeight: 13,
+  },
+  activityLocation: {
+    fontSize: 8,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: theme.colors.muted,
+    marginTop: 1,
   },
   nowBadge: {
     fontSize: 6,
@@ -756,8 +853,6 @@ const previewStyles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 5,
     textTransform: 'uppercase',
-    alignSelf: 'flex-start',
-    marginTop: 2,
   },
   chatReceived: {
     flexDirection: 'row',

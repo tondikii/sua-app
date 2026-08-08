@@ -1,17 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AuthResponse, UserProfile } from '@atur-perjalanan/shared-types';
 
 import { apiClient, setOnUnauthorized, setTokenGetter } from '../api/client';
 import { secureStorage } from '../lib/secureStorage';
 import { setRealtimeAuthToken } from '../realtime/supabaseClient';
+import { queryClient } from '../api/queryClient';
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -22,6 +15,8 @@ interface AuthContextValue {
   /** True when the user has authenticated but not yet set a username. */
   isNewUser: boolean;
   isAuthenticated: boolean;
+  /** True while a sign-out is in flight (state not yet committed). */
+  isSigningOut: boolean;
   /** Exchange a Google ID token for app + realtime JWTs. */
   signInGoogle: (idToken: string) => Promise<{ isNewUser: boolean }>;
   /** Set the username for a new user; resolves the fresh profile. */
@@ -39,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [realtimeToken, setRealtimeToken] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Synchronous token mirror so the API client never awaits storage per request.
   const tokenRef = useRef<string | null>(null);
@@ -54,10 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
     setRealtimeToken(null);
     setIsNewUser(false);
+    // Clear the persisted query cache so no stale user data (trips, profile,
+    // wishlist) leaks into the next session after signing out.
+    queryClient.clear();
   }, []);
 
   const signOut = useCallback(async () => {
-    await clearAuth();
+    setIsSigningOut(true);
+    try {
+      await clearAuth();
+    } finally {
+      setIsSigningOut(false);
+    }
   }, [clearAuth]);
 
   useEffect(() => {
@@ -137,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isHydrated,
     isNewUser,
     isAuthenticated: !!accessToken,
+    isSigningOut,
     signInGoogle,
     completeRegistration,
     setUser,
