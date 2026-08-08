@@ -2,28 +2,37 @@ import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
-import { makeRedirectUri } from 'expo-auth-session';
 import { useAuthRequest } from 'expo-auth-session/providers/google';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const isExpoGo = Constants.appOwnership === 'expo';
 
-const clientId = (() => {
-  if (isExpoGo || Platform.OS === 'web') {
-    return process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
-  }
-  if (Platform.OS === 'ios') {
-    return process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
-  }
-  return process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
-})();
+const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || webClientId;
+const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || webClientId;
+
+const clientId =
+  isExpoGo || Platform.OS === 'web'
+    ? webClientId
+    : Platform.OS === 'ios'
+      ? iosClientId
+      : androidClientId;
+
+/**
+ * Google's installed-app redirect URI is derived from the client ID:
+ * `com.googleusercontent.apps.<client-id-without-domain>:/oauthredirect`.
+ * A custom scheme (e.g. `aturperjalanan://`) is NOT registered with Google and
+ * causes "Akses diblokir: Error Otorisasi" (redirect_uri_mismatch) on Android/iOS builds.
+ */
+const googleNativeRedirectUri = (id: string) =>
+  `com.googleusercontent.apps.${id.replace(/\.apps\.googleusercontent\.com$/, '')}:/oauthredirect`;
 
 const redirectUri = Platform.OS === 'web'
   ? (process.env.EXPO_PUBLIC_WEB_ORIGIN ?? window.location.origin)
   : isExpoGo
     ? 'https://auth.expo.io/@sudutkode/atur-perjalanan'
-    : makeRedirectUri({ scheme: 'aturperjalanan' });
+    : googleNativeRedirectUri(clientId);
 
 /**
  * Capture the id_token from the URL hash at MODULE LOAD TIME — before Expo

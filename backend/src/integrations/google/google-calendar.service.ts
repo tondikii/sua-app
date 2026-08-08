@@ -43,6 +43,12 @@ export class GoogleCalendarService {
   }
 
   private redirectUri(): string {
+    // Production: absolute URL of the deployed backend (e.g. Vercel). The
+    // `BACKEND_URL` env overrides the default; in dev fall back to localhost.
+    const backendUrl = process.env.BACKEND_URL;
+    if (backendUrl) {
+      return `${backendUrl.replace(/\/+$/, '')}${CALLBACK_PATH}`;
+    }
     const port = process.env.PORT ?? '8080';
     return `http://localhost:${port}${CALLBACK_PATH}`;
   }

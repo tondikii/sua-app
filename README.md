@@ -46,7 +46,7 @@ Seluruh informasi mendalam terkait produk dan teknis ada di folder `/docs`:
 5. [Architecture Blueprint](docs/ARCHITECTURE.md) - Arsitektur DB, Backend, dan Mobile (target state — tidak melacak progress).
 6. [Milestones & Roadmap](docs/MILESTONES.md) - Progress development ada di sini.
 7. [Figma Design Reference](docs/FIGMA.md) - Design tokens, screen inventory, penghubung ke workflow.
-8. [Deployment Guide](docs/DEPLOYMENT.md) - Langkah deploy backend (Render), web (Cloudflare Pages), dan Play Store (EAS).
+8. [Deployment Guide](docs/DEPLOYMENT.md) - Langkah deploy backend (Vercel), web (Cloudflare Pages), dan Play Store (EAS).
 
 ## 🚀 Memulai Pengerjaan
 
@@ -148,22 +148,27 @@ pnpm --filter mobile build:production:ios          # EAS production build (IPA �
 
 | Layer | Host | Alamat |
 | --- | --- | --- |
-| Backend (NestJS) | **Render.com** (free) | `https://atur-perjalanan-backend.onrender.com` |
+| Backend (NestJS) | **Vercel** (serverless) | `https://atur-perjalanan-backend.vercel.app` |
 | Web (Expo export) | **Cloudflare Pages** | `https://atur-perjalanan.pages.dev` |
 | Database | Supabase (cloud) | project `vclvoovqneuiorpiidqz` |
 | Storage | Cloudflare R2 | bucket `atur-perjalanan-media` |
 
-### 1. Backend — Render
+### 1. Backend — Vercel Serverless
 
 ```bash
-# Blueprint infra-as-code ada di render.yaml
 # 1. Push repo ke GitHub
-# 2. render.com → New → Blueprint → pilih repo
-# 3. Isi env vars (sync: false → set manual di dashboard):
-#    DATABASE_URL (pooler :6543), DIRECT_URL (:5432), SUPABASE_*, JWT_SECRET,
-#    GOOGLE_CLIENT_ID, R2_*, APP_WEB_URL=https://atur-perjalanan.pages.dev,
-#    EXPO_ACCESS_TOKEN, USER_LIMIT=50, APP_ENV=production
-# 4. Migrasi DB (sekali via Render Shell): pnpm --filter backend exec prisma migrate deploy
+# 2. vercel.com → Add New → Project → import repo
+#    Framework: Other | Root: / 
+#    Build: corepack enable && pnpm install --frozen-lockfile &&
+#           pnpm --filter backend exec prisma migrate deploy &&
+#           pnpm --filter backend exec prisma generate &&
+#           pnpm --filter backend build
+# 3. Isi env vars (Production):
+#    DATABASE_URL (pooler :6543, connection_limit=1), DIRECT_URL (:5432),
+#    SUPABASE_*, JWT_SECRET, GOOGLE_CLIENT_ID, R2_*, APP_WEB_URL,
+#    EXPO_ACCESS_TOKEN, USER_LIMIT=50, APP_ENV=production, CRON_SECRET
+# 4. Cron reminder (pengganti @nestjs/schedule): set GitHub Secret CRON_SECRET +
+#    Variable VERCEL_BACKEND_URL → workflow cron-reminders.yml POST tiap jam
 ```
 
 ### 2. Web — Cloudflare Pages
@@ -177,7 +182,7 @@ pnpm export:web           # output: mobile/dist
 # Cloudflare Pages project:
 #   Build command: pnpm --filter mobile export:web
 #   Output dir:    mobile/dist
-#   Env vars:      EXPO_PUBLIC_API_URL, EXPO_PUBLIC_WEB_ORIGIN,
+#   Env vars:      EXPO_PUBLIC_API_URL (Vercel), EXPO_PUBLIC_WEB_ORIGIN,
 #                  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, EXPO_PUBLIC_SUPABASE_*
 ```
 

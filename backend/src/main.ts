@@ -1,11 +1,13 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 
-async function bootstrap() {
+/** Build & configure the Nest app without listening (used by local bootstrap
+ *  and the Vercel serverless handler). */
+export async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
 
   // Global prefix
@@ -50,9 +52,17 @@ async function bootstrap() {
     SwaggerModule.setup('docs', app, document);
   }
 
+  return app;
+}
+
+/** Local / Docker entry — serverless (Vercel) uses createApp() directly. */
+async function bootstrap() {
+  const app = await createApp();
   const port = process.env.PORT ?? 8080;
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}/v1`);
 }
 
-bootstrap();
+if (process.env.VERCEL !== '1') {
+  bootstrap();
+}

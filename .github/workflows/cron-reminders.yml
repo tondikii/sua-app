@@ -1,0 +1,33 @@
+name: Cron Reminder (Vercel backend)
+
+# Pengganti @nestjs/schedule — Vercel serverless tidak punya scheduler in-process.
+# Workflow ini POST ke endpoint cron tiap 1 jam untuk menjalankan reminder:
+#   - voting deadline (R1/R2 proporsional)
+#   - trip start (R1/R2 proporsional)
+#
+# Konfigurasi: set GitHub Secret `CRON_SECRET` (sama dengan env Vercel CRON_SECRET)
+# dan Variable `VERCEL_BACKEND_URL` (mis. https://your-backend.vercel.app).
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # setiap jam (UTC)
+  workflow_dispatch:
+
+jobs:
+  run-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger backend reminders
+        run: |
+          BACKEND_URL="${{ vars.VERCEL_BACKEND_URL || 'https://atur-perjalanan-backend.vercel.app' }}"
+          SECRET="${{ secrets.CRON_SECRET }}"
+          if [ -z "$SECRET" ]; then
+            echo "::warning::CRON_SECRET secret belum di-set — endpoint ditolak 401."
+            exit 1
+          fi
+          curl -fsS --max-time 90 -X POST \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: $SECRET" \
+            "$BACKEND_URL/v1/cron/reminders" \
+            && echo "✅ reminders executed" \
+            || echo "⚠️ reminder run gagal (akan coba lagi jam depan)"

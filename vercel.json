@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "functions": {
+    "backend/dist/serverless.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
+}

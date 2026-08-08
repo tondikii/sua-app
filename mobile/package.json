@@ -12,6 +12,7 @@
     "lint": "tsc --noEmit",
     "build:development:android": "eas build --platform android --profile development",
     "build:development:ios": "eas build --platform ios --profile development",
+    "build:android:dev:local": "./scripts/build-android-dev-local.sh",
     "build:preview:android": "eas build --platform android --profile preview",
     "build:preview:ios": "eas build --platform ios --profile preview",
     "build:production:android": "eas build --platform android --profile production",
@@ -59,6 +60,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.2.17",
+    "sharp": "^0.35.3",
     "typescript": "^6.0.3"
   }
 }

@@ -71,7 +71,11 @@
 
 - OAuth callback redirects must return to the exact return URL the client passed to the auth session — native deeplink (e.g., `aturperjalanan://trip/{id}`) or web origin — not a hardcoded web URL. When the backend redirects to the web app while mobile awaits the deeplink return URL, `openAuthSessionAsync` never reports success, so post-consent steps (e.g., create calendar event) silently never run and the user sees "no success feedback, no event created". Store the client-supplied full redirect URI in the OAuth `state` and redirect to it verbatim (bare paths get prefixed with the app web URL). Confidence: 0.8
 
-- Prefers free-tier hosting services for initial production deployment (web + backend) before scaling to paid tiers — explicitly chose Render free (backend) and Cloudflare Pages (static web) as zero-cost deployment targets, accepting free-tier tradeoffs (e.g., service cold starts after idle, limited concurrency) as acceptable for early release rather than enabling paid hosting. Confidence: 0.8
+- Prefers free-tier hosting services for initial production deployment (web + backend) before scaling to paid tiers, accepting free-tier tradeoffs rather than enabling paid hosting. Hosting choice should follow practical account constraints: when a provider is blocked by credit/debit-card requirements, switch to a viable alternative (currently Vercel for the backend) instead of insisting on the original provider. Confidence: 0.8
+
+- When migrating deployment providers, expects the implementation to be fully adapted to the target platform's execution model and limitations (e.g., convert in-process hourly schedulers to an authenticated externally triggered endpoint for serverless), not merely change the deployment URL. Confidence: 0.85
+
+- When changing the deployment provider, expects all deployment configuration, environment examples, documentation, workflows, and production URLs to be updated consistently and obsolete provider references removed rather than left as historical traces. Confidence: 0.85
 
 - Enforces a soft cap on registered users via a configurable backend gate (`USER_LIMIT` env var, default 50) rather than a hard freeze — new sign-ups are rejected with a structured `USER_LIMIT_REACHED` error once active users reach the threshold, while existing users can always sign in. Applied at the auth registration boundary (not on login) so the free-tier capacity ceiling is respected without locking out real users; the limit is env-driven so capacity can be raised without a new deploy. Confidence: 0.85
 

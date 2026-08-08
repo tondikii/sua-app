@@ -8,6 +8,9 @@ export default () => ({
   /** Maximum number of registered (active) users — free-tier gate. */
   userLimit: parseInt(process.env.USER_LIMIT ?? '50', 10),
 
+  /** Shared secret that must be sent as `x-cron-secret` to the cron endpoints. */
+  cronSecret: process.env.CRON_SECRET ?? '',
+
   database: {
     url: process.env.DATABASE_URL,
     directUrl: process.env.DIRECT_URL,

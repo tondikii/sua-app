@@ -548,11 +548,11 @@ mobile/
 
 ## M18 — Deployment Web + Rilis Play Store (Free-Tier) 🔲 BELUM DIMULAI
 
-**AI Prompt**: _"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §5`. Deploy backend ke Render free, web ke Cloudflare Pages, batasi user aktif (USER_LIMIT), dan rilis ke Google Play."_
+**AI Prompt**: _"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §5`. Deploy backend ke Vercel serverless, web ke Cloudflare Pages, batasi user aktif (USER_LIMIT), dan rilis ke Google Play."_
 
-**Referensi**: `docs/ARCHITECTURE.md §5`, `mobile/app.json`, `mobile/eas.json`, `backend/src/main.ts`, `render.yaml`
+**Referensi**: `docs/ARCHITECTURE.md §5`, `mobile/app.json`, `mobile/eas.json`, `backend/src/main.ts`, `backend/src/serverless.ts`, `vercel.json`
 
-> **Konteks**: Prioritas diubah setelah M17 — kita deploy dulu (web + rilis Play Store) dengan semua gratis-tier sebelum testing suite & CI/CD. Batas maksimum **50 user aktif** (backend gate via `USER_LIMIT`) karena gratis-tier. User dummy tidak ada di repo (hanya contoh copy di komponen). **Play Console sudah aktif** (developer account sudah bayar) — rilis Play Store termasuk dalam milestone ini (M21 lama digabung ke sini). Panduan lengkap: **`docs/DEPLOYMENT.md`**.
+> **Konteks**: Prioritas diubah setelah M17 — kita deploy dulu (web + rilis Play Store) dengan semua gratis-tier sebelum testing suite & CI/CD. Batas maksimum **50 user aktif** (backend gate via `USER_LIMIT`) karena gratis-tier. User dummy tidak ada di repo (hanya contoh copy di komponen). **Play Console sudah aktif** (developer account sudah bayar) — rilis Play Store termasuk dalam milestone ini (M21 lama digabung ke sini). **Backend di-hosting di Vercel serverless** (bukan Render — akun Render terkendala pembayaran kartu). Cron reminder di-trigger endpoint eksternal. Panduan lengkap: **`docs/DEPLOYMENT.md`**.
 
 ### Checklist — Limit User & Free-Tier
 
@@ -560,17 +560,21 @@ mobile/
 - [x] Backend gate di `googleLogin` — blokir registrasi baru saat user aktif ≥ `USER_LIMIT` (403 `USER_LIMIT_REACHED`); user lama tetap login
 - [x] UI sign-in menangani `USER_LIMIT_REACHED` — pesan "Aplikasi sedang penuh"
 
-### Checklist — Backend (Render free)
+### Checklist — Backend (Vercel serverless)
 
-- [x] `render.yaml` — Web Service NestJS (native build), healthcheck `/health`, env vars, free plan **tanpa preDeployCommand (free tier tidak support)**; migrasi DB jalan manual sekali via Render Shell
+- [x] `vercel.json` — function serverless (`backend/dist/serverless.js`), build command `prisma migrate deploy` + build, env vars
+- [x] `main.ts` refactor — `createApp()` terpisah, dipakai `serverless.ts` handler Vercel
+- [x] Cron `@nestjs/schedule` dihapus (tidak kompatibel serverless) — reminder jadi endpoint `POST /v1/cron/reminders` + pemicu eksternal tiap jam
+- [x] `RemindersController` — proteksi header `x-cron-secret` (`CRON_SECRET` env)
+- [x] `.github/workflows/cron-reminders.yml` — POST tiap jam ke endpoint reminder
 - [x] CORS production — whitelist `APP_WEB_URL` (Cloudflare Pages) di `main.ts`
-- [ ] Env production di Render: `DATABASE_URL` (pooler), `DIRECT_URL`, Supabase, JWT, Google, R2, `APP_WEB_URL=https://atur-perjalanan.pages.dev`, `EXPO_ACCESS_TOKEN`, `USER_LIMIT=50`, `APP_ENV=production`
-- [ ] Google OAuth: redirect URI produksi + origin web ditambahkan ke OAuth client
+- [ ] Env production di Vercel: `DATABASE_URL` (pooler, `connection_limit=1`), `DIRECT_URL`, Supabase, JWT, Google, R2, `APP_WEB_URL=https://atur-perjalanan.pages.dev`, `EXPO_ACCESS_TOKEN`, `USER_LIMIT=50`, `APP_ENV=production`, `CRON_SECRET`
+- [ ] Google OAuth: redirect URI produksi + origin web ditambahkan ke OAuth client (termasuk redirect URI Vercel untuk Google Calendar)
 
 ### Checklist — Web (Cloudflare Pages)
 
 - [x] `mobile/package.json` — script `export:web`
-- [x] `mobile/.env.production` — API URL Render, web origin, Google web client ID
+- [x] `mobile/.env.production` — API URL Vercel, web origin, Google web client ID
 - [x] `mobile/public/_redirects` — SPA fallback (deep link) di Cloudflare Pages
 - [ ] Cloudflare Pages project: build command `pnpm --filter mobile export:web`, output `mobile/dist`
 - [ ] R2 bucket CORS — tambah origin `https://atur-perjalanan.pages.dev`
@@ -586,7 +590,7 @@ mobile/
 - [ ] Ikon/splash final (ganti placeholder gradient) sebelum rilis
 - [ ] Rilis ke **Internal Testing** dulu → production track setelah verified
 
-> **Aksi manual user**: buat service di Render, project Cloudflare Pages, tambah SHA-1 ke OAuth client, isi store listing & content rating di Play Console. Config/script disiapkan agent; aksi akun & upload tetap manual.
+> **Aksi manual user**: buat project di Vercel, project Cloudflare Pages, set `CRON_SECRET` (Vercel + GitHub), tambah SHA-1 ke OAuth client, isi store listing & content rating di Play Console. Config/script disiapkan agent; aksi akun & upload tetap manual.
 
 ---
 

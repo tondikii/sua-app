@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from './notifications.service';
 import { NotificationType, TripStatus } from '@prisma/client';
@@ -17,9 +16,10 @@ import { getReminderTargets, dueTarget } from './reminder-horizons';
  *
  * Targets are anchored at `trip.updatedAt` (when the start was last set), so
  * they are stable over time and naturally reschedule when the trip start is
- * moved. The cron runs every hour; a reminder fires when its target falls
- * within the next hour. Notifications are deduped per (user, trip,
- * reminder_type).
+ * moved. An external cron triggers `handleTripStartReminders()` roughly every
+ * hour (Vercel serverless has no in-process scheduler); a reminder fires when
+ * its target falls within the next hour. Notifications are deduped per
+ * (user, trip, reminder_type).
  */
 @Injectable()
 export class TripStartReminderService {
@@ -30,7 +30,7 @@ export class TripStartReminderService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  @Cron(CronExpression.EVERY_HOUR)
+  /** Run the reminder pass — called by the external cron endpoint. */
   async handleTripStartReminders() {
     try {
       const now = new Date();

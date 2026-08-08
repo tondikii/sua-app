@@ -6,7 +6,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "aturperjalanan",
+    "scheme": [
+      "aturperjalanan",
+      "com.googleusercontent.apps.463752801012-d0f7hsgg7f23ft4bacgeki81o5rnr2vf"
+    ],
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
