@@ -97,9 +97,7 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     if (!configured) {
-      showToast(
-        'Masuk Google belum siap nih. Hubungi developer atau coba lagi nanti.',
-      );
+      showToast('Masuk Google belum siap nih. Hubungi developer atau coba lagi nanti.');
       return;
     }
     await promptAsync();
@@ -137,7 +135,7 @@ export default function SignIn() {
           contentContainerStyle={styles.bottomContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.heading}>Yuk mulai!</Text>
+          <Text style={styles.heading}>Atur Perjalananmu</Text>
           <Text style={styles.description}>
             Atur perjalanan bareng teman-temanmu di satu tempat — dari rencana sampai jadwal harian.
           </Text>
@@ -167,9 +165,8 @@ export default function SignIn() {
           )}
 
           <Text style={styles.legal}>
-            Dengan lanjut, kamu setuju sama{' '}
-            <Text style={styles.legalLink}>Syarat & Ketentuan</Text> dan{' '}
-            <Text style={styles.legalLink}>Kebijakan Privasi</Text> kami.
+            Dengan lanjut, kamu setuju sama <Text style={styles.legalLink}>Syarat & Ketentuan</Text>{' '}
+            dan <Text style={styles.legalLink}>Kebijakan Privasi</Text> kami.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
