@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { VotingService } from './voting.service';
 import { CreatePollSchema, UpdatePollSchema, VoteSchema } from '@atur-perjalanan/shared-validation';
+import type { CreatePollInput, UpdatePollInput } from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('voting')
@@ -40,7 +41,7 @@ export class VotingController {
   createPoll(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
-    @Body(new ZodValidationPipe(CreatePollSchema)) dto: any,
+    @Body(new ZodValidationPipe(CreatePollSchema)) dto: CreatePollInput,
   ) {
     return this.votingService.createPoll(tripId, user.userId, dto);
   }
@@ -52,7 +53,7 @@ export class VotingController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('pollId', ParseUUIDPipe) pollId: string,
-    @Body(new ZodValidationPipe(VoteSchema)) dto: any,
+    @Body(new ZodValidationPipe(VoteSchema)) dto: { option_id: string },
   ) {
     return this.votingService.voteOnPoll(tripId, pollId, user.userId, dto.option_id);
   }
@@ -63,7 +64,7 @@ export class VotingController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('pollId', ParseUUIDPipe) pollId: string,
-    @Body(new ZodValidationPipe(UpdatePollSchema)) dto: any,
+    @Body(new ZodValidationPipe(UpdatePollSchema)) dto: UpdatePollInput,
   ) {
     return this.votingService.updatePoll(tripId, pollId, user.userId, dto);
   }
@@ -108,7 +109,7 @@ export class VotingController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Param('pollId', ParseUUIDPipe) pollId: string,
-    @Body() _dto: any, // Empty body, but accepts {}
+    @Body() _dto: Record<string, never>, // Empty body, but accepts {}
   ) {
     return this.votingService.lockPoll(tripId, pollId, user.userId);
   }

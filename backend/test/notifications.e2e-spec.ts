@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request = require('supertest');
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import { NotificationType } from '@prisma/client';
@@ -29,13 +29,6 @@ describe('Notifications E2E', () => {
     });
 
     // Create a test user and get JWT token
-    // This assumes you have a working auth endpoint
-    const response = await request(app.getHttpServer()).post('/v1/auth/google').send({
-      id_token: 'test-token', // You'll need to mock this or use a test token
-    });
-
-    // For testing purposes, you might need to create the user directly in DB
-    // and generate a test JWT token
     const user = await prisma.user.create({
       data: {
         googleId: 'test-google-id-notifications',
@@ -203,7 +196,7 @@ describe('Notifications E2E', () => {
       const updated = await prisma.notification.findUnique({
         where: { id: notification.id },
       });
-      expect(updated.isRead).toBe(true);
+      expect(updated?.isRead).toBe(true);
     });
 
     it('should return 404 for non-existent notification', async () => {

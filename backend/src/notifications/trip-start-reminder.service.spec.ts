@@ -8,7 +8,6 @@ import { getReminderTargets } from './reminder-horizons';
 describe('TripStartReminderService', () => {
   let service: TripStartReminderService;
   let prismaService: PrismaService;
-  let notificationsService: NotificationsService;
 
   const mockPrismaService = {
     trip: {
@@ -90,7 +89,6 @@ describe('TripStartReminderService', () => {
 
     service = module.get<TripStartReminderService>(TripStartReminderService);
     prismaService = module.get<PrismaService>(PrismaService);
-    notificationsService = module.get<NotificationsService>(NotificationsService);
   });
 
   afterEach(() => {

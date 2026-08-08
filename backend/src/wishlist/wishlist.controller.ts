@@ -20,7 +20,11 @@ import {
   UpdateWishlistSchema,
   ConvertToTripSchema,
 } from '@atur-perjalanan/shared-validation';
-import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/shared-validation';
+import type {
+  CreateWishlistInput,
+  UpdateWishlistInput,
+  ConvertToTripInput,
+} from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('wishlists')
@@ -84,7 +88,7 @@ export class WishlistController {
   convertToTrip(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(ConvertToTripSchema)) dto: any,
+    @Body(new ZodValidationPipe(ConvertToTripSchema)) dto: ConvertToTripInput,
   ) {
     return this.wishlistService.convertToTrip(id, user.userId, dto);
   }

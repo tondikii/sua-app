@@ -1,5 +1,4 @@
 import { timeToHHMM, dateToISO } from '../../common/helpers/date.helpers';
-import type { TripActivity } from '@atur-perjalanan/shared-types';
 
 type ActivityLike = {
   id: string;
@@ -13,7 +12,7 @@ type ActivityLike = {
   description: string | null;
   locationLabel: string | null;
   mapsLink: string | null;
-  refLinks: any;
+  refLinks: unknown;
   coverSource: string;
   coverIcon: string | null;
   coverDocumentId: string | null;

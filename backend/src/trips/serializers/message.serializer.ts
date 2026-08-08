@@ -1,6 +1,5 @@
 import { UserSummarySerializer } from '../../users/serializers/user.serializer';
 import type { R2Service } from '../../integrations/r2/r2.service';
-import type { TripMessage, UserSummary } from '@atur-perjalanan/shared-types';
 
 type LocalUserSummary = {
   id: string;

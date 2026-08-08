@@ -8,8 +8,6 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
-  let prismaService: PrismaService;
-  let pushService: PushNotificationsService;
 
   const mockPrismaService = {
     notification: {
@@ -57,8 +55,6 @@ describe('NotificationsService', () => {
     }).compile();
 
     service = module.get<NotificationsService>(NotificationsService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    pushService = module.get<PushNotificationsService>(PushNotificationsService);
   });
 
   afterEach(() => {

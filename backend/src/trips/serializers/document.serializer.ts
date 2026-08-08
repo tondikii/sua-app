@@ -1,5 +1,3 @@
-import type { TripDocument } from '@atur-perjalanan/shared-types';
-
 type DocumentRow = {
   id: string;
   tripId: string;

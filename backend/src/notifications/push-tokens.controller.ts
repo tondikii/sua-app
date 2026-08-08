@@ -16,10 +16,10 @@ import { PushTokensService } from './push-tokens.service';
 
 class RegisterPushTokenDto {
   @IsString()
-  token: string;
+  token!: string;
 
   @IsIn(['ios', 'android'])
-  platform: 'ios' | 'android';
+  platform!: 'ios' | 'android';
 }
 
 @ApiTags('push-tokens')

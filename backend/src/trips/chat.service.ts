@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { MessageSerializer } from './serializers/message.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
+import type { CreateMessageInput } from '@atur-perjalanan/shared-validation';
+import type { MediaType } from '@prisma/client';
 
 const USER_SUMMARY_SELECT = {
   id: true,
@@ -83,7 +85,7 @@ export class ChatService {
    *   row with `from_chat=true` so it also appears in the Media tab
    *   (ARCHITECTURE §3.3, §7; WORKFLOW §9 → §10 integration).
    */
-  async createMessage(tripId: string, userId: string, dto: any) {
+  async createMessage(tripId: string, userId: string, dto: CreateMessageInput) {
     await this.assertParticipant(tripId, userId);
 
     if (dto.message_kind === 'text') {
@@ -143,7 +145,7 @@ export class ChatService {
           data: {
             tripId,
             uploadedBy: userId,
-            mediaType: dto.message_kind,
+            mediaType: dto.message_kind as MediaType,
             storageKey,
             storageUrl: this.r2.resolvePublicUrl(storageKey),
             mediaDuration,

@@ -9,6 +9,7 @@ import { TripStatus } from '@prisma/client';
 import { TripSerializer } from './serializers/trip.serializer';
 import { InvitationSerializer } from './serializers/invitation.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
+import type { CreateTripInput, UpdateTripInput } from '@atur-perjalanan/shared-validation';
 
 const USER_SUMMARY_SELECT = {
   id: true,
@@ -30,7 +31,7 @@ export class TripsService {
    * sets `voting_deadline` — all inside a single Prisma transaction (ARCHITECTURE §3.4).
    * The creator is always inserted as the first participant.
    */
-  async createTrip(userId: string, dto: any) {
+  async createTrip(userId: string, dto: CreateTripInput) {
     const {
       name,
       tags = [],
@@ -343,7 +344,7 @@ export class TripsService {
   }
 
   /** Update trip metadata — creator only. */
-  async updateTrip(tripId: string, userId: string, dto: any) {
+  async updateTrip(tripId: string, userId: string, dto: UpdateTripInput) {
     await this.assertCreator(tripId, userId);
 
     await this.prisma.trip.update({

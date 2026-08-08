@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { R2Service, PRESIGN_DOWNLOAD_EXPIRY_SECONDS } from '../integrations/r2/r2.service';
 import { DocumentSerializer } from './serializers/document.serializer';
+import type { PresignUploadInput, CreateDocumentInput } from '@atur-perjalanan/shared-validation';
 
 @Injectable()
 export class MediaService {
@@ -19,7 +20,7 @@ export class MediaService {
    * Issue a presigned R2 PUT URL for a trip's media bucket path. Participants
    * only (ARCHITECTURE §7 — direct-to-R2 upload, never proxied through NestJS).
    */
-  async presignUpload(userId: string, dto: any) {
+  async presignUpload(userId: string, dto: PresignUploadInput) {
     await this.assertParticipant(dto.trip_id, userId);
 
     return this.r2.presignUpload(dto.trip_id, dto.content_type);
@@ -49,7 +50,7 @@ export class MediaService {
    * Verifies the object actually exists via `HeadObject` before inserting
    * (ARCHITECTURE §7 sequence).
    */
-  async createDocument(tripId: string, userId: string, dto: any) {
+  async createDocument(tripId: string, userId: string, dto: CreateDocumentInput) {
     await this.assertParticipant(tripId, userId);
 
     if (!dto.storage_key.startsWith(`trips/${tripId}/`)) {

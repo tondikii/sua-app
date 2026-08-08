@@ -45,7 +45,7 @@ export class UsersController {
   @Get('search')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  searchUsers(@Query(new ZodValidationPipe(SearchUsersSchema)) query: any) {
+  searchUsers(@Query(new ZodValidationPipe(SearchUsersSchema)) query: { q: string; cursor?: string; limit?: number }) {
     return this.usersService.searchUsers(query.q, query.cursor, query.limit);
   }
 

@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { GoogleCalendarService } from './google-calendar.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { OAuth2Client } from 'google-auth-library';
 
 const mockOAuth = {
   generateAuthUrl: jest.fn().mockReturnValue('https://accounts.google.com/o/oauth2/v2/auth?...'),

@@ -72,7 +72,7 @@ export class TripStartReminderService {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to send trip start reminders: ${error.message}`,
+        `Failed to send trip start reminders: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -123,7 +123,7 @@ export class TripStartReminderService {
       existing
         .filter(
           (n) =>
-            (n.payload as Record<string, any>)?.reminder_type === reminderType,
+            (n.payload as Record<string, unknown> | null)?.reminder_type === reminderType,
         )
         .map((n) => n.userId),
     );

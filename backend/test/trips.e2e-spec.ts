@@ -369,7 +369,7 @@ describe('Trips E2E (M4)', () => {
       expect(Array.isArray(res.body.members)).toBe(true);
       // creator + accepted user2
       expect(res.body.members.length).toBe(2);
-      expect(res.body.members.some((m: any) => m.role === 'creator')).toBe(true);
+      expect(res.body.members.some((m: { role: string }) => m.role === 'creator')).toBe(true);
       expect(Array.isArray(res.body.invitations)).toBe(true);
     });
 
@@ -380,7 +380,7 @@ describe('Trips E2E (M4)', () => {
         .set(auth(userToken))
         .expect(HttpStatus.OK);
 
-      const rejected = res.body.invitations.find((i: any) => i.state === 'rejected');
+      const rejected = res.body.invitations.find((i: { state: string }) => i.state === 'rejected');
       expect(rejected).toBeDefined();
       expect(rejected.invited_user?.username).toBe('user3_travel');
     });
@@ -475,7 +475,7 @@ describe('Trips E2E (M4)', () => {
         .set(auth(userToken))
         .expect(HttpStatus.OK);
 
-      expect(res.body.data.some((t: any) => t.id === past.id)).toBe(true);
+      expect(res.body.data.some((t: { id: string }) => t.id === past.id)).toBe(true);
     });
   });
 
@@ -581,7 +581,7 @@ describe('Trips E2E (M4)', () => {
         .set(auth(userToken))
         .expect(HttpStatus.OK);
 
-      expect(listRes.body.data.some((a: any) => a.id === activityId)).toBe(false);
+      expect(listRes.body.data.some((a: { id: string }) => a.id === activityId)).toBe(false);
     });
   });
 
@@ -950,7 +950,7 @@ describe('Chat & Media E2E (M7)', () => {
       expect(res.body.data.length).toBeGreaterThan(0);
       expect(res.body).toHaveProperty('next_cursor');
 
-      const photo = res.body.data.find((m: any) => m.message_kind === 'photo');
+      const photo = res.body.data.find((m: { message_kind: string }) => m.message_kind === 'photo');
       expect(photo?.media_url).toContain('X-Amz-Signature');
     });
 
@@ -1012,7 +1012,7 @@ describe('Chat & Media E2E (M7)', () => {
 
       // listMessages filters deletedAt: null — soft-deleted rows stay in DB but
       // are not returned in the thread (clients render placeholders via Realtime).
-      expect(list.body.data.find((m: any) => m.id === messageId)).toBeUndefined();
+      expect(list.body.data.find((m: { id: string }) => m.id === messageId)).toBeUndefined();
     });
   });
 

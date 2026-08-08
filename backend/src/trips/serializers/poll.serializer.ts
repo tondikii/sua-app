@@ -1,5 +1,3 @@
-import type { TripPoll } from '@atur-perjalanan/shared-types';
-import type { UserSummary } from '@atur-perjalanan/shared-types';
 import { UserSummarySerializer } from '../../users/serializers/user.serializer';
 import type { R2Service } from '../../integrations/r2/r2.service';
 
@@ -29,7 +27,7 @@ type PollOptionLike = {
   sortOrder: number;
   candidateId: string | null;
   mapsLink?: string | null;
-  refLinks?: any;
+  refLinks?: unknown;
 };
 
 type PollVoteLike = {

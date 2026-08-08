@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TripsService } from '../trips/trips.service';
-import type { CreateWishlistInput, UpdateWishlistInput } from '@atur-perjalanan/shared-validation';
+import type { CreateWishlistInput, UpdateWishlistInput, ConvertToTripInput } from '@atur-perjalanan/shared-validation';
 import { WishlistSerializer } from './serializers/wishlist.serializer';
 import { toTimeDate } from '../common/helpers/date.helpers';
 import { GoogleMapsService } from '../common/google-maps/google-maps.service';
 import { R2Service } from '../integrations/r2/r2.service';
 import { normalizeWishlistTags } from './wishlist-tags';
-import { TripStatus } from '@prisma/client';
+import { TripStatus, PriorityLevel } from '@prisma/client';
 
 @Injectable()
 export class WishlistService {
@@ -69,7 +69,7 @@ export class WishlistService {
       where: {
         userId,
         deletedAt: null,
-        ...(priority ? { priorityLevel: priority as any } : {}),
+        ...(priority ? { priorityLevel: priority as PriorityLevel } : {}),
         ...(tag ? { tags: { array_contains: [tag] } } : {}),
         ...(cursor ? { id: { lt: cursor } } : {}),
       },
@@ -158,7 +158,7 @@ export class WishlistService {
    * wishlist's fields, and soft-delete the `wishlists` row — all inside one
    * Prisma transaction (ARCHITECTURE §3.4). Rolls back entirely on failure.
    */
-  async convertToTrip(wishlistId: string, userId: string, dto: any) {
+  async convertToTrip(wishlistId: string, userId: string, dto: ConvertToTripInput) {
     const wishlist = await this.assertOwner(wishlistId, userId);
 
     const startDate = new Date(dto.start_date);

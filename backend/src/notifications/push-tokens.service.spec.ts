@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 
 describe('PushTokensService', () => {
   let service: PushTokensService;
-  let prisma: any;
 
   const mockPrisma = {
     pushToken: {

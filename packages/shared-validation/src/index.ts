@@ -152,11 +152,13 @@ export const PresignUploadSchema = z.object({
   media_type: z.enum(['photo', 'video']),
   content_type: z.string(),
 });
+export type PresignUploadInput = z.infer<typeof PresignUploadSchema>;
 
 export const CreateDocumentSchema = z.object({
   storage_key: z.string(),
   media_type: z.enum(['photo', 'video']),
 });
+export type CreateDocumentInput = z.infer<typeof CreateDocumentSchema>;
 
 // ── Voting ────────────────────────────────────────────────────
 
@@ -183,10 +185,12 @@ export const CreatePollSchema = z.object({
   options: z.array(PollOptionSchema).min(1).max(10),
   deadline: z.string().datetime().optional(),
 });
+export type CreatePollInput = z.infer<typeof CreatePollSchema>;
 
 export const UpdatePollSchema = CreatePollSchema.partial().extend({
   options: z.array(PollOptionSchema).min(1).max(10).optional(),
 });
+export type UpdatePollInput = z.infer<typeof UpdatePollSchema>;
 
 export const VoteSchema = z.object({
   option_id: z.string().uuid(),
@@ -251,3 +255,4 @@ export const ConvertToTripSchema = z.object({
   start_time: z.string().regex(TIME_HHMM, 'start_time must be in HH:MM format').optional(),
   end_time: z.string().regex(TIME_HHMM, 'end_time must be in HH:MM format').optional(),
 });
+export type ConvertToTripInput = z.infer<typeof ConvertToTripSchema>;

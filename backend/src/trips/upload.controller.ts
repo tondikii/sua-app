@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { MediaService } from './media.service';
 import { PresignUploadSchema } from '@atur-perjalanan/shared-validation';
+import type { PresignUploadInput } from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('uploads')
@@ -17,7 +18,7 @@ export class UploadsController {
   @Post('presign')
   @HttpCode(HttpStatus.OK)
   async presign(
-    @Body(new ZodValidationPipe(PresignUploadSchema)) dto: any,
+    @Body(new ZodValidationPipe(PresignUploadSchema)) dto: PresignUploadInput,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.mediaService.presignUpload(user.userId, dto);

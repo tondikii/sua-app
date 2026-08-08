@@ -87,7 +87,9 @@ export class VotingReminderService {
         await this.sendForTrip(trip, due);
       }
     } catch (error) {
-      this.logger.error(`Failed to send voting reminders: ${error.message}`);
+      this.logger.error(
+        `Failed to send voting reminders: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -123,7 +125,7 @@ export class VotingReminderService {
     });
     const alreadyNotified = new Set(
       existing
-        .filter((n) => (n.payload as Record<string, any>)?.reminder_type === reminderType)
+        .filter((n) => (n.payload as Record<string, unknown> | null)?.reminder_type === reminderType)
         .map((n) => n.userId),
     );
     const recipients = participantsToNotify.filter(

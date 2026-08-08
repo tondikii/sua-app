@@ -7,7 +7,7 @@ interface PushSendOptions {
   type: NotificationType;
   actorId?: string;
   tripId?: string;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }
 
 interface PushTokenRow {
@@ -181,7 +181,7 @@ export class PushNotificationsService {
       const token = tokens[i]?.token;
       if (!token) return;
       if (ticket.status === 'error') {
-        const errCode = (ticket as any).details?.error;
+        const errCode = (ticket as { details?: { error?: string } }).details?.error;
         if (errCode === 'DeviceNotRegistered' || errCode === 'InvalidExpoToken') {
           invalid.add(token);
         }

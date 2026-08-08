@@ -113,14 +113,14 @@ describe('Wishlist E2E (M8)', () => {
         .set(auth(userToken))
         .expect(HttpStatus.OK);
 
-      expect(res.body.data.some((w: any) => w.id === wishlistId)).toBe(true);
+      expect(res.body.data.some((w: { id: string }) => w.id === wishlistId)).toBe(true);
 
       const filtered = await request(app.getHttpServer())
         .get('/v1/wishlists?priority=high&tag=%23pantai')
         .set(auth(userToken))
         .expect(HttpStatus.OK);
 
-      expect(filtered.body.data.some((w: any) => w.id === wishlistId)).toBe(true);
+      expect(filtered.body.data.some((w: { id: string }) => w.id === wishlistId)).toBe(true);
     });
 
     it('does not leak another user’s wishlist items', async () => {
@@ -129,7 +129,7 @@ describe('Wishlist E2E (M8)', () => {
         .set(auth(otherToken))
         .expect(HttpStatus.OK);
 
-      expect(res.body.data.some((w: any) => w.id === wishlistId)).toBe(false);
+      expect(res.body.data.some((w: { id: string }) => w.id === wishlistId)).toBe(false);
     });
   });
 
@@ -170,14 +170,14 @@ describe('Wishlist E2E (M8)', () => {
         .expect(HttpStatus.OK);
 
       const seeded = Array.isArray(activities.body) ? activities.body : activities.body.data;
-      expect(seeded.some((a: any) => a.place_name === 'Pantai Tanjung Aan')).toBe(true);
+      expect(seeded.some((a: { place_name: string }) => a.place_name === 'Pantai Tanjung Aan')).toBe(true);
 
       // Wishlist is now soft-deleted — no longer listed, and re-converting fails.
       const list = await request(app.getHttpServer())
         .get('/v1/wishlists')
         .set(auth(userToken))
         .expect(HttpStatus.OK);
-      expect(list.body.data.some((w: any) => w.id === wishlistId)).toBe(false);
+      expect(list.body.data.some((w: { id: string }) => w.id === wishlistId)).toBe(false);
 
       await request(app.getHttpServer())
         .post(`/v1/wishlists/${wishlistId}/convert-to-trip`)
@@ -204,7 +204,7 @@ describe('Wishlist E2E (M8)', () => {
         .get('/v1/wishlists')
         .set(auth(userToken))
         .expect(HttpStatus.OK);
-      expect(list.body.data.some((w: any) => w.id === create.body.id)).toBe(true);
+      expect(list.body.data.some((w: { id: string }) => w.id === create.body.id)).toBe(true);
     });
   });
 
@@ -225,7 +225,7 @@ describe('Wishlist E2E (M8)', () => {
         .get('/v1/wishlists')
         .set(auth(userToken))
         .expect(HttpStatus.OK);
-      expect(list.body.data.some((w: any) => w.id === create.body.id)).toBe(false);
+      expect(list.body.data.some((w: { id: string }) => w.id === create.body.id)).toBe(false);
     });
 
     it('rejects a non-owner', async () => {

@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { MediaService } from './media.service';
 import { CreateDocumentSchema } from '@atur-perjalanan/shared-validation';
+import type { CreateDocumentInput } from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('media')
@@ -39,7 +40,7 @@ export class MediaController {
   @HttpCode(HttpStatus.CREATED)
   async createDocument(
     @Param('tripId', ParseUUIDPipe) tripId: string,
-    @Body(new ZodValidationPipe(CreateDocumentSchema)) dto: any,
+    @Body(new ZodValidationPipe(CreateDocumentSchema)) dto: CreateDocumentInput,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.mediaService.createDocument(tripId, user.userId, dto);

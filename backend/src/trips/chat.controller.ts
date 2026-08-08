@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { ChatService } from './chat.service';
 import { CreateMessageSchema } from '@atur-perjalanan/shared-validation';
+import type { CreateMessageInput } from '@atur-perjalanan/shared-validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 @ApiTags('chat')
@@ -53,7 +54,7 @@ export class ChatController {
   @HttpCode(HttpStatus.CREATED)
   async createMessage(
     @Param('tripId', ParseUUIDPipe) tripId: string,
-    @Body(new ZodValidationPipe(CreateMessageSchema)) dto: any,
+    @Body(new ZodValidationPipe(CreateMessageSchema)) dto: CreateMessageInput,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.chatService.createMessage(tripId, user.userId, dto);

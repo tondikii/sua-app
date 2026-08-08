@@ -1,5 +1,4 @@
 import { toTime } from '../../common/helpers/date.helpers';
-import type { WishlistItem } from '@atur-perjalanan/shared-types';
 
 type WishlistLike = {
   id: string;

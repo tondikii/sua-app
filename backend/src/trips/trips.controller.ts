@@ -109,7 +109,7 @@ export class TripsController {
   setTripCover(
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
-    @Body(new ZodValidationPipe(SetTripCoverSchema)) dto: any,
+    @Body(new ZodValidationPipe(SetTripCoverSchema)) dto: { document_id: string },
   ) {
     return this.tripsService.setTripCover(tripId, user.userId, dto.document_id);
   }
@@ -161,7 +161,7 @@ export class TripsController {
     @CurrentUser() user: CurrentUserPayload,
     @Param('tripId') tripId: string,
     @Param('invitationId') invitationId: string,
-    @Body(new ZodValidationPipe(RespondInvitationSchema)) dto: any,
+    @Body(new ZodValidationPipe(RespondInvitationSchema)) dto: { accept: boolean },
   ) {
     return this.invitationsService.respondToInvitation(
       tripId,

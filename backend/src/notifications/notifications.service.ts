@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Prisma, NotificationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { R2Service } from '../integrations/r2/r2.service';
 import { PushNotificationsService } from './push-notifications.service';
-import { NotificationType } from '@prisma/client';
 
 interface CreateNotificationParams {
   userId: string;
   type: NotificationType;
   actorId?: string;
   tripId?: string;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }
 
 interface CreateManyNotificationParams {
@@ -17,7 +17,7 @@ interface CreateManyNotificationParams {
   type: NotificationType;
   actorId?: string;
   tripId?: string;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }
 
 @Injectable()
@@ -41,7 +41,7 @@ export class NotificationsService {
         type,
         actorId,
         tripId,
-        payload,
+        payload: (payload as Prisma.InputJsonValue) ?? {},
       },
     });
 
@@ -64,7 +64,7 @@ export class NotificationsService {
         type: item.type,
         actorId: item.actorId,
         tripId: item.tripId,
-        payload: item.payload ?? {},
+        payload: (item.payload ?? {}) as Prisma.InputJsonValue,
       })),
       skipDuplicates: true,
     });

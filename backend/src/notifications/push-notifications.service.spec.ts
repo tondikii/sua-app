@@ -26,7 +26,6 @@ jest.mock('expo-server-sdk', () => {
 
 describe('PushNotificationsService', () => {
   let service: PushNotificationsService;
-  let prisma: any;
   let config: { get: jest.Mock };
 
   const mockPrisma = {

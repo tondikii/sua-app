@@ -10,6 +10,7 @@ import { InvitationSerializer } from './serializers/invitation.serializer';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MailService } from '../mail/mail.service';
 import { R2Service } from '../integrations/r2/r2.service';
+import type { CreateInvitationInput } from '@atur-perjalanan/shared-validation';
 
 @Injectable()
 export class InvitationsService {
@@ -25,7 +26,7 @@ export class InvitationsService {
    * Only existing participants may invite. Duplicate/pending/already-member
    * invites are rejected. (WORKFLOW §6, §11)
    */
-  async createInvitation(tripId: string, inviterId: string, dto: any) {
+  async createInvitation(tripId: string, inviterId: string, dto: CreateInvitationInput) {
     if ((!!dto.username && !!dto.email) || (!dto.username && !dto.email)) {
       throw new BadRequestException({
         code: 'INVALID_INVITATION_TARGET',

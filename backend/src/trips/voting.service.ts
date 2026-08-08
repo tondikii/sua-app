@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PollSerializer } from './serializers/poll.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
 import type { PollType } from '@atur-perjalanan/shared-types';
+import type { CreatePollInput, UpdatePollInput } from '@atur-perjalanan/shared-validation';
 
 const USER_SUMMARY_SELECT = {
   id: true,
@@ -90,7 +91,7 @@ export class VotingService {
    * Enforces: max 1 active poll per poll_type per trip (tanggal may only be
    * re-created after the previous one is locked/expired). Participants only.
    */
-  async createPoll(tripId: string, userId: string, dto: any) {
+  async createPoll(tripId: string, userId: string, dto: CreatePollInput) {
     if (!['tanggal', 'aktivitas', 'lainnya'].includes(dto.poll_type)) {
       throw new BadRequestException({
         code: 'INVALID_POLL_TYPE',
@@ -220,7 +221,7 @@ export class VotingService {
    * Update an active poll (creator only): title, deadline, and options are
    * replaced (existing votes are dropped). Used by Screen 66/67 edit flow.
    */
-  async updatePoll(tripId: string, pollId: string, userId: string, dto: any) {
+  async updatePoll(tripId: string, pollId: string, userId: string, dto: UpdatePollInput) {
     const poll = await this.prisma.tripPoll.findFirst({
       where: { id: pollId, tripId },
     });

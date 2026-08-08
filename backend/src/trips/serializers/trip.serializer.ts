@@ -1,13 +1,7 @@
-import { Prisma } from '@prisma/client';
 import { toDateOnly, toTime } from '../../common/helpers/date.helpers';
 import { UserSummarySerializer } from '../../users/serializers/user.serializer';
 import type { R2Service } from '../../integrations/r2/r2.service';
-import type {
-  UserSummary,
-  TripSummary,
-  TripDetail,
-  TripStatus,
-} from '@atur-perjalanan/shared-types';
+import type { UserSummary } from '@atur-perjalanan/shared-types';
 
 type UserLike = {
   id: string;

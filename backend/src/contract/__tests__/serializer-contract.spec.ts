@@ -40,6 +40,7 @@ describe('UserSummarySerializer → shared-types contract', () => {
     // Compile-time assertion: if UserSummary changes incompatibly, this line errors
     const _check: { id: string; name: string; username: string; avatar_url: string | null } =
       result;
+    void _check;
     expect(result).toMatchInlineSnapshot(`
       {
         "avatar_url": null,

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "build:vercel": "pnpm --filter @atur-perjalanan/shared-types build && pnpm --filter @atur-perjalanan/shared-validation build && pnpm prisma:deploy && pnpm prisma:generate && pnpm build",
+    "build:vercel": "pnpm --filter @atur-perjalanan/shared-types build && pnpm --filter @atur-perjalanan/shared-validation build && pnpm build",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

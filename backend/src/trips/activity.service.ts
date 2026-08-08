@@ -2,7 +2,6 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -11,6 +10,8 @@ import { ActivitySerializer } from './serializers/activity.serializer';
 import { R2Service } from '../integrations/r2/r2.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { timeToHHMM } from '../common/helpers/date.helpers';
+import type { CreateActivityInput, UpdateActivityInput } from '@atur-perjalanan/shared-validation';
+import { ActivityKind, CoverSource } from '@prisma/client';
 
 @Injectable()
 export class ActivityService {
@@ -105,7 +106,7 @@ export class ActivityService {
    * - start_time <= end_time
    * - activity_date must fall within trip date range if trip.status='fixed'
    */
-  async createActivity(tripId: string, userId: string, dto: any) {
+  async createActivity(tripId: string, userId: string, dto: CreateActivityInput) {
     // Verify participant access
     const trip = await this.prisma.trip.findFirst({
       where: {
@@ -159,12 +160,12 @@ export class ActivityService {
         dayNumber,
         startTime: this.parseTimeToDate(dto.start_time),
         endTime: this.parseTimeToDate(dto.end_time),
-        kind: (dto.kind || 'activity') as any,
+        kind: (dto.kind || 'activity') as ActivityKind,
         description: dto.description,
         locationLabel: dto.location_label,
         mapsLink: dto.maps_link,
-        refLinks: (dto.ref_links as any) || [],
-        coverSource: (dto.cover_source || 'none') as any,
+        refLinks: dto.ref_links ?? [],
+        coverSource: (dto.cover_source || 'none') as CoverSource,
         coverIcon: dto.cover_icon,
         coverDocumentId: dto.cover_document_id,
         thumbnailUrl: dto.thumbnail_url,
@@ -205,7 +206,7 @@ export class ActivityService {
    * Update an existing activity.
    * Participants can edit. Same validations as create.
    */
-  async updateActivity(tripId: string, activityId: string, userId: string, dto: any) {
+  async updateActivity(tripId: string, activityId: string, userId: string, dto: UpdateActivityInput) {
     // Verify participant access
     const trip = await this.prisma.trip.findFirst({
       where: {
@@ -272,12 +273,12 @@ export class ActivityService {
         dayNumber,
         startTime: dto.start_time !== undefined ? this.parseTimeToDate(dto.start_time) : undefined,
         endTime: dto.end_time !== undefined ? this.parseTimeToDate(dto.end_time) : undefined,
-        kind: dto.kind !== undefined ? (dto.kind as any) : undefined,
+        kind: dto.kind !== undefined ? (dto.kind as ActivityKind) : undefined,
         description: dto.description !== undefined ? dto.description : undefined,
         locationLabel: dto.location_label !== undefined ? dto.location_label : undefined,
         mapsLink: dto.maps_link !== undefined ? dto.maps_link : undefined,
-        refLinks: dto.ref_links !== undefined ? (dto.ref_links as any) : undefined,
-        coverSource: dto.cover_source !== undefined ? (dto.cover_source as any) : undefined,
+        refLinks: dto.ref_links ?? undefined,
+        coverSource: dto.cover_source !== undefined ? (dto.cover_source as CoverSource) : undefined,
         coverIcon: dto.cover_icon !== undefined ? dto.cover_icon : undefined,
         coverDocumentId: dto.cover_document_id !== undefined ? dto.cover_document_id : undefined,
         thumbnailUrl: dto.thumbnail_url !== undefined ? dto.thumbnail_url : undefined,
