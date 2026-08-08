@@ -6,8 +6,20 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
+
+type PrismaErrorLike = { code?: string };
+
+/** Duck-typed check for Prisma errors without importing from a possibly-
+ *  ungenerated client at runtime. */
+function isPrismaKnownRequestError(error: unknown): error is PrismaErrorLike {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { name?: string }).name === 'PrismaClientKnownRequestError'
+  );
+}
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -36,10 +48,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = exceptionResponse;
         code = this.statusToCode(status);
       }
-    } else if (
-      exception instanceof Prisma.PrismaClientKnownRequestError &&
-      exception.code === 'P2025'
-    ) {
+    } else if (isPrismaKnownRequestError(exception) && exception.code === 'P2025') {
       // Record required but not found (e.g. update/delete on missing row)
       status = HttpStatus.NOT_FOUND;
       code = 'NOT_FOUND';

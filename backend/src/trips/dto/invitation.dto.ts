@@ -12,10 +12,10 @@ export class CreateInvitationDto {
 
 export class RespondInvitationDto {
   @IsBoolean()
-  accept: boolean;
+  accept!: boolean;
 }
 
 export class SetTripCoverDto {
   @IsUUID()
-  document_id: string;
+  document_id!: string;
 }

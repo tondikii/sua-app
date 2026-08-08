@@ -58,7 +58,8 @@ export class GoogleCalendarController {
       throw new BadRequestException({ code: 'MISSING_OAUTH_PARAMS', message: 'Missing code/state' });
     }
     const { redirectUrl } = await this.googleCalendar.handleCallback(code, state);
-    return res.redirect(redirectUrl);
+    res.redirect(redirectUrl);
+    return;
   }
 
   // POST /v1/integrations/google-calendar/events — JWT

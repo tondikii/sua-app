@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import { Express, Request, Response } from 'express';
-import express from 'express';
+import { Request, Response } from 'express';
+import express, { Express } from 'express';
 import { createApp } from '../src/main';
 import { ExpressAdapter } from '@nestjs/platform-express';
 
@@ -13,8 +13,10 @@ import { ExpressAdapter } from '@nestjs/platform-express';
  * request. The global `/v1` prefix, CORS, exception filter and request-id
  * interceptor all come from `createApp()`.
  */
-const expressApp: Express = express();
+const expressApp = express() as Express;
 let app: INestApplication | null = null;
+
+type BodyRequest = Request & { body?: unknown; _body?: boolean };
 
 async function getApp(): Promise<INestApplication> {
   if (app) return app;
@@ -25,8 +27,9 @@ async function getApp(): Promise<INestApplication> {
 
 export default async function handler(req: Request, res: Response): Promise<void> {
   // Vercel pre-parses the JSON body; let Express know so it doesn't re-read it.
-  if (req.body !== undefined && typeof req.body === 'object') {
-    (req as Request & { _body?: boolean })._body = true;
+  const bodyReq = req as BodyRequest;
+  if (bodyReq.body !== undefined && typeof bodyReq.body === 'object') {
+    bodyReq._body = true;
   }
 
   await getApp();

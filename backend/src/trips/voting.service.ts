@@ -616,7 +616,7 @@ export class VotingService {
    * Pick the winning option by vote count.
    * Tiebreaker: the earliest option (lowest sort order / first in the list).
    */
-  private pickWinningOption<T extends { id: string; votes: unknown[] }>(
+  private pickWinningOption<T extends { id: string; votes: unknown[]; label?: string; candidateId?: string | null }>(
     options: T[],
   ): T | undefined {
     if (options.length === 0) return undefined;
