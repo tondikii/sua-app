@@ -77,6 +77,7 @@ export function buildItineraryDays(
   tripStatus: string,
   tripStartTime?: string | null,
   tripEndTime?: string | null,
+  tripIsAllDay = false,
 ): ItineraryDay[] {
   // Group activities by day_number
   const dayMap = new Map<number, TripActivity[]>();
@@ -121,10 +122,11 @@ export function buildItineraryDays(
     const hasNextDay = dayNumber < totalDays;
     const hasPrevDay = dayNumber > 1;
 
-    // Window basis: trip-level times when provided (e.g. "14:00 – 12:00"),
-    // otherwise the default day window. Activities may still widen it.
-    let windowStart = tripStartTime || DEFAULT_WINDOW_START;
-    let windowEnd = tripEndTime || DEFAULT_WINDOW_END;
+    // Window basis: all-day trips span the full day; otherwise trip-level times
+    // when provided (e.g. "14:00 – 12:00"), else the default day window.
+    // Activities may still widen the window.
+    let windowStart = tripIsAllDay ? '00:00' : tripStartTime || DEFAULT_WINDOW_START;
+    let windowEnd = tripIsAllDay ? '24:00' : tripEndTime || DEFAULT_WINDOW_END;
     if (hasPrevDay) windowStart = '00:00';
     if (hasNextDay) windowEnd = '24:00';
 
@@ -157,8 +159,8 @@ export function buildItineraryDays(
       dayNumber: 1,
       date: '',
       dayLabel: tripStatus === 'voting_pending' ? 'Hari 1' : 'Hari 1',
-      windowStart: DEFAULT_WINDOW_START,
-      windowEnd: DEFAULT_WINDOW_END,
+      windowStart: tripIsAllDay ? '00:00' : DEFAULT_WINDOW_START,
+      windowEnd: tripIsAllDay ? '24:00' : DEFAULT_WINDOW_END,
       items: [],
     });
   }
@@ -166,7 +168,7 @@ export function buildItineraryDays(
   return result;
 }
 
-export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
+export function buildTimelineSegments(day: ItineraryDay, isAllDay = false): TimelineSegment[] {
   const segments: TimelineSegment[] = [];
   const items = day.items;
 
@@ -184,11 +186,12 @@ export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
   for (let i = 0; i < sorted.length; i++) {
     const item = sorted[i];
 
-    // Gap before this item.
+    // Gap before this item. Skipped for all-day trips — the window spans the
+    // whole day, so a leading "00:00 – 09:00 · Tidak ada aktivitas" is noise.
     if (i === 0) {
       const prevEnd = day.windowStart;
       const startMin = toMinutes(item.start_time);
-      if (!spansMidnight(item) && startMin > toMinutes(prevEnd)) {
+      if (!isAllDay && !spansMidnight(item) && startMin > toMinutes(prevEnd)) {
         segments.push({
           type: 'gap',
           startTime: prevEnd,
@@ -220,9 +223,10 @@ export function buildTimelineSegments(day: ItineraryDay): TimelineSegment[] {
   }
 
   // Trailing gap: after the last activity until the day window ends — but only
-  // when the last item doesn't span midnight (those end "tomorrow", past the window).
+  // when the last item doesn't span midnight (those end "tomorrow", past the
+  // window) and the trip isn't all-day (full-day window makes this gap noise).
   const lastItem = sorted[sorted.length - 1];
-  if (!spansMidnight(lastItem) && toMinutes(lastItem.end_time) < toMinutes(day.windowEnd)) {
+  if (!isAllDay && !spansMidnight(lastItem) && toMinutes(lastItem.end_time) < toMinutes(day.windowEnd)) {
     segments.push({
       type: 'gap',
       startTime: lastItem.end_time,

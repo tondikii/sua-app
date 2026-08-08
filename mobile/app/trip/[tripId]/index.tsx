@@ -362,6 +362,7 @@ export default function TripDetailScreen() {
               tripStatus={trip.status}
               tripStartTime={trip.start_time}
               tripEndTime={trip.end_time}
+              tripIsAllDay={trip.is_all_day}
               activeDayIndex={activeDayIndex}
               onChangeDay={setActiveDayIndex}
               onPressItem={handlePressItem}

@@ -36,10 +36,24 @@ import { avatarColorFor } from '@/theme/colors';
 
 type SettingsView = 'main' | 'edit';
 
-const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {};
+const webOutlineNone = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {};
 
-function SettingsRow({ icon, iconBg, label, sub, subColor, chevronColor, onPress }: {
-  icon: React.ReactNode; iconBg: string; label: string; sub: string; subColor?: string; chevronColor?: string; onPress?: () => void;
+function SettingsRow({
+  icon,
+  iconBg,
+  label,
+  sub,
+  subColor,
+  chevronColor,
+  onPress,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  sub: string;
+  subColor?: string;
+  chevronColor?: string;
+  onPress?: () => void;
 }) {
   return (
     <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.7}>
@@ -88,11 +102,8 @@ export default function SettingsScreen() {
     }
     setSavingAvatar(true);
     try {
-      let avatarUrl: string | undefined;
-      // Upload the drafted avatar only now — profile is not changed until save.
       if (avatarDraft) {
-        const profile = await avatarUpload.uploadAvatar(avatarDraft.blob, avatarDraft.contentType);
-        avatarUrl = profile.avatar_url ?? undefined;
+        await avatarUpload.uploadAvatar(avatarDraft.blob, avatarDraft.contentType);
       }
       await updateProfile.mutateAsync({
         name: name.trim(),
@@ -101,7 +112,6 @@ export default function SettingsScreen() {
       });
       setAvatarDraft(null);
       setView('main');
-      if (avatarUrl) showToast('Foto profil diperbarui');
     } catch {
       showToast('Tidak dapat menyimpan profil');
     } finally {
@@ -172,7 +182,12 @@ export default function SettingsScreen() {
               ) : user?.avatar_url ? (
                 <Image source={{ uri: user.avatar_url }} style={styles.editAvatarImg} />
               ) : (
-                <View style={[styles.editAvatarFallback, { backgroundColor: avatarColorFor(user?.username ?? 'x') }]}>
+                <View
+                  style={[
+                    styles.editAvatarFallback,
+                    { backgroundColor: avatarColorFor(user?.username ?? 'x') },
+                  ]}
+                >
                   <Text style={styles.editAvatarLetter}>{(user?.name ?? '?').charAt(0)}</Text>
                 </View>
               )}
@@ -183,7 +198,9 @@ export default function SettingsScreen() {
               </Text>
             </TouchableOpacity>
             {avatarDraft && (
-              <Text style={styles.avatarDraftHint}>Foto akan disimpan saat kamu menekan "Simpan Perubahan".</Text>
+              <Text style={styles.avatarDraftHint}>
+                Foto akan disimpan saat kamu menekan "Simpan Perubahan".
+              </Text>
             )}
           </View>
 
@@ -215,7 +232,13 @@ export default function SettingsScreen() {
               <Text style={styles.editLabel}>Bio</Text>
               <Text style={styles.editCounter}>{bio.length} / 150</Text>
             </View>
-            <View style={[styles.editInputRow, styles.editTextAreaRow, focusedField === 'bio' && styles.editInputRowFocused]}>
+            <View
+              style={[
+                styles.editInputRow,
+                styles.editTextAreaRow,
+                focusedField === 'bio' && styles.editInputRowFocused,
+              ]}
+            >
               <Text style={[styles.editInputIconText, { marginTop: 2, flexShrink: 0 }]}>≡</Text>
               <TextInput
                 style={[styles.editTextAreaInput, webOutlineNone]}
@@ -235,7 +258,12 @@ export default function SettingsScreen() {
           {/* Website */}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Website / Sosial Media</Text>
-            <View style={[styles.editInputRow, focusedField === 'website' && styles.editInputRowFocused]}>
+            <View
+              style={[
+                styles.editInputRow,
+                focusedField === 'website' && styles.editInputRowFocused,
+              ]}
+            >
               <Globe size={16} color={colors.muted} />
               <TextInput
                 style={[styles.editFieldInput, webOutlineNone]}
@@ -254,7 +282,10 @@ export default function SettingsScreen() {
         {/* Sticky footer save button */}
         <View style={styles.editFooter}>
           <TouchableOpacity
-            style={[styles.saveFullBtn, (savingAvatar || updateProfile.isPending) && { opacity: 0.7 }]}
+            style={[
+              styles.saveFullBtn,
+              (savingAvatar || updateProfile.isPending) && { opacity: 0.7 },
+            ]}
             onPress={handleSave}
             disabled={savingAvatar || updateProfile.isPending}
             activeOpacity={0.8}
@@ -275,7 +306,10 @@ export default function SettingsScreen() {
     <View style={[styles.screen, { backgroundColor: c.light, paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBackSmart(router)} style={[styles.headerBtn, { backgroundColor: c.white }]}>
+        <TouchableOpacity
+          onPress={() => goBackSmart(router)}
+          style={[styles.headerBtn, { backgroundColor: c.white }]}
+        >
           <ChevronLeft size={18} color={c.charcoal} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.charcoal }]}>Pengaturan</Text>
@@ -284,12 +318,21 @@ export default function SettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.menuContent} showsVerticalScrollIndicator={false}>
         {/* Profile card */}
-        <TouchableOpacity style={styles.profileCard} onPress={() => setView('edit')} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.profileCard}
+          onPress={() => setView('edit')}
+          activeOpacity={0.7}
+        >
           <View style={styles.menuAvatar}>
             {user?.avatar_url ? (
               <Image source={{ uri: user.avatar_url }} style={styles.menuAvatarImg} />
             ) : (
-              <View style={[styles.menuAvatarFallback, { backgroundColor: avatarColorFor(user?.username ?? 'x') }]}>
+              <View
+                style={[
+                  styles.menuAvatarFallback,
+                  { backgroundColor: avatarColorFor(user?.username ?? 'x') },
+                ]}
+              >
                 <Text style={styles.menuAvatarLetter}>{(user?.name ?? '?').charAt(0)}</Text>
               </View>
             )}
@@ -368,7 +411,9 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.menuRowText}>
               <Text style={[styles.menuRowLabel, { color: colors.coral }]}>Keluar</Text>
-              <Text style={[styles.menuRowSub, { color: 'rgba(255, 107, 107, 0.6)' }]}>Keluar dari akun di perangkat ini</Text>
+              <Text style={[styles.menuRowSub, { color: 'rgba(255, 107, 107, 0.6)' }]}>
+                Keluar dari akun di perangkat ini
+              </Text>
             </View>
             <ChevronRight size={16} color="rgba(255, 107, 107, 0.5)" />
           </TouchableOpacity>
@@ -441,12 +486,38 @@ const styles = StyleSheet.create({
   },
   menuAvatar: { width: 48, height: 48, borderRadius: 16, overflow: 'hidden' },
   menuAvatarImg: { width: '100%', height: '100%', borderRadius: 16 },
-  menuAvatarFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', borderRadius: 16 },
-  menuAvatarLetter: { fontSize: 20, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.white },
+  menuAvatarFallback: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+  },
+  menuAvatarLetter: {
+    fontSize: 20,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.white,
+  },
   menuProfileInfo: { flex: 1 },
-  menuProfileName: { fontSize: 15, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal },
-  menuProfileUsername: { fontSize: 12, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, marginTop: 2 },
-  sectionLabel: { fontSize: 11, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted, marginTop: 8, textTransform: 'uppercase', letterSpacing: 1.2 },
+  menuProfileName: {
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.charcoal,
+  },
+  menuProfileUsername: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.muted,
+    marginTop: 2,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.muted,
+    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+  },
   menuCard: {
     backgroundColor: colors.white,
     borderRadius: 18,
@@ -469,9 +540,21 @@ const styles = StyleSheet.create({
   },
   menuRowText: { flex: 1 },
   menuRowLabel: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal },
-  menuRowSub: { fontSize: 11, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, marginTop: 1 },
+  menuRowSub: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.muted,
+    marginTop: 1,
+  },
   menuDivider: { height: 1, backgroundColor: colors.border, marginLeft: 68 },
-  versionText: { fontSize: 11, fontFamily: 'PlusJakartaSans_500Medium', color: colors.mutedLight, textAlign: 'center', marginTop: 4, marginBottom: 12 },
+  versionText: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.mutedLight,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 12,
+  },
   // Edit profile
   editContent: { padding: 20, paddingHorizontal: 22, paddingBottom: 40 },
   editAvatarSection: {
@@ -485,8 +568,18 @@ const styles = StyleSheet.create({
   },
   editAvatar: { width: 84, height: 84, borderRadius: 26, overflow: 'hidden', marginBottom: 10 },
   editAvatarImg: { width: '100%', height: '100%', borderRadius: 26 },
-  editAvatarFallback: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', borderRadius: 26 },
-  editAvatarLetter: { fontSize: 34, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.white },
+  editAvatarFallback: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 26,
+  },
+  editAvatarLetter: {
+    fontSize: 34,
+    fontFamily: 'PlusJakartaSans_800ExtraBold',
+    color: colors.white,
+  },
   changePhotoText: { fontSize: 14, fontFamily: 'PlusJakartaSans_700Bold', color: colors.coral },
   avatarDraftHint: {
     fontSize: 11,
@@ -496,7 +589,12 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   editField: { marginBottom: 16 },
-  editLabel: { fontSize: 13, fontFamily: 'PlusJakartaSans_700Bold', color: colors.charcoal, marginBottom: 8 },
+  editLabel: {
+    fontSize: 13,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: colors.charcoal,
+    marginBottom: 8,
+  },
   editLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   editCounter: { fontSize: 11, fontFamily: 'PlusJakartaSans_500Medium', color: colors.mutedLight },
   editInputRow: {
@@ -514,9 +612,23 @@ const styles = StyleSheet.create({
     borderColor: colors.coral,
     borderWidth: 2,
   },
-  editInputText: { fontSize: 15, fontFamily: 'PlusJakartaSans_500Medium', color: colors.muted, flex: 1 },
-  editInputIconText: { fontSize: 16, fontFamily: 'PlusJakartaSans_400Regular', color: colors.muted },
-  editFieldInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal },
+  editInputText: {
+    fontSize: 15,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.muted,
+    flex: 1,
+  },
+  editInputIconText: {
+    fontSize: 16,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.muted,
+  },
+  editFieldInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.charcoal,
+  },
   editFieldInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -532,7 +644,14 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
   },
   editTextAreaRow: { alignItems: 'flex-start', minHeight: 88 },
-  editTextAreaInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, lineHeight: 22.4, minHeight: 62 },
+  editTextAreaInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    color: colors.charcoal,
+    lineHeight: 22.4,
+    minHeight: 62,
+  },
   editFooter: {
     padding: 16,
     paddingHorizontal: 22,

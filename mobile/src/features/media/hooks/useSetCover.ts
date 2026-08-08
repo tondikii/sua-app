@@ -11,6 +11,7 @@ export function useSetCover(tripId: string) {
       qc.invalidateQueries({ queryKey: ['documents', tripId] });
       qc.invalidateQueries({ queryKey: ['trip', tripId] });
       qc.invalidateQueries({ queryKey: ['trips'] });
+      qc.invalidateQueries({ queryKey: ['userTrips'] });
     },
   });
 }

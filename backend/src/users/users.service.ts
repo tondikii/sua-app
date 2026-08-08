@@ -222,7 +222,7 @@ export class UsersService {
       },
       orderBy: { createdAt: 'desc' },
       include: {
-        coverDocument: { select: { storageUrl: true } },
+        coverDocument: { select: { storageKey: true, storageUrl: true } },
         _count: { select: { participants: true } },
         participants: {
           take: 4,
@@ -239,6 +239,20 @@ export class UsersService {
     // Manual pagination since Prisma 5.22 + Node 24 has a bug with `take` + `_count`
     const hasMore = trips.length > take;
     const results = hasMore ? trips.slice(0, take) : trips;
+
+    // Cover images live in a private R2 bucket — presign the storage keys so
+    // clients can render them (same as `TripsService.listTrips`). Legacy rows
+    // may hold a raw `pub-*.r2.dev` URL instead of a key — extract the key.
+    const coverKeys = results
+      .map((t) => this.resolveCoverKey(t.coverDocument))
+      .filter((key): key is string => Boolean(key));
+    const signedCovers = await this.r2.presignDownloads(coverKeys);
+
+    const resolveCover = (t: (typeof results)[number]): string | null => {
+      const key = this.resolveCoverKey(t.coverDocument);
+      if (!key) return null;
+      return signedCovers.get(key) ?? null;
+    };
 
     const avatarKeys = results
       .flatMap((t) => t.participants.map((p) => p.user.avatarUrl))
@@ -263,7 +277,7 @@ export class UsersService {
           is_all_day: t.isAllDay,
           start_time: toTime(t.startTime),
           end_time: toTime(t.endTime),
-          cover_image_url: t.coverDocument?.storageUrl ?? null,
+          cover_image_url: resolveCover(t),
           voting_deadline: t.votingDeadline?.toISOString() ?? null,
           participant_count: t._count.participants,
           participants_preview: await Promise.all(
@@ -278,5 +292,15 @@ export class UsersService {
       ),
       next_cursor: hasMore ? (results[results.length - 1]?.id ?? null) : null,
     };
+  }
+
+  /** Derive an R2 storage key from a trip cover document (key or legacy r2.dev URL). */
+  private resolveCoverKey(
+    coverDocument: { storageKey: string | null; storageUrl: string | null } | null,
+  ): string | null {
+    if (!coverDocument) return null;
+    if (coverDocument.storageKey) return coverDocument.storageKey;
+    if (coverDocument.storageUrl) return this.r2.extractStorageKey(coverDocument.storageUrl);
+    return null;
   }
 }

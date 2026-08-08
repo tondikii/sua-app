@@ -44,9 +44,14 @@ export class WishlistService {
       },
     });
 
-    this.scheduleThumbnailResolve(wishlist.id, dto.maps_link);
+    // Resolve cover dari maps_link secara sinkron agar response langsung berisi
+    // cover (bug: cover tidak tampil sampai refetch berikutnya).
+    let thumbnailUrl = wishlist.thumbnailUrl;
+    if (!thumbnailUrl) {
+      thumbnailUrl = await this.resolveThumbnailNow(wishlist.id, dto.maps_link);
+    }
 
-    return WishlistSerializer.toItem(wishlist);
+    return WishlistSerializer.toItem(thumbnailUrl ? { ...wishlist, thumbnailUrl } : wishlist);
   }
 
   /**
@@ -122,11 +127,19 @@ export class WishlistService {
     const needsResolve =
       !dto.thumbnail_url &&
       (mapsLinkChanged || this.isFallbackThumbnail(existing.thumbnailUrl));
-    if (needsResolve && (dto.maps_link ?? existing.mapsLink)) {
-      this.scheduleThumbnailResolve(wishlistId, dto.maps_link ?? existing.mapsLink);
+
+    // Resolve cover secara sinkron supaya response update langsung berisi cover
+    // yang baru (bug: cover tidak berubah sampai refetch berikutnya).
+    let thumbnailUrl = wishlist.thumbnailUrl;
+    if (needsResolve) {
+      const resolved = await this.resolveThumbnailNow(
+        wishlistId,
+        dto.maps_link ?? existing.mapsLink,
+      );
+      if (resolved) thumbnailUrl = resolved;
     }
 
-    return WishlistSerializer.toItem(wishlist);
+    return WishlistSerializer.toItem(thumbnailUrl ? { ...wishlist, thumbnailUrl } : wishlist);
   }
 
   /** Soft-delete a wishlist item — owner only (`WishlistDeleteModal`). */
@@ -290,6 +303,36 @@ export class WishlistService {
     }
 
     return wishlist;
+  }
+
+  /**
+   * Resolve thumbnail dari maps_link secara sinkron dan persist ke DB. Tidak
+   * pernah throw — return URL baru (atau null) supaya response create/update
+   * langsung memuat cover. Timeout 10 detik agar tombol simpan tidak menggantung.
+   */
+  private async resolveThumbnailNow(
+    wishlistId: string,
+    mapsLink: string | null | undefined,
+  ): Promise<string | null> {
+    if (!mapsLink) return null;
+    try {
+      const thumbnailUrl = await Promise.race([
+        this.googleMaps.resolveThumbnailFromMapsLink(mapsLink),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000)),
+      ]);
+      if (!thumbnailUrl) return null;
+
+      await this.prisma.wishlist.update({
+        where: { id: wishlistId },
+        data: { thumbnailUrl },
+      });
+      return thumbnailUrl;
+    } catch (err) {
+      this.logger.warn(
+        `Synchronous thumbnail resolve failed for wishlist ${wishlistId}: ${err}`,
+      );
+      return null;
+    }
   }
 
   /**

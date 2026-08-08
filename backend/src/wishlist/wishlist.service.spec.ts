@@ -138,17 +138,14 @@ describe('WishlistService', () => {
       );
     });
 
-    it('schedules thumbnail resolve in background when maps_link set', async () => {
+    it('resolves thumbnail synchronously when maps_link set', async () => {
       prisma.wishlist.create.mockResolvedValue(wishlistRow());
       googleMaps.resolveThumbnailFromMapsLink.mockResolvedValue('https://thumb.example.com/a.jpg');
 
-      await service.createWishlist(OWNER, {
+      const result = await service.createWishlist(OWNER, {
         place_name: 'Pantai',
         maps_link: 'https://maps.google.com/abc',
       } as any);
-
-      // allow the setImmediate fire-and-forget to run
-      await new Promise((r) => setTimeout(r, 5));
 
       expect(googleMaps.resolveThumbnailFromMapsLink).toHaveBeenCalledWith(
         'https://maps.google.com/abc',
@@ -157,13 +154,13 @@ describe('WishlistService', () => {
         where: { id: 'wish-1' },
         data: { thumbnailUrl: 'https://thumb.example.com/a.jpg' },
       });
+      expect(result.thumbnail_url).toBe('https://thumb.example.com/a.jpg');
     });
 
-    it('does not schedule resolve without maps_link', async () => {
+    it('does not resolve thumbnail without maps_link', async () => {
       prisma.wishlist.create.mockResolvedValue(wishlistRow());
 
       await service.createWishlist(OWNER, { place_name: 'Pantai' } as any);
-      await new Promise((r) => setTimeout(r, 5));
 
       expect(googleMaps.resolveThumbnailFromMapsLink).not.toHaveBeenCalled();
     });
