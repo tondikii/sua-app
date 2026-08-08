@@ -1,39 +1,34 @@
-import { ValidationPipe, HttpStatus, INestApplication } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { INestApplication } from '@nestjs/common';
+import { Express, Request, Response } from 'express';
+import express from 'express';
+import { createApp } from '../src/main';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { AppModule } from '../src/app.module';
-import express, { Express, Request, Response } from 'express';
 
+/**
+ * Vercel serverless entry (`/api` directory, Vercel convention).
+ *
+ * `backend/vercel.json` rewrites every request to this function. The Nest app
+ * is built once via `createApp()` (same factory as `main.ts`) and reused for
+ * warm instances to avoid re-running DI container initialization on every
+ * request. The global `/v1` prefix, CORS, exception filter and request-id
+ * interceptor all come from `createApp()`.
+ */
 const expressApp: Express = express();
 let app: INestApplication | null = null;
 
 async function getApp(): Promise<INestApplication> {
   if (app) return app;
 
-  app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
-
-  app.enableCors();
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
-    }),
-  );
-
-  await app.init();
-
+  app = await createApp(new ExpressAdapter(expressApp));
   return app;
 }
 
-export default async (req: Request, res: Response) => {
-  // Vercel pre-parses the body, mark request as already having body parsed
-  if (req.body !== undefined) {
-    (req as any)._body = true;
+export default async function handler(req: Request, res: Response): Promise<void> {
+  // Vercel pre-parses the JSON body; let Express know so it doesn't re-read it.
+  if (req.body !== undefined && typeof req.body === 'object') {
+    (req as Request & { _body?: boolean })._body = true;
   }
 
   await getApp();
-  return expressApp(req, res);
-};
+  expressApp(req, res);
+}

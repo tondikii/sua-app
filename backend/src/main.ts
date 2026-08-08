@@ -4,11 +4,16 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 /** Build & configure the Nest app without listening (used by local bootstrap
  *  and the Vercel serverless handler in `api/index.ts`). */
-export async function createApp(): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule);
+export async function createApp(
+  adapter?: ExpressAdapter,
+): Promise<INestApplication> {
+  const app = adapter
+    ? await NestFactory.create(AppModule, adapter)
+    : await NestFactory.create(AppModule);
 
   // Global prefix
   app.setGlobalPrefix('v1');
