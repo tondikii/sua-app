@@ -60,24 +60,26 @@ git commit -m "m18: migrate backend to vercel serverless + external cron"
 git push origin m17   # atau branch kerja kamu
 ```
 
-> `vercel.json` di root sudah berisi konfigurasi function serverless (`backend/dist/serverless.js`). Tidak ada Docker/Render lagi.
+> `backend/vercel.json` sudah berisi konfigurasi function serverless — entry di `backend/api/index.ts` (folder `/api`, konvensi Vercel). Semua request di-rewrite ke `/api`, lalu Nest app (Express) menangani routing `/v1/*`. Tidak ada Docker/Render lagi. Vercel project **Root Directory = `backend`**, jadi config & function live di dalam `backend/`.
 
 ## 1.2 Buat Project di Vercel
 
 1. Buka **vercel.com** → **Add New** → **Project**.
 2. Import repo `atur-perjalanan`.
 3. **Framework Preset**: `Other` (bukan Next.js).
-4. **Root Directory**: `/` (workspace root).
+4. **Root Directory**: `backend` (bukan `/` — semua config & function di dalam `backend/`).
 5. **Build Command**:
    ```bash
    corepack enable &&
    pnpm install --frozen-lockfile &&
+   pnpm --filter @atur-perjalanan/shared-types build &&
+   pnpm --filter @atur-perjalanan/shared-validation build &&
    pnpm --filter backend exec prisma migrate deploy &&
    pnpm --filter backend exec prisma generate &&
    pnpm --filter backend build
    ```
-   > Migrasi Prisma (`prisma migrate deploy`) dijalankan saat **build**, jadi tidak ada pre-deploy command terpisah.
-6. **Output Directory**: kosong (function di `backend/dist/serverless.js`).
+   > Migrasi Prisma (`prisma migrate deploy`) dijalankan saat **build**, jadi tidak ada pre-deploy command terpisah. Shared packages dibuild ke JS dulu (agar bisa di-bundle function `/api`).
+6. **Output Directory**: kosong (function di `backend/api/index.ts`).
 7. Deploy → dapatkan URL `https://atur-perjalanan-backend.vercel.app` (atau `<project>.vercel.app`).
 
 ## 1.3 Environment Variables (Production)
@@ -333,6 +335,7 @@ Push ke branch → Vercel auto-deploy (build + `prisma migrate deploy`).
 | Masalah | Solusi |
 | --- | --- |
 | `prisma migrate deploy` gagal saat build | Cek `DATABASE_URL`/`DIRECT_URL` di Vercel env; pastikan `DIRECT_URL` port 5432 |
+| Function crash `500` / `FUNCTION_INVOCATION_FAILED` | Entry lama `backend/dist/serverless.js` berjalan **tanpa bundle** sehingga `require("@atur-perjalanan/shared-*")` memuat TypeScript mentah yang gagal di runtime Node Vercel. Pastikan sudah pakai `backend/api/index.ts` (folder `/api`) — Vercel me-bundle function dengan esbuild sehingga shared packages (yang sudah di-build ke JS) ikut ter-bundle. Juga pastikan shared packages di-build dulu (`pnpm --filter @atur-perjalanan/shared-* build`) sebelum `pnpm --filter backend build`. |
 | Endpoint cron 401 | `CRON_SECRET` beda antara Vercel & GitHub — samakan |
 | Migrasi perlu manual | Jalankan `pnpm --filter backend exec prisma migrate deploy` lokal dengan `DIRECT_URL` production, atau via Vercel CLI |
 | Sign-in Google gagal di Android | Cek SHA-1 sudah masuk ke Android OAuth client |
@@ -344,8 +347,8 @@ Push ke branch → Vercel auto-deploy (build + `prisma migrate deploy`).
 
 ## 🔗 Referensi
 
-- `vercel.json` — config function serverless (root repo)
-- `backend/src/serverless.ts` — entry handler Vercel
+- `backend/vercel.json` — rewrite semua request ke function `/api` (Root Directory Vercel = `backend`)
+- `backend/api/index.ts` — entry handler Vercel (bundle `dist` + shared packages)
 - `backend/src/notifications/reminders.controller.ts` — endpoint cron
 - `mobile/eas.json` — profile build/submit EAS
 - `mobile/.env.production` — env production mobile

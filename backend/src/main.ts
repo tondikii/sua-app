@@ -6,7 +6,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 
 /** Build & configure the Nest app without listening (used by local bootstrap
- *  and the Vercel serverless handler). */
+ *  and the Vercel serverless handler in `api/index.ts`). */
 export async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create(AppModule);
 
@@ -55,7 +55,7 @@ export async function createApp(): Promise<INestApplication> {
   return app;
 }
 
-/** Local / Docker entry — serverless (Vercel) uses createApp() directly. */
+/** Local / Docker entry — Vercel (`api/index.ts`) uses createApp() directly. */
 async function bootstrap() {
   const app = await createApp();
   const port = process.env.PORT ?? 8080;

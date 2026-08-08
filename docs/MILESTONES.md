@@ -550,7 +550,7 @@ mobile/
 
 **AI Prompt**: _"Let's implement M18. Read `docs/MILESTONES.md`, `docs/ARCHITECTURE.md §5`. Deploy backend ke Vercel serverless, web ke Cloudflare Pages, batasi user aktif (USER_LIMIT), dan rilis ke Google Play."_
 
-**Referensi**: `docs/ARCHITECTURE.md §5`, `mobile/app.json`, `mobile/eas.json`, `backend/src/main.ts`, `backend/src/serverless.ts`, `vercel.json`
+**Referensi**: `docs/ARCHITECTURE.md §5`, `mobile/app.json`, `mobile/eas.json`, `backend/src/main.ts`, `backend/api/index.ts`, `backend/vercel.json`
 
 > **Konteks**: Prioritas diubah setelah M17 — kita deploy dulu (web + rilis Play Store) dengan semua gratis-tier sebelum testing suite & CI/CD. Batas maksimum **50 user aktif** (backend gate via `USER_LIMIT`) karena gratis-tier. User dummy tidak ada di repo (hanya contoh copy di komponen). **Play Console sudah aktif** (developer account sudah bayar) — rilis Play Store termasuk dalam milestone ini (M21 lama digabung ke sini). **Backend di-hosting di Vercel serverless** (bukan Render — akun Render terkendala pembayaran kartu). Cron reminder di-trigger endpoint eksternal. Panduan lengkap: **`docs/DEPLOYMENT.md`**.
 
@@ -562,8 +562,8 @@ mobile/
 
 ### Checklist — Backend (Vercel serverless)
 
-- [x] `vercel.json` — function serverless (`backend/dist/serverless.js`), build command `prisma migrate deploy` + build, env vars
-- [x] `main.ts` refactor — `createApp()` terpisah, dipakai `serverless.ts` handler Vercel
+- [x] `backend/vercel.json` — rewrite semua request ke `backend/api/index.ts` (folder `/api`, konvensi Vercel; Root Directory Vercel = `backend`, di-bundle esbuild termasuk shared packages), build command `prisma migrate deploy` + build, env vars
+- [x] `main.ts` refactor — `createApp()` terpisah, dipakai `backend/api/index.ts` handler Vercel
 - [x] Cron `@nestjs/schedule` dihapus (tidak kompatibel serverless) — reminder jadi endpoint `POST /v1/cron/reminders` + pemicu eksternal tiap jam
 - [x] `RemindersController` — proteksi header `x-cron-secret` (`CRON_SECRET` env)
 - [x] `.github/workflows/cron-reminders.yml` — POST tiap jam ke endpoint reminder

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "corepack enable && pnpm install --frozen-lockfile && pnpm --filter @atur-perjalanan/shared-types build && pnpm --filter @atur-perjalanan/shared-validation build && pnpm --filter backend exec prisma migrate deploy && pnpm --filter backend exec prisma generate && pnpm --filter backend build",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
+}

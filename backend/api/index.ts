@@ -1,13 +1,15 @@
+import 'reflect-metadata';
 import type { IncomingMessage, ServerResponse } from 'http';
-import { createApp } from './main';
+import { createApp } from '../dist/main.js';
 
 /**
- * Vercel serverless entry point.
+ * Vercel serverless entry point (/api folder convention, Vercel root = backend/).
  *
- * Vercel invokes this handler for every request to the backend function. The
- * Nest app (Express adapter) is built lazily on first invocation and cached in
- * the module scope for subsequent warm invocations — the standard pattern for
- * running an Express/Nest app on Vercel Functions.
+ * Vercel bundles this file (and its imports) with esbuild, which includes the
+ * compiled shared workspace packages (@atur-perjalanan/shared-*, built to JS)
+ * that the compiled backend requires at runtime. The Nest app (Express
+ * adapter) is built lazily on first invocation and cached in module scope for
+ * warm invocations — the standard pattern for Express/Nest on Vercel Functions.
  */
 let cachedHandler: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
 

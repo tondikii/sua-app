@@ -8,6 +8,8 @@
 
 - When updating an environment variable's value in `.env`, must also update the same value in `.env.example` simultaneously to keep both files in sync. Confidence: 0.85
 
+- Expects ALL env files across the project (root `.env`, `backend/.env`, `mobile/.env` / `mobile/.env.production`) to be kept in sync with their `.env.example` templates in both directions — when asked to sync env files ("sync semua env, hapus yang sudah tidak terpakai"), the agent should copy any vars present in the template but missing from `.env`, remove vars no longer used, and fix template variable names that no longer match actual code usage (e.g., `EXPO_PUBLIC_GOOGLE_CLIENT_ID` → `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, matching `useGoogleAuth.ts`). "Unused" is judged by actual source-code usage (grep for `process.env` / config reads, plus deployment docs/config), not by file-diff guessing or stale doc references; the final state is verified with an automated key-set comparison across all env files before declaring done. Confidence: 0.85
+
 # web
 See [web/taste.md](web/taste.md)
 # ui/form
@@ -34,9 +36,6 @@ See [workflow/taste.md](workflow/taste.md)
 
 - Communication is a mix of Indonesian and English; agent may respond in Indonesian, but all code must be written in English (variable names, comments, strings, file content). Confidence: 0.9
 - Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.85
-
-# architecture
-See [architecture/taste.md](architecture/taste.md)signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.8
 
 # architecture
 See [architecture/taste.md](architecture/taste.md)
