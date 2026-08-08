@@ -68,17 +68,8 @@ git push origin m17   # atau branch kerja kamu
 2. Import repo `atur-perjalanan`.
 3. **Framework Preset**: `Other` (bukan Next.js).
 4. **Root Directory**: `backend` (bukan `/` — semua config & function di dalam `backend/`).
-5. **Build Command**:
-   ```bash
-   corepack enable &&
-   pnpm install --frozen-lockfile &&
-   pnpm --filter @atur-perjalanan/shared-types build &&
-   pnpm --filter @atur-perjalanan/shared-validation build &&
-   pnpm --filter backend exec prisma migrate deploy &&
-   pnpm --filter backend exec prisma generate &&
-   pnpm --filter backend build
-   ```
-   > Migrasi Prisma (`prisma migrate deploy`) dijalankan saat **build**, jadi tidak ada pre-deploy command terpisah. Shared packages dibuild ke JS dulu (agar bisa di-bundle function `/api`).
+5. **Build Command**: `pnpm run build:vercel` (atau biarkan Vercel baca `backend/vercel.json` secara otomatis).
+   > `backend/vercel.json` sudah meng‑override `installCommand`/`buildCommand`. Buildchainnya: build shared packages (ke JS) → `prisma migrate deploy` → `prisma generate` → `nest build`.
 6. **Output Directory**: kosong (function di `backend/api/index.ts`).
 7. Deploy → dapatkan URL `https://atur-perjalanan-backend.vercel.app` (atau `<project>.vercel.app`).
 

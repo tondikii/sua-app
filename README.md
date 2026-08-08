@@ -159,12 +159,8 @@ pnpm --filter mobile build:production:ios          # EAS production build (IPA �
 # 1. Push repo ke GitHub
 # 2. vercel.com → Add New → Project → import repo
 #    Framework: Other | Root: backend
-#    Build: corepack enable && pnpm install --frozen-lockfile &&
-#           pnpm --filter @atur-perjalanan/shared-types build &&
-#           pnpm --filter @atur-perjalanan/shared-validation build &&
-#           pnpm --filter backend exec prisma migrate deploy &&
-#           pnpm --filter backend exec prisma generate &&
-#           pnpm --filter backend build
+#    Build: pnpm run build:vercel
+#    (atau biarkan Vercel baca backend/vercel.json otomatis)
 #    Entry function: backend/api/index.ts (folder /api, di-rewrite dari backend/vercel.json)
 # 3. Isi env vars (Production):
 #    DATABASE_URL (pooler :6543, connection_limit=1), DIRECT_URL (:5432),
