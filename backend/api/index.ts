@@ -1,35 +1,42 @@
 import 'reflect-metadata';
-import type { IncomingMessage, ServerResponse } from 'http';
 import { createApp } from '../dist/main.js';
 import type { Request, Response } from 'express';
 
 /**
- * Vercel serverless entry point (/api folder convention, Vercel root = backend/).
+ * Vercel serverless entry point (`/api` folder convention, Vercel Root Directory
+ * = backend/).
  *
- * Vercel bundles this file (and its imports) with esbuild, which includes the
- * compiled shared workspace packages (@atur-perjalanan/shared-*, built to JS)
- * that the compiled backend requires at runtime. The Nest app (Express
- * adapter) is built lazily on first invocation and cached in module scope for
- * warm invocations — the standard pattern for Express/Nest on Vercel Functions.
+ * `createApp()` — exported by src/main.ts (which wires up AppModule, CORS, the
+ * global validation pipe, the exception filter, the request-id interceptor and
+ * the `/v1` prefix) — is reused as the single source of truth so local
+ * (port 8080) and Vercel behave identically. Importing the compiled
+ * `../dist/main.js` (rather than re-bundling raw `src/` from source via esbuild)
+ * avoids re-transpiling the full Nest tree on Vercel and is the path that was
+ * already verified to cold-start successfully.
+ *
+ * Mirrors the proven handler structure from
+ * uangku-app/apps/server/api/index.ts: the app is created once on first
+ * invocation and cached in module scope for warm invocations; the Express
+ * instance (retrieved via the Nest HttpAdapter) is the actual handler Vercel
+ * invokes.
  */
-let cachedHandler: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
+let cachedHandler: ((req: Request, res: Response) => void) | null = null;
 
 async function getHandler() {
-  if (!cachedHandler) {
-    const app = await createApp();
-    await app.init();
-    cachedHandler = app.getHttpAdapter().getInstance() as (
-      req: IncomingMessage,
-      res: ServerResponse,
-    ) => void;
-  }
+  if (cachedHandler) return cachedHandler;
+
+  const app = await createApp();
+  await app.init();
+  cachedHandler = app
+    .getHttpAdapter()
+    .getInstance() as unknown as ((req: Request, res: Response) => void);
   return cachedHandler;
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  // Vercel pre-parses the body; mark it so express/Nest don't double-parse it.
-  if ((req as Request).body !== undefined) {
-    (req as Request & { _body: boolean })._body = true;
+export default async function handler(req: Request, res: Response) {
+  // Vercel pre-parses the body — mark it so Express doesn't double-parse it.
+  if (req.body !== undefined) {
+    (req as any)._body = true;
   }
   const appHandler = await getHandler();
   return appHandler(req, res);
