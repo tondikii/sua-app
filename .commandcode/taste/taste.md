@@ -35,7 +35,7 @@ See [workflow/taste.md](workflow/taste.md)
 # communication
 
 - Communication is a mix of Indonesian and English; agent may respond in Indonesian, but all code must be written in English (variable names, comments, strings, file content). Confidence: 0.9
-- Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Confidence: 0.85
+- Provides structured IDE context in messages using `<ide-context>` blocks containing file path, language, and line number — signals that the agent should reference the exact file location to understand the current working context. Reconfirmed when the user pasted an IDE error for `backend/api/index.ts` (line 5) with a bare `<ide-context>` block and no further explanation — the agent anchored on that exact file/line to investigate. Confidence: 0.9
 
 # architecture
 See [architecture/taste.md](architecture/taste.md)

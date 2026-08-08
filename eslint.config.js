@@ -22,6 +22,14 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+  // Backend tests — mock-heavy; `any` is idiomatic for partial Prisma/jest mocks
+  {
+    files: ['backend/**/*.spec.ts', 'backend/**/*.e2e-spec.ts', 'backend/**/__tests__/**'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+
   // Shared packages — pure TS, strict rules
   {
     files: ['packages/**/*.ts'],
