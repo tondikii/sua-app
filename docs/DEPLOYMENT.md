@@ -70,7 +70,7 @@ git push origin m17   # atau branch kerja kamu
 4. **Root Directory**: `backend` (bukan `/` — semua config & function di dalam `backend/`).
 5. **Build Command**: `pnpm run build:vercel` (atau biarkan Vercel baca `backend/vercel.json` secara otomatis).
    > `backend/vercel.json` sudah meng‑override `installCommand`/`buildCommand`. Buildchainnya: build shared packages (ke JS) → `prisma migrate deploy` → `prisma generate` → `nest build`.
-6. **Output Directory**: kosong (function di `backend/api/index.ts`).
+   6. **Output Directory**: `dist` (hasil `nest build`). Vercel men-deploy function serverless di `backend/api/index.ts` lewat folder `/api`, lalu me-bundle `dist` + shared packages yang sudah dikompilasi ke JS.
 7. Deploy → dapatkan URL `https://atur-perjalanan-backend.vercel.app` (atau `<project>.vercel.app`).
 
 ## 1.3 Environment Variables (Production)
