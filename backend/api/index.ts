@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { createApp } from '../dist/main.js';
+import type { Request, Response } from 'express';
 
 /**
  * Vercel serverless entry point (/api folder convention, Vercel root = backend/).
@@ -26,6 +27,10 @@ async function getHandler() {
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  // Vercel pre-parses the body; mark it so express/Nest don't double-parse it.
+  if ((req as Request).body !== undefined) {
+    (req as Request & { _body: boolean })._body = true;
+  }
   const appHandler = await getHandler();
   return appHandler(req, res);
 }
