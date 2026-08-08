@@ -57,7 +57,7 @@ git commit -m "m18: deployment config (render, pages, user limit)"
 git push origin m17   # atau branch kerja kamu
 ```
 
-> Blueprint `render.yaml` di root sudah berisi Web Service + env vars + release command (`prisma migrate deploy`).
+> Blueprint `render.yaml` di root sudah berisi Web Service + env vars + pre-deploy command (`prisma migrate deploy`).
 
 ## 1.2 Buat Web Service di Render
 
@@ -91,7 +91,7 @@ Di dashboard service → **Environment**, isi:
 | `USER_LIMIT` | `50` (sudah di-set default) |
 | `APP_ENV` / `NODE_ENV` | `production` (sudah di-set default) |
 
-> **Release Command**: `render.yaml` sudah menyertakan `releaseCommand` → `prisma migrate deploy` otomatis jalan sebelum service start. Verifikasi di dashboard → Settings → Lifecycle.
+> **Pre-deploy Command**: `render.yaml` sudah menyertakan `preDeployCommand` → `prisma migrate deploy` otomatis jalan setelah build, sebelum service start. Verifikasi di dashboard → Settings → Lifecycle.
 
 ## 1.4 Verifikasi Backend
 
@@ -284,7 +284,7 @@ Push ke branch → Cloudflare Pages auto-rebuild → `https://atur-perjalanan.pa
 | Sign-in Google gagal di Android | Cek SHA-1 sudah masuk ke Android OAuth client |
 | Upload media gagal di web | Cek R2 CORS (origin pages.dev) |
 | CORS API ditolak | Cek `APP_WEB_URL` di Render = `https://atur-perjalanan.pages.dev` |
-| Migrasi gagal | Cek `DATABASE_URL`/`DIRECT_URL` benar; `prisma migrate deploy` di Release Command |
+| Migrasi gagal | Cek `DATABASE_URL`/`DIRECT_URL` benar; `prisma migrate deploy` di Pre-deploy Command |
 
 ---
 

@@ -23,7 +23,7 @@ services:
       pnpm --filter backend build
     startCommand: node backend/dist/main
     healthCheckPath: /health
-    releaseCommand: >-
+    preDeployCommand: >-
       pnpm --filter backend exec prisma migrate deploy
     envVars:
       - key: NODE_ENV
@@ -83,5 +83,5 @@ services:
       - key: EXPO_ACCESS_TOKEN
         sync: false
 
-# Release command — `prisma migrate deploy` otomatis dijalankan Render
-# sebelum service start (setiap deploy baru).
+# preDeployCommand — `prisma migrate deploy` dijalankan Render setelah build
+# dan sebelum service start (setiap deploy baru).

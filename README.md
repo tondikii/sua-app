@@ -163,7 +163,7 @@ pnpm --filter mobile build:production:ios          # EAS production build (IPA â
 #    DATABASE_URL (pooler :6543), DIRECT_URL (:5432), SUPABASE_*, JWT_SECRET,
 #    GOOGLE_CLIENT_ID, R2_*, APP_WEB_URL=https://atur-perjalanan.pages.dev,
 #    EXPO_ACCESS_TOKEN, USER_LIMIT=50, APP_ENV=production
-# 4. Release Command: pnpm --filter backend exec prisma migrate deploy
+# 4. Pre-deploy Command (otomatis): pnpm --filter backend exec prisma migrate deploy
 ```
 
 ### 2. Web â€” Cloudflare Pages

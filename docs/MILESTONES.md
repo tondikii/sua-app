@@ -564,7 +564,7 @@ mobile/
 
 - [x] `render.yaml` — Web Service NestJS (native build), healthcheck `/health`, env vars, free plan
 - [x] CORS production — whitelist `APP_WEB_URL` (Cloudflare Pages) di `main.ts`
-- [x] `releaseCommand` — `prisma migrate deploy` otomatis sebelum service start
+- [x] `preDeployCommand` — `prisma migrate deploy` otomatis sebelum service start
 - [ ] Env production di Render: `DATABASE_URL` (pooler), `DIRECT_URL`, Supabase, JWT, Google, R2, `APP_WEB_URL=https://atur-perjalanan.pages.dev`, `EXPO_ACCESS_TOKEN`, `USER_LIMIT=50`, `APP_ENV=production`
 - [ ] Google OAuth: redirect URI produksi + origin web ditambahkan ke OAuth client
 

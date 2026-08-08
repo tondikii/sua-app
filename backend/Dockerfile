@@ -54,5 +54,5 @@ EXPOSE 8080
 # We expose node_modules symlink structure:
 ENV NODE_PATH=/app/node_modules
 
-# `prisma migrate deploy` runs via Render release command; start the API here.
+# `prisma migrate deploy` runs via Render pre-deploy command; start the API here.
 CMD ["node", "dist/main"]
