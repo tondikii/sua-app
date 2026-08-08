@@ -57,7 +57,7 @@ git commit -m "m18: deployment config (render, pages, user limit)"
 git push origin m17   # atau branch kerja kamu
 ```
 
-> Blueprint `render.yaml` di root sudah berisi Web Service + env vars + pre-deploy command (`prisma migrate deploy`).
+> Blueprint `render.yaml` di root sudah berisi Web Service + env vars. **Catatan free tier**: `preDeployCommand` tidak didukung — jalankan migrasi sekali manual via Render Shell (lihat langkah 1.5).
 
 ## 1.2 Buat Web Service di Render
 
@@ -91,7 +91,18 @@ Di dashboard service → **Environment**, isi:
 | `USER_LIMIT` | `50` (sudah di-set default) |
 | `APP_ENV` / `NODE_ENV` | `production` (sudah di-set default) |
 
-> **Pre-deploy Command**: `render.yaml` sudah menyertakan `preDeployCommand` → `prisma migrate deploy` otomatis jalan setelah build, sebelum service start. Verifikasi di dashboard → Settings → Lifecycle.
+## 1.5 Jalankan Migrasi Database (sekali, free tier tidak support preDeployCommand)
+
+Setelah service pertama kali berjalan (setelah isi env vars):
+
+1. Buka service di dashboard Render → **Shell** (atau gunakan Render CLI)
+2. Jalankan:
+   ```bash
+   pnpm --filter backend exec prisma migrate deploy
+   ```
+3. Verifikasi migration berhasil — jika ada error, cek env `DATABASE_URL`/`DIRECT_URL` dan koneksi pooler.
+
+> ⚠️ Di free tier, migration **tidak otomatis** tiap deploy. Jika Anda menambahkan migration baru (schema drift), jalankan langkah ini lagi secara manual. Untuk otomatisasi tiap deploy → upgrade ke **paid plan** dan gunakan `preDeployCommand`.
 
 ## 1.4 Verifikasi Backend
 
@@ -284,7 +295,7 @@ Push ke branch → Cloudflare Pages auto-rebuild → `https://atur-perjalanan.pa
 | Sign-in Google gagal di Android | Cek SHA-1 sudah masuk ke Android OAuth client |
 | Upload media gagal di web | Cek R2 CORS (origin pages.dev) |
 | CORS API ditolak | Cek `APP_WEB_URL` di Render = `https://atur-perjalanan.pages.dev` |
-| Migrasi gagal | Cek `DATABASE_URL`/`DIRECT_URL` benar; `prisma migrate deploy` di Pre-deploy Command |
+| Migrasi gagal | Cek `DATABASE_URL`/`DIRECT_URL` benar; jalankan `pnpm --filter backend exec prisma migrate deploy` via Render Shell |
 
 ---
 

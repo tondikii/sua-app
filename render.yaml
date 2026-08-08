@@ -6,9 +6,12 @@
 #   2. Pilih repo ini — Render membaca render.yaml ini
 #   3. Set environment variables (lihat `envVars` di bawah / dashboard)
 #
-# Catatan free tier: service tidur setelah ~15 menit idle; request pertama
-# lambat (~50s boot). Cron reminder voting (M9) hanya jalan saat service awake.
-# ─────────────────────────────────────────────────────────────────────
+# Catatan free tier:
+#   - preDeployCommand (migrasi DB) TIDAK didukung di free tier. Jalan sekali
+#     via Render Shell:  pnpm --filter backend exec prisma migrate deploy
+#   - service tidur setelah ~15 menit idle; request pertama lambat (~50s boot).
+#   - Cron reminder voting (M9) hanya jalan saat service awake.
+# ─────────────────────────────────────────────────────────────────────────────────────
 
 services:
   - type: web
@@ -23,8 +26,6 @@ services:
       pnpm --filter backend build
     startCommand: node backend/dist/main
     healthCheckPath: /health
-    preDeployCommand: >-
-      pnpm --filter backend exec prisma migrate deploy
     envVars:
       - key: NODE_ENV
         value: production
@@ -83,5 +84,7 @@ services:
       - key: EXPO_ACCESS_TOKEN
         sync: false
 
-# preDeployCommand — `prisma migrate deploy` dijalankan Render setelah build
-# dan sebelum service start (setiap deploy baru).
+# Migration DB — karena free tier tidak support preDeployCommand, jalankan sekali
+# via Render Shell setelah service pertama kali berjalan:
+#   pnpm --filter backend exec prisma migrate deploy
+# (atau gunakan "Manual" migrate di prisma studio / dashboard Supabase)
