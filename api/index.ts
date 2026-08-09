@@ -1,16 +1,18 @@
 import { INestApplication } from '@nestjs/common';
 import { Request, Response } from 'express';
 import express, { Express } from 'express';
-import { createApp } from '../src/main';
+import { createApp } from '../backend/src/main.ts';
 import { ExpressAdapter } from '@nestjs/platform-express';
 
 /**
- * Vercel serverless entry (`/api` directory, Vercel convention).
+ * Vercel serverless entry (`/api` at repo root — Vercel convention).
  *
- * `backend/vercel.json` rewrites every request to this function. The Nest app
- * is built once via `createApp()` (same factory as `main.ts`) and reused for
- * warm instances to avoid re-running DI container initialization on every
- * request. The global `/v1` prefix, CORS, exception filter and request-id
+ * Root Directory project = `/` (repo root) so the workspace `node_modules`
+ * (pnpm `.pnpm` store), shared packages and Prisma client — all outside
+ * `backend/` — are bundled into the function. `vercel.json` (repo root)
+ * rewrites every request to this function. The Nest app is built once via
+ * `createApp()` (same factory as `backend/src/main.ts`) and reused for warm
+ * instances; the global `/v1` prefix, CORS, exception filter and request-id
  * interceptor all come from `createApp()`.
  */
 const expressApp = express() as Express;

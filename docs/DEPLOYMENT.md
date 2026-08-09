@@ -52,7 +52,7 @@ Browser / Android app
 
 # Bagian 1 — Deploy Backend (Vercel Serverless)
 
-> **Ringkas cara kerja**: repo ini monorepo pnpm. Backend di-deploy sebagai **satu Vercel Function** dengan entry `backend/api/index.ts` (folder `/api`, konvensi Vercel). `backend/vercel.json` me-rewrite semua request ke function tersebut, lalu Nest app (Express) menangani routing `/v1/*`. Root Directory project = `backend`.
+> **Ringkas cara kerja**: repo ini monorepo pnpm. Backend di-deploy sebagai **satu Vercel Function** dengan entry `api/index.ts` di **repo root** (`/api`, konvensi Vercel). `vercel.json` (root) me-rewrite semua request ke function tersebut, lalu Nest app (Express) menangani routing `/v1/*`. **Root Directory project = `/`** (repo root) — penting, karena dependencies (express, @nestjs, @prisma/client) di-hoist ke `backend/node_modules` dan store `.pnpm` di root; dengan Root Directory `/` Vercel bisa mengakses semuanya. `.npmrc` berisi `shamefully-hoist=true` supaya deps ter-hoist ke root `node_modules` sehingga handler `api/index.ts` bisa `require`-nya.
 
 ## 1.1 Prasyarat Lokal (sekali saja)
 
@@ -77,36 +77,36 @@ CI=true pnpm install --no-frozen-lockfile
 
 1. Buka **vercel.com** → **Add New** → **Project**.
 2. Import repo `sudutkode/atur-perjalanan` dari GitHub.
-3. **Framework Preset**: pilih **`Other`** (bukan `NestJS` — kita pakai entry `/api` + rewrite, bukan zero-config `src/main.ts`; `framework: null` di `backend/vercel.json` meng-override preset ini di setiap deploy).
-4. **Root Directory**: `backend` — semua config (`vercel.json`), function (`api/`), dan source (`src/`) ada di dalam folder ini.
+3. **Framework Preset**: pilih **`Other`** (bukan `NestJS` — kita pakai entry `/api` + rewrite, bukan zero-config `src/main.ts`; `framework: null` di `vercel.json` meng-override preset ini di setiap deploy).
+4. **Root Directory**: `/` (repo root) — **jangan** `backend`; semua workspace deps di-hoist ke `backend/node_modules` + store `.pnpm` di root, dan function `api/index.ts` butuh akses ke semuanya.
 5. **Node.js Version**: `24.x` (cocok dengan `engines.node >= 20` dan Node runtime Vercel).
-6. **Build Command**: biarkan Vercel membaca `backend/vercel.json` secara otomatis → akan jadi `pnpm run build:vercel`.
-7. **Output Directory**: `dist` (dipakai Vercel sebagai static fallback; function sebenarnya di-bundle dari `api/`).
+6. **Build Command**: biarkan Vercel membaca `vercel.json` secara otomatis → akan jadi `pnpm --filter backend run build:vercel`.
+7. **Output Directory**: biarkan kosong (function `/api` yang menangani; tidak ada static output).
 8. Klik **Deploy** → tunggu build selesai → dapatkan URL `https://<project>.vercel.app`.
 
-> ⚠️ Kalau kamu pernah menjalankan `vercel link` dari root repo, setting `Root Directory` project bisa tertimpa jadi `/` (root repo). Pastikan **Settings → Build & Development → Root Directory = `backend`** sebelum deploy Git. (Folder `.vercel/` lokal tidak di-commit, jadi yang berlaku adalah setting dashboard.)
+> ⚠️ **Root Directory harus `/`**. Kalau ter-set `backend`, Vercel tidak bisa mengakses `node_modules` store di root → function crash `Cannot find module 'express'` / `@nestjs/*`. Cek di **Settings → Build & Development → Root Directory**. (Folder `.vercel/` lokal tidak di-commit, jadi yang berlaku adalah setting dashboard.)
 
 ### Opsi B — Vercel CLI
 
 ```bash
-cd backend
+# Dari repo ROOT (bukan backend) — Root Directory project = /
 vercel link        # pilih/create project, org, dan environment
 vercel env pull    # tarik env vars production ke .env.local (untuk vercel dev)
 vercel --prod      # deploy production pertama
 ```
 
-### Build chain yang dijalankan Vercel (`backend/vercel.json`)
+### Build chain yang dijalankan Vercel (`vercel.json` root)
 
 ```text
-pnpm install                          ← install semua workspace deps (Vercel auto-detect pnpm dari lockfile root)
-pnpm run build:vercel
+pnpm install                                   ← install semua workspace deps + postinstall prisma generate
+pnpm --filter backend run build:vercel
  ├─ pnpm --filter @atur-perjalanan/shared-types build        ← tsc → JS
  ├─ pnpm --filter @atur-perjalanan/shared-validation build   ← tsc → JS
  ├─ pnpm prisma:generate                                     ← generate Prisma Client dari schema
  └─ pnpm build (nest build)                                  ← compile src/ → dist/
 ```
 
-> **Catatan penting**: `prisma migrate deploy` **tidak** lagi dijalankan di build Vercel (butuh koneksi DB saat build; kalau gagal, deploy ikut gagal). Migrasi dijalankan **manual/terpisah** — lihat §1.4.
+> **Catatan penting**: `prisma migrate deploy` **tidak** dijalankan di build Vercel. DB Supabase kamu satu-satunya (sama untuk dev/local/prod) dan sudah sinkron — perubahan skema ditangani manual via Supabase (lihat §1.4). `prisma generate` jalan otomatis via `postinstall` root + di build:vercel, jadi Prisma Client selalu siap saat Vercel me-bundle function.
 
 ## 1.3 Environment Variables (Production)
 
@@ -137,20 +137,12 @@ Di Vercel dashboard → Project → **Settings → Environment Variables**, set 
 
 > ⚠️ **Serverless best practice**: `DATABASE_URL` memakai `pgbouncer=true&connection_limit=1` (pooler Supabase) — menghindari kebocoran koneksi pada serverless scale-to-zero.
 
-## 1.4 Migrasi Database (manual, tidak di build)
+## 1.4 Migrasi Database (manual via Supabase)
 
-`prisma migrate deploy` **sengaja tidak** dimasukkan ke build Vercel: build berjalan tanpa koneksi DB, sehingga deploy tidak gagal gara-gara database down. Jalankan migrasi **sebelum** deploy pertama, dan **setiap ada perubahan schema**:
+Karena backend, development, dan local memakai **satu Supabase yang sama**, `prisma migrate deploy` **tidak** dijalankan di build Vercel. Skema DB dikelola manual:
 
-```bash
-# Dari folder backend, dengan DIRECT_URL production (bukan pooler — migrasi butuh koneksi direct)
-cd backend
-DATABASE_URL="$DATABASE_URL_PRODUCTION" DIRECT_URL="$DIRECT_URL_PRODUCTION" \
-  npx prisma migrate deploy
-```
-
-Alternatif via GitHub Actions (disarankan): tambahkan workflow `prisma-migrate.yml` yang menjalankan `prisma migrate deploy` dengan `DIRECT_URL` dari GitHub Secret saat ada perubahan di `backend/prisma/`.
-
-> Urutan yang benar saat deploy update: **(1) jalankan migrasi → (2) push/deploy backend**. Kalau backend deploy duluan, runtime bisa error karena kolom/table belum ada.
+- **Setiap ada perubahan schema** (`backend/prisma/schema.prisma`): terapkan perubahannya langsung di Supabase (SQL editor dashboard), atau jalankan `npx prisma db push`/`migrate deploy` dari lokal dengan `DATABASE_URL` yang sama — lalu `npx prisma generate` supaya client sinkron.
+- **Urutan saat deploy update**: **(1) terapkan perubahan skema di Supabase → (2) push/deploy backend**. Kalau backend deploy duluan, runtime bisa error karena kolom/table belum ada.
 
 ## 1.5 Cron Reminders (pengganti @nestjs/schedule)
 
@@ -370,16 +362,17 @@ Push ke branch → Cloudflare Pages auto-rebuild → `https://atur-perjalanan.pa
 
 ## Update Backend
 
-1. **Jalankan migrasi dulu** (kalau ada perubahan schema): `npx prisma migrate deploy` dengan `DIRECT_URL` production — lihat §1.4.
-2. Push ke branch → Vercel auto-deploy (build `pnpm run build:vercel` → shared packages + `prisma generate` + `nest build`).
+1. **Terapkan perubahan skema di Supabase dulu** (kalau ada perubahan schema) — lihat §1.4.
+2. Push ke branch → Vercel auto-deploy (Root Directory `/`; build `pnpm --filter backend run build:vercel` → shared packages + `prisma generate` + `nest build`).
 
 ## Rollback / Troubleshoot
 
 | Masalah | Solusi |
 | --- | --- |
-| Runtime `Cannot find module 'express'` (Require stack: `/var/task/backend/api/index.js`) | `express` dipakai langsung di `backend/api/index.ts` tapi tidak terdaftar di `backend/package.json` (hanya transitif dari `@nestjs/platform-express`, jadi hoisted di lokal tapi tidak ikut di-bundle function Vercel). Pastikan `express` ada di `dependencies` backend — sudah ditambahkan (`^4.22.1`). |
-| Deploy sukses tapi `FUNCTION_INVOCATION_FAILED` / typecheck error `Module '@prisma/client' has no exported member 'Prisma'/'PrismaClient'/'TripStatus'...`, `Property 'trip' does not exist on type 'PrismaService'` | Prisma Client belum ter-generate saat Vercel me-bundle function (Vercel install ulang deps di phase bundle tanpa menjalankan build command). Sudah diatasi dengan `postinstall: prisma generate` di `backend/package.json` — pastikan ada, lalu redeploy. |
-| Typecheck error `Cannot find module '../tsconfig.base.json'` / `Property 'body' does not exist on type 'Request'` / `exception is of type 'unknown'` | `backend/tsconfig.json` dulu `extends ../tsconfig.base.json` yang **di luar Root Directory (`backend`)** — Vercel tidak bisa mengakses file di luar root, jadi fallback ke tsconfig strict default. Sudah diatasi: tsconfig base di-inline ke `backend/tsconfig.json`. Jangan pindahkan tsconfig ke luar folder `backend/`. |
+| Runtime `Cannot find module 'express'` / `@nestjs/*` / `@prisma/client` (Require stack: `/var/task/api/index.js`) | **Root Directory project salah (`backend`)** — Vercel tidak bisa mengakses node_modules store di root repo, sehingga handler `api/index.ts` (root) tidak bisa require deps yang di-hoist ke `backend/node_modules`. Fix: Root Directory = `/` (repo root) + `.npmrc` `shamefully-hoist=true`. Pastikan `express` juga terdaftar di `backend/package.json` dependencies. |
+| `Cannot find module './backend/src/main'` saat bundle | Path import di `api/index.ts` harus `../backend/src/main.ts` (naik satu level dari `api/` ke root). |
+| Deploy sukses tapi `FUNCTION_INVOCATION_FAILED` / typecheck error `Module '@prisma/client' has no exported member 'Prisma'/'PrismaClient'/'TripStatus'...`, `Property 'trip' does not exist on type 'PrismaService'` | Prisma Client belum ter-generate saat Vercel me-bundle function (Vercel install ulang deps di phase bundle tanpa menjalankan build command). Sudah diatasi dengan `postinstall` di root `package.json` (`pnpm --filter backend exec prisma generate`) + `prisma:generate` di `build:vercel` — pastikan keduanya ada, lalu redeploy. |
+| Typecheck error `Property 'body' does not exist on type 'Request'` / `exception is of type 'unknown'` / `Request has no call signatures` | tsconfig strict default Vercel saat tsconfig tidak ter-resolve. `backend/tsconfig.json` sudah inline (tidak extends file di luar), dan file terkait (`api/index.ts`, filter, interceptor) sudah diperbaiki typenya supaya strict-safe. |
 | `Property 'X' has no initializer` di DTO | Property DTO memakai `!` (definite assignment) supaya lolos `strictPropertyInitialization` (sudah diterapkan ke semua DTO). |
 | Build gagal `tsc: command not found` | `NODE_ENV=production` membuat pnpm skip `devDependencies`. Pastikan env Vercel **tidak** menge-set `NODE_ENV` saat install (Vercel default pakai `development` saat install), atau install dengan `NODE_ENV=development pnpm install`. |
 | Deploy gagal `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` | Lockfile tidak sinkron dengan `pnpm.overrides` di root `package.json`. Jalankan `CI=true pnpm install --no-frozen-lockfile` di root, commit lockfile yang ter-update, push ulang. |
@@ -398,9 +391,11 @@ Push ke branch → Cloudflare Pages auto-rebuild → `https://atur-perjalanan.pa
 
 ## 🔗 Referensi
 
-- `backend/vercel.json` — `framework: null` + rewrite semua request ke function `/api` (Root Directory Vercel = `backend`); install/build command di-override di sini
-- `backend/api/index.ts` — entry handler Vercel; memanggil `createApp()` dari `src/main.ts` (prefix `/v1`, CORS, filter, interceptor konsisten dengan lokal)
+- `vercel.json` (root) — `framework: null` + rewrite semua request ke function `/api` (Root Directory Vercel = `/`); install/build command di-override di sini
+- `api/index.ts` (root) — entry handler Vercel; import `createApp()` dari `../backend/src/main.ts` (prefix `/v1`, CORS, filter, interceptor konsisten dengan lokal)
+- `.npmrc` — `shamefully-hoist=true` (deps workspace di-hoist ke root `node_modules` supaya handler `/api` bisa require express/@nestjs/@prisma)
 - `backend/src/main.ts` — `createApp()` factory (dipakai lokal + serverless) dan `bootstrap()` (guard `VERCEL !== '1'`)
+- `backend/package.json` — script `build:vercel` (shared packages + prisma generate + nest build)
 - `backend/src/notifications/reminders.controller.ts` — endpoint cron
 - `mobile/eas.json` — profile build/submit EAS
 - `mobile/.env.production` — env production mobile
