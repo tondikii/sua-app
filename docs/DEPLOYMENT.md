@@ -81,7 +81,7 @@ CI=true pnpm install --no-frozen-lockfile
 4. **Root Directory**: `/` (repo root) — **jangan** `backend`; semua workspace deps di-hoist ke `backend/node_modules` + store `.pnpm` di root, dan function `api/index.ts` butuh akses ke semuanya.
 5. **Node.js Version**: `24.x` (cocok dengan `engines.node >= 20` dan Node runtime Vercel).
 6. **Build Command**: biarkan Vercel membaca `vercel.json` secara otomatis → akan jadi `pnpm --filter backend run build:vercel`.
-7. **Output Directory**: biarkan kosong (function `/api` yang menangani; tidak ada static output).
+7. **Output Directory**: `backend/dist` (output `nest build` — wajib di-set karena framework `Other` default mencari `public`; lihat `vercel.json` root). Semua request tetap di-rewrite ke function `/api`.
 8. Klik **Deploy** → tunggu build selesai → dapatkan URL `https://<project>.vercel.app`.
 
 > ⚠️ **Root Directory harus `/`**. Kalau ter-set `backend`, Vercel tidak bisa mengakses `node_modules` store di root → function crash `Cannot find module 'express'` / `@nestjs/*`. Cek di **Settings → Build & Development → Root Directory**. (Folder `.vercel/` lokal tidak di-commit, jadi yang berlaku adalah setting dashboard.)
