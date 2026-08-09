@@ -109,6 +109,8 @@ pnpm --filter backend run build:vercel
 
 > **Kenapa di-bundle?** Vercel tidak me-bundle import TypeScript relatif di luar folder `api/` pada runtime — handler mentah yang import `../backend/src/main.ts` akan crash `Cannot find module`. Dengan esbuild bundle, seluruh Nest app jadi satu file JS (`api/index.js`), sementara package eksternal (`express`, `@nestjs/*`, `@prisma/client`) tetap di-`require` dan resolve dari node_modules (Vercel menjalankan `pnpm install`). Handler juga memanggil `app.init()` eksplisit — dengan `ExpressAdapter` eksternal, route baru ter-mount setelah `init()` (tanpa ini semua route balas 404).
 
+> ⚠️ **`api/index.js` WAJIB di-commit** (tidak di-gitignore). Vercel hanya men-deploy `api/*` sebagai function jika file-nya ada di repo (file yang di-gitignore tidak di-clone → rewrite `/api` jadi 404). Build `build:vercel` selalu menimpa `api/index.js` dengan versi terbaru sebelum deploy.
+
 > **Catatan penting**: `prisma migrate deploy` **tidak** dijalankan di build Vercel. DB Supabase kamu satu-satunya (sama untuk dev/local/prod) dan sudah sinkron — perubahan skema ditangani manual via Supabase (lihat §1.4). `prisma generate` jalan otomatis via `postinstall` root + di build:vercel, jadi Prisma Client selalu siap saat Vercel me-bundle function.
 
 ## 1.3 Environment Variables (Production)

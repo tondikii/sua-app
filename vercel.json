@@ -4,6 +4,11 @@
   "buildCommand": "pnpm --filter backend run build:vercel",
   "outputDirectory": "backend/dist",
   "framework": null,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
