@@ -80,7 +80,6 @@ export default function SignIn() {
     try {
       await signInGoogle(token);
     } catch (err) {
-      console.log('ERR TONDIKI:', err);
       if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
         showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
       } else {
