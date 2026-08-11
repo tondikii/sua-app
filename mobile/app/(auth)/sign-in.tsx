@@ -85,7 +85,7 @@ export default function SignIn() {
       if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
         showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
       } else {
-        showToast('Gagal masuk pakai Google. Coba lagi ya.');
+        showToast('Gagal masuk pakai Google. Coba lagi ya 3.');
       }
     } finally {
       signingInRef.current = false;
@@ -105,7 +105,7 @@ export default function SignIn() {
           if (err instanceof ApiError && err.code === 'USER_LIMIT_REACHED') {
             showToast('Ups, kapasitas pengguna lagi penuh nih. Coba lagi nanti ya.');
           } else {
-            showToast('Gagal masuk pakai Google. Coba lagi ya.');
+            showToast('Gagal masuk pakai Google. Coba lagi ya 2.');
           }
         } finally {
           signingInRef.current = false;
@@ -117,7 +117,7 @@ export default function SignIn() {
 
   useEffect(() => {
     if (error) {
-      showToast('Gagal masuk pakai Google. Coba lagi ya.');
+      showToast(error.message || 'Gagal masuk pakai Google. Coba lagi ya 1.');
     }
   }, [error, showToast]);
 

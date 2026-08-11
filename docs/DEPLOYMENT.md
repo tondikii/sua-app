@@ -200,7 +200,7 @@ pnpm export:web        # output: mobile/dist (termasuk _redirects)
 ## 2.2 Buat Project di Cloudflare Pages
 
 1. Buka **dash.cloudflare.com** → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-2. Pilih repo `atur-perjalanan`, branch `m17` (atau production branch).
+2. Pilih repo `atur-perjalanan`, branch `development` (atau production branch).
 3. **Build settings**:
    - **Framework preset**: None
    - **Build command**: `pnpm --filter mobile export:web`
