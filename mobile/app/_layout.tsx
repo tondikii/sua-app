@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Redirect, Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -45,20 +45,38 @@ function MobileContainer({ children, backdropColor }: { children: ReactNode; bac
 function RootGate({ children }: { children: ReactNode }) {
   const { isHydrated, isAuthenticated, user } = useAuth();
   const pathname = usePathname();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('has_completed_onboarding').then((val) => {
+      setHasCompletedOnboarding(val === 'true');
+      setOnboardingChecked(true);
+    });
+  }, []);
 
   // Subscribe to real-time notifications when authenticated
   useNotificationsSubscription(user?.id);
   // Register the device for push notifications (native only)
   usePushNotifications(user?.id);
 
-  if (!isHydrated) return null;
+  if (!isHydrated || !onboardingChecked) return null;
 
   // Auth guard at the ROOT level — covers screens outside `(tabs)` (settings,
   // notifications, profile, trip) that the tabs layout guard can't reach.
   // `(auth)` routes are exempt so sign-in/onboarding stay reachable.
-  const isAuthRoute = pathname.startsWith('/(auth)') || pathname === '/sign-in' || pathname === '/onboarding';
-  if (!isAuthenticated && !isAuthRoute) {
-    return <Redirect href="/(auth)/sign-in" />;
+  const isAuthRoute =
+    pathname.startsWith('/(auth)') || pathname === '/sign-in' || pathname === '/onboarding';
+
+  if (!isAuthenticated) {
+    // First-time users (onboarding not done) go to the onboarding flow first;
+    // returning users go straight to sign-in.
+    if (!hasCompletedOnboarding && !isAuthRoute) {
+      return <Redirect href="/(auth)/onboarding" />;
+    }
+    if (!isAuthRoute) {
+      return <Redirect href="/(auth)/sign-in" />;
+    }
   }
 
   return (
