@@ -115,7 +115,7 @@ function ActivityItemRow({
   const isPast = timeState === 'past';
 
   return (
-    <View style={[styles.itemRow, { opacity: stateMeta.opacity }]}>
+    <View style={styles.itemRow}>
       <View style={styles.dotColumn}>
         <View style={[styles.dotRing, { backgroundColor: stateMeta.ringColor }]}>
           <View
@@ -172,11 +172,11 @@ function ActivityItemRow({
             )}
 
             <View style={styles.itemInfo}>
-              <Text style={styles.itemTitle} numberOfLines={1}>{activity.place_name}</Text>
+              <Text style={[styles.itemTitle, isPast && styles.itemTitlePast]} numberOfLines={1}>{activity.place_name}</Text>
               {activity.location_label && (
                 <View style={styles.locationRow}>
-                  <MapPin size={11} color={colors.muted} />
-                  <Text style={styles.locationText} numberOfLines={1}>{activity.location_label}</Text>
+                  <MapPin size={11} color={isPast ? colors.mutedLight : colors.muted} />
+                  <Text style={[styles.locationText, isPast && styles.locationTextPast]} numberOfLines={1}>{activity.location_label}</Text>
                 </View>
               )}
             </View>
@@ -454,6 +454,13 @@ const styles = StyleSheet.create({
   },
   itemCardPast: {
     backgroundColor: colors.light,
+    borderColor: colors.border,
+  },
+  itemTitlePast: {
+    color: colors.muted,
+  },
+  locationTextPast: {
+    color: colors.mutedLight,
   },
   itemCardWrap: {
     flex: 1,

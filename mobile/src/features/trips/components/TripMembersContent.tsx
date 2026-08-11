@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Platform,
   Image,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCreateInvitation } from '@/features/invitations/hooks/useCreateInvitation';
@@ -160,13 +161,14 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
 
   return (
     <>
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {isLoading ? (
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.coral} />
         </View>
@@ -314,6 +316,7 @@ export function TripMembersContent({ tripId, isCreator, currentUserId }: TripMem
         </>
       )}
       </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Remove member confirmation modal */}
       <ConfirmModal

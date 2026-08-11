@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -62,6 +62,7 @@ export default function SignIn() {
   const { showToast } = useToast();
   const router = useRouter();
   const signingInRef = useRef(false);
+  const [signingIn, setSigningIn] = useState(false);
 
   // Native flow: promptAsync resolves the id_token directly.
   // Web flow: id_token arrives via the URL hash and is picked up below.
@@ -77,6 +78,7 @@ export default function SignIn() {
     const token = await promptAsync();
     if (!token || signingInRef.current) return;
     signingInRef.current = true;
+    setSigningIn(true);
     try {
       await signInGoogle(token);
     } catch (err) {
@@ -87,6 +89,7 @@ export default function SignIn() {
       }
     } finally {
       signingInRef.current = false;
+      setSigningIn(false);
     }
   };
 
@@ -94,6 +97,7 @@ export default function SignIn() {
   useEffect(() => {
     if (idToken && !signingInRef.current) {
       signingInRef.current = true;
+      setSigningIn(true);
       (async () => {
         try {
           await signInGoogle(idToken);
@@ -105,6 +109,7 @@ export default function SignIn() {
           }
         } finally {
           signingInRef.current = false;
+          setSigningIn(false);
         }
       })();
     }
@@ -167,11 +172,15 @@ export default function SignIn() {
             style={styles.googleButton}
             onPress={handleGoogleSignIn}
             activeOpacity={0.9}
-            disabled={loading}
+            disabled={loading || signingIn}
           >
-            {loading ? <ActivityIndicator color={theme.colors.white} /> : <GoogleIcon />}
+            {loading || signingIn ? (
+              <ActivityIndicator color={theme.colors.white} />
+            ) : (
+              <GoogleIcon />
+            )}
             <Text style={styles.googleButtonText}>
-              {loading ? 'Sebentar...' : 'Lanjutkan dengan Google'}
+              {loading || signingIn ? 'Sebentar...' : 'Lanjutkan dengan Google'}
             </Text>
           </TouchableOpacity>
 
@@ -194,6 +203,15 @@ export default function SignIn() {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {signingIn && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.coral} />
+            <Text style={styles.loadingText}>Sedang masuk…</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -346,5 +364,21 @@ const styles = StyleSheet.create({
   legalLink: {
     color: theme.colors.coral,
     fontFamily: 'PlusJakartaSans_600SemiBold',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  loadingCard: {
+    alignItems: 'center',
+    gap: 14,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontFamily: 'PlusJakartaSans_700Bold',
+    color: theme.colors.charcoal,
   },
 });

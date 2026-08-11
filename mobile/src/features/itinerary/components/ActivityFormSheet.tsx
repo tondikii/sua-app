@@ -172,7 +172,7 @@ export function ActivityFormSheet({
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
         style={styles.backdrop}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>

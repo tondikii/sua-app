@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
@@ -114,7 +115,7 @@ export default function SearchScreen() {
   const showResults = debouncedQuery.trim().length >= 2;
 
   return (
-    <View style={styles.screen}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* Search bar */}
       <View style={[styles.searchBarContainer, { paddingTop: insets.top + 12 }]}>
         <View style={[styles.searchBar, (searchFocused || query.length > 0) && styles.searchBarFocused]}>
@@ -199,7 +200,7 @@ export default function SearchScreen() {
           </View>
         )
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -217,10 +218,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 10,
   },
-  searchBarFocused: { borderColor: colors.coral, shadowColor: colors.coral, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 2 },
+  searchBarFocused: { borderColor: colors.coral, borderWidth: 2 },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
   clearBtn: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  idleContainer: { flex: 1, paddingHorizontal: 22, paddingTop: 16 },
+  idleContainer: { flex: 1, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 110 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   sectionLabel: { fontSize: 12, fontFamily: 'PlusJakartaSans_700Bold', color: colors.muted, letterSpacing: 0.5 },
   helperText: { ...typography.body, color: colors.mutedLight, textAlign: 'center', marginTop: 40, paddingHorizontal: 20 },
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   emptyIconContainer: { width: 72, height: 72, borderRadius: 24, backgroundColor: colors.light, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   emptyTitle: { fontSize: 17, fontFamily: 'PlusJakartaSans_800ExtraBold', color: colors.charcoal, marginBottom: 8, letterSpacing: -0.3 },
   emptyDesc: { ...typography.body, color: colors.muted, textAlign: 'center', lineHeight: 20 },
-  resultsContainer: { flex: 1, paddingHorizontal: 22 },
+  resultsContainer: { flex: 1, paddingHorizontal: 22, paddingBottom: 110 },
   resultCount: { fontSize: 12, fontFamily: 'PlusJakartaSans_600SemiBold', color: colors.muted, marginBottom: 12 },
   userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, gap: 12 },
   userAvatar: { width: 44, height: 44, borderRadius: 15, overflow: 'hidden' },

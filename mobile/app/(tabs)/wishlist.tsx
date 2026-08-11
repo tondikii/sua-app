@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   // Search
   searchContainer: { paddingHorizontal: 22, paddingTop: 14 },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.light, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, gap: 10, borderWidth: 1.5, borderColor: colors.border },
-  searchBarFocused: { borderColor: colors.coral, shadowColor: colors.coral, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 2 },
+  searchBarFocused: { borderColor: colors.coral, borderWidth: 2 },
   searchInput: { flex: 1, fontSize: 14, fontFamily: 'PlusJakartaSans_400Regular', color: colors.charcoal },
   clearBtn: { width: 20, height: 20, borderRadius: 10, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center' },
   // Sort tabs

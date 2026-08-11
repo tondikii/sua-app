@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,9 @@ import { useAuth } from '@/auth/AuthProvider';
 import { ItineraryTimeline } from '@/features/itinerary/components/ItineraryTimeline';
 import { ActivityFormSheet } from '@/features/itinerary/components/ActivityFormSheet';
 import { ActivityDetailSheet } from '@/features/itinerary/components/ActivityDetailSheet';
+import { InviteBottomSheet } from '@/features/invitations/components/InviteBottomSheet';
 import { Plus } from '@/components/icons/Plus';
+import { Send } from '@/components/icons/Send';
 import { VotingTabContent } from './voting';
 import { ChatTabContent } from './chat';
 import { MediaTabContent } from './media';
@@ -51,6 +53,21 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'chat', label: 'Chat' },
   { key: 'media', label: 'Media' },
 ];
+
+/** 0-based day index whose date equals today, or -1 if today is outside the
+ * trip's [start_date, end_date] range. */
+function dayIndexForToday(startDate: string, endDate: string): number {
+  const parseYMD = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const start = parseYMD(startDate);
+  const end = parseYMD(endDate);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (today < start || today > end) return -1;
+  return Math.round((today.getTime() - start.getTime()) / 86400000);
+}
 
 export default function TripDetailScreen() {
   const { tripId } = useLocalSearchParams<{ tripId: string }>();
@@ -83,6 +100,7 @@ export default function TripDetailScreen() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [detailActivity, setDetailActivity] = useState<TripActivity | null>(null);
   const [editingActivity, setEditingActivity] = useState<TripActivity | null>(null);
@@ -103,6 +121,18 @@ export default function TripDetailScreen() {
         trip.status,
       )
     : '';
+
+  // Default the selected day to today when today falls within the trip range.
+  // Runs once after the trip loads; afterwards the user's selection wins.
+  const dayInitRef = useRef(false);
+  useEffect(() => {
+    if (dayInitRef.current || !trip?.start_date || !trip?.end_date) return;
+    const idx = dayIndexForToday(trip.start_date, trip.end_date);
+    if (idx >= 0) {
+      setActiveDayIndex(idx);
+    }
+    dayInitRef.current = true;
+  }, [trip?.start_date, trip?.end_date]);
 
   const handlePressItem = useCallback((activity: TripActivity) => {
     setMenuOpenId(null);
@@ -258,6 +288,20 @@ export default function TripDetailScreen() {
               style={styles.menuItem}
               onPress={() => {
                 setShowMenu(false);
+                setShowInvite(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconBox, { backgroundColor: colors.coralLight }]}>
+                <Send size={16} color={colors.coral} />
+              </View>
+              <Text style={styles.menuItemText}>Undang Teman</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowMenu(false);
                 router.push(`/trip/${tripId}/members`);
               }}
               activeOpacity={0.7}
@@ -363,12 +407,12 @@ export default function TripDetailScreen() {
                   ? chatCount
                   : mediaCount;
           // Badge rules (docs/FIGMA.md "Trip Detail — Tab Structure"):
-          // - Itinerary: hidden jika 0
+          // - Itinerary: selalu tampil termasuk 0 (counter tetap terlihat meski belum ada aktivitas)
           // - Voting: selalu tampil termasuk 0
           // - Chat: unread saja (hanya jika > 0 dan tab tidak aktif)
           // - Media: selalu tampil termasuk 0
           const showBadge =
-            tab.key === 'itinerary' ? count > 0 : tab.key === 'chat' ? count > 0 && !active : true;
+            tab.key === 'itinerary' ? true : tab.key === 'chat' ? count > 0 && !active : true;
           return (
             <TouchableOpacity
               key={tab.key}
@@ -552,6 +596,14 @@ export default function TripDetailScreen() {
         dateLabel={dateRange}
         onClose={() => setShowCalendar(false)}
         onAdded={() => setShowCalendar(false)}
+      />
+
+      {/* Undang Teman (Screen 35–40) */}
+      <InviteBottomSheet
+        visible={showInvite}
+        tripId={tripId}
+        onClose={() => setShowInvite(false)}
+        onEnterTrip={() => setShowInvite(false)}
       />
     </View>
   );
@@ -752,12 +804,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
-    paddingBottom: 20,
+    paddingBottom: 90,
     flexGrow: 1,
   },
   createFab: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+    zIndex: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

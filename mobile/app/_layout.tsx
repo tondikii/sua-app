@@ -22,6 +22,12 @@ import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
 import { ToastProvider } from '../src/components/Toast';
 import { useNotificationsSubscription } from '../src/realtime/useNotificationsSubscription';
 import { usePushNotifications } from '../src/features/notifications/push/usePushNotifications';
+import { captureWebGoogleToken } from '../src/lib/webGoogleToken';
+
+// Capture the Google web OAuth id_token from the URL hash at the earliest
+// possible moment — before index.tsx's client-side redirect to /(auth)/sign-in
+// rewrites the URL and drops the hash. See src/lib/webGoogleToken.ts.
+captureWebGoogleToken();
 
 const persister = createAsyncStoragePersister({ storage: AsyncStorage });
 

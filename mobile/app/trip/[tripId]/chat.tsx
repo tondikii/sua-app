@@ -452,6 +452,7 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
+          style={styles.messagesList}
           contentContainerStyle={styles.messagesContent}
           inverted={false}
           onEndReached={() => {
@@ -589,6 +590,7 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.light },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  messagesList: { flex: 1 },
   messagesContent: { padding: 16, paddingBottom: 8, gap: 12 },
 
   // ── Empty state ─────────────────────────────────────────────

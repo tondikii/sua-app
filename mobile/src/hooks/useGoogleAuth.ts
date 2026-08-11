@@ -5,11 +5,19 @@ import {
   statusCodes,
   type User as GoogleUser,
 } from '@react-native-google-signin/google-signin';
+import { consumeWebGoogleToken } from '@/lib/webGoogleToken';
 
 const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
 
-/** Capture id_token from URL hash at module load (web OAuth redirect). */
+/**
+ * Read the Google web OAuth id_token. It is stashed in sessionStorage by
+ * `captureWebGoogleToken()` (called at the root layout, before any route
+ * redirect drops the URL hash). If that's unavailable, fall back to reading
+ * the hash directly. See src/lib/webGoogleToken.ts.
+ */
 const pendingWebIdToken: string | null = (() => {
+  const stored = consumeWebGoogleToken();
+  if (stored) return stored;
   if (typeof window === 'undefined') return null;
   const hash = window.location.hash;
   if (!hash) return null;
@@ -30,7 +38,12 @@ const pendingWebIdToken: string | null = (() => {
  * "invalid_request / Akses diblokir" errors do not apply. `webClientId` lets
  * the SDK return an id_token that the backend validates.
  *
- * Web: redirect-based flow that returns an id_token in the URL hash.
+ * Web: redirect-based implicit flow (`response_type=id_token`). Google
+ * redirects back to `redirect_uri` with the id_token in the URL hash. The
+ * `redirect_uri` MUST be registered as an Authorized redirect URI in Google
+ * Cloud (for local dev this is `http://localhost:8081`, already registered).
+ * For the production web origin (e.g. pages.dev) add that origin to the
+ * Authorized redirect URIs too — see issues.md / README deployment notes.
  */
 export function useGoogleAuth() {
   const [idToken, setIdToken] = useState<string | null>(pendingWebIdToken);
