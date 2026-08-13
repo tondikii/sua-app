@@ -16,9 +16,34 @@ import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
+const require = createRequire(import.meta.url);
 const backendRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = path.resolve(backendRoot, '..');
+
+/**
+ * Inline the workspace packages (`@atur-perjalanan/*`) into the bundle so the
+ * deployed `api/index.js` is self-contained for the Zod schemas. Other npm
+ * packages stay external and resolve from node_modules at runtime.
+ *
+ * Without this, Vercel resolves `@atur-perjalanan/shared-validation` from the
+ * workspace `dist/` on the server — which can go stale if the build cache is
+ * restored, causing "Validation failed" from an old schema even after redeploy.
+ */
+const inlineWorkspacePackages = {
+  name: 'inline-workspace-packages',
+  setup(build) {
+    for (const pkg of ['@atur-perjalanan/shared-validation', '@atur-perjalanan/shared-types']) {
+      build.onResolve({ filter: new RegExp(`^${pkg.replace('/', '\\/')}$`) }, (args) => {
+        return {
+          path: require.resolve(pkg, { paths: [backendRoot] }),
+          namespace: 'file',
+        };
+      });
+    }
+  },
+};
 
 mkdirSync(path.join(repoRoot, 'api'), { recursive: true });
 
@@ -30,6 +55,7 @@ await build({
   format: 'cjs',
   target: 'node20',
   packages: 'external',
+  plugins: [inlineWorkspacePackages],
   sourcemap: false,
   logLevel: 'info',
 });

@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -18,14 +18,11 @@ export async function createApp(
   // Global prefix
   app.setGlobalPrefix('v1');
 
-  // Global validation pipe — strip unknown fields, transform types
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  // NOTE: No global ValidationPipe here. All request bodies are validated
+  // per-endpoint with ZodValidationPipe (shared-validation schemas). A global
+  // class-validator pipe with `forbidNonWhitelisted` rejects type-alias bodies
+  // (metatype Object) before the Zod pipe runs — which broke /auth/google and
+  // every other Zod-validated endpoint with "Validation failed".
 
   // Global exception filter — structured JSON error envelope
   app.useGlobalFilters(new HttpExceptionFilter());

@@ -26,7 +26,7 @@ CREATE TYPE "MessageKind" AS ENUM ('text', 'photo', 'video');
 CREATE TYPE "MediaType" AS ENUM ('photo', 'video');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('invite', 'follow', 'voting_deadline', 'activity_update');
+CREATE TYPE "NotificationType" AS ENUM ('invite', 'follow', 'voting_deadline', 'activity_update', 'trip_start_soon');
 
 -- CreateEnum
 CREATE TYPE "PriorityLevel" AS ENUM ('high', 'medium', 'low');
@@ -43,6 +43,9 @@ CREATE TABLE "users" (
     "website_url" TEXT,
     "location_label" TEXT,
     "is_public" BOOLEAN NOT NULL DEFAULT true,
+    "google_access_token" TEXT,
+    "google_refresh_token" TEXT,
+    "google_token_expires_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -145,7 +148,9 @@ CREATE TABLE "trip_poll_options" (
     "poll_id" UUID NOT NULL,
     "label" TEXT NOT NULL,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
-    "candidate_id" UUID,
+    "candidate_id" TEXT,
+    "maps_link" TEXT,
+    "ref_links" JSONB NOT NULL DEFAULT '[]',
 
     CONSTRAINT "trip_poll_options_pkey" PRIMARY KEY ("id")
 );
@@ -178,6 +183,7 @@ CREATE TABLE "trip_activities" (
     "cover_document_id" UUID,
     "thumbnail_url" TEXT,
     "sort_order" INTEGER NOT NULL DEFAULT 0,
+    "day_number" INTEGER NOT NULL DEFAULT 1,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
 
@@ -217,7 +223,9 @@ CREATE TABLE "trip_documents" (
     "media_type" "MediaType" NOT NULL,
     "storage_key" TEXT NOT NULL,
     "storage_url" TEXT NOT NULL,
+    "media_duration" TEXT,
     "from_chat" BOOLEAN NOT NULL DEFAULT false,
+    "message_id" UUID,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "trip_documents_pkey" PRIMARY KEY ("id")
@@ -238,6 +246,18 @@ CREATE TABLE "notifications" (
 );
 
 -- CreateTable
+CREATE TABLE "push_tokens" (
+    "id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "token" TEXT NOT NULL,
+    "platform" VARCHAR(16) NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
+
+    CONSTRAINT "push_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "wishlists" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
@@ -246,6 +266,8 @@ CREATE TABLE "wishlists" (
     "end_time" TIME,
     "location_label" TEXT,
     "link" TEXT,
+    "maps_link" TEXT,
+    "ref_links" JSONB NOT NULL DEFAULT '[]',
     "notes" TEXT,
     "tags" JSONB NOT NULL DEFAULT '[]',
     "priority_level" "PriorityLevel" NOT NULL DEFAULT 'medium',
@@ -265,6 +287,12 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
+
+-- CreateIndex
+CREATE INDEX "push_tokens_user_id_idx" ON "push_tokens"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "push_tokens_user_id_token_key" ON "push_tokens"("user_id", "token");
 
 -- AddForeignKey
 ALTER TABLE "follows" ADD CONSTRAINT "follows_follower_id_fkey" FOREIGN KEY ("follower_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -312,9 +340,6 @@ ALTER TABLE "trip_polls" ADD CONSTRAINT "trip_polls_created_by_fkey" FOREIGN KEY
 ALTER TABLE "trip_poll_options" ADD CONSTRAINT "trip_poll_options_poll_id_fkey" FOREIGN KEY ("poll_id") REFERENCES "trip_polls"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "trip_poll_options" ADD CONSTRAINT "trip_poll_options_candidate_id_fkey" FOREIGN KEY ("candidate_id") REFERENCES "trip_date_candidates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "trip_poll_votes" ADD CONSTRAINT "trip_poll_votes_poll_id_fkey" FOREIGN KEY ("poll_id") REFERENCES "trip_polls"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -351,6 +376,9 @@ ALTER TABLE "trip_documents" ADD CONSTRAINT "trip_documents_trip_id_fkey" FOREIG
 ALTER TABLE "trip_documents" ADD CONSTRAINT "trip_documents_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "trip_documents" ADD CONSTRAINT "trip_documents_message_id_fkey" FOREIGN KEY ("message_id") REFERENCES "trip_messages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -358,6 +386,9 @@ ALTER TABLE "notifications" ADD CONSTRAINT "notifications_actor_id_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_trip_id_fkey" FOREIGN KEY ("trip_id") REFERENCES "trips"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "push_tokens" ADD CONSTRAINT "push_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

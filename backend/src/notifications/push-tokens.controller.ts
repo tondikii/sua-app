@@ -9,18 +9,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { IsIn, IsString } from 'class-validator';
+import { RegisterPushTokenSchema } from '@atur-perjalanan/shared-validation';
+import type { RegisterPushTokenInput } from '@atur-perjalanan/shared-validation';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators/current-user.decorator';
 import { PushTokensService } from './push-tokens.service';
-
-class RegisterPushTokenDto {
-  @IsString()
-  token!: string;
-
-  @IsIn(['ios', 'android'])
-  platform!: 'ios' | 'android';
-}
 
 @ApiTags('push-tokens')
 @ApiBearerAuth()
@@ -33,7 +27,7 @@ export class PushTokensController {
   @Post()
   register(
     @CurrentUser() user: CurrentUserPayload,
-    @Body() dto: RegisterPushTokenDto,
+    @Body(new ZodValidationPipe(RegisterPushTokenSchema)) dto: RegisterPushTokenInput,
   ) {
     return this.pushTokensService.register(user.userId, dto);
   }

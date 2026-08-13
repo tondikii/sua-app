@@ -575,6 +575,189 @@ var require_auth_service = __commonJS({
   }
 });
 
+// ../packages/shared-validation/dist/index.js
+var require_dist = __commonJS({
+  "../packages/shared-validation/dist/index.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.ConvertToTripSchema = exports2.UpdateWishlistSchema = exports2.CreateWishlistSchema = exports2.RegisterPushTokenSchema = exports2.MarkAsReadSchema = exports2.CreateNotificationSchema = exports2.VoteDateCandidateSchema = exports2.VoteSchema = exports2.UpdatePollSchema = exports2.CreatePollSchema = exports2.CreateDocumentSchema = exports2.PresignUploadSchema = exports2.SetTripCoverSchema = exports2.RespondInvitationSchema = exports2.CreateInvitationSchema = exports2.CreateMessageSchema = exports2.UpdateActivitySchema = exports2.CreateActivitySchema = exports2.UpdateTripSchema = exports2.CreateTripSchema = exports2.UpdateAvatarSchema = exports2.PresignAvatarSchema = exports2.UpdateUserSchema = exports2.SearchUsersSchema = exports2.CheckUsernameSchema = exports2.CompleteRegistrationSchema = exports2.GoogleAuthSchema = exports2.PRIORITY_LEVELS = void 0;
+    var zod_1 = require("zod");
+    var TIME_HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+    exports2.PRIORITY_LEVELS = ["high", "medium", "low"];
+    exports2.GoogleAuthSchema = zod_1.z.object({
+      id_token: zod_1.z.string()
+    });
+    exports2.CompleteRegistrationSchema = zod_1.z.object({
+      username: zod_1.z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+    });
+    exports2.CheckUsernameSchema = zod_1.z.object({
+      username: zod_1.z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+    });
+    exports2.SearchUsersSchema = zod_1.z.object({
+      q: zod_1.z.string().min(1),
+      cursor: zod_1.z.string().optional(),
+      limit: zod_1.z.coerce.number().optional()
+    });
+    exports2.UpdateUserSchema = zod_1.z.object({
+      name: zod_1.z.string().trim().min(1).max(255).optional(),
+      bio: zod_1.z.string().max(150).optional(),
+      website_url: zod_1.z.string().url().max(255).optional(),
+      location_label: zod_1.z.string().max(100).optional(),
+      is_public: zod_1.z.union([zod_1.z.boolean(), zod_1.z.literal("true"), zod_1.z.literal("false")]).transform((v) => v === true || v === "true").optional()
+    });
+    exports2.PresignAvatarSchema = zod_1.z.object({
+      content_type: zod_1.z.string()
+    });
+    exports2.UpdateAvatarSchema = zod_1.z.object({
+      storage_key: zod_1.z.string()
+    });
+    var DateCandidateSchema = zod_1.z.object({
+      start_date: zod_1.z.string().datetime(),
+      end_date: zod_1.z.string().datetime()
+    });
+    exports2.CreateTripSchema = zod_1.z.object({
+      name: zod_1.z.string().max(255),
+      tags: zod_1.z.array(zod_1.z.string()).optional(),
+      start_date: zod_1.z.string().datetime().optional(),
+      end_date: zod_1.z.string().datetime().optional(),
+      is_all_day: zod_1.z.boolean().optional(),
+      start_time: zod_1.z.string().regex(TIME_HHMM, "start_time must be in HH:MM format").optional(),
+      end_time: zod_1.z.string().regex(TIME_HHMM, "end_time must be in HH:MM format").optional(),
+      candidates: zod_1.z.array(DateCandidateSchema).optional(),
+      voting_deadline: zod_1.z.string().datetime().optional()
+    });
+    exports2.UpdateTripSchema = zod_1.z.object({
+      name: zod_1.z.string().max(255).optional(),
+      tags: zod_1.z.array(zod_1.z.string()).optional(),
+      start_date: zod_1.z.string().datetime().optional(),
+      end_date: zod_1.z.string().datetime().optional(),
+      is_all_day: zod_1.z.boolean().optional(),
+      start_time: zod_1.z.string().regex(TIME_HHMM, "start_time must be in HH:MM format").optional(),
+      end_time: zod_1.z.string().regex(TIME_HHMM, "end_time must be in HH:MM format").optional(),
+      is_public: zod_1.z.boolean().optional()
+    });
+    var RefLinkSchema = zod_1.z.object({
+      url: zod_1.z.string().url(),
+      label: zod_1.z.string().max(255).optional()
+    });
+    var ActivityKindEnum = zod_1.z.enum(["gather", "transport", "meal", "activity", "destination"]);
+    var CoverSourceEnum = zod_1.z.enum(["none", "maps", "trip_media", "device", "icon"]);
+    exports2.CreateActivitySchema = zod_1.z.object({
+      place_name: zod_1.z.string().max(255),
+      activity_date: zod_1.z.string().datetime().optional(),
+      day_number: zod_1.z.number().int().min(1).optional(),
+      start_time: zod_1.z.string().regex(TIME_HHMM),
+      end_time: zod_1.z.string().regex(TIME_HHMM),
+      kind: ActivityKindEnum.optional(),
+      description: zod_1.z.string().optional(),
+      location_label: zod_1.z.string().optional(),
+      maps_link: zod_1.z.string().url().optional(),
+      ref_links: zod_1.z.array(RefLinkSchema).optional(),
+      cover_source: CoverSourceEnum.optional(),
+      cover_icon: zod_1.z.string().optional(),
+      cover_document_id: zod_1.z.string().uuid().nullable().optional(),
+      thumbnail_url: zod_1.z.string().nullable().optional(),
+      sort_order: zod_1.z.number().optional()
+    });
+    exports2.UpdateActivitySchema = exports2.CreateActivitySchema.partial();
+    exports2.CreateMessageSchema = zod_1.z.object({
+      message_kind: zod_1.z.enum(["text", "photo", "video"]),
+      message_text: zod_1.z.string().max(2e3).optional(),
+      media_url: zod_1.z.string().optional(),
+      media_duration_seconds: zod_1.z.number().int().min(0).optional(),
+      reply_to_id: zod_1.z.string().uuid().optional()
+    });
+    exports2.CreateInvitationSchema = zod_1.z.object({
+      username: zod_1.z.string().optional(),
+      email: zod_1.z.string().email().optional()
+    });
+    exports2.RespondInvitationSchema = zod_1.z.object({
+      accept: zod_1.z.boolean()
+    });
+    exports2.SetTripCoverSchema = zod_1.z.object({
+      document_id: zod_1.z.string().uuid()
+    });
+    exports2.PresignUploadSchema = zod_1.z.object({
+      trip_id: zod_1.z.string().uuid(),
+      media_type: zod_1.z.enum(["photo", "video"]),
+      content_type: zod_1.z.string()
+    });
+    exports2.CreateDocumentSchema = zod_1.z.object({
+      storage_key: zod_1.z.string(),
+      media_type: zod_1.z.enum(["photo", "video"])
+    });
+    var PollRefLinkSchema = zod_1.z.object({
+      url: zod_1.z.string().url("ref link url must be a valid URL"),
+      label: zod_1.z.string().max(255).optional()
+    });
+    var PollOptionSchema = zod_1.z.union([
+      zod_1.z.string(),
+      zod_1.z.object({
+        label: zod_1.z.string(),
+        candidate_id: zod_1.z.string().optional(),
+        start_date: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "start_date must be a date in YYYY-MM-DD format").optional(),
+        end_date: zod_1.z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "end_date must be a date in YYYY-MM-DD format").optional(),
+        maps_link: zod_1.z.string().url("maps_link must be a valid URL").optional(),
+        ref_links: zod_1.z.array(PollRefLinkSchema).optional()
+      })
+    ]);
+    exports2.CreatePollSchema = zod_1.z.object({
+      title: zod_1.z.string().max(255),
+      poll_type: zod_1.z.enum(["tanggal", "aktivitas", "lainnya"]),
+      options: zod_1.z.array(PollOptionSchema).min(1).max(10),
+      deadline: zod_1.z.string().datetime().optional()
+    });
+    exports2.UpdatePollSchema = exports2.CreatePollSchema.partial().extend({
+      options: zod_1.z.array(PollOptionSchema).min(1).max(10).optional()
+    });
+    exports2.VoteSchema = zod_1.z.object({
+      option_id: zod_1.z.string().uuid()
+    });
+    exports2.VoteDateCandidateSchema = zod_1.z.object({
+      candidate_id: zod_1.z.string().uuid()
+    });
+    exports2.CreateNotificationSchema = zod_1.z.object({
+      userId: zod_1.z.string(),
+      type: zod_1.z.enum(["invite", "follow", "voting_deadline", "activity_update"]),
+      actorId: zod_1.z.string().optional(),
+      tripId: zod_1.z.string().optional(),
+      payload: zod_1.z.record(zod_1.z.unknown()).optional()
+    });
+    exports2.MarkAsReadSchema = zod_1.z.object({
+      is_read: zod_1.z.boolean().optional()
+    });
+    exports2.RegisterPushTokenSchema = zod_1.z.object({
+      token: zod_1.z.string().min(1),
+      platform: zod_1.z.enum(["ios", "android"])
+    });
+    exports2.CreateWishlistSchema = zod_1.z.object({
+      place_name: zod_1.z.string().max(255),
+      start_time: zod_1.z.string().regex(TIME_HHMM, "start_time must be in HH:MM format").optional(),
+      end_time: zod_1.z.string().regex(TIME_HHMM, "end_time must be in HH:MM format").optional(),
+      location_label: zod_1.z.string().optional(),
+      maps_link: zod_1.z.string().url("maps_link must be a valid URL").optional(),
+      ref_links: zod_1.z.array(zod_1.z.object({
+        url: zod_1.z.string().url("ref link url must be a valid URL"),
+        label: zod_1.z.string().optional()
+      })).optional(),
+      notes: zod_1.z.string().optional(),
+      tags: zod_1.z.array(zod_1.z.string()).optional(),
+      priority_level: zod_1.z.enum(exports2.PRIORITY_LEVELS).optional(),
+      thumbnail_url: zod_1.z.string().optional()
+    });
+    exports2.UpdateWishlistSchema = exports2.CreateWishlistSchema.partial();
+    exports2.ConvertToTripSchema = zod_1.z.object({
+      trip_name: zod_1.z.string().max(255).optional(),
+      tags: zod_1.z.array(zod_1.z.string()).optional(),
+      start_date: zod_1.z.string().datetime(),
+      end_date: zod_1.z.string().datetime(),
+      is_all_day: zod_1.z.boolean().optional(),
+      start_time: zod_1.z.string().regex(TIME_HHMM, "start_time must be in HH:MM format").optional(),
+      end_time: zod_1.z.string().regex(TIME_HHMM, "end_time must be in HH:MM format").optional()
+    });
+  }
+});
+
 // dist/common/pipes/zod-validation.pipe.js
 var require_zod_validation_pipe = __commonJS({
   "dist/common/pipes/zod-validation.pipe.js"(exports2) {
@@ -681,7 +864,7 @@ var require_auth_controller = __commonJS({
     var common_1 = require("@nestjs/common");
     var swagger_1 = require("@nestjs/swagger");
     var auth_service_1 = require_auth_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
@@ -1057,7 +1240,15 @@ var require_users_service = __commonJS({
         if (!user.isPublic && user.id !== viewerUserId) {
           throw new common_1.ForbiddenException({ code: "PROFILE_PRIVATE", message: "This profile is private" });
         }
-        return user_serializer_1.UserSummarySerializer.toProfile(user, this.r2);
+        const isOwner = user.id === viewerUserId;
+        const tripCount = await this.prisma.trip.count({
+          where: {
+            OR: [{ creatorId: user.id }, { participants: { some: { userId: user.id } } }],
+            deletedAt: null,
+            ...isOwner ? {} : { isPublic: true }
+          }
+        });
+        return user_serializer_1.UserSummarySerializer.toProfile({ ...user, _count: { tripsCreated: tripCount } }, this.r2);
       }
       async getUserTrips(username, viewerUserId, cursor, limit = 20) {
         const take = Math.min(limit, 100);
@@ -1071,7 +1262,7 @@ var require_users_service = __commonJS({
         const isOwner = user.id === viewerUserId;
         const trips = await this.prisma.trip.findMany({
           where: {
-            creatorId: user.id,
+            OR: [{ creatorId: user.id }, { participants: { some: { userId: user.id } } }],
             deletedAt: null,
             ...isOwner ? {} : { isPublic: true },
             ...cursor ? { id: { lt: cursor } } : {}
@@ -1180,7 +1371,7 @@ var require_users_controller = __commonJS({
     var users_service_1 = require_users_service();
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var UsersController = class UsersController {
       constructor(usersService) {
@@ -2768,7 +2959,7 @@ var require_trips_controller = __commonJS({
     var current_user_decorator_1 = require_current_user_decorator();
     var trips_service_1 = require_trips_service();
     var invitations_service_1 = require_invitations_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var TripsController = class TripsController {
       constructor(tripsService, invitationsService) {
@@ -3573,7 +3764,7 @@ var require_voting_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var voting_service_1 = require_voting_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var VotingController = class VotingController {
       constructor(votingService) {
@@ -4307,7 +4498,7 @@ var require_activity_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var activity_service_1 = require_activity_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var ActivityController = class ActivityController {
       constructor(activityService) {
@@ -4711,7 +4902,7 @@ var require_chat_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var chat_service_1 = require_chat_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var ChatController = class ChatController {
       constructor(chatService) {
@@ -4980,7 +5171,7 @@ var require_media_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var media_service_1 = require_media_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var MediaController = class MediaController {
       constructor(mediaService) {
@@ -5061,7 +5252,7 @@ var require_upload_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var media_service_1 = require_media_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var UploadsController = class UploadsController {
       constructor(mediaService) {
@@ -5628,20 +5819,11 @@ var require_push_tokens_controller = __commonJS({
     exports2.PushTokensController = void 0;
     var common_1 = require("@nestjs/common");
     var swagger_1 = require("@nestjs/swagger");
-    var class_validator_1 = require("class-validator");
+    var shared_validation_1 = require_dist();
+    var zod_validation_pipe_1 = require_zod_validation_pipe();
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var push_tokens_service_1 = require_push_tokens_service();
-    var RegisterPushTokenDto = class {
-    };
-    __decorate([
-      (0, class_validator_1.IsString)(),
-      __metadata("design:type", String)
-    ], RegisterPushTokenDto.prototype, "token", void 0);
-    __decorate([
-      (0, class_validator_1.IsIn)(["ios", "android"]),
-      __metadata("design:type", String)
-    ], RegisterPushTokenDto.prototype, "platform", void 0);
     var PushTokensController = class PushTokensController {
       constructor(pushTokensService) {
         this.pushTokensService = pushTokensService;
@@ -5657,9 +5839,9 @@ var require_push_tokens_controller = __commonJS({
     __decorate([
       (0, common_1.Post)(),
       __param(0, (0, current_user_decorator_1.CurrentUser)()),
-      __param(1, (0, common_1.Body)()),
+      __param(1, (0, common_1.Body)(new zod_validation_pipe_1.ZodValidationPipe(shared_validation_1.RegisterPushTokenSchema))),
       __metadata("design:type", Function),
-      __metadata("design:paramtypes", [Object, RegisterPushTokenDto]),
+      __metadata("design:paramtypes", [Object, Object]),
       __metadata("design:returntype", void 0)
     ], PushTokensController.prototype, "register", null);
     __decorate([
@@ -6191,7 +6373,7 @@ var require_wishlist_controller = __commonJS({
     var jwt_auth_guard_1 = require_jwt_auth_guard();
     var current_user_decorator_1 = require_current_user_decorator();
     var wishlist_service_1 = require_wishlist_service();
-    var shared_validation_1 = require("@atur-perjalanan/shared-validation");
+    var shared_validation_1 = require_dist();
     var zod_validation_pipe_1 = require_zod_validation_pipe();
     var WishlistController = class WishlistController {
       constructor(wishlistService) {
@@ -6999,7 +7181,6 @@ var require_main = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createApp = createApp;
     var core_1 = require("@nestjs/core");
-    var common_1 = require("@nestjs/common");
     var swagger_1 = require("@nestjs/swagger");
     var app_module_1 = require_app_module();
     var http_exception_filter_1 = require_http_exception_filter();
@@ -7007,11 +7188,6 @@ var require_main = __commonJS({
     async function createApp(adapter) {
       const app2 = adapter ? await core_1.NestFactory.create(app_module_1.AppModule, adapter) : await core_1.NestFactory.create(app_module_1.AppModule);
       app2.setGlobalPrefix("v1");
-      app2.useGlobalPipes(new common_1.ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true
-      }));
       app2.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
       app2.useGlobalInterceptors(new request_id_interceptor_1.RequestIdInterceptor());
       const appWebUrl = process.env.APP_WEB_URL ?? "http://localhost:8081";
