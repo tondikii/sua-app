@@ -672,7 +672,9 @@ export default function CreateTripScreen() {
                     return cells.map((day, i) => {
                       if (day === null) return <View key={`empty-${i}`} style={styles.calDayCell} />;
                       const iso = formatDateISO(dlYear, dlMonth, day);
-                      const selected = votingDeadline.startsWith(iso);
+                      const selected =
+                        votingDeadline.startsWith(iso) ||
+                        (!votingDeadline && iso === initialStartDate);
                       return (
                         <TouchableOpacity
                           key={day}

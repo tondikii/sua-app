@@ -132,12 +132,14 @@ function buildDeadlineISO(dateIso: string, timeStr: string) {
  */
 function DeadlineField({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
   const parsed = parseISO(value);
+  const today = new Date();
+  const todayIso = formatISO(today.getFullYear(), today.getMonth(), today.getDate());
   const [open, setOpen] = useState(false);
-  const [year, setYear] = useState(parsed?.year ?? new Date().getFullYear());
-  const [month, setMonth] = useState(parsed?.month ?? new Date().getMonth());
+  const [year, setYear] = useState(parsed?.year ?? today.getFullYear());
+  const [month, setMonth] = useState(parsed?.month ?? today.getMonth());
   const [time, setTime] = useState(parsed ? `${parsed.hh}:${parsed.mm}` : nowTime());
   const [selectedDateIso, setSelectedDateIso] = useState<string | null>(
-    parsed ? formatISO(parsed.year, parsed.month, parsed.day) : null,
+    parsed ? formatISO(parsed.year, parsed.month, parsed.day) : todayIso,
   );
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -149,7 +151,12 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
       setTime(`${p.hh}:${p.mm}`);
       setSelectedDateIso(formatISO(p.year, p.month, p.day));
     } else if (!value) {
-      setSelectedDateIso(null);
+      // Kalendar selalu mengarah ke hari ini saat belum ada tenggat.
+      const t = new Date();
+      setYear(t.getFullYear());
+      setMonth(t.getMonth());
+      setTime(nowTime());
+      setSelectedDateIso(formatISO(t.getFullYear(), t.getMonth(), t.getDate()));
     }
   }, [value]);
 
@@ -1073,7 +1080,7 @@ function CreateVotingSheet({
               <View style={styles.sheetBackBtn} />
             )}
             <Text style={styles.sheetTitle}>
-              {mode === 'type' ? 'Buat Voting 1' : 'Detail Voting'}
+              {mode === 'type' ? 'Buat Voting' : 'Detail Voting'}
             </Text>
             <TouchableOpacity style={styles.sheetCloseBtn} onPress={onClose}>
               <X size={18} color={colors.charcoal} />
@@ -1171,9 +1178,11 @@ function CreateVotingSheet({
                   <TouchableOpacity
                     style={styles.addCandidateBtn}
                     onPress={() => {
+                      const t = new Date();
+                      const todayIso = formatISO(t.getFullYear(), t.getMonth(), t.getDate());
                       setShowDatePicker(true);
-                      setDpRange(null);
-                      setDpSelectingEnd(false);
+                      setDpRange({ start: todayIso, end: todayIso });
+                      setDpSelectingEnd(true);
                     }}
                     activeOpacity={0.7}
                   >
@@ -1316,7 +1325,7 @@ function CreateVotingSheet({
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.sheetSubmitText}>
-                  {mode === 'type' ? 'Lanjutkan' : 'Buat Voting 2'}
+                  {mode === 'type' ? 'Lanjutkan' : 'Buat Voting'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -1490,9 +1499,11 @@ function EditVotingSheet({
                   <TouchableOpacity
                     style={styles.addCandidateBtn}
                     onPress={() => {
+                      const t = new Date();
+                      const todayIso = formatISO(t.getFullYear(), t.getMonth(), t.getDate());
                       setEditShowDatePicker(true);
-                      setEditDpRange(null);
-                      setEditDpSelectingEnd(false);
+                      setEditDpRange({ start: todayIso, end: todayIso });
+                      setEditDpSelectingEnd(true);
                     }}
                     activeOpacity={0.7}
                   >
