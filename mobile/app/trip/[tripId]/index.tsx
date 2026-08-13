@@ -20,9 +20,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { ItineraryTimeline } from '@/features/itinerary/components/ItineraryTimeline';
 import { ActivityFormSheet } from '@/features/itinerary/components/ActivityFormSheet';
 import { ActivityDetailSheet } from '@/features/itinerary/components/ActivityDetailSheet';
-import { InviteBottomSheet } from '@/features/invitations/components/InviteBottomSheet';
 import { Plus } from '@/components/icons/Plus';
-import { Send } from '@/components/icons/Send';
 import { VotingTabContent } from './voting';
 import { ChatTabContent } from './chat';
 import { MediaTabContent } from './media';
@@ -100,7 +98,6 @@ export default function TripDetailScreen() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showInvite, setShowInvite] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [detailActivity, setDetailActivity] = useState<TripActivity | null>(null);
   const [editingActivity, setEditingActivity] = useState<TripActivity | null>(null);
@@ -284,20 +281,6 @@ export default function TripDetailScreen() {
             onPress={() => setShowMenu(false)}
           />
           <View style={styles.menuDropdown}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMenu(false);
-                setShowInvite(true);
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: colors.coralLight }]}>
-                <Send size={16} color={colors.coral} />
-              </View>
-              <Text style={styles.menuItemText}>Undang Teman</Text>
-            </TouchableOpacity>
-            <View style={styles.menuDivider} />
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -596,14 +579,6 @@ export default function TripDetailScreen() {
         dateLabel={dateRange}
         onClose={() => setShowCalendar(false)}
         onAdded={() => setShowCalendar(false)}
-      />
-
-      {/* Undang Teman (Screen 35–40) */}
-      <InviteBottomSheet
-        visible={showInvite}
-        tripId={tripId}
-        onClose={() => setShowInvite(false)}
-        onEnterTrip={() => setShowInvite(false)}
       />
     </View>
   );

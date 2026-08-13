@@ -38,7 +38,7 @@
 
 - When a poll option carries date candidate data (start_date/end_date) but no corresponding database record exists, automatically create the `TripDateCandidate` record at poll creation (or update) time so that downstream operations (e.g., locking the poll → resolving the winning candidate → updating the trip's startDate/endDate) resolve correctly — prefer creating the backing record over skipping/guarding the lookup when the data is needed for a business operation. This must run within the same `$transaction` as the poll/option creation. The user explicitly expects "setelah voting tanggal dikunci, tanggal yang menang voting menjadi tanggal perjalanan." Confidence: 0.7
 
-- Calendar date picker should default to today's date as the initial selected date when first opened. Confidence: 0.85
+- Calendar date pickers should default to today's date as the initial selected date when first opened, AND all time inputs across the app (activity start/end, trip times, voting deadlines) must default to the current wall-clock time — the user explicitly requested "buat semua input time atau kalendar defaultnya current time atau date" (make all time inputs and calendars default to current time/date) and confirmed it applies to deadline fields too, replacing static defaults like '20:00' with `nowTime()`. Confidence: 0.9
 
 - Navigation back actions should gracefully handle an empty navigation stack (e.g., after browser refresh) by falling back to a default route instead of throwing an error. Confidence: 0.85
 

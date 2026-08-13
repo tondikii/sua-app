@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -58,6 +58,15 @@ export function ActivityCoverPickerSheet({ visible, tripId, current, onClose, on
   );
   const [selectedIcon, setSelectedIcon] = useState<string | null>(current?.cover_icon ?? null);
   const [uploading, setUploading] = useState(false);
+
+  // Sync selection from `current` each time the sheet opens, so editing an
+  // activity that already has a cover shows the active icon/media pre-selected.
+  useEffect(() => {
+    if (visible) {
+      setSelectedMediaId(current?.cover_document_id ?? null);
+      setSelectedIcon(current?.cover_icon ?? null);
+    }
+  }, [visible, current]);
 
   if (!visible) return null;
 

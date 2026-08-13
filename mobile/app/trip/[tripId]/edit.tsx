@@ -17,6 +17,7 @@ import { useToast } from '@/components/Toast';
 import { TagInput } from '@/components/TagInput';
 import { FocusedTextInput } from '@/components/FocusedTextInput';
 import { TimePicker } from '@/components/TimePicker';
+import { nowTime, nowPlusOneHour } from '@/lib/time';
 import { X } from '@/components/icons/X';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { colors } from '@/theme/colors';
@@ -63,8 +64,8 @@ export default function EditTripScreen() {
   const [name, setName] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [allDay, setAllDay] = useState(true);
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('17:00');
+  const [startTime, setStartTime] = useState(nowTime());
+  const [endTime, setEndTime] = useState(nowPlusOneHour());
   const [calYear, setCalYear] = useState(parsedStart?.year ?? new Date().getFullYear());
   const [calMonth, setCalMonth] = useState(parsedStart?.month ?? new Date().getMonth());
   const [dateRange, setDateRange] = useState<{ startDate: string; endDate: string } | null>(null);
@@ -80,8 +81,8 @@ export default function EditTripScreen() {
     setName(trip.name);
     setTags(trip.tags ?? []);
     setAllDay(trip.is_all_day ?? true);
-    setStartTime(trip.start_time ?? '08:00');
-    setEndTime(trip.end_time ?? '17:00');
+    setStartTime(trip.start_time ?? nowTime());
+    setEndTime(trip.end_time ?? nowPlusOneHour());
     if (trip.start_date && trip.end_date) {
       setDateRange({ startDate: trip.start_date, endDate: trip.end_date });
     }

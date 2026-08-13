@@ -27,6 +27,7 @@ import { AlertCircle } from '@/components/icons/AlertCircle';
 import { colors } from '@/theme/colors';
 import { shadows } from '@/theme/shadows';
 import { bottomSheetFrame } from '@/theme/layout';
+import { nowTime, nowPlusOneHour } from '@/lib/time';
 
 const webOutlineNone = Platform.OS === 'web' ? { outlineStyle: 'none' } as Record<string, unknown> : {};
 
@@ -55,8 +56,8 @@ export function ActivityFormSheet({
   const syncMaps = useSyncMapsThumbnail(tripId);
 
   const [placeName, setPlaceName] = useState('');
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
+  const [startTime, setStartTime] = useState(nowTime);
+  const [endTime, setEndTime] = useState(nowPlusOneHour);
   const [description, setDescription] = useState('');
   const [locationLabel, setLocationLabel] = useState('');
   const [mapsLink, setMapsLink] = useState('');
@@ -66,6 +67,7 @@ export function ActivityFormSheet({
   const [coverThumb, setCoverThumb] = useState<string | null>(null);
   const [coverDocumentId, setCoverDocumentId] = useState<string | null>(null);
   const [titleError, setTitleError] = useState('');
+  const [timeError, setTimeError] = useState('');
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -87,10 +89,11 @@ export function ActivityFormSheet({
       setCoverThumb(editActivity.thumbnail_url);
       setCoverDocumentId(editActivity.cover_document_id);
       setTitleError('');
+      setTimeError('');
     } else {
       setPlaceName('');
-      setStartTime('09:00');
-      setEndTime('10:00');
+      setStartTime(nowTime());
+      setEndTime(nowPlusOneHour());
       setDescription('');
       setLocationLabel('');
       setMapsLink('');
@@ -100,6 +103,7 @@ export function ActivityFormSheet({
       setCoverThumb(null);
       setCoverDocumentId(null);
       setTitleError('');
+      setTimeError('');
     }
   }, [editActivity, visible]);
 
@@ -111,6 +115,11 @@ export function ActivityFormSheet({
       return;
     }
     setTitleError('');
+    if (endTime <= startTime) {
+      setTimeError('Waktu selesai harus setelah waktu mulai');
+      return;
+    }
+    setTimeError('');
     try {
       const filledRefLinks = refLinks
         .map((r) => {
@@ -131,7 +140,11 @@ export function ActivityFormSheet({
         ref_links: filledRefLinks.length > 0 ? filledRefLinks : undefined,
         cover_source: coverSource,
         ...(coverIcon ? { cover_icon: coverIcon } : {}),
-        ...(coverDocumentId ? { cover_document_id: coverDocumentId } : {}),
+        ...(coverSource === 'icon' || coverSource === 'none'
+          ? { cover_document_id: null, thumbnail_url: null }
+          : coverDocumentId
+            ? { cover_document_id: coverDocumentId }
+            : {}),
         ...(coverThumb ? { thumbnail_url: coverThumb } : {}),
       };
       if (editActivity) {
@@ -216,16 +229,22 @@ export function ActivityFormSheet({
                 </TouchableOpacity>
               </View>
             </View>
+            {timeError ? (
+              <View style={styles.errorRow}>
+                <AlertCircle size={12} color={colors.danger} />
+                <Text style={styles.errorText}>{timeError}</Text>
+              </View>
+            ) : null}
             <TimePicker
               visible={showStartPicker}
               value={startTime}
-              onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedField(null); }}
+              onChange={(t) => { setStartTime(t); setTimeError(''); setShowStartPicker(false); setFocusedField(null); }}
               onClose={() => setShowStartPicker(false)}
             />
             <TimePicker
               visible={showEndPicker}
               value={endTime}
-              onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedField(null); }}
+              onChange={(t) => { setEndTime(t); setTimeError(''); setShowEndPicker(false); setFocusedField(null); }}
               onClose={() => setShowEndPicker(false)}
             />
 
@@ -447,6 +466,7 @@ export function ActivityFormSheet({
       <ActivityCoverPickerSheet
         visible={showCoverPicker}
         tripId={tripId}
+        current={editActivity}
         onClose={() => setShowCoverPicker(false)}
         onSelect={handleCoverSelect}
       />
@@ -496,7 +516,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  body: { flex: 1 },
+  body: { flexShrink: 1 },
   bodyContent: { padding: 20, paddingTop: 12, gap: 14, paddingBottom: 32 },
   field: { gap: 6 },
   label: {

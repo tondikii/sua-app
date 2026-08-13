@@ -25,6 +25,7 @@ import { Calendar } from '@/components/icons/Calendar';
 import { Clock } from '@/components/icons/Clock';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { TimePicker } from '@/components/TimePicker';
+import { nowTime, nowPlusOneHour } from '@/lib/time';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 
@@ -104,8 +105,8 @@ export default function CreateTripScreen() {
   );
   // When the wishlist carries times, prefill them and disable "all day".
   const [allDay, setAllDay] = useState(!(params.start && params.end));
-  const [startTime, setStartTime] = useState(params.start ?? '08:00');
-  const [endTime, setEndTime] = useState(params.end ?? '17:00');
+  const [startTime, setStartTime] = useState(params.start ?? nowTime());
+  const [endTime, setEndTime] = useState(params.end ?? nowPlusOneHour());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -135,7 +136,7 @@ export default function CreateTripScreen() {
   // Deadline picker calendar state
   const [dlMonth, setDlMonth] = useState(today.getMonth());
   const [dlYear, setDlYear] = useState(today.getFullYear());
-  const [dlTime, setDlTime] = useState('20:00');
+  const [dlTime, setDlTime] = useState(nowTime());
 
   // Validation
   const [errors, setErrors] = useState<{ name?: string; date?: string }>({});

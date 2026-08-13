@@ -21,6 +21,7 @@ import { useCreateWishlist } from '@/features/wishlist/hooks/useCreateWishlist';
 import { useUpdateWishlist } from '@/features/wishlist/hooks/useUpdateWishlist';
 import { useDeleteWishlist } from '@/features/wishlist/hooks/useDeleteWishlist';
 import { TimePicker } from '@/components/TimePicker';
+import { nowTime, nowPlusOneHour } from '@/lib/time';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus } from '@/components/icons/Plus';
 import { X } from '@/components/icons/X';
@@ -401,7 +402,7 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
                   onPress={() => { setShowStartPicker(true); setShowEndPicker(false); setFocusedTime('start'); }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.timeValue, !startTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{startTime || '09:00'}</Text>
+                  <Text style={[styles.timeValue, !startTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{startTime || nowTime()}</Text>
                 </TouchableOpacity>
               </View>
               <View style={[styles.sheetField, { flex: 1 }]}>
@@ -411,19 +412,19 @@ function WishlistFormSheet({ visible, onClose, editItem }: {
                   onPress={() => { setShowEndPicker(true); setShowStartPicker(false); setFocusedTime('end'); }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.timeValue, !endTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{endTime || '16:00'}</Text>
+                  <Text style={[styles.timeValue, !endTime && { color: colors.mutedLight, fontFamily: 'PlusJakartaSans_400Regular' }]}>{endTime || nowPlusOneHour()}</Text>
                 </TouchableOpacity>
               </View>
             </View>
             <TimePicker
               visible={showStartPicker}
-              value={startTime || '09:00'}
+              value={startTime || nowTime()}
               onChange={(t) => { setStartTime(t); setShowStartPicker(false); setFocusedTime(null); }}
               onClose={() => { setShowStartPicker(false); setFocusedTime(null); }}
             />
             <TimePicker
               visible={showEndPicker}
-              value={endTime || '16:00'}
+              value={endTime || nowPlusOneHour()}
               onChange={(t) => { setEndTime(t); setShowEndPicker(false); setFocusedTime(null); }}
               onClose={() => { setShowEndPicker(false); setFocusedTime(null); }}
             />

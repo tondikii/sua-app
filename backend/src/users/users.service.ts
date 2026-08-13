@@ -194,7 +194,18 @@ export class UsersService {
       throw new ForbiddenException({ code: 'PROFILE_PRIVATE', message: 'This profile is private' });
     }
 
-    return UserSummarySerializer.toProfile(user, this.r2);
+    // trip_count should match the trips shown on the profile: trips the user
+    // created or joined. For a non-owner viewer, only count public trips.
+    const isOwner = user.id === viewerUserId;
+    const tripCount = await this.prisma.trip.count({
+      where: {
+        OR: [{ creatorId: user.id }, { participants: { some: { userId: user.id } } }],
+        deletedAt: null,
+        ...(isOwner ? {} : { isPublic: true }),
+      },
+    });
+
+    return UserSummarySerializer.toProfile({ ...user, _count: { tripsCreated: tripCount } }, this.r2);
   }
 
   async getUserTrips(username: string, viewerUserId?: string, cursor?: string, limit = 20) {
@@ -211,10 +222,13 @@ export class UsersService {
 
     const isOwner = user.id === viewerUserId;
 
-    // Fetch trips using the same approach as listTrips (include not select)
+    // Fetch trips the user created OR joined (accepted invitations). For a
+    // non-owner viewer, only public trips are exposed. This keeps the profile
+    // trip list consistent with what the user sees on Home (which includes
+    // accepted invitations) while still respecting privacy.
     const trips = await this.prisma.trip.findMany({
       where: {
-        creatorId: user.id,
+        OR: [{ creatorId: user.id }, { participants: { some: { userId: user.id } } }],
         deletedAt: null,
         ...(isOwner ? {} : { isPublic: true }),
         ...(cursor ? { id: { lt: cursor } } : {}),

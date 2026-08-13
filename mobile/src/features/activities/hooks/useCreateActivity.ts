@@ -14,8 +14,8 @@ interface CreateActivityPayload {
   ref_links?: { url: string; label?: string }[];
   cover_source?: string;
   cover_icon?: string;
-  cover_document_id?: string;
-  thumbnail_url?: string;
+  cover_document_id?: string | null;
+  thumbnail_url?: string | null;
   sort_order?: number;
 }
 

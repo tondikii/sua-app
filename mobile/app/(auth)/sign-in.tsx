@@ -184,12 +184,6 @@ export default function SignIn() {
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>atau</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
           {/* Email login — hidden in MVP per PRD §1.3 */}
           {false && (
             <TouchableOpacity style={styles.emailButton} activeOpacity={0.85}>

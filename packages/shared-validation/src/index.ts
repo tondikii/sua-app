@@ -115,8 +115,8 @@ export const CreateActivitySchema = z.object({
   ref_links: z.array(RefLinkSchema).optional(),
   cover_source: CoverSourceEnum.optional(),
   cover_icon: z.string().optional(),
-  cover_document_id: z.string().uuid().optional(),
-  thumbnail_url: z.string().optional(),
+  cover_document_id: z.string().uuid().nullable().optional(),
+  thumbnail_url: z.string().nullable().optional(),
   sort_order: z.number().optional(),
 });
 export type CreateActivityInput = z.infer<typeof CreateActivitySchema>;
@@ -172,8 +172,8 @@ const PollOptionSchema = z.union([
   z.object({
     label: z.string(),
     candidate_id: z.string().optional(),
-    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'start_date must be a date in YYYY-MM-DD format'),
-    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'end_date must be a date in YYYY-MM-DD format'),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'start_date must be a date in YYYY-MM-DD format').optional(),
+    end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'end_date must be a date in YYYY-MM-DD format').optional(),
     maps_link: z.string().url('maps_link must be a valid URL').optional(),
     ref_links: z.array(PollRefLinkSchema).optional(),
   }),

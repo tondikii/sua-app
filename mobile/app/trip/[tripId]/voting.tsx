@@ -39,6 +39,7 @@ import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
 import { bottomSheetFrame } from '@/theme/layout';
+import { nowTime } from '@/lib/time';
 import type { TripPoll, PollOption, PollType, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {};
@@ -134,7 +135,7 @@ function DeadlineField({ value, onChange }: { value: string; onChange: (iso: str
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(parsed?.year ?? new Date().getFullYear());
   const [month, setMonth] = useState(parsed?.month ?? new Date().getMonth());
-  const [time, setTime] = useState(parsed ? `${parsed.hh}:${parsed.mm}` : '20:00');
+  const [time, setTime] = useState(parsed ? `${parsed.hh}:${parsed.mm}` : nowTime());
   const [selectedDateIso, setSelectedDateIso] = useState<string | null>(
     parsed ? formatISO(parsed.year, parsed.month, parsed.day) : null,
   );
@@ -293,6 +294,8 @@ function OptionLinkFields({
   onChangeMapsLink: (url: string) => void;
   onChangeRefLinks: (links: RefLink[]) => void;
 }) {
+  const [focusedRow, setFocusedRow] = useState<string | null>(null);
+
   const updateRef = useCallback(
     (index: number, patch: Partial<RefLink>) => {
       onChangeRefLinks(refLinks.map((r, i) => (i === index ? { ...r, ...patch } : r)));
@@ -317,14 +320,17 @@ function OptionLinkFields({
       {/* Google Maps */}
       <View style={styles.optionLinkField}>
         <Text style={styles.optionLinkLabel}>Google Maps</Text>
-        <View style={styles.optionLinkInputRow}>
+        <View style={[styles.optionLinkInputRow, focusedRow === 'maps' && styles.optionLinkInputRowFocused]}>
           <Navigation size={14} color={mapsLink ? colors.teal : colors.mutedLight} />
           <FocusedTextInput
             style={styles.optionLinkInput}
+            focusedStyle={styles.optionLinkInputFocused}
             placeholder="Tempel link Google Maps (opsional)"
             placeholderTextColor={colors.mutedLight}
             value={mapsLink}
             onChangeText={onChangeMapsLink}
+            onFocus={() => setFocusedRow('maps')}
+            onBlur={() => setFocusedRow(null)}
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
@@ -341,14 +347,17 @@ function OptionLinkFields({
               <Text style={styles.optionRefIndex}>Link {index + 1}</Text>
             )}
             <Text style={styles.optionRefSubLabel}>URL</Text>
-            <View style={styles.optionLinkInputRow}>
+            <View style={[styles.optionLinkInputRow, focusedRow === `ref-${index}` && styles.optionLinkInputRowFocused]}>
               <Link2 size={14} color={colors.mutedLight} />
               <FocusedTextInput
                 style={styles.optionLinkInput}
+                focusedStyle={styles.optionLinkInputFocused}
                 placeholder="Tempel link referensi..."
                 placeholderTextColor={colors.mutedLight}
                 value={ref.url}
                 onChangeText={(t) => updateRef(index, { url: t })}
+                onFocus={() => setFocusedRow(`ref-${index}`)}
+                onBlur={() => setFocusedRow(null)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
@@ -366,11 +375,13 @@ function OptionLinkFields({
               <>
                 <Text style={styles.optionRefSubLabel}>Judul tampilan</Text>
                 <FocusedTextInput
-                  style={styles.optionLinkInput}
+                  style={[styles.optionLinkInput, styles.optionLinkLabelInput]}
                   placeholder="Kosongkan untuk tampilkan URL"
                   placeholderTextColor={colors.mutedLight}
                   value={ref.label}
                   onChangeText={(t) => updateRef(index, { label: t })}
+                  onFocus={() => setFocusedRow(`label-${index}`)}
+                  onBlur={() => setFocusedRow(null)}
                 />
               </>
             )}
@@ -797,6 +808,7 @@ function DatePickerCalendar({
   onPrev,
   onNext,
   onSelect,
+  onCancel,
 }: {
   year: number;
   month: number;
@@ -805,6 +817,7 @@ function DatePickerCalendar({
   onPrev: () => void;
   onNext: () => void;
   onSelect: (iso: string) => void;
+  onCancel?: () => void;
 }) {
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfWeek(year, month);
@@ -882,6 +895,11 @@ function DatePickerCalendar({
         </Text>
       )}
       {selectingEnd && <Text style={styles.dpHint}>Pilih tanggal akhir.</Text>}
+      {onCancel && (
+        <TouchableOpacity style={styles.dpCancelBtn} onPress={onCancel} activeOpacity={0.7}>
+          <Text style={styles.dpCancelBtnText}>Batal</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -1028,6 +1046,7 @@ function CreateVotingSheet({
       reset();
       onClose();
     } catch (err: any) {
+      console.log('CREATE POLL ERROR', err);
       const msg = err?.message ?? 'Terjadi kesalahan saat membuat voting';
       showToast(msg);
     }
@@ -1054,7 +1073,7 @@ function CreateVotingSheet({
               <View style={styles.sheetBackBtn} />
             )}
             <Text style={styles.sheetTitle}>
-              {mode === 'type' ? 'Buat Voting' : 'Detail Voting'}
+              {mode === 'type' ? 'Buat Voting 1' : 'Detail Voting'}
             </Text>
             <TouchableOpacity style={styles.sheetCloseBtn} onPress={onClose}>
               <X size={18} color={colors.charcoal} />
@@ -1131,9 +1150,11 @@ function CreateVotingSheet({
                     Tanggal
                   </Text>
                 </View>
-                <Text style={styles.sheetLabel}>
-                  Kandidat Tanggal <Text style={{ color: colors.coral }}>*</Text>
-                </Text>
+                {dateCandidates.length > 0 && (
+                  <Text style={styles.sheetLabel}>
+                    Kandidat Tanggal <Text style={{ color: colors.coral }}>*</Text>
+                  </Text>
+                )}
                 {dateCandidates.map((c) => (
                   <View key={c.id} style={styles.optionRow}>
                     <Text style={styles.optionText}>
@@ -1158,6 +1179,15 @@ function CreateVotingSheet({
                   >
                     <Plus size={16} color={colors.coral} />
                     <Text style={styles.addCandidateBtnText}>Tambah Kandidat Tanggal</Text>
+                  </TouchableOpacity>
+                )}
+                {dateCandidates.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.undoCandidateBtn}
+                    onPress={() => setDateCandidates((prev) => prev.slice(0, -1))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.undoCandidateBtnText}>Undo kandidat terakhir</Text>
                   </TouchableOpacity>
                 )}
                 {showDatePicker && (
@@ -1198,6 +1228,7 @@ function CreateVotingSheet({
                         setDpSelectingEnd(true);
                       }
                     }}
+                    onCancel={() => setShowDatePicker(false)}
                   />
                 )}
                 <DeadlineField value={deadline} onChange={setDeadline} />
@@ -1285,7 +1316,7 @@ function CreateVotingSheet({
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Text style={styles.sheetSubmitText}>
-                  {mode === 'type' ? 'Lanjutkan' : 'Buat Voting'}
+                  {mode === 'type' ? 'Lanjutkan' : 'Buat Voting 2'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -1430,9 +1461,11 @@ function EditVotingSheet({
                 />
               </>
             )}
-            <Text style={styles.sheetLabel}>
-              Kandidat <Text style={{ color: colors.coral }}>*</Text>
-            </Text>
+            {options.length > 0 && (
+              <Text style={styles.sheetLabel}>
+                Kandidat <Text style={{ color: colors.coral }}>*</Text>
+              </Text>
+            )}
             {options.map((opt) => (
               <View key={opt.label} style={styles.optionCard}>
                 <View style={styles.optionCardHeader}>
@@ -1465,6 +1498,15 @@ function EditVotingSheet({
                   >
                     <Plus size={16} color={colors.coral} />
                     <Text style={styles.addCandidateBtnText}>Tambah Kandidat Tanggal</Text>
+                  </TouchableOpacity>
+                )}
+                {options.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.undoCandidateBtn}
+                    onPress={() => setOptions((prev) => prev.slice(0, -1))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.undoCandidateBtnText}>Undo kandidat terakhir</Text>
                   </TouchableOpacity>
                 )}
                 {editShowDatePicker && (
@@ -1508,6 +1550,7 @@ function EditVotingSheet({
                         setEditDpSelectingEnd(true);
                       }
                     }}
+                    onCancel={() => setEditShowDatePicker(false)}
                   />
                 )}
               </>
@@ -2006,7 +2049,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sheetBody: { flex: 1 },
+  sheetBody: { flexShrink: 1 },
   sheetBodyContent: { padding: 20, paddingTop: 8, gap: 12 },
   sheetSubtitle: {
     fontSize: 12,
@@ -2157,6 +2200,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     minWidth: 0,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  optionLinkInputRowFocused: {
+    borderColor: colors.coral,
+    borderWidth: 2,
   },
   optionLinkInput: {
     flex: 1,
@@ -2166,6 +2215,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_400Regular',
     color: colors.charcoal,
+  },
+  optionLinkInputFocused: {
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  optionLinkLabelInput: {
+    backgroundColor: colors.light,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    flex: undefined,
   },
   optionRefGroup: {
     gap: 4,
@@ -2217,6 +2279,17 @@ const styles = StyleSheet.create({
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.coral,
   },
+  undoCandidateBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+  },
+  undoCandidateBtnText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
+    textDecorationLine: 'underline',
+  },
   // Date picker calendar
   dpCard: {
     backgroundColor: colors.white,
@@ -2263,6 +2336,19 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 8,
     textAlign: 'center',
+  },
+  dpCancelBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    marginTop: 4,
+    borderRadius: 10,
+    backgroundColor: colors.light,
+  },
+  dpCancelBtnText: {
+    fontSize: 12,
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    color: colors.muted,
   },
   // Deadline field (konsisten form buat perjalanan)
   deadlineBox: {

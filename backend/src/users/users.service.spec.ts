@@ -28,7 +28,7 @@ describe('UsersService', () => {
       delete: jest.Mock;
     };
     $queryRaw: jest.Mock;
-    trip: { findMany: jest.Mock };
+    trip: { findMany: jest.Mock; count: jest.Mock };
   };
   let r2: {
     presignAvatarUpload: jest.Mock;
@@ -47,7 +47,7 @@ describe('UsersService', () => {
         delete: jest.fn(),
       },
       $queryRaw: jest.fn(),
-      trip: { findMany: jest.fn() },
+      trip: { findMany: jest.fn(), count: jest.fn() },
     };
 
     r2 = {
@@ -212,8 +212,10 @@ describe('UsersService', () => {
   describe('getPublicProfile', () => {
     it('should return profile for public user', async () => {
       prisma.user.findFirst.mockResolvedValue(mockUser);
+      prisma.trip.count.mockResolvedValue(3);
       const result = await service.getPublicProfile('testuser');
       expect(result.username).toBe('testuser');
+      expect(result.trip_count).toBe(3);
     });
 
     it('should throw NotFoundException for unknown user', async () => {
