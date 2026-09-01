@@ -8,5 +8,3 @@ issue atur perjalanan:
 - [ ] button tambah kandidat tanggal tidak bisa diundo, kemudian hapus label kandidat tanggal kalo belum ada kandidat tanggal yang dipilih.
 - [ ] buat initial value input time start timenya time saat ini dan end time + 1 jam di semua penggunaannya input time yang ada
 
-
-- [ ] aktivitas pemenang voting belum mengisi gmaps link dan link lainnya ke aktivitas, kemudian ternyata diperlukan start dan end time, lalu seharusnya masuk ke aktivitas hari terdekat dengan date now
