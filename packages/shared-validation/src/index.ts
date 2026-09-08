@@ -176,6 +176,8 @@ const PollOptionSchema = z.union([
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'end_date must be a date in YYYY-MM-DD format').optional(),
     maps_link: z.string().url('maps_link must be a valid URL').optional(),
     ref_links: z.array(PollRefLinkSchema).optional(),
+    start_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'start_time must be in HH:MM format').optional(),
+    end_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'end_time must be in HH:MM format').optional(),
   }),
 ]);
 

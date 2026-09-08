@@ -1,9 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AuthResponse, UserProfile } from '@atur-perjalanan/shared-types';
 
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
 import { apiClient, setOnUnauthorized, setTokenGetter } from '../api/client';
 import { secureStorage } from '../lib/secureStorage';
-import { setRealtimeAuthToken } from '../realtime/supabaseClient';
+import { disconnectRealtime, setRealtimeAuthToken } from '../realtime/supabaseClient';
 import { queryClient } from '../api/queryClient';
 
 interface AuthContextValue {
@@ -45,6 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenRef.current = null;
     await secureStorage.removeAccessToken();
     await secureStorage.removeRealtimeToken();
+    // Drop realtime auth *and* all subscribed channels before clearing state,
+    // otherwise the websocket keeps the old JWT and keeps receiving the previous
+    // user's notifications/chat events after logout.
+    disconnectRealtime();
     setRealtimeAuthToken('');
     setUser(null);
     setAccessToken(null);
@@ -53,6 +61,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear the persisted query cache so no stale user data (trips, profile,
     // wishlist) leaks into the next session after signing out.
     queryClient.clear();
+    // Remove the persisted query cache from AsyncStorage as well.
+    try {
+      await AsyncStorage.removeItem('REACT_QUERY_OFFLINE_CACHE');
+    } catch {}
+    // Clear Google Sign-In cache so next login shows account picker.
+    try {
+      if (Platform.OS !== 'web') {
+        const hasPrev = await GoogleSignin.hasPreviousSignIn();
+        if (hasPrev) await GoogleSignin.signOut();
+        try { await GoogleSignin.revokeAccess(); } catch {}
+      } else if (typeof window !== 'undefined') {
+        // Web: clear any gsi/one-tap state and google session hint.
+        try { window.sessionStorage.removeItem('ap_google_web_id_token'); } catch {}
+        try { window.localStorage.removeItem('g_state'); } catch {}
+      }
+    } catch {}
   }, []);
 
   const signOut = useCallback(async () => {

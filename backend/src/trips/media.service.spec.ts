@@ -28,12 +28,13 @@ describe('MediaService', () => {
 
   beforeEach(async () => {
     prisma = {
-      trip: { findFirst: jest.fn(), updateMany: jest.fn() },
+      trip: { findFirst: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
       tripDocument: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
         create: jest.fn(),
         delete: jest.fn(),
+        count: jest.fn().mockResolvedValue(1),
       },
       tripActivity: { updateMany: jest.fn() },
       $transaction: jest.fn((cb: any) => cb(prisma)),
@@ -108,6 +109,8 @@ describe('MediaService', () => {
     it('registers a verified R2 object', async () => {
       r2.headObject.mockResolvedValue({ exists: true, size: 1024 });
       prisma.tripDocument.create.mockResolvedValue(docRow());
+      prisma.tripDocument.count.mockResolvedValue(1);
+      prisma.trip.update.mockResolvedValue({});
 
       const result = await service.createDocument(TRIP, USER, {
         storage_key: `trips/${TRIP}/abc.jpg`,
@@ -120,6 +123,26 @@ describe('MediaService', () => {
           data: expect.objectContaining({ fromChat: false, mediaType: 'photo' }),
         }),
       );
+      expect(prisma.trip.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { coverDocumentId: DOC } }),
+      );
+    });
+
+    it('does not overwrite existing cover on second media', async () => {
+      // Second non-chat doc: count >1 and already has cover
+      prisma.trip.findFirst.mockResolvedValueOnce({ id: TRIP, coverDocumentId: null }); // assertParticipant
+      prisma.trip.findFirst.mockResolvedValueOnce({ id: TRIP, coverDocumentId: DOC }); // trip cover already set
+      r2.headObject.mockResolvedValue({ exists: true });
+      prisma.tripDocument.create.mockResolvedValue(docRow({ id: 'doc-2' }));
+      prisma.tripDocument.count.mockResolvedValue(2);
+
+      const result = await service.createDocument(TRIP, USER, {
+        storage_key: `trips/${TRIP}/second.jpg`,
+        media_type: 'photo',
+      });
+
+      expect(result.is_cover).toBe(false);
+      expect(prisma.trip.update).not.toHaveBeenCalled();
     });
 
     it('rejects a storage_key from another trip', async () => {

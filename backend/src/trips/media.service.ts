@@ -84,7 +84,23 @@ export class MediaService {
       select: { coverDocumentId: true },
     });
 
-    return this.toDocumentResponse(document, trip?.coverDocumentId ?? null);
+    // First non-chat media of a trip automatically becomes the cover, but only
+    // the very first time (cover still empty + this is the only non-chat doc).
+    let coverDocumentId = trip?.coverDocumentId ?? null;
+    if (!coverDocumentId) {
+      const nonChatCount = await this.prisma.tripDocument.count({
+        where: { tripId, fromChat: false },
+      });
+      if (nonChatCount <= 1) {
+        await this.prisma.trip.update({
+          where: { id: tripId },
+          data: { coverDocumentId: document.id },
+        });
+        coverDocumentId = document.id;
+      }
+    }
+
+    return this.toDocumentResponse(document, coverDocumentId);
   }
 
   /**

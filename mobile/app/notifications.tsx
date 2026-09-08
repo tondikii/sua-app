@@ -22,6 +22,8 @@ import { Send } from '@/components/icons/Send';
 import { Check } from '@/components/icons/Check';
 import { ListChecks } from '@/components/icons/ListChecks';
 import { Clock } from '@/components/icons/Clock';
+import { PageLoader, InlineLoader } from '@/components/LoadingState';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { shadows } from '@/theme/shadows';
@@ -194,7 +196,7 @@ function NotificationCard({
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, isLoading, refetch, isRefetching } = useNotifications();
+  const { data, isLoading, isError, refetch, isRefetching } = useNotifications();
   const { data: unreadData } = useUnreadCount();
   const { markOne, markAll } = useMarkAsRead();
   const respondInvitation = useRespondInvitation();
@@ -276,15 +278,15 @@ export default function NotificationsScreen() {
           <ChevronLeft size={20} color={colors.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifikasi</Text>
-        <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllButton}>
-          <Text style={styles.markAllText}>Tandai semua dibaca</Text>
+        <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllButton} disabled={markAll.isPending}>
+          {markAll.isPending ? <InlineLoader /> : <Text style={styles.markAllText}>Tandai semua dibaca</Text>}
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.coral} />
-        </View>
+        <PageLoader message="Memuat notifikasi..." />
+      ) : isError ? (
+        <ErrorScreen onRetry={() => refetch()} />
       ) : (
         <FlatList
           data={notifications}

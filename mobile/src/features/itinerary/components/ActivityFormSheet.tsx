@@ -274,36 +274,35 @@ export function ActivityFormSheet({
             {/* Cover */}
             <View style={styles.field}>
               <Text style={styles.label}>Cover</Text>
-              <TouchableOpacity
-                style={styles.coverRow}
-                onPress={() => setShowCoverPicker(true)}
-                activeOpacity={0.7}
-              >
-                {hasCover && coverThumb ? (
-                  <Image source={{ uri: coverThumb }} style={styles.coverThumb} resizeMode="cover" />
-                ) : hasCover && coverIcon ? (
-                  <View style={[styles.coverThumb, styles.coverIconThumb, { backgroundColor: iconMeta.bg }]}>
-                    <Icon size={20} color={iconMeta.color} />
+              <View style={styles.coverRow}>
+                <TouchableOpacity
+                  style={styles.coverPreview}
+                  onPress={() => setShowCoverPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  {hasCover && coverThumb ? (
+                    <Image source={{ uri: coverThumb }} style={styles.coverThumb} resizeMode="cover" />
+                  ) : hasCover && coverIcon ? (
+                    <View style={[styles.coverThumb, styles.coverIconThumb, { backgroundColor: iconMeta.bg }]}>
+                      <Icon size={20} color={iconMeta.color} />
+                    </View>
+                  ) : (
+                    <View style={[styles.coverThumb, styles.coverEmpty]}>
+                      <MapPin size={20} color={colors.mutedLight} />
+                    </View>
+                  )}
+                  <View style={styles.coverInfo}>
+                    <Text style={styles.coverLabel}>
+                      {hasCover ? (coverSource === 'maps' ? 'Google Maps' : coverSource === 'icon' ? 'Icon' : 'Media perjalanan') : 'Belum dipilih'}
+                    </Text>
+                    <Text style={styles.coverSubLabel}>{hasCover ? 'Tap untuk ubah' : 'Tap untuk pilih'}</Text>
                   </View>
-                ) : (
-                  <View style={[styles.coverThumb, styles.coverEmpty]}>
-                    <MapPin size={20} color={colors.mutedLight} />
-                  </View>
-                )}
-                <View style={styles.coverInfo}>
-                  <Text style={styles.coverLabel}>
-                    {hasCover ? (coverSource === 'maps' ? 'Google Maps' : coverSource === 'icon' ? 'Icon' : 'Media perjalanan') : 'Belum dipilih'}
-                  </Text>
-                  <Text style={styles.coverAction}>{hasCover ? 'Ubah' : 'Pilih'}</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={styles.coverActions}>
-                <TouchableOpacity onPress={() => setShowCoverPicker(true)} activeOpacity={0.7}>
-                  <Text style={styles.coverActionText}>{hasCover ? 'Ubah' : 'Pilih'}</Text>
                 </TouchableOpacity>
-                {hasCover && (
-                  <>
-                    <Text style={styles.coverActionDivider}>·</Text>
+                <View style={styles.coverInlineActions}>
+                  <TouchableOpacity onPress={() => setShowCoverPicker(true)} activeOpacity={0.7} style={styles.coverInlineBtn}>
+                    <Text style={styles.coverInlineBtnText}>{hasCover ? 'Ubah' : 'Pilih'}</Text>
+                  </TouchableOpacity>
+                  {hasCover && (
                     <TouchableOpacity
                       onPress={() => {
                         setCoverSource('none');
@@ -312,14 +311,12 @@ export function ActivityFormSheet({
                         setCoverDocumentId(null);
                       }}
                       activeOpacity={0.7}
+                      style={styles.coverInlineBtn}
                     >
-                      <Text style={styles.coverActionText}>Hapus</Text>
+                      <Text style={[styles.coverInlineBtnText, { color: colors.muted }]}>Hapus</Text>
                     </TouchableOpacity>
-                  </>
-                )}
-                {mapsLink.trim().length > 0 && (
-                  <>
-                    <Text style={styles.coverActionDivider}>·</Text>
+                  )}
+                  {mapsLink.trim().length > 0 && (
                     <TouchableOpacity
                       onPress={async () => {
                         try {
@@ -334,13 +331,12 @@ export function ActivityFormSheet({
                       }}
                       activeOpacity={0.7}
                       disabled={syncMaps.isPending}
+                      style={[styles.coverInlineBtn, syncMaps.isPending && { opacity: 0.6 }]}
                     >
-                      <Text style={[styles.coverActionText, { color: colors.muted }]}>
-                        {syncMaps.isPending ? 'Menyinkronkan...' : 'Sinkron Maps'}
-                      </Text>
+                      <Text style={[styles.coverInlineBtnText, { color: colors.teal }]}>{syncMaps.isPending ? '...' : 'Sinkron'}</Text>
                     </TouchableOpacity>
-                  </>
-                )}
+                  )}
+                </View>
               </View>
             </View>
 
@@ -587,13 +583,14 @@ const styles = StyleSheet.create({
   coverRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     padding: 10,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.light,
   },
+  coverPreview: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   coverThumb: {
     width: 52,
     height: 52,
@@ -609,31 +606,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coverInfo: { flex: 1, gap: 4 },
+  coverInfo: { flex: 1, gap: 2 },
   coverLabel: {
     fontSize: 13,
     fontFamily: 'PlusJakartaSans_600SemiBold',
     color: colors.charcoal,
   },
-  coverAction: {
-    fontSize: 12,
-    fontFamily: 'PlusJakartaSans_700Bold',
-    color: colors.coral,
+  coverSubLabel: {
+    fontSize: 11,
+    fontFamily: 'PlusJakartaSans_500Medium',
+    color: colors.muted,
   },
-  coverActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  coverInlineActions: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
     gap: 6,
-    marginTop: 8,
   },
-  coverActionText: {
-    fontSize: 12,
+  coverInlineBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  coverInlineBtnText: {
+    fontSize: 11,
     fontFamily: 'PlusJakartaSans_700Bold',
     color: colors.coral,
-  },
-  coverActionDivider: {
-    fontSize: 12,
-    color: colors.border,
   },
   refLinkGroup: { flexDirection: 'column', gap: 8, marginBottom: 10 },
   refLinkIndex: {

@@ -523,7 +523,7 @@ export class VotingService {
 
     const trip = await this.prisma.trip.findUnique({
       where: { id: tripId },
-      select: { creatorId: true, status: true, startDate: true },
+      select: { creatorId: true, status: true, startDate: true, endDate: true },
     });
 
     if (trip?.creatorId !== userId) {
@@ -591,13 +591,53 @@ export class VotingService {
 
         if (winningOption) {
           const activityCount = await tx.tripActivity.count({ where: { tripId } });
+          // Compute nearest day for fixed trips (hari terdekat dengan date now)
+          let dayNumber = 1;
+          let activityDate: Date | null = null;
+          if (trip.status === 'fixed' && trip.startDate) {
+            const start = new Date(trip.startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = trip.endDate ? new Date(trip.endDate) : start;
+            end.setHours(0, 0, 0, 0);
+            const totalDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86_400_000) + 1);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffDays = Math.floor((today.getTime() - start.getTime()) / 86_400_000);
+            dayNumber = Math.min(Math.max(diffDays + 1, 1), totalDays);
+            activityDate = new Date(start.getTime() + (dayNumber - 1) * 86_400_000);
+          }
+          const rawOpt: any = winningOption as any;
+          const startTimeStr: string | undefined = rawOpt.startTime ?? rawOpt.start_time;
+          const endTimeStr: string | undefined = rawOpt.endTime ?? rawOpt.end_time;
+          // Default to current time +1h if not provided, ensure end > start
+          const now = new Date();
+          const fallbackStart = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          const fallbackEndDate = new Date(now.getTime() + 60 * 60 * 1000);
+          const fallbackEnd = `${String(fallbackEndDate.getHours()).padStart(2, '0')}:${String(fallbackEndDate.getMinutes()).padStart(2, '0')}`;
+          const start_time = startTimeStr && /^([01]\d|2[0-3]):[0-5]\d$/.test(startTimeStr) ? startTimeStr : fallbackStart;
+          let end_time = endTimeStr && /^([01]\d|2[0-3]):[0-5]\d$/.test(endTimeStr) ? endTimeStr : fallbackEnd;
+          if (end_time <= start_time) {
+            // Ensure end after start: +1h from start
+            const [h, m] = start_time.split(':').map(Number);
+            const d = new Date(Date.UTC(1970, 0, 1, h, m));
+            d.setUTCHours(d.getUTCHours() + 1);
+            end_time = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+          }
+          const toTimeDate = (hhmm: string) => {
+            const [h, m] = hhmm.split(':').map(Number);
+            return new Date(Date.UTC(1970, 0, 1, h, m, 0, 0));
+          };
           await tx.tripActivity.create({
             data: {
               tripId,
               placeName: winningOption.label,
               kind: 'activity',
-              // Land on day 1 for fixed trips; leave unscheduled otherwise.
-              activityDate: trip.status === 'fixed' ? trip.startDate : null,
+              activityDate,
+              dayNumber,
+              startTime: toTimeDate(start_time),
+              endTime: toTimeDate(end_time),
+              mapsLink: (winningOption as any).mapsLink ?? null,
+              refLinks: (winningOption as any).refLinks ?? [],
               sortOrder: activityCount,
             },
           });

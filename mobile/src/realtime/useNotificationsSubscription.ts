@@ -32,7 +32,11 @@ export function useNotificationsSubscription(userId: string | undefined) {
           qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(`[realtime] notifications:${userId} ${status}`, err);
+        }
+      });
 
     channelRef.current = channel;
 

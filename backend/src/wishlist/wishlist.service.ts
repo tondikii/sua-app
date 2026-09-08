@@ -402,12 +402,14 @@ export class WishlistService {
       documentId = document.id;
     }
 
-    // Use the imported R2 media as the trip cover and the seeded activity's
-    // cover (replacing the raw external URL with a stable media reference).
-    await this.prisma.trip.update({
-      where: { id: tripId },
-      data: { coverDocumentId: documentId },
-    });
+    // First-media-as-cover rule: only set trip cover if it is still empty.
+    const trip = await this.prisma.trip.findFirst({ where: { id: tripId }, select: { coverDocumentId: true } });
+    if (!trip?.coverDocumentId) {
+      await this.prisma.trip.update({
+        where: { id: tripId },
+        data: { coverDocumentId: documentId },
+      });
+    }
     await this.prisma.tripActivity.updateMany({
       where: { tripId, dayNumber: 1 },
       data: {

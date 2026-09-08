@@ -71,8 +71,21 @@ export class ChatService {
           where: { tripId, deletedAt: null, senderId: { not: userId } },
         });
 
+    // Batch presign all media keys in one go to minimize signing overhead.
+    const mediaKeys = results
+      .filter((m) => !m.deletedAt && m.mediaUrl && (m.messageKind === 'photo' || m.messageKind === 'video'))
+      .map((m) => this.r2.extractStorageKey(m.mediaUrl!));
+    const presignedMap = await this.r2.presignDownloads(mediaKeys);
+
     return {
-      data: await Promise.all(results.map((m) => this.toMessageResponse(m))),
+      data: await Promise.all(
+        results.map((m) => {
+          if (m.deletedAt || !m.mediaUrl) return this.toMessageResponse(m, null);
+          if (m.messageKind !== 'photo' && m.messageKind !== 'video') return this.toMessageResponse(m, m.mediaUrl);
+          const key = this.r2.extractStorageKey(m.mediaUrl);
+          return this.toMessageResponse(m, presignedMap.get(key) ?? m.mediaUrl);
+        }),
+      ),
       next_cursor: hasMore ? (results[results.length - 1]?.createdAt.toISOString() ?? null) : null,
       unread_count: unreadCount,
     };
@@ -230,8 +243,12 @@ export class ChatService {
     });
   }
 
-  private async toMessageResponse(message: Parameters<typeof MessageSerializer.toList>[0]) {
-    const mediaUrl = await this.resolveMediaUrl(message);
+  private async toMessageResponse(
+    message: Parameters<typeof MessageSerializer.toList>[0],
+    mediaUrlOverride?: string | null,
+  ) {
+    const mediaUrl =
+      mediaUrlOverride !== undefined ? mediaUrlOverride : await this.resolveMediaUrl(message);
     return MessageSerializer.toList(message, mediaUrl, this.r2);
   }
 

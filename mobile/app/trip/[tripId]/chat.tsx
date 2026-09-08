@@ -80,6 +80,7 @@ function ChatBubble({
   onLongPress: () => void;
   onPressMedia?: () => void;
 }) {
+  const isPending = message.id.startsWith('optimistic-');
   if (message.is_deleted) {
     return (
       <View style={[styles.bubbleRow, isMe ? styles.bubbleRowMe : styles.bubbleRowOther]}>
@@ -116,7 +117,13 @@ function ChatBubble({
         </View>
       )}
 
-      <View style={[styles.bubbleContent, isMe ? styles.bubbleContentMe : styles.bubbleContentOther]}>
+      <View
+        style={[
+          styles.bubbleContent,
+          isMe ? styles.bubbleContentMe : styles.bubbleContentOther,
+          isPending && styles.bubblePending,
+        ]}
+      >
         {!isMe && sender && (
           <Text style={styles.senderName}>{sender.name}</Text>
         )}
@@ -181,7 +188,7 @@ function ChatBubble({
         ) : null}
 
         <Text style={[styles.bubbleTime, isMe ? styles.bubbleTimeMe : styles.bubbleTimeOther]}>
-          {timeText}
+          {isPending ? 'Mengirim…' : timeText}
         </Text>
       </View>
     </TouchableOpacity>
@@ -275,8 +282,20 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
 
   const messages = useMemo(() => {
     const pages = data?.pages ?? [];
+    // Desc (newest first) from server → reversed to asc for chronological render.
+    // This is O(n) but n ≤ 20 per page, negligible. Keep memoised.
     return pages.flatMap((p) => p.data).reverse();
   }, [data]);
+
+  // Auto-scroll to bottom when a new message arrives (optimistic or realtime).
+  const prevCountRef = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevCountRef.current) {
+      // Small delay lets FlatList layout settle before scroll.
+      requestAnimationFrame(() => flatListRef.current?.scrollToEnd({ animated: true }));
+    }
+    prevCountRef.current = messages.length;
+  }, [messages.length]);
 
   // Media messages mapped to viewer items (photo/video only, with media_url).
   const chatMediaItems = useMemo(() => {
@@ -304,7 +323,16 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
 
   useEffect(() => {
     markChatRead.mutate();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tripId]);
+
+  // Mark read whenever new messages arrive while tab is visible.
+  useEffect(() => {
+    if (messages.length > 0) {
+      const t = setTimeout(() => markChatRead.mutate(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [messages.length]);
 
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
@@ -455,12 +483,16 @@ export function ChatTabContent({ tripId, currentUserId }: { tripId: string; curr
           style={styles.messagesList}
           contentContainerStyle={styles.messagesContent}
           inverted={false}
+          initialNumToRender={20}
+          windowSize={7}
+          maxToRenderPerBatch={12}
+          removeClippedSubviews={Platform.OS !== 'web'}
+          keyboardShouldPersistTaps="handled"
           onEndReached={() => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           onEndReachedThreshold={0.3}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -721,6 +753,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 13, fontFamily: 'PlusJakartaSans_500Medium', lineHeight: 19.5 },
   bubbleTextMe: { color: colors.white },
   bubbleTextOther: { color: colors.charcoal },
+  bubblePending: { opacity: 0.72 },
   bubbleTime: { fontSize: 10, fontFamily: 'PlusJakartaSans_400Regular', marginTop: 4 },
   bubbleTimeMe: { color: 'rgba(255,255,255,0.6)', textAlign: 'right' },
   bubbleTimeOther: { color: colors.mutedLight },

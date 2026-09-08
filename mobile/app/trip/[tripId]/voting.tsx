@@ -39,7 +39,7 @@ import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
 import { bottomSheetFrame } from '@/theme/layout';
-import { nowTime } from '@/lib/time';
+import { nowTime, nowPlusOneHour } from '@/lib/time';
 import type { TripPoll, PollOption, PollType, RefLink } from '@atur-perjalanan/shared-types';
 
 const webOutlineNone = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {};
@@ -925,6 +925,8 @@ interface PollOptionDraft {
   label: string;
   maps_link: string;
   ref_links: RefLink[];
+  start_time: string;
+  end_time: string;
 }
 
 function CreateVotingSheet({
@@ -992,7 +994,7 @@ function CreateVotingSheet({
   const addOption = useCallback(() => {
     const trimmed = optionText.trim();
     if (trimmed && !options.some((o) => o.label === trimmed)) {
-      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }] }]);
+      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }], start_time: nowTime(), end_time: nowPlusOneHour() }]);
       setOptionText('');
     }
   }, [optionText, options]);
@@ -1046,6 +1048,8 @@ function CreateVotingSheet({
                 return label ? { url, label } : { url };
               })
               .filter((r) => r.url.length > 0),
+            start_time: o.start_time,
+            end_time: o.end_time,
           })),
           deadline: deadline || undefined,
         });
@@ -1372,6 +1376,8 @@ function EditVotingSheet({
           o.ref_links.length > 0
             ? o.ref_links.map((r) => ({ url: r.url, label: r.label ?? '' }))
             : [{ url: '', label: '' }],
+        start_time: (o as any).start_time ?? nowTime(),
+        end_time: (o as any).end_time ?? nowPlusOneHour(),
       })),
     );
     setDeadline(poll.deadline ?? '');
@@ -1382,7 +1388,7 @@ function EditVotingSheet({
   const addOption = useCallback(() => {
     const trimmed = optionText.trim();
     if (trimmed && !options.some((o) => o.label === trimmed)) {
-      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }] }]);
+      setOptions((prev) => [...prev, { label: trimmed, maps_link: '', ref_links: [{ url: '', label: '' }], start_time: nowTime(), end_time: nowPlusOneHour() }]);
       setOptionText('');
     }
   }, [optionText, options]);
@@ -1412,6 +1418,8 @@ function EditVotingSheet({
                 return label ? { url, label } : { url };
               })
               .filter((r) => r.url.length > 0),
+            start_time: o.start_time,
+            end_time: o.end_time,
           })),
           deadline: deadline || null,
         },

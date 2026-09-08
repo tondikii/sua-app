@@ -7,6 +7,8 @@ import { TripMembersContent } from '@/features/trips/components/TripMembersConte
 import { useTripDetail } from '@/features/trips/hooks/useTripDetail';
 import { goBackSmart } from '@/lib/navigation';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
+import { PageLoader } from '@/components/LoadingState';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { colors } from '@/theme/colors';
 
 export default function TripMembersScreen() {
@@ -14,9 +16,27 @@ export default function TripMembersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const { data: trip } = useTripDetail(tripId);
+  const { data: trip, isLoading, isError, refetch } = useTripDetail(tripId);
 
   const isCreator = trip?.creator?.id === user?.id;
+
+  if (isLoading) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <PageLoader message="Memuat anggota..." />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ErrorScreen onRetry={() => refetch()} />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>

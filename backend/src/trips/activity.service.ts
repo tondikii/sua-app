@@ -451,7 +451,7 @@ export class ActivityService {
       buffer,
     );
 
-    await this.prisma.tripDocument.create({
+    const document = await this.prisma.tripDocument.create({
       data: {
         tripId,
         uploadedBy: uploaderId!,
@@ -461,6 +461,24 @@ export class ActivityService {
         fromChat: false,
       },
     });
+
+    // Same rule as MediaService: the very first non-chat media of a trip
+    // becomes the trip cover automatically.
+    const trip = await this.prisma.trip.findFirst({
+      where: { id: tripId },
+      select: { coverDocumentId: true },
+    });
+    if (!trip?.coverDocumentId) {
+      const nonChatCount = await this.prisma.tripDocument.count({
+        where: { tripId, fromChat: false },
+      });
+      if (nonChatCount <= 1) {
+        await this.prisma.trip.update({
+          where: { id: tripId },
+          data: { coverDocumentId: document.id },
+        });
+      }
+    }
   }
 
   /**

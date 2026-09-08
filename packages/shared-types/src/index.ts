@@ -198,6 +198,8 @@ export interface PollOptionInput {
   end_date?: string;
   maps_link?: string;
   ref_links?: { url: string; label?: string }[];
+  start_time?: string;
+  end_time?: string;
 }
 
 export interface CreatePollPayload {

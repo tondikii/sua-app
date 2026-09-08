@@ -31,6 +31,16 @@ export const supabase: SupabaseClient | null = _client;
 
 /** Push the backend-minted realtime JWT so RLS `auth.uid()` resolves. */
 export function setRealtimeAuthToken(token: string): void {
-  if (!_client || !token) return;
-  _client.realtime.setAuth(token);
+  if (!_client) return;
+  // `setAuth('')` clears the previous JWT on logout; early-return on empty
+  // would leave the stale token on the websocket (bug on signOut).
+  _client.realtime.setAuth(token ?? '');
+}
+
+/** Remove all realtime channels — call on logout to drop stale subscriptions immediately. */
+export function disconnectRealtime(): void {
+  if (!_client) return;
+  try {
+    _client.removeAllChannels();
+  } catch {}
 }

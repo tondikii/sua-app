@@ -18,6 +18,8 @@ import { openExternalLink } from '@/lib/externalLink';
 import { ChevronLeft } from '@/components/icons/ChevronLeft';
 import { Globe } from '@/components/icons/Globe';
 import { TripCard } from '@/features/trips/components/TripCard';
+import { PageLoader } from '@/components/LoadingState';
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { avatarColorFor } from '@/theme/colors';
@@ -27,10 +29,12 @@ export default function PublicProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: profile, isLoading: profileLoading } = usePublicProfile(username);
-  const { data: tripsData, isLoading: tripsLoading } = useUserTrips(username);
+  const { data: profile, isLoading: profileLoading, isError: profileError, refetch: refetchProfile } = usePublicProfile(username);
+  const { data: tripsData, isLoading: tripsLoading, isError: tripsError, refetch: refetchTrips } = useUserTrips(username);
   const trips = tripsData?.data ?? [];
   const isLoading = profileLoading || tripsLoading;
+  const isError = profileError || tripsError;
+  const handleRetry = () => { refetchProfile(); refetchTrips(); };
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -44,7 +48,9 @@ export default function PublicProfileScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.coral} /></View>
+        <PageLoader message="Memuat profil..." />
+      ) : isError ? (
+        <ErrorScreen onRetry={handleRetry} />
       ) : !profile ? (
         <View style={styles.loadingContainer}><Text style={{ color: colors.muted }}>Profil tidak ditemukan</Text></View>
       ) : (
